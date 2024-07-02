@@ -1,9 +1,10 @@
 ################### FUNCTIONS #####################
 
 ## Correlation Analysis - Plot
-plt_corr = function(corr,labelcol = "black",labelorder='alphabet'){
+# RColorBrewer::brewer.pal(4, "RdYlBu")
+plt_corr = function(corr,labelcol = "black",labelorder='alphabet',meth = 'square', tpe = 'lower'){
 corma = as.matrix(corr)
-plt = corrplot(corma, method = 'color', order =labelorder,tl.col = labelcol)
+plt = corrplot(corma, method = meth, order =labelorder,tl.col = labelcol, type=tpe,diag=FALSE)
 return(plt)
 }
 
@@ -23,7 +24,7 @@ find_high_corr <- function(cor_matrix, threshold = 0.75) {
   # Loop through the upper triangle of the correlation matrix
   for (i in 1:(nrow(cor_matrix) - 1)) {
     for (j in (i + 1):ncol(cor_matrix)) {
-      if (cor_matrix[i, j] > threshold) {
+      if (abs(cor_matrix[i, j]) > abs(threshold)) {
         # Add the pair and the correlation to the data frame
         high_cor_pairs <- rbind(high_cor_pairs, data.frame(
           variable1 = var_names[i],
@@ -34,6 +35,32 @@ find_high_corr <- function(cor_matrix, threshold = 0.75) {
       }
     }
   }
-  
-  return(high_cor_pairs)
+  higg = high_cor_pairs %>% 
+    arrange(desc(abs(Correlation)))
+  return(higg)
 }
+
+## config for correlation
+write_corr = function(vars, measures = mes, configs = config){
+  varmes = NULL
+  
+  if("moran" %in% vars){
+    varmes = append(varmes,paste(mes,"moran",sep="_"))
+  }
+  if("linE"%in% vars){
+    varmes = append(varmes,"linE") #linE is the only variable that is not calculated for each measure
+  }
+  if("sit" %in% vars){
+    varmes = append(varmes,paste(mes,"sit",sep="_"))
+  }
+  if("siim" %in% vars){
+    varmes = append(varmes,paste(mes,"siim",sep="_"))
+    
+  }
+  
+  configs[[1]]$col_correlation_matrix = paste(varmes, collapse=", ")
+  
+  write.config(configs,file.path = "../input/config.ini",write.type = "ini")
+  
+}
+
