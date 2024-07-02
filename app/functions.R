@@ -9,7 +9,7 @@ return(plt)
 }
 
 ## Correlation Analysis - Table
-find_high_corr <- function(cor_matrix, threshold = 0.75) {
+find_high_corr <- function(cor_matrix, threshold = 0.75, tab = T) {
   # Get the row and column names of the correlation matrix
   var_names <- colnames(cor_matrix)
   
@@ -35,9 +35,13 @@ find_high_corr <- function(cor_matrix, threshold = 0.75) {
       }
     }
   }
+  
   higg = high_cor_pairs %>% 
     arrange(desc(abs(Correlation)))
-  return(higg)
+  
+  yolo = unique(c(higg$variable1,higg$variable2)) #used to fill drop down menu
+  
+  if(tab==T){return(higg)}else(return(yolo))
 }
 
 ## config for correlation

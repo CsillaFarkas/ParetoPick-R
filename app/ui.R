@@ -1,13 +1,27 @@
 ################# UI ###############################
 
-
-
-ui <- fluidPage(
-  tags$style(HTML(".js-irs-0 .irs-single, .js-irs-0 .irs-bar-edge, .js-irs-0 .irs-bar {background: darkslateblue}")),#https://htmlcolorcodes.com/color-names/
-  
-  titlePanel("Shiny App Calling Python Script and Reading Correlation Output"),
-  sidebarLayout(
-    sidebarPanel(
+ui <- 
+  dashboardPage(
+    dashboardHeader(),
+    dashboardSidebar(id = "", sidebarMenu(
+      menuItem("Data Prep", tabName = "Data Prep"),
+      menuItem("Correlation Analysis", tabName = "Correlation Analysis")
+    )),
+    dashboardBody(
+      
+        tabItem(tabName = "Data Prep", h2()),
+        tabItem(
+          tabName = "Correlation Analysis",
+         
+            tags$style(
+              HTML(
+                ".js-irs-0 .irs-single, .js-irs-0 .irs-bar-edge, .js-irs-0 .irs-bar {background: darkslateblue}"
+              )
+            ),
+            #https://htmlcolorcodes.com/color-names/
+            
+            titlePanel("Shiny App Calling Python Script and Reading Correlation Output"),
+            sidebarLayout(sidebarPanel(
       # Display message about file status
       textOutput("fileStatusMessage"),
       div("1. Choose variables to be included in the Correlation Analysis:", style = "text-align: left; font-size:150%"),
@@ -29,8 +43,19 @@ ui <- fluidPage(
       
       div("Correlation Analysis", style = "text-align: left; font-size:150%"),
       plotOutput("corrplot"),
+      
       div("Most correlated variables", style = "text-align: left; font-size:150%"),
-      tableOutput("corrtable")
+      tableOutput("corrtable"), 
+    
+      div("Choose variables that shall not be considered in the PCA",style = "text-align: left; font-size:150%"),
+      selectInput(inputId = "excl",label = "variables", choices = mes,multiple = TRUE),
+       textOutput("excla")
+       
+      # div("Accepted Correlation under this decision",style = "text-align: left; font-size:150%"),
+      # tableOutput("remtab")
+      )
+    
     )
   )
 )
+  )

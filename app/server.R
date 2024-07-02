@@ -51,7 +51,7 @@ server <- function(input, output, session) {
     # Highest correlation under selected threshold
     output$corrtable <- renderTable({
      
-      find_high_corr(corr,threshold=input$thresh)
+      find_high_corr(corr,threshold=input$thresh, tab=T) #tab = T means this returns the full table, =F is for pulling variables
     })
     
     output$selements <- renderTable({
@@ -59,7 +59,16 @@ server <- function(input, output, session) {
       },rownames = T,colnames = F)
     })
   
-
+   output$excla <- renderText({
+    input$excl
+  })
+ 
+   
+   observe({
+     updateSelectInput(session, "excl",
+                       choices = find_high_corr(corr,threshold=input$thresh, tab=F)
+                       )
+   })
 }
 
 
