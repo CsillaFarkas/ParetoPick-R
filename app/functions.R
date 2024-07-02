@@ -45,26 +45,40 @@ find_high_corr <- function(cor_matrix, threshold = 0.75, tab = T) {
 }
 
 ## config for correlation
-write_corr = function(vars, measures = mes, configs = config){
-  varmes = NULL
-  
-  if("moran" %in% vars){
-    varmes = append(varmes,paste(mes,"moran",sep="_"))
+write_corr = function(vars,
+                      measures = mes,
+                      configs = config,
+                      cor_analysis = F,
+                      pca_content = all_var,
+                      pca = T) {
+  if (cor_analysis && pca) {
+    stop("cannot write both PCA and Correlation ini at the same time, set pca = T OR cor_analysis = T, not both")
   }
-  if("linE"%in% vars){
-    varmes = append(varmes,"linE") #linE is the only variable that is not calculated for each measure
-  }
-  if("sit" %in% vars){
-    varmes = append(varmes,paste(mes,"sit",sep="_"))
-  }
-  if("siim" %in% vars){
-    varmes = append(varmes,paste(mes,"siim",sep="_"))
+  if (cor_analysis) {
+    varmes = NULL
+    
+    if ("moran" %in% vars) {
+      varmes = append(varmes, paste(mes, "moran", sep = "_"))
+    }
+    if ("linE" %in% vars) {
+      varmes = append(varmes, "linE") #linE is the only variable that is not calculated for each measure
+    }
+    if ("sit" %in% vars) {
+      varmes = append(varmes, paste(mes, "sit", sep = "_"))
+    }
+    if ("siim" %in% vars) {
+      varmes = append(varmes, paste(mes, "siim", sep = "_"))
+    }
+    
+    configs[[1]]$col_correlation_matrix = paste(varmes, collapse = ", ")
+    
+    write.config(configs, file.path = "../input/config.ini", write.type = "ini")
+  } 
+  if (pca) {
+    configs[[1]]$colums = paste(pca_content, collapse = ", ")
+    write.config(configs, file.path = "../input/config.ini", write.type = "ini")
     
   }
-  
-  configs[[1]]$col_correlation_matrix = paste(varmes, collapse=", ")
-  
-  write.config(configs,file.path = "../input/config.ini",write.type = "ini")
   
 }
 

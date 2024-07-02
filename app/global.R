@@ -6,6 +6,7 @@ library(reticulate)
 library(readr)
 library(dplyr)
 library(shinydashboard)
+library(shinyWidgets)
 source("functions.R")
 
 ## get measures
@@ -15,5 +16,10 @@ source("functions.R")
 
 ## read config
   config <- read.config("../input/config.ini")
-
+  
+  # this is produced in first tab
+  hauptdat = read.csv("../input/var_corr_par.csv")
+  all_var = colnames(hauptdat)[5:ncol(hauptdat)]
+  
+  
   

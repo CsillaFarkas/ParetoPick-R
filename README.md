@@ -7,4 +7,8 @@ This dashboard first performs a correlation analysis and allows the user to sele
 * measure_location.csv
 
 ## Missing/Nice to have
-* user input on which measures are management and which are structural
+* user input on which measures are management and which are structural (required for linE calculation)
+* distinction of measures across variables (e.g. with a matrix decision board) rn all measures are considered
+* PCA - selection of how many variables shall be plotted
+* PCA - allow either kmedoids or kmeans (does not work on my machine so I cannot test it)
+* PCA - other selections like violin plot possible in Sydney's most recent script

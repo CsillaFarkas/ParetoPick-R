@@ -1,6 +1,8 @@
 ################# SERVER #############################
 server <- function(input, output, session) {
 
+   pca_remove <- reactiveVal(NULL)
+  
   required_files <- c("../data/pareto_genomes.txt", "../data/pareto_fitness.txt", "../data/hru.con", "../data/measure_location.csv")   # Example file names
   
   # Check if required files exist #####
@@ -37,9 +39,36 @@ server <- function(input, output, session) {
     output$selements <- renderTable({input$selements},rownames = T,colnames = F)
     })
   
-    # Drop Down Menu with subset of those with selected threshold (outsider for now so it doesn't delete values when playing with threshold)
-    observe({ updateSelectInput(session, "excl",choices = find_high_corr(corr,threshold=input$thresh, tab=F))})
+    # Drop Down Menu with subset of those with selected threshold
+    observe({updateSelectInput(session, "excl",choices = find_high_corr(corr,threshold=input$thresh, tab=F))})
   })
+  
+  observeEvent(input$confirm_selection,{pca_remove(input$excl)
+
+    # Display confirmed selection in the Correlation Analysis tab
+  output$confirmed_selection <- renderText({
+    paste("Removed variables: ", paste(pca_remove(),collapse = ", "))})
+  
+  output$pca_incl <- renderTable({
+    all_var[-which(all_var%in%pca_remove())]
+  },colnames = F)
+  
+  
+  
+  })
+  
+  observeEvent(input$runPCA,{
+    # write a new config.ini with selected variables and find the highest correlation
+    write_corr(pca_content = all_var[-which(all_var%in%pca_remove())])
+    
+    # Define the command to run the Python script
+    pca_script <- "../python_files/kmeans.py"
+    pcacmd <- paste("python", pca_script)
+    
+    # Run the command and capture the output
+    result <- system(pcacmd, intern = TRUE)})
+  
+  
 }
 
 
