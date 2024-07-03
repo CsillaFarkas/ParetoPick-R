@@ -89,3 +89,20 @@ read_pca = function(con = config){
   pca_col = pca_col_incl[order(pca_col_incl)]
   return(pca_col)
 }
+
+## Extract the Objective ranges
+get_obj_range = function(filepath = "../data/pareto_fitness.txt",colnames=paste0("objective", seq(1, 4))){
+  stopifnot(is.character(filepath))
+  
+  pf = read.table(filepath,sep=",")
+  colnames(pf) = colnames
+  
+  range_df <- data.frame(column = character(), min = numeric(), max = numeric(), stringsAsFactors = FALSE)
+  
+  for (col_name in colnames(pf)) {
+    min_val <- min(pf[[col_name]], na.rm = TRUE)
+    max_val <- max(pf[[col_name]], na.rm = TRUE)
+    range_df <- rbind(range_df, data.frame(column = col_name, min = min_val, max = max_val, stringsAsFactors = FALSE))
+  }
+  return(range_df)
+}

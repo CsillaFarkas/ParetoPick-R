@@ -12,7 +12,11 @@ library(readr)
 library(dplyr)
 library(shinydashboard)
 library(shinyWidgets)
+library(shinyjs)
 source("functions.R")
+
+## Data Prep
+  required_files <- c("../data/pareto_genomes.txt", "../data/pareto_fitness.txt", "../data/hru.con", "../data/measure_location.csv")   # Example file names
 
 ## get measures
   mes = read.csv("../data/measure_location.csv")

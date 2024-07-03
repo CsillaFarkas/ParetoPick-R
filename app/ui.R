@@ -1,4 +1,4 @@
-################# UI ###############################
+############################### UI ###############################
 
 ui <- 
   dashboardPage(
@@ -10,20 +10,50 @@ ui <-
       menuItem("PCA", tabName = "pca")
     )),
     dashboardBody(
+      useShinyjs(),
       tabItems(
-        tabItem(tabName = "data_prep",),
+        tabItem(tabName = "data_prep",
+                titlePanel("OPTAIN Data Preparation"),
+                mainPanel(
+                  
+                  tags$head(tags$style("#fileStatusMessage{font-size:150%;}")),
+                  
+                  
+                          p("To run the data preparation and the subsequent Correlation and Principal Component Analysis the following files have to be provided in the data folder:",style =  "text-align: left; font-size:150%"),
+                         HTML(paste0("<ol>",
+                            "<li style=font-size:150%>","pareto_genomes.txt","</li>",
+                            "<li style=font-size:150%>","pareto_fitness.txt","</li>",
+                            "<li style=font-size:150%>","hru.con","</li>",
+                            "<li style=font-size:150%>","measure_location.csv","</li>",
+                            "</ol>")),
+                         actionButton("files_avail", "Check Files"),
+                         
+                  uiOutput("fileStatusMessage"),
+                  
+                  fluidRow(
+                    id="sel_obj",
+                    column(3, textInput("col1", "Objective 1\n (Column 1)")),
+                    column(3, textInput("col2", "Objective 2\n (Column 2)")),
+                    column(3, textInput("col3", "Objective 3\n (Column 3)")),
+                    column(3, textInput("col4", "Objective 4\n (Column 4)")),
+                    actionButton("obj_conf", "Confirm Objective Names")
+                  )%>% hidden(), 
+                  hr(),
+                  tableOutput("obj_conf")
+               
+                )# DATA PREP MAIN PANEL END
+        ), 
         
       ## CORRELATION ANALYSIS PANEL
         tabItem(tabName = "correlation_analysis",
          
-            tags$style(HTML(".js-irs-0 .irs-single, .js-irs-0 .irs-bar-edge, .js-irs-0 .irs-bar {background: darkslateblue}")),
-            #https://htmlcolorcodes.com/color-names/
-            
+            # tags$style(HTML(".js-irs-0 .irs-single, .js-irs-0 .irs-bar-edge, .js-irs-0 .irs-bar {background: darkslateblue}")),
+            # #https://htmlcolorcodes.com/color-names/
+            # 
             titlePanel("Correlation Analysis"),
            sidebarLayout(
               sidebarPanel(
       # Display message about file status
-      textOutput("fileStatusMessage"),
       div("1. Choose variables to be included in the Correlation Analysis:", style = "text-align: left; font-size:150%"),
       checkboxGroupInput("selements", "", 
                          choiceNames = c("Measure share in total catchment area (sit)", 
@@ -33,9 +63,12 @@ ui <-
       div("2. Perform the Correlation Analysis", style = "text-align: left; font-size:150%"),
       actionButton("run", "Run Correlation Analysis"),
       shinyWidgets::sliderTextInput(inputId = "thresh", label= "Choose threshold",choices = seq(0.65,0.95,0.05),selected=0.75),
+      div("3. Choose variables that shall be excluded from the PCA",style = "text-align: left; font-size:150%"),
+      selectInput(inputId = "excl",label = "variables to exclude", choices = mes,multiple = TRUE),
+      actionButton("confirm_selection", "Confirm Selection"),
       
     ),
-    mainPanel(textOutput("fileStatusMessage"),
+    mainPanel(
               
       # Display the selected elements from the checkbox group
       div("Selected Variables", style = "text-align: left; font-size:150%"),
@@ -47,12 +80,9 @@ ui <-
       div("Most correlated variables", style = "text-align: left; font-size:150%"),
       tableOutput("corrtable"), 
     
-      div("3. Choose variables that shall be excluded from the PCA",style = "text-align: left; font-size:150%"),
-      selectInput(inputId = "excl",label = "variables to exclude", choices = mes,multiple = TRUE),
-      actionButton("confirm_selection", "Confirm Selection"),
-      
+     
       # print confirmed selectoin
-      textOutput("confirmed_selection")
+      uiOutput(outputId = "confirmed_selection")
       # textOutput("excla")
        
       # div("Accepted Correlation under this decision",style = "text-align: left; font-size:150%"),
