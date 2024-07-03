@@ -1,4 +1,9 @@
-################ GLOBAL ############################
+######################### GLOBAL #################################
+# comments: we assume four variables delineating pareto front
+# 
+# used files:
+# Project: Clustering of pareto front to reduce objective space
+##################################################################
 library(configr)
 library(corrplot)
 library(shiny)
@@ -19,7 +24,7 @@ source("functions.R")
   
   # this is produced in first tab
   hauptdat = read.csv("../input/var_corr_par.csv")
-  all_var = colnames(hauptdat)[5:ncol(hauptdat)]
+  all_var = colnames(hauptdat)[5:ncol(hauptdat)] #assuming four variables here
   
   
   

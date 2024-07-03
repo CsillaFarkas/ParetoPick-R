@@ -1,7 +1,7 @@
 ################# SERVER #############################
 server <- function(input, output, session) {
 
-   pca_remove <- reactiveVal(NULL)
+  pca_remove <- reactiveVal(NULL)
   
   required_files <- c("../data/pareto_genomes.txt", "../data/pareto_fitness.txt", "../data/hru.con", "../data/measure_location.csv")   # Example file names
   
@@ -11,6 +11,9 @@ server <- function(input, output, session) {
   # Output message about file status
    output$fileStatusMessage <- renderText({if (all(checkFiles())) {""} else {paste("The following file(s) are missing:", paste(required_files[!checkFiles()], collapse = ", "))}})
   
+   # initialise PCA table when app starts
+   pca_in <- reactiveValues(data = read_pca())
+   
    
   observeEvent(input$run,{
     # write a new config.ini with selected variables and find the highest correlation
@@ -43,19 +46,22 @@ server <- function(input, output, session) {
     observe({updateSelectInput(session, "excl",choices = find_high_corr(corr,threshold=input$thresh, tab=F))})
   })
   
-  observeEvent(input$confirm_selection,{pca_remove(input$excl)
+  # on clicking confirm selection the config ini is updated
+  observeEvent(input$confirm_selection,{
+    pca_remove(input$excl)
 
-    # Display confirmed selection in the Correlation Analysis tab
-  output$confirmed_selection <- renderText({
-    paste("Removed variables: ", paste(pca_remove(),collapse = ", "))})
-  
-  output$pca_incl <- renderTable({
-    all_var[-which(all_var%in%pca_remove())]
-  },colnames = F)
-  
-  
+    pca_in$data = all_var[-which(all_var%in%pca_remove())]
+    
+    write_corr(pca_content = pca_in$data,pca = T)#startup this is also called into the pca tab
+    
+  # Display confirmed selection in the Correlation Analysis tab
+   output$confirmed_selection <- renderText({paste("Removed variables: ", paste(pca_remove(),collapse = ", "))})
   
   })
+  
+  # table with variables INCLUDED in PCA (renewed every time confirm selection is clicked in correlation tab)
+  output$pca_incl <- renderTable({paste(pca_in$data)},rownames=T,colnames = F)
+  
   
   observeEvent(input$runPCA,{
     # write a new config.ini with selected variables and find the highest correlation
@@ -67,7 +73,6 @@ server <- function(input, output, session) {
     
     # Run the command and capture the output
     result <- system(pcacmd, intern = TRUE)})
-  
   
 }
 

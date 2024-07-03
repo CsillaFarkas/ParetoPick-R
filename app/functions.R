@@ -44,7 +44,7 @@ find_high_corr <- function(cor_matrix, threshold = 0.75, tab = T) {
   if(tab==T){return(higg)}else(return(yolo))
 }
 
-## config for correlation
+## Update Config for PCA and Correlation
 write_corr = function(vars,
                       measures = mes,
                       configs = config,
@@ -82,3 +82,10 @@ write_corr = function(vars,
   
 }
 
+
+## Read Config for PCA Table on startup 
+read_pca = function(con = config){
+  pca_col_incl = unlist(strsplit(config[[1]]$columns,", "))
+  pca_col = pca_col_incl[order(pca_col_incl)]
+  return(pca_col)
+}
