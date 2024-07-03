@@ -4,31 +4,33 @@
 # used files: pareto_genomes.txt, hru.con, measure_location.csv
 # Project: Clustering of pareto front to reduce objective space
 ##################################################################
-rm(list=ls())
+# rm(list=ls())
+suppressPackageStartupMessages({
+  library(shiny)
+  library(shinyWidgets)
+  library(shinythemes)
+  library(shinydashboard)
+  library(tidyverse)
+  library(readr)
+  library(ggtext)
+  library(viridis)
+  library(patchwork)
+  library(here)
+  library(purrr)
+  library(rnaturalearthdata)
+  library(mapview)
+  library(leafsync)
+  library(leaflet)
+  library(tmap)
+  library(sf)
+  library(ggplot2)
+  library(plotly)
+  library(sp)
+  library(spdep)
+  library(geosphere)
+  library(geohashTools)
+})
 
-library(shiny)
-library(shinyWidgets)
-library(shinythemes)
-library(shinydashboard)
-library(tidyverse)
-library(readr)
-library(ggtext)
-library(viridis)
-library(patchwork)
-library(here)
-library(purrr)
-library(rnaturalearthdata)
-library(mapview)
-library(leafsync)
-library(leaflet)
-library(tmap)
-library(sf)
-library(ggplot2)
-library(plotly)
-library(sp)
-library(spdep)
-library(geosphere)
-library(geohashTools)
 
 ### we have to create a pareto_and_scen_solutions.csv from OPTAIN outputs
 # each row one Pareto-optimal solution
@@ -37,17 +39,20 @@ library(geohashTools)
 # 6 - end = relevant stuff considered in the clustering
 
 ## Genomes, I am taking those Micha gave me and not from Marta's original script
-  gen = read.table("data/pareto_genomes.txt", header=F,stringsAsFactors=FALSE,sep = ',')
+  gen = read.table("../data/pareto_genomes.txt", header=F,stringsAsFactors=FALSE,sep = ',')
   gen=as.data.frame((t(gen))) #now the rownumber is the measures/AEP and the columns are the points on optima
   
+  print("check: read pareto_genomes.txt...")
+
   #get number of optima
   nopt = length(gen)
   gen <- gen %>%
     mutate(id = c(1:nrow(gen)), .before = V1) #id is number of AEP
 
 # genome_hru matches AEP and hrus, several of the latter for each AEP 
-  genome_hru <- read.csv('data/measure_location.csv')
+  genome_hru <- read.csv('../data/measure_location.csv')
 
+  print("check: read measure_location.csv...")
 #Separate values in obj_id/every hru its own column
   genome_hru_separate <- genome_hru %>%
      separate(obj_id, paste0("hru_sep_", 1:35), sep = ',', remove = FALSE)#hru = obj_id in separate columns
@@ -75,6 +80,8 @@ gen_act_prio <- gen_act %>%
   # order data frame based on priority
   arrange(priority)
 
+ print("check: assigned priorities...")
+
 
 #### Land use Cover of HRUs ####
  ## 1. create a dataframe defining all land uses of hru across pareto optima
@@ -85,6 +92,8 @@ gen_act_prio <- gen_act %>%
   # reduce the df size for efficiency
   gen_check = gen_act_prio %>% select(-c(id,name,obj_id))
 
+  print("calculating: land use allocation in optima...")
+  
 # loop through optima
 for(op in paste0("V", 1:nopt)){ #instable looping, Cordi...
   
@@ -117,11 +126,12 @@ for(op in paste0("V", 1:nopt)){ #instable looping, Cordi...
   }
 }
 
-
+  print("check: calculated land use allocation in optima...")
+  
 ##### Creating a dataframe to be used in the cluster analysis ####
   
   ## Moran's, share in total and activated area and linE
-  con = read.table("data/hru.con",header=T,skip=1)
+  con = read.table("../data/hru.con",header=T,skip=1)
   hru <- hru%>%mutate(id = as.integer(id))
   
   # could also use id as is the same as obj_id in con
@@ -157,7 +167,8 @@ for(op in paste0("V", 1:nopt)){ #instable looping, Cordi...
   
     #also needed for calculation of area share
     hru_copy = hru_donde %>% select(paste0("V", 1:nopt))
-  
+    print("calculating: Moran's I...")
+    
   # Moran's per measure/land use (setting all others to 0 and taking the area)
   for (op in paste0("V", 1:nopt)) {
     #   #how much area was covered by individual measures (hedge and linear stuff of course very little)
@@ -179,7 +190,8 @@ for(op in paste0("V", 1:nopt)){ #instable looping, Cordi...
   # change col names
   colnames(mesur) = paste(colnames(mesur),"moran",sep="_")
   mesur = mesur %>%mutate(id = row_number())
- 
+  print("check: calculated Moran's I across measure implementation...")
+  
   ## Moran's across all land uses/measures
   # for(op in paste0("V", 1:nopt)){
   #   mesur[op,"moran"]=mean(localmoran(hru_copy[[op]],weights_listw)[,"Ii"])# mean is debatable
@@ -249,12 +261,14 @@ for(op in paste0("V", 1:nopt)){ #instable looping, Cordi...
 
   
   ## merge with pareto fitness, # I assume the first row is the first pareto V1??
-  fit = read.table("data/pareto_fitness.txt", header=F,stringsAsFactors=FALSE,sep = ',')
-  names(fit) = c('HC', 'HQ', 'P', 'AP')
+  fit = read.table("../data/pareto_fitness.txt", header=F,stringsAsFactors=FALSE,sep = ',')
+  names(fit) = yolo# c('HC', 'HQ', 'P', 'AP')
   fit$id = 1:nrow(fit)
+  print("check: read pareto_fitness.txt, assigned names...")
   
   test_clu = fit %>%left_join(lin,by="id")%>%left_join(siim, by = "id") %>%left_join(sit, by ="id") %>% left_join(mesur, by="id")%>% select(-id)%>%replace(is.na(.), 0)
    
-  write.csv(test_clu, "output/trial6.csv",  row.names = FALSE, fileEncoding = "UTF8")  
-    
+  write.csv(test_clu, "../input/var_corr_par.csv",  row.names = FALSE, fileEncoding = "UTF8")  
+  print("check: printed output ---> /input/var_corr_par...")
+  
   

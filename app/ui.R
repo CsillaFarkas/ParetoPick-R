@@ -39,8 +39,11 @@ ui <-
                     actionButton("obj_conf", "Confirm Objective Names")
                   )%>% hidden(), 
                   hr(),
-                  tableOutput("obj_conf")
-               
+                  tableOutput("obj_conf"),
+                  p("Run Preparation Script when ready",style =  "text-align: left; font-size:150%"),
+                  actionButton("runprep", "Run Prep"),
+                  verbatimTextOutput("script_output") 
+                  
                 )# DATA PREP MAIN PANEL END
         ), 
         

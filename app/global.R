@@ -12,7 +12,8 @@ library(readr)
 library(dplyr)
 library(shinydashboard)
 library(shinyWidgets)
-library(shinyjs)
+library(shinyjs) # for hiding parts of the app
+library(processx) # manage system processes from within shiny (e.g. for pulling R output into shiny)
 source("functions.R")
 
 ## Data Prep

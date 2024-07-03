@@ -2,18 +2,59 @@
 server <- function(input, output, session) {
 
   pca_remove <- reactiveVal(NULL)
-  
-  required_files <- c("../data/pareto_genomes.txt", "../data/pareto_fitness.txt", "../data/hru.con", "../data/measure_location.csv")   # Example file names
+  script_output <- reactiveVal("")
   
   # Check if required files exist #####
-  checkFiles <- reactive({sapply(required_files, function(file) file.exists(file))})
+  observeEvent(input$files_avail,{
+     
+     checkFiles <- reactive({sapply(required_files, function(file) file.exists(file))})
+     
+     output$fileStatusMessage <- renderText({if (all(checkFiles())) {HTML(paste("All Files found.", 
+    "Please provide the names of the objectives represented in the Pareto front. The names and the order in which they are given have 
+    to align with what is provided in the first four columns of pareto_fitness.txt", sep="<br/><br/>"))} else {paste("The following file(s) are missing:", paste(required_files[!checkFiles()], collapse = ", "))}})
+  })
   
-  # Output message about file status
-   output$fileStatusMessage <- renderText({if (all(checkFiles())) {""} else {paste("The following file(s) are missing:", paste(required_files[!checkFiles()], collapse = ", "))}})
   
    # initialise PCA table when app starts
    pca_in <- reactiveValues(data = read_pca())
    
+   objs <- reactiveValues(data=NULL)
+   
+   # only show objective naming when files have been checked
+   observeEvent(input$files_avail, {shinyjs::show(id="sel_obj")})
+   
+   # Observe event for confirm button
+   observeEvent(input$obj_conf, {
+     objs$data<- data.frame(Objective = c(input$col1, input$col2, input$col3, input$col4), stringsAsFactors = FALSE )
+     
+     objs$objectives <- c(input$col1, input$col2, input$col3, input$col4)
+     assign("yolo",objs$objectives,envir = globalenv()) #required in convert_optain
+     output$obj_conf <- renderTable({get_obj_range(colnames = objs$objectives)},rownames = T)})
+   
+   # Calling external script
+   
+   # # Run Data Prep with external script
+     observeEvent(input$runprep,{
+       script_output("") #clear old output
+       
+       optain <- process$new("Rscript",c("../convert_optain.R"),stdout = "|", stderr = NULL) #stdout | ---> pipe output, stderr ---> ignore
+       autoInvalidate <- reactiveTimer(100)
+       
+       observe({
+         autoInvalidate()
+         if(optain$is_alive()) {
+           new_output <- paste(optain$read_output_lines(), collapse = "\n")
+           
+           if (new_output != ""){
+             script_output(paste(script_output(), new_output, sep = "\n"))}
+           }else{
+             final_output <- paste(optain$read_output_lines(), collapse = "\n")
+             script_output(paste(script_output(), final_output, sep = "\n"))
+            }
+       })
+     })
+      output$script_output  <- renderText({script_output()})
+ 
    
   observeEvent(input$run,{
     # write a new config.ini with selected variables and find the highest correlation
@@ -54,8 +95,9 @@ server <- function(input, output, session) {
     
     write_corr(pca_content = pca_in$data,pca = T)#startup this is also called into the pca tab
     
+    nonoval = paste(pca_remove(),collapse = ", ")
   # Display confirmed selection in the Correlation Analysis tab
-   output$confirmed_selection <- renderText({paste("Removed variables: ", paste(pca_remove(),collapse = ", "))})
+   output$confirmed_selection <- renderText({HTML(paste0("Removed variables: ","<b>", nonoval,"</b>"))})
   
   })
   
