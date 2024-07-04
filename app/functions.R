@@ -90,6 +90,14 @@ read_pca = function(con = config){
   return(pca_col)
 }
 
+## Count number of decimals
+num.decimals <- function(x) {
+  stopifnot(class(x)=="numeric")
+  x <- sub("0+$","",x)
+  x <- sub("^.+[.]","",x)
+  nchar(x)
+}
+
 ## Extract the Objective ranges
 get_obj_range = function(filepath = "../data/pareto_fitness.txt",colnames=paste0("objective", seq(1, 4))){
   stopifnot(is.character(filepath))
@@ -104,5 +112,7 @@ get_obj_range = function(filepath = "../data/pareto_fitness.txt",colnames=paste0
     max_val <- max(pf[[col_name]], na.rm = TRUE)
     range_df <- rbind(range_df, data.frame(column = col_name, min = min_val, max = max_val, stringsAsFactors = FALSE))
   }
+  
+  
   return(range_df)
 }

@@ -28,33 +28,66 @@ server <- function(input, output, session) {
      objs$data<- data.frame(Objective = c(input$col1, input$col2, input$col3, input$col4), stringsAsFactors = FALSE )
      
      objs$objectives <- c(input$col1, input$col2, input$col3, input$col4)
-     assign("yolo",objs$objectives,envir = globalenv()) #required in convert_optain
-     output$obj_conf <- renderTable({get_obj_range(colnames = objs$objectives)},rownames = T)})
+     
+     assigned_objnames <<- c(input$col1, input$col2, input$col3, input$col4)
+     saveRDS(assigned_objnames,file="../input/object_names.RDS") #for later use in background script
+     
+     output$obj_conf <- renderTable({
+       rng = get_obj_range(colnames = objs$objectives)
+       bng = rng
+       
+       for(i in 1:4){
+         for(j in 2:3){
+          bng[i,j] = formatC(rng[i,j],digits= unlist(lapply(rng[,2],num.decimals))[i])#same decimal for min and max
+         }
+       }
+       bng
+       
+       },rownames = T)})
    
    # Calling external script
    
    # # Run Data Prep with external script
      observeEvent(input$runprep,{
-       script_output("") #clear old output
        
+       script_output(character()) #clear old output
        optain <- process$new("Rscript",c("../convert_optain.R"),stdout = "|", stderr = NULL) #stdout | ---> pipe output, stderr ---> ignore
        autoInvalidate <- reactiveTimer(100)
        
        observe({
          autoInvalidate()
-         if(optain$is_alive()) {
-           new_output <- paste(optain$read_output_lines(), collapse = "\n")
-           
-           if (new_output != ""){
-             script_output(paste(script_output(), new_output, sep = "\n"))}
-           }else{
-             final_output <- paste(optain$read_output_lines(), collapse = "\n")
-             script_output(paste(script_output(), final_output, sep = "\n"))
-            }
+         if (optain$is_alive()) {
+           new_output <- optain$read_output_lines()
+           if (length(new_output) > 0) {
+             current_output <- script_output()
+             
+             # Append new output lines and limit to last 10 lines
+             updated_output <- c(current_output, new_output)
+             if (length(updated_output) > 10) {
+               updated_output <- tail(updated_output, 10)
+             }
+             # update the reactive value
+             script_output(updated_output)
+           }
+         }else{
+           final_output <- optain$read_output_lines()
+           if (length(final_output) > 0) {
+             current_output <- script_output()
+             updated_output <- c(current_output, final_output)
+             if (length(updated_output) > 10) {
+               updated_output <- tail(updated_output, 10)
+             }
+             script_output(updated_output)
+           }
+         }
        })
      })
-      output$script_output  <- renderText({script_output()})
- 
+     
+      output$script_output  <- renderText({paste(script_output(),collapse="\n")
+        })
+
+      
+   
    
   observeEvent(input$run,{
     # write a new config.ini with selected variables and find the highest correlation
