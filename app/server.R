@@ -2,7 +2,9 @@
 server <- function(input, output, session) {
 
   pca_remove <- reactiveVal(NULL)
-  script_output <- reactiveVal("")
+  script_output <- reactiveVal("") # data prep R output
+  pca_done = reactiveVal(FALSE) # checking if data prep R output is done
+  
   
   # Check if required files exist #####
   observeEvent(input$files_avail,{
@@ -16,7 +18,7 @@ server <- function(input, output, session) {
   
   
    # initialise PCA table when app starts
-   pca_in <- reactiveValues(data = read_pca())
+   pca_in <- reactiveValues(data = read_pca()) #this only reads config$columns, NULL if opening for the first time
    
    objs <- reactiveValues(data=NULL)
    
@@ -45,12 +47,14 @@ server <- function(input, output, session) {
        
        },rownames = T)})
    
-   # Calling external script
-   
+
    # # Run Data Prep with external script
+    
      observeEvent(input$runprep,{
        
+       pca_done(FALSE)
        script_output(character()) #clear old output
+       
        optain <- process$new("Rscript",c("../convert_optain.R"),stdout = "|", stderr = NULL) #stdout | ---> pipe output, stderr ---> ignore
        autoInvalidate <- reactiveTimer(100)
        
@@ -79,19 +83,26 @@ server <- function(input, output, session) {
              }
              script_output(updated_output)
            }
+           pca_done(TRUE)
          }
        })
      })
      
-      output$script_output  <- renderText({paste(script_output(),collapse="\n")
+      output$script_output  <- renderUI({
+        if(pca_done()){
+          tags$p("The data preparation was successful. You can now continue with the Correlation and Principal Component Analysis. You will not need this tab again.")
+        }else{verbatimTextOutput("rscriptcmd")}
+        
         })
-
+      output$rscriptcmd <- renderText({
+        paste(script_output(), collapse = "\n")
+      })
       
-   
+      
    
   observeEvent(input$run,{
     # write a new config.ini with selected variables and find the highest correlation
-    write_corr(vars = input$selements)
+    write_corr(vars = input$selements,cor_analysis = T, pca = F)
     
     # Define the command to run the Python script
     py_script <- "../python_files/correlation_matrix.py"
@@ -126,7 +137,7 @@ server <- function(input, output, session) {
 
     pca_in$data = all_var[-which(all_var%in%pca_remove())]
     
-    write_corr(pca_content = pca_in$data,pca = T)#startup this is also called into the pca tab
+    write_corr(pca_content = pca_in$data,pca = T,cor_analysis = F)#startup this is also called into the pca tab
     
     nonoval = paste(pca_remove(),collapse = ", ")
   # Display confirmed selection in the Correlation Analysis tab
@@ -136,18 +147,72 @@ server <- function(input, output, session) {
   
   # table with variables INCLUDED in PCA (renewed every time confirm selection is clicked in correlation tab)
   output$pca_incl <- renderTable({paste(pca_in$data)},rownames=T,colnames = F)
+  # Reactive values to store selected choices
+  selections <- reactiveValues(
+    element1 = NULL,
+    element2 = NULL,
+    element3 = NULL,
+    element4 = NULL
+  )
+  
+  observeEvent(input$set_choices, {
+    # Set the selections from user input when the button is clicked
+    selections$element1 <- input$element1
+    selections$element2 <- input$element2
+    selections$element3 <- input$element3
+    selections$element4 <- input$element4
+  })
+  
+  observe({
+    # Get the current selections
+    selected1 <- selections$element1
+    selected2 <- selections$element2
+    selected3 <- selections$element3
+    selected4 <- selections$element4
+    
+    # Create a set of all choices including a blank option
+    all_choices <- c("off", "A", "B", "C", "D")
+    
+    # Determine the available choices for each dropdown
+    choices1 <- setdiff(all_choices, c(selected2, selected3, selected4))
+    choices2 <- setdiff(all_choices, c(selected1, selected3, selected4))
+    choices3 <- setdiff(all_choices, c(selected1, selected2, selected4))
+    choices4 <- setdiff(all_choices, c(selected1, selected2, selected3))
+    
+    # Update the choices for each dropdown, maintaining the current selection if it's valid
+    updateSelectInput(session, "element1", choices = choices1, selected = selected1)
+    updateSelectInput(session, "element2", choices = choices2, selected = selected2)
+    updateSelectInput(session, "element3", choices = choices3, selected = selected3)
+    updateSelectInput(session, "element4", choices = choices4, selected = selected4)
+  })
+  
+  # Display the selected elements
+  output$selected_elements <- renderText({
+    paste("Element 1:", selections$element1, 
+          "\nElement 2:", selections$element2, 
+          "\nElement 3:", selections$element3,
+          "\nElement 4:", selections$element4)
+  })
   
   
   observeEvent(input$runPCA,{
-    # write a new config.ini with selected variables and find the highest correlation
-    write_corr(pca_content = all_var[-which(all_var%in%pca_remove())])
+    
+    ## Prepare config.ini
+    write_corr(pca_content = all_var[-which(all_var%in%pca_remove())],pca=T, cor_analysis = F)# columns
+    
     
     # Define the command to run the Python script
     pca_script <- "../python_files/kmeans.py"
     pcacmd <- paste("python", pca_script)
     
     # Run the command and capture the output
-    result <- system(pcacmd, intern = TRUE)})
+    result <- system(pcacmd, intern = TRUE)
+    
+    # Display the output
+    output$pca_status <- renderText({
+      paste(result, collapse = "\n")})
+    
+    })
   
 }
 

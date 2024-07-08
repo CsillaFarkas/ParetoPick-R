@@ -42,7 +42,7 @@ ui <-
                   tableOutput("obj_conf"),
                   p("Run Preparation Script when ready",style =  "text-align: left; font-size:150%"),
                   actionButton("runprep", "Run Prep"),
-                  verbatimTextOutput("script_output") 
+                  uiOutput("script_output") 
                   
                 )# DATA PREP MAIN PANEL END
         ), 
@@ -106,7 +106,18 @@ ui <-
           sidebarLayout(sidebarPanel(div("Variables included in the PCA",style = "text-align: left; font-size:150%"),
                           tableOutput("pca_incl"),
                           actionButton("runPCA", "Run Principal Component Analysis")),
-                        mainPanel(
+                          mainPanel(div("Plot Style: Please select how the objectives should be plotted", style = "text-align: left; font-size:150%"),
+                                    selectInput("element1", "X Axis", choices = c("off","A", "B", "C", "D")),
+                                    selectInput("element2", "Y Axis", choices = c("off","A", "B", "C", "D")),
+                                    selectInput("element3", "Colour", choices = c("off","A", "B", "C", "D")),
+                                    selectInput("element4", "Size", choices = c("off","A", "B", "C", "D")),
+                                    actionButton("set_choices","SET CHOICES"),
+                                    textOutput("selected_elements"),
+
+                                    textOutput("selected_elements"),
+                                    
+                                    
+                          verbatimTextOutput("pca_status")
                           
                         )## PCA MAIN PANEL END
                         )

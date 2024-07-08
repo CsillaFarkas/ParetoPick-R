@@ -75,7 +75,7 @@ write_corr = function(vars,
     write.config(configs, file.path = "../input/config.ini", write.type = "ini")
   } 
   if (pca) {
-    configs[[1]]$colums = paste(pca_content, collapse = ", ")
+    configs[[1]]$columns = paste(pca_content, collapse = ", ")
     write.config(configs, file.path = "../input/config.ini", write.type = "ini")
     
   }
@@ -85,8 +85,9 @@ write_corr = function(vars,
 
 ## Read Config for PCA Table on startup 
 read_pca = function(con = config){
-  pca_col_incl = unlist(strsplit(config[[1]]$columns,", "))
-  pca_col = pca_col_incl[order(pca_col_incl)]
+  if(!is.null(config[[1]]$columns)){pca_col_incl = unlist(strsplit(config[[1]]$columns,", "))
+  pca_col = pca_col_incl[order(pca_col_incl)]}else(pca_col = NULL)
+  
   return(pca_col)
 }
 

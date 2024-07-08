@@ -27,9 +27,9 @@ source("functions.R")
 ## read config
   config <- read.config("../input/config.ini")
   
-  # this is produced in first tab
+## this can only be produced once var_corr_par.csv is written THIS HAS TO MOVE TO SERVER
   hauptdat = read.csv("../input/var_corr_par.csv")
-  all_var = colnames(hauptdat)[5:ncol(hauptdat)] #assuming four variables here
+  all_var <<- colnames(hauptdat)[5:ncol(hauptdat)] #assuming four variables here
   
   
   

@@ -8,9 +8,9 @@
 # used files: pareto_genomes.txt, hru.con, measure_location.csv
 # Project: Clustering of pareto front to reduce objective space
 ##################################################################
-# rm(list=ls())
 
-print("loading packages ...",quote=F)
+# rm(list=ls())
+print(paste0("loading required packages..."))
 suppressPackageStartupMessages({
   library(shiny)
   library(shinyWidgets)
@@ -36,13 +36,13 @@ suppressPackageStartupMessages({
   library(geosphere)
   library(geohashTools)
 })
-print("check: loaded packages...",quote=F)
+
 
 ## Genomes
   gen = read.table("../data/pareto_genomes.txt", header=F,stringsAsFactors=FALSE,sep = ',')
   gen=as.data.frame((t(gen))) #now the rownumber is the measures/AEP and the columns are the points on optima
   
-  print("check: read pareto_genomes.txt...",quote=F)
+  print("check: read pareto_genomes.txt...")
 
   #get number of optima
   nopt = length(gen)
@@ -52,7 +52,7 @@ print("check: loaded packages...",quote=F)
 # genome_hru matches AEP with hrus, several hrus for each AEP 
   genome_hru <- read.csv('../data/measure_location.csv')
 
-  print("check: read measure_location.csv...",quote=F)
+  print("check: read measure_location.csv...")
 #Separate values in obj_id/every hru its own column
   genome_hru_separate <- genome_hru %>%
      separate(obj_id, paste0("hru_sep_", 1:35), sep = ',', remove = FALSE)#hru = obj_id in separate columns
@@ -80,7 +80,7 @@ gen_act_prio <- gen_act %>%
   # order data frame based on priority
   arrange(priority)
 
- print("check: assigned priorities...",quote=F)
+ print("check: assigned priorities...")
 
 
 #### Land use Cover of HRUs ####
@@ -92,7 +92,7 @@ gen_act_prio <- gen_act %>%
   # reduce the df size for efficiency
   gen_check = gen_act_prio %>% select(-c(id,name,obj_id))
 
-  print("calculating: land use allocation in optima under priorities...",quote=F)
+  print("calculating: land use allocation in optima under priorities...")
   
 # loop through optima
 for(op in paste0("V", 1:nopt)){ #instable looping, Cordi...
@@ -126,7 +126,7 @@ for(op in paste0("V", 1:nopt)){ #instable looping, Cordi...
   }
 }
 
-  print("check: calculated land use allocation in optima...",quote=F)
+  print("check: calculated land use allocation in optima...")
   
   ## Moran's, share in total and activated area and linE
   con = read.table("../data/hru.con",header=T,skip=1)
@@ -149,7 +149,7 @@ for(op in paste0("V", 1:nopt)){ #instable looping, Cordi...
   
   # Convert to a listw object for spatial analysis
    weights_listw <- mat2listw(inv_dist_matrix, style = "B")
-   print("check: produced spatial weights object...",quote=F)
+   print("check: produced spatial weights object...")
   # this weight object is used to calculate spatial autocorrelation across different measures, using the area they cover as input value
 
   # empty dataframe
@@ -159,6 +159,7 @@ for(op in paste0("V", 1:nopt)){ #instable looping, Cordi...
   
     #also needed for calculation of area share
     hru_copy = hru_donde %>% select(paste0("V", 1:nopt))
+    print("calculating: Moran's I...")
     
   # Moran's per measure/land use (setting all others to 0 and taking the area)
     for (op in paste0("V", 1:nopt)) {
@@ -176,13 +177,12 @@ for(op in paste0("V", 1:nopt)){ #instable looping, Cordi...
           
         }else{mesur[op, m] = 0}
       }
-      print(paste0("check: calculated Moran's I for Optimum ", op,"..."),quote=F)
+      print(paste0("check: calculated Moran's I for Optimum ", op,"..."))
     }
   # change col names
   colnames(mesur) = paste(colnames(mesur),"moran",sep="_")
   mesur = mesur %>%mutate(id = row_number())
-  print("check: cluster input variable (1/4) - Moran's I...",quote=F)
-  
+
   ## Moran's across all land uses/measures
   # for(op in paste0("V", 1:nopt)){
   #   mesur[op,"moran"]=mean(localmoran(hru_copy[[op]],weights_listw)[,"Ii"])# mean is debatable
@@ -210,11 +210,10 @@ for(op in paste0("V", 1:nopt)){ #instable looping, Cordi...
     strc = opti %>% filter(.data[[op]] %in% c("hedge","buffer","grassslope","pond"))%>%distinct()%>%ungroup()%>%select(count)%>%sum()
 
     lin[op,]= (strc/mngmt)*100 #just a nicer value
-    print(paste0("caculated linE for Optimum ",op,"..."),quote=F)
+    print(paste0("caculated linE for Optimum ",op,"..."))
     }
   
   lin = lin %>%mutate(id = row_number())
-  print("check: cluster input variable (2/4) - linE...",quote=F)
   
   
   ## Area per measure, required for calculating share below
@@ -239,7 +238,7 @@ for(op in paste0("V", 1:nopt)){ #instable looping, Cordi...
         arre[op, m] = 0
       }
     }
-    print(paste0("caculated area share of measures across Optimum ",op,"..."),quote=F)
+    print(paste0("caculated area share of measures across Optimum ",op,"..."))
     
   }
 
@@ -249,28 +248,21 @@ for(op in paste0("V", 1:nopt)){ #instable looping, Cordi...
   sit = arre %>% mutate(across(meas,~ (.x/totar)*100))%>%
     rename_at(vars(meas),~paste0(., "_sit"))%>%mutate(id = row_number())
  
-  print("check: cluster input variable (3/4) - share in total area (sit)...",quote=F)
-  
   ## share in implemented catchment area
   siim = arre %>% mutate(allarea = rowSums(across(everything()), na.rm =T))%>%
     mutate(across(.cols = 1:length(meas),~ (.x/allarea)*100)) %>%select(-allarea)%>%
     rename_at(vars(meas),~paste0(., "_siim"))%>%mutate(id = row_number())
 
-  print("check: cluster input variable (4/4) - share in used area (siim)...",quote=F)
   
   ## merge with pareto fitness, # I assume the first row is the first pareto V1??
   fit = read.table("../data/pareto_fitness.txt", header=F,stringsAsFactors=FALSE,sep = ',')
-  print("check: read pareto_fitness.txt...",quote=F)
-  
-  ## reload objective names
-  assigned_objnames=readRDS("../input/object_names.RDS")
-  colnames(fit) = assigned_objnames# c('HC', 'HQ', 'P', 'AP')
-  print("check: read pareto_fitness.txt, assigned objective names...",quote=F)
+  names(fit) = yolo# c('HC', 'HQ', 'P', 'AP')
   fit$id = 1:nrow(fit)
-
+  print("check: read pareto_fitness.txt, assigned names...")
+  
   test_clu = fit %>%left_join(lin,by="id")%>%left_join(siim, by = "id") %>%left_join(sit, by ="id") %>% left_join(mesur, by="id")%>% select(-id)%>%replace(is.na(.), 0)
-
+   
   write.csv(test_clu, "../input/var_corr_par.csv",  row.names = FALSE, fileEncoding = "UTF8")  
-  print("check: printed output ---> /input/var_corr_par.csv",quote=F)
+  print("check: printed output ---> /input/var_corr_par...")
   
   
