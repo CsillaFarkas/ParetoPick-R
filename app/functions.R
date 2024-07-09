@@ -82,6 +82,22 @@ write_corr = function(vars,
   
 }
 
+# Write empty var for those where "off"
+write_pca_ini <- function(configs = config, var1 = "", var2 = "", var3 = "", var4 = "") {
+  configs[[5]]$var_1 <- ifelse(var1 == "off", "", var1)
+  configs[[5]]$var_2 <- ifelse(var2 == "off", "", var2)
+  configs[[5]]$var_3 <- ifelse(var3 == "off", "", var3)
+  configs[[5]]$var_4 <- ifelse(var4 == "off", "", var4)
+  
+  off_count <- sum(c(var1, var2, var3, var4) == "off")
+  configs[[5]]$num_variables_to_plot <- 4 - off_count
+  
+  configs[[6]]$qualitative_clustering_columns = c(var1, var2, var3, var4)
+  
+  
+  write.config(configs, file.path = "../input/config.ini", write.type = "ini")
+  
+}
 
 ## Read Config for PCA Table on startup 
 read_pca = function(con = config){
@@ -89,6 +105,16 @@ read_pca = function(con = config){
   pca_col = pca_col_incl[order(pca_col_incl)]}else(pca_col = NULL)
   
   return(pca_col)
+}
+
+read_config_plt = function(con = config){
+  var1 = config[[5]]$var_1
+  var2 = config[[5]]$var_2
+  var3 = config[[5]]$var_3
+  var4 = config[[5]]$var_4
+  
+  return(c(var1,var2,var3,var4))
+  
 }
 
 ## Count number of decimals

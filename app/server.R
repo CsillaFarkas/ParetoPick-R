@@ -4,7 +4,7 @@ server <- function(input, output, session) {
   pca_remove <- reactiveVal(NULL)
   script_output <- reactiveVal("") # data prep R output
   pca_done = reactiveVal(FALSE) # checking if data prep R output is done
-  
+  all_choices = reactiveVal()
   
   # Check if required files exist #####
   observeEvent(input$files_avail,{
@@ -31,7 +31,6 @@ server <- function(input, output, session) {
      
      objs$objectives <- c(input$col1, input$col2, input$col3, input$col4)
      
-     assigned_objnames <<- c(input$col1, input$col2, input$col3, input$col4)
      saveRDS(assigned_objnames,file="../input/object_names.RDS") #for later use in background script
      
      output$obj_conf <- renderTable({
@@ -154,30 +153,36 @@ server <- function(input, output, session) {
     element3 = NULL,
     element4 = NULL
   )
+ 
+  observe({ 
+    if(input$tabs == "pca"){ choices = readRDS("../input/object_names.RDS")
+    choices = c("off",choices)
+    all_choices(choices)
+    preselected = read_config_plt(config)
+
+    updateSelectInput(session, "element1", choices = choices, selected = preselected[1])
+    updateSelectInput(session, "element2", choices = choices, selected = preselected[2])
+    updateSelectInput(session, "element3", choices = choices, selected = preselected[3])
+    updateSelectInput(session, "element4", choices = choices, selected = preselected[4])
+    }
+      })
   
-  observeEvent(input$set_choices, {
-    # Set the selections from user input when the button is clicked
-    selections$element1 <- input$element1
-    selections$element2 <- input$element2
-    selections$element3 <- input$element3
-    selections$element4 <- input$element4
-  })
+ 
   
   observe({
-    # Get the current selections
-    selected1 <- selections$element1
-    selected2 <- selections$element2
-    selected3 <- selections$element3
-    selected4 <- selections$element4
+    req(all_choices())
     
-    # Create a set of all choices including a blank option
-    all_choices <- c("off", "A", "B", "C", "D")
+    # Get the current selections
+    selected1 <- input$element1
+    selected2 <- input$element2
+    selected3 <- input$element3
+    selected4 <- input$element4
     
     # Determine the available choices for each dropdown
-    choices1 <- setdiff(all_choices, c(selected2, selected3, selected4))
-    choices2 <- setdiff(all_choices, c(selected1, selected3, selected4))
-    choices3 <- setdiff(all_choices, c(selected1, selected2, selected4))
-    choices4 <- setdiff(all_choices, c(selected1, selected2, selected3))
+    choices1 <- setdiff(all_choices(), c(selected2, selected3, selected4))
+    choices2 <- setdiff(all_choices(), c(selected1, selected3, selected4))
+    choices3 <- setdiff(all_choices(), c(selected1, selected2, selected4))
+    choices4 <- setdiff(all_choices(), c(selected1, selected2, selected3))
     
     # Update the choices for each dropdown, maintaining the current selection if it's valid
     updateSelectInput(session, "element1", choices = choices1, selected = selected1)
@@ -186,13 +191,27 @@ server <- function(input, output, session) {
     updateSelectInput(session, "element4", choices = choices4, selected = selected4)
   })
   
-  # Display the selected elements
+  observeEvent(input$set_choices,{
+    empty_count <- sum(input$element1 == "off", input$element2 == "off", input$element3 == "off", input$element4 == "off")
+    if (empty_count < 2){
+      write_pca_ini(config,input$element1,input$element2,input$element3,input$element4)
+    }
+  
   output$selected_elements <- renderText({
-    paste("Element 1:", selections$element1, 
-          "\nElement 2:", selections$element2, 
-          "\nElement 3:", selections$element3,
-          "\nElement 4:", selections$element4)
+    
+    if (empty_count >= 2) {
+      "Please make selections for at least three elements."
+    } else {
+      HTML(paste("X Axis: ", ifelse(input$element1 == "off", "No selection", input$element1),
+            "<br/>Y Axis: ", ifelse(input$element2 == "off", "No selection", input$element2),
+            "<br/>Colour: ", ifelse(input$element3 == "off", "No selection", input$element3),
+            "<br/>Size: ", ifelse(input$element4 == "off", "No selection", input$element4)))
+    }
   })
+  
+  })
+
+ 
   
   
   observeEvent(input$runPCA,{

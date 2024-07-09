@@ -4,7 +4,7 @@ ui <-
   dashboardPage(
     dashboardHeader(),
     dashboardSidebar(
-      sidebarMenu(
+      sidebarMenu(id = "tabs",
       menuItem("Data Prep", tabName = "data_prep"),
       menuItem("Correlation Analysis", tabName = "correlation_analysis"),
       menuItem("PCA", tabName = "pca")
@@ -106,16 +106,15 @@ ui <-
           sidebarLayout(sidebarPanel(div("Variables included in the PCA",style = "text-align: left; font-size:150%"),
                           tableOutput("pca_incl"),
                           actionButton("runPCA", "Run Principal Component Analysis")),
-                          mainPanel(div("Plot Style: Please select how the objectives should be plotted", style = "text-align: left; font-size:150%"),
+                          mainPanel(div("Please select how the objectives should be plotted", style = "text-align: left; font-size:150%"),
                                     selectInput("element1", "X Axis", choices = c("off","A", "B", "C", "D")),
                                     selectInput("element2", "Y Axis", choices = c("off","A", "B", "C", "D")),
                                     selectInput("element3", "Colour", choices = c("off","A", "B", "C", "D")),
                                     selectInput("element4", "Size", choices = c("off","A", "B", "C", "D")),
-                                    actionButton("set_choices","SET CHOICES"),
-                                    textOutput("selected_elements"),
+                                    actionButton("set_choices","Confirm Choice"),
+                                    htmlOutput("selected_elements"),
 
-                                    textOutput("selected_elements"),
-                                    
+
                                     
                           verbatimTextOutput("pca_status")
                           
