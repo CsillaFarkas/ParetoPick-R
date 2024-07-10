@@ -3,9 +3,10 @@ server <- function(input, output, session) {
 
   pca_remove <- reactiveVal(NULL)
   script_output <- reactiveVal("") # data prep R output
-  pca_done = reactiveVal(FALSE) # checking if data prep R output is done
+  dp_done = reactiveVal(FALSE) # checking if data prep R output is done
   all_choices = reactiveVal()
-  
+  isElementVisible = reactiveVal(FALSE)
+  ### Data Prep ###
   # Check if required files exist #####
   observeEvent(input$files_avail,{
      
@@ -47,18 +48,17 @@ server <- function(input, output, session) {
        },rownames = T)})
    
 
-   # # Run Data Prep with external script
+   # Data Prep with external script
     
      observeEvent(input$runprep,{
        
-       pca_done(FALSE)
+       dp_done(FALSE)
        script_output(character()) #clear old output
        
        optain <- process$new("Rscript",c("../convert_optain.R"),stdout = "|", stderr = NULL) #stdout | ---> pipe output, stderr ---> ignore
        autoInvalidate <- reactiveTimer(100)
        
-       observe({
-         autoInvalidate()
+       observe({autoInvalidate()
          if (optain$is_alive()) {
            new_output <- optain$read_output_lines()
            if (length(new_output) > 0) {
@@ -82,13 +82,13 @@ server <- function(input, output, session) {
              }
              script_output(updated_output)
            }
-           pca_done(TRUE)
+           dp_done(TRUE)
          }
        })
      })
      
       output$script_output  <- renderUI({
-        if(pca_done()){
+        if(dp_done()){
           tags$p("The data preparation was successful. You can now continue with the Correlation and Principal Component Analysis. You will not need this tab again.")
         }else{verbatimTextOutput("rscriptcmd")}
         
@@ -97,10 +97,10 @@ server <- function(input, output, session) {
         paste(script_output(), collapse = "\n")
       })
       
-      
+    ### Correlation Analysis ###
    
   observeEvent(input$run,{
-    # write a new config.ini with selected variables and find the highest correlation
+ 
     write_corr(vars = input$selements,cor_analysis = T, pca = F)
     
     # Define the command to run the Python script
@@ -111,12 +111,12 @@ server <- function(input, output, session) {
     result <- system(cmd, intern = TRUE)
     
     
-    # Correlation Plot (does not change for different thresholds)
+  # Correlation Plot (does not change for different thresholds)
     csv_file <- "../output/correlation_matrix.csv"
     validate(need(file.exists(csv_file), "CSV file not found."))
     corr = read.csv(csv_file, row.names = 1)
     output$corrplot <- renderPlot({plt_corr(corr)})
- 
+   
   # events tied to a change in threshold, however also tied to change in selected variables, therefore also observe run
   observeEvent(input$thresh,{
     # Highest correlation under selected threshold
@@ -155,15 +155,28 @@ server <- function(input, output, session) {
   )
  
   observe({ 
-    if(input$tabs == "pca"){ choices = readRDS("../input/object_names.RDS")
+    if(input$tabs == "pca"){
+      
+    choices = readRDS("../input/object_names.RDS")
     choices = c("off",choices)
     all_choices(choices)
-    preselected = read_config_plt(config)
+    preselected = read_config_plt(config,obj=T,axis=F)
+    axiselected = read_config_plt(config,obj=F,axis=T)
 
+    
+    updateTextInput(session, "axisx",  value  = axiselected[1])
+    updateTextInput(session, "axisy", value = axiselected[2])
+    updateTextInput(session, "colour", value = axiselected[3])
+    updateTextInput(session, "size", value = axiselected[4])
+    
+    
     updateSelectInput(session, "element1", choices = choices, selected = preselected[1])
     updateSelectInput(session, "element2", choices = choices, selected = preselected[2])
     updateSelectInput(session, "element3", choices = choices, selected = preselected[3])
     updateSelectInput(session, "element4", choices = choices, selected = preselected[4])
+    
+    
+      
     }
       })
   
@@ -189,6 +202,23 @@ server <- function(input, output, session) {
     updateSelectInput(session, "element2", choices = choices2, selected = selected2)
     updateSelectInput(session, "element3", choices = choices3, selected = selected3)
     updateSelectInput(session, "element4", choices = choices4, selected = selected4)
+    
+    selected1_2 <- input$axisx
+    selected2_2 <- input$axisy
+    selected3_2 <- input$colour
+    selected4_2 <- input$size
+    
+    # Determine the available choices for each dropdown in the second set
+    choices1_2 <- setdiff(all_choices(), c(selected2_2, selected3_2, selected4_2))
+    choices2_2 <- setdiff(all_choices(), c(selected1_2, selected3_2, selected4_2))
+    choices3_2 <- setdiff(all_choices(), c(selected1_2, selected2_2, selected4_2))
+    choices4_2 <- setdiff(all_choices(), c(selected1_2, selected2_2, selected3_2))
+    
+    # Update the choices for each dropdown in the second set, maintaining the current selection if it's valid
+    updateTextInput(session, "axisx", value = selected1_2)
+    updateTextInput(session, "axisy", value = selected2_2)
+    updateTextInput(session, "colour",  value = selected3_2)
+    updateTextInput(session, "size",  value = selected4_2)
   })
   
   observeEvent(input$set_choices,{
@@ -210,18 +240,43 @@ server <- function(input, output, session) {
   })
   
   })
+  
+  observeEvent(input$confirm_axis,{
+    empty_count2 <- sum(input$axisx == "", input$axisy == "", input$colour == "", input$size == "")
+    if (empty_count2 < 2){
+      write_axis_ini(config,input$axisx,input$axisy,input$colour,input$size)
+    }
+    
+    output$axis_text <- renderText({
+      
+      if (empty_count2 >= 2) {
+        "Please make selections for at least three elements."
+      } else {
+        HTML(paste("X Axis: ", ifelse(input$element1 == "", "No selection", input$axisx),
+                   "<br/>Y Axis: ", ifelse(input$element2 == "", "No selection", input$axisy),
+                   "<br/>Colour: ", ifelse(input$element3 == "", "No selection", input$colour),
+                   "<br/>Size: ", ifelse(input$element4 == "", "No selection", input$size)))
+      }
+    })
+  })
 
  
   
   
   observeEvent(input$runPCA,{
     
+    output$pca_mess <- renderUI({
+      tags$p("If all data was provided in the right format, the PCA outputs will open in separate windows - you can discard or save them as necessary.")
+      
+    })
+    isElementVisible(TRUE)
+    
     ## Prepare config.ini
     write_corr(pca_content = all_var[-which(all_var%in%pca_remove())],pca=T, cor_analysis = F)# columns
     
-    
     # Define the command to run the Python script
-    pca_script <- "../python_files/kmeans.py"
+    if(input$pcamethod=="k-means"){pca_script <- "../python_files/kmeans.py"}else{pca_script <- "../python_files/kmedoid.py"}
+    
     pcacmd <- paste("python", pca_script)
     
     # Run the command and capture the output
@@ -233,6 +288,13 @@ server <- function(input, output, session) {
     
     })
   
+  # Pass the reactive value to output for use in conditionalPanel
+  output$isElementVisible <- reactive({
+    isElementVisible()
+  })
+  
+  # Required for conditionalPanel to work with reactive output
+  outputOptions(output, "isElementVisible", suspendWhenHidden = FALSE)
 }
 
 

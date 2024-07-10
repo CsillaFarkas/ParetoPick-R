@@ -6,7 +6,7 @@ ui <-
     dashboardSidebar(
       sidebarMenu(id = "tabs",
       menuItem("Data Prep", tabName = "data_prep"),
-      menuItem("Correlation Analysis", tabName = "correlation_analysis"),
+      menuItem("Correlation Analysis", tabName = "correlation_analysis",selected=TRUE),
       menuItem("PCA", tabName = "pca")
     )),
     dashboardBody(
@@ -62,12 +62,12 @@ ui <-
                          choiceNames = c("Measure share in total catchment area (sit)", 
                                      "Measure share in used catchment area (siim)",
                                      "Moran's I", "Ratio of structural to management options (linE)"),choiceValues=c("sit","siim","moran","linE")),
-      
+      textOutput("numbercorr"),
       div("2. Perform the Correlation Analysis", style = "text-align: left; font-size:150%"),
       actionButton("run", "Run Correlation Analysis"),
       shinyWidgets::sliderTextInput(inputId = "thresh", label= "Choose threshold",choices = seq(0.65,0.95,0.05),selected=0.75),
       div("3. Choose variables that shall be excluded from the PCA",style = "text-align: left; font-size:150%"),
-      selectInput(inputId = "excl",label = "variables to exclude", choices = mes,multiple = TRUE),
+      selectInput(inputId = "excl",label = "variables to exclude", choices = NULL,multiple = TRUE),
       actionButton("confirm_selection", "Confirm Selection"),
       
     ),
@@ -105,18 +105,30 @@ ui <-
           titlePanel("Principal Component Analysis"),
           sidebarLayout(sidebarPanel(div("Variables included in the PCA",style = "text-align: left; font-size:150%"),
                           tableOutput("pca_incl"),
-                          actionButton("runPCA", "Run Principal Component Analysis")),
+                          radioButtons("pcamethod", "Select a clustering option:",
+                                       choices = c("k-means", "k-medoids"),
+                                       selected = "k-means"),
+                          actionButton("runPCA", "Run Principal Component Analysis"),
+                          uiOutput("pca_mess")),
                           mainPanel(div("Please select how the objectives should be plotted", style = "text-align: left; font-size:150%"),
-                                    selectInput("element1", "X Axis", choices = c("off","A", "B", "C", "D")),
-                                    selectInput("element2", "Y Axis", choices = c("off","A", "B", "C", "D")),
-                                    selectInput("element3", "Colour", choices = c("off","A", "B", "C", "D")),
-                                    selectInput("element4", "Size", choices = c("off","A", "B", "C", "D")),
+                            fluidRow(column(6,
+                                    selectInput("element1", "X Axis", choices = NULL),
+                                    selectInput("element2", "Y Axis", choices = NULL),
+                                    selectInput("element3", "Colour", choices = NULL),
+                                    selectInput("element4", "Size", choices = NULL),
                                     actionButton("set_choices","Confirm Choice"),
-                                    htmlOutput("selected_elements"),
+                                    htmlOutput("selected_elements")),
+                                    column(6,
+                                           textInput("axisx","X Axis Title",value = ""),
+                                           textInput("axisy","Y Axis Title",value = ""),
+                                           textInput("colour","Colour Title",value = ""),
+                                           textInput("size","Size Title",value = ""),
+                                           actionButton("confirm_axis","Confirm Axis Labels"),
+                                           htmlOutput("axis_text"))),
 
 
-                                    
-                          verbatimTextOutput("pca_status")
+                          conditionalPanel(condition = "output.isElementVisible == true",div("Python Background Processes",style = "text-align: left; font-size:150%"),        
+                          verbatimTextOutput("pca_status"))
                           
                         )## PCA MAIN PANEL END
                         )

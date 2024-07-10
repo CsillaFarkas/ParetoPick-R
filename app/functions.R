@@ -92,12 +92,39 @@ write_pca_ini <- function(configs = config, var1 = "", var2 = "", var3 = "", var
   off_count <- sum(c(var1, var2, var3, var4) == "off")
   configs[[5]]$num_variables_to_plot <- 4 - off_count
   
-  configs[[6]]$qualitative_clustering_columns = c(var1, var2, var3, var4)
+  conf_clust = NULL
+  if(var1 != "off"){
+    conf_clust = append(conf_clust,var1)
+  }
+  if(var2 != "off"){
+    conf_clust = append(conf_clust,var2)
+  }
+  if(var3 != "off"){
+    conf_clust = append(conf_clust,var3)
+  }
+  if(var4 != "off"){
+    conf_clust = append(conf_clust,var4)
+  }
+  
+  
+  configs[[6]]$qualitative_clustering_columns = paste(conf_clust, collapse = ", ")
   
   
   write.config(configs, file.path = "../input/config.ini", write.type = "ini")
   
 }
+write_axis_ini <- function(configs = config,var1 = "", var2 = "", var3 = "", var4 = ""){
+  configs[[5]]$var_1_label <- ifelse(var1 == "off", "", var1)
+  configs[[5]]$var_2_label <- ifelse(var2 == "off", "", var2)
+  configs[[5]]$var_3_label <- ifelse(var3 == "off", "", var3)
+  configs[[5]]$var_4_label <- ifelse(var4 == "off", "", var4)
+  
+  write.config(configs, file.path = "../input/config.ini", write.type = "ini")
+  
+}
+
+
+
 
 ## Read Config for PCA Table on startup 
 read_pca = function(con = config){
@@ -107,11 +134,17 @@ read_pca = function(con = config){
   return(pca_col)
 }
 
-read_config_plt = function(con = config){
+read_config_plt = function(con = config,obj=T,axis=F){
+  if(obj){
   var1 = config[[5]]$var_1
   var2 = config[[5]]$var_2
   var3 = config[[5]]$var_3
-  var4 = config[[5]]$var_4
+  var4 = config[[5]]$var_4}else if(axis){
+    var1 = config[[5]]$var_1_label
+    var2 = config[[5]]$var_2_label
+    var3 = config[[5]]$var_3_label
+    var4 = config[[5]]$var_4_label
+  }else{stop("either obj or axis has to be TRUE")}
   
   return(c(var1,var2,var3,var4))
   
