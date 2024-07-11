@@ -11,3 +11,4 @@ This dashboard first performs a correlation analysis and allows the user to sele
 ## Missing/Nice to have
 * PCA - number of fixed clusters adapted to number of variables
 * Bigger collection of management and structural nswrm implemented in OPTAIN
+* Correlation Analysis: output largest accepted correlation 
