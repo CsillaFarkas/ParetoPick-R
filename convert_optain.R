@@ -63,22 +63,26 @@ suppressPackageStartupMessages({
 # Pivot 
   gen_act <- gen_act_hru %>%
    pivot_longer(cols = paste0("hru_sep_", 1:35), names_to = "code", values_to = "name_new") %>% #name_new = hru
-   relocate(name_new, .after = obj_id)%>%
-   drop_na(name_new)
+   relocate(name_new, .after = obj_id)%>%drop_na(name_new)
 
 # Eliminate space before some "name_new"
   gen_act$name_new <- str_remove(gen_act$name_new, " ")
+  prios <- read.csv("../input/nswrm_priorities.csv")
 
-# Assign priority to AEP
-gen_act_prio <- gen_act %>%
-  mutate(priority = case_when(
-    nswrm == "hedge" ~ 2,
-    nswrm == "buffer" ~ 3,
-    nswrm == "grassslope" ~ 4,
-    nswrm == "pond" ~ 1,
-    nswrm == "lowtillcc" ~ 5), .after = nswrm) %>%
-  # order data frame based on priority
-  arrange(priority)
+  gen_act_prio= gen_act %>%
+    left_join(prios, by = c("nswrm" = "nswrm")) %>%
+    relocate(priority, .after = nswrm)%>%arrange(priority)
+  
+#   # Assign priority to AEP
+# gen_act_prio <- gen_act %>%
+#   mutate(priority = case_when(
+#     nswrm == "hedge" ~ 2,
+#     nswrm == "buffer" ~ 3,
+#     nswrm == "grassslope" ~ 4,
+#     nswrm == "pond" ~ 1,
+#     nswrm == "lowtillcc" ~ 5), .after = nswrm) %>%
+#   # order data frame based on priority
+#   arrange(priority)
 
  print("check: assigned priorities...",quote=F)
 
@@ -100,14 +104,14 @@ for(op in paste0("V", 1:nopt)){ #instable looping, Cordi...
   # only consider activated hrus
   all_act = gen_check %>%select(c(all_of(op),name_new, nswrm,priority))%>%filter(.data[[op]]==2)%>%group_by(name_new)
   
-  # without conflicting use (group_by not needed as used above)
+  # without conflicting use 
   no_confl = all_act%>%filter(n()==1)%>%ungroup()
   
   if(nrow(no_confl) > 0){
     
     hru <- hru %>%
       left_join(no_confl %>% select(name_new, nswrm), by = c("id" = "name_new")) %>%
-      mutate(!!op := ifelse(!is.na(nswrm), nswrm, !!sym(op))) %>% #not 100% sure we need the check if nswrm is empty
+      mutate(!!op := ifelse(!is.na(nswrm), nswrm, !!sym(op))) %>% 
       select(-nswrm)
   }
   
@@ -124,9 +128,10 @@ for(op in paste0("V", 1:nopt)){ #instable looping, Cordi...
       mutate(!!op := ifelse(!is.na(nswrm), nswrm, !!sym(op))) %>%
       select(-nswrm)
   }
+  print(paste0("check: calculated land use allocation in optima ",op,"..."),quote=F)
+  
 }
 
-  print("check: calculated land use allocation in optima...",quote=F)
   
   ## Moran's, share in total and activated area and linE
   con = read.table("../data/hru.con",header=T,skip=1)
@@ -173,7 +178,7 @@ for(op in paste0("V", 1:nopt)){ #instable looping, Cordi...
           moran_area =  opti %>% mutate(mor = ifelse(.data[[op]] == m, area, 0)) %>%
             replace(is.na(.), 0)
           
-          mesur[op, m] = mean(localmoran(moran_area$mor, weights_listw)[, "Ii"])
+          mesur[op, m] = median(localmoran(moran_area$mor, weights_listw)[, "Ii"])#median or mean?
           
         }else{mesur[op, m] = 0}
       }
@@ -196,7 +201,10 @@ for(op in paste0("V", 1:nopt)){ #instable looping, Cordi...
   #   mesur[op, "moran"] = mean(localmoran(hru_copy[[op]], weights_listw)[, "Ii"])# mean is debatable
   # }
   
+  
   ## linE - number of management versus number of structural measures in each optimum
+  mngmt_obj= prios%>%filter(mngmt ==1)%>%select(nswrm)%>%pull() #management measures
+  strct_obj = prios%>%filter(mngmt ==0)%>%select(nswrm)%>%pull()#structural measures
   
   lin = as.data.frame(array(NA, dim = c(nopt,1)))
   names(lin) = "linE"
@@ -205,9 +213,9 @@ for(op in paste0("V", 1:nopt)){ #instable looping, Cordi...
   for(op in paste0("V", 1:nopt)){
     opti = hru_donde %>% select(all_of(op))%>%group_by(.data[[op]])%>%mutate(count=n())
     
-    mngmt = opti%>%filter(.data[[op]] == "lowtillcc")%>%ungroup()%>%select(count)%>%distinct()%>%pull()
+    mngmt = opti%>%filter(.data[[op]] %in% mngmt_obj)%>%ungroup()%>%select(count)%>%distinct()%>%pull()
     
-    strc = opti %>% filter(.data[[op]] %in% c("hedge","buffer","grassslope","pond"))%>%distinct()%>%ungroup()%>%select(count)%>%sum()
+    strc = opti %>% filter(.data[[op]] %in% strct_obj)%>%distinct()%>%ungroup()%>%select(count)%>%sum()
 
     lin[op,]= (strc/mngmt)*100 #just a nicer value
     print(paste0("caculated linE for Optimum ",op,"..."),quote=F)
