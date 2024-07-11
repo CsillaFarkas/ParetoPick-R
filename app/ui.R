@@ -5,7 +5,7 @@ ui <-
     dashboardHeader(),
     dashboardSidebar(
       sidebarMenu(id = "tabs",
-      menuItem("Data Prep", tabName = "data_prep"),
+      menuItem("Data Preparation", tabName = "data_prep"),
       menuItem("Correlation Analysis", tabName = "correlation_analysis",selected=TRUE),
       menuItem("PCA", tabName = "pca")
     )),
@@ -39,6 +39,7 @@ ui <-
                     actionButton("obj_conf", "Confirm Objective Names")
                   )%>% hidden(), 
                   hr(),
+                  div(id="range_title","Range of objective values",style = "text-align: left; font-size:120%"),
                   tableOutput("obj_conf"),
                   p("Run Preparation Script when ready",style =  "text-align: left; font-size:150%"),
                   actionButton("runprep", "Run Prep"),
@@ -81,7 +82,7 @@ ui <-
       plotOutput("corrplot"),
       
       div("Most correlated variables", style = "text-align: left; font-size:150%"),
-      tableOutput("corrtable"), 
+      DTOutput("corrtable"), 
     
      
       # print confirmed selectoin
@@ -119,14 +120,55 @@ ui <-
                                     actionButton("set_choices","Confirm Choice"),
                                     htmlOutput("selected_elements")),
                                     column(6,
-                                           textInput("axisx","X Axis Title",value = ""),
-                                           textInput("axisy","Y Axis Title",value = ""),
-                                           textInput("colour","Colour Title",value = ""),
-                                           textInput("size","Size Title",value = ""),
+                                           textInput("axisx","X Axis Label",value = ""),
+                                           textInput("axisy","Y Axis Label",value = ""),
+                                           textInput("colour","Colour Label",value = ""),
+                                           textInput("size","Size Label",value = ""),
                                            actionButton("confirm_axis","Confirm Axis Labels"),
                                            htmlOutput("axis_text"))),
-
-
+                            # PCA Clustering
+                            div("Shall several number of clusters be tested?", style = "text-align: left; font-size:150%"),
+                            div(style = "margin-top: -15px;",radioButtons("clusyn", "", choices = c("Yes", "No"))),
+                            
+                            conditionalPanel(
+                              condition = "input.clusyn == 'Yes'",
+                              h3("Please specify how many clusters to iterate through:"),
+                              numericInput("clus_min", "Minimum number of Clusters", value = 0),
+                              numericInput("clus_max", "Maximum number of Clusters", value = 0),
+                              
+                            ),
+                            
+                            conditionalPanel(
+                              condition = "input.clusyn == 'No'",
+                              numericInput("clus_fix", "Fixed number of Clusters", value = 0)
+                            ),
+                            actionButton("write_clust", "Confirm Cluster Number"),
+                            
+                            # PCA Outlier
+                            div("Shall outliers be analysed and potentially removed?", style = "text-align: left; font-size:150%"),
+                            div(style = "margin-top: -15px;",radioButtons("outlyn", "", choices = c("Yes", "No"))),
+                            
+                            conditionalPanel(
+                              condition = "input.outlyn == 'Yes'",
+                              h3("Please specify the number of standard deviations that shall be tested:"),
+                              numericInput("sd_min", "Minimum standard deviation from cluster mean", value = 0),
+                              numericInput("sd_max", "Maximum standard deviation from cluster mean", value = 0),
+                              h3("Please specify how many extreme variables within a datapoint shall be tested:"),
+                              numericInput("count_min", "Minimum number of extreme variables", value = 0),
+                              numericInput("count_max", "Maximum number of extreme variables", value = 0),
+                              h3("Please specify set a limit for the number of extreme solutions allowed in the final clustering:"),
+                              numericInput("outlier_ratio", "Outlier to cluster ratio", value = 0.5, min=0.1, max=0.9),
+                              actionButton("write_outl", "Confirm Outlier Testing")
+                              ),
+                            
+                            conditionalPanel(
+                              condition = "input.outlyn == 'No'",
+                              actionButton("write_outl", "Confirm No Outlier Testing") ),
+                           
+                            
+                            
+                            
+                            # PCA printing Background Processes
                           conditionalPanel(condition = "output.isElementVisible == true",div("Python Background Processes",style = "text-align: left; font-size:150%"),        
                           verbatimTextOutput("pca_status"))
                           

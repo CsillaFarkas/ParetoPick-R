@@ -1,7 +1,7 @@
 ######################### GLOBAL #################################
 # comments: we assume four variables delineating pareto front
 # 
-# used files:
+# used files: config.ini,...
 # Project: Clustering of pareto front to reduce objective space
 ##################################################################
 library(configr)
@@ -10,6 +10,7 @@ library(shiny)
 library(reticulate)
 library(readr)
 library(dplyr)
+library(ini)
 library(shinydashboard)
 library(shinyWidgets)
 library(shinyjs) # for hiding parts of the app
@@ -26,10 +27,7 @@ source("functions.R")
 
 ## read config
   config <- read.config("../input/config.ini")
-  
-## this can only be produced once var_corr_par.csv is written THIS HAS TO MOVE TO SERVER
-  hauptdat = read.csv("../input/var_corr_par.csv")
-  all_var <<- colnames(hauptdat)[5:ncol(hauptdat)] #assuming four variables here
+
   
   
   

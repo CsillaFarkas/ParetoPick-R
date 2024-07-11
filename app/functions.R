@@ -8,8 +8,14 @@ plt = corrplot(corma, method = meth, order =labelorder,tl.col = labelcol, type=t
 return(plt)
 }
 
+## Table formatting with strike through
+strike_through <- function(x) {
+  sprintf('<span style="text-decoration: line-through;">%s</span>', x)
+}
+
+
 ## Correlation Analysis - Table
-find_high_corr <- function(cor_matrix, threshold = 0.75, tab = T) {
+find_high_corr <- function(cor_matrix, threshold = 0.75, tab = T,strike = NULL) {
   # Get the row and column names of the correlation matrix
   var_names <- colnames(cor_matrix)
   
@@ -37,7 +43,13 @@ find_high_corr <- function(cor_matrix, threshold = 0.75, tab = T) {
   }
   
   higg = high_cor_pairs %>% 
-    arrange(desc(abs(Correlation)))
+    arrange(desc(abs(Correlation)))%>%mutate(Correlation = round(Correlation,2))
+  
+  if(!is.null(strike)){
+    higg[which(higg$variable1 %in% strike,arr.ind = T),] = sapply(higg[which(higg$variable1 %in% strike,arr.ind = T),], strike_through)
+    higg[which(higg$variable2 %in% strike,arr.ind = T),] = sapply(higg[which(higg$variable2 %in% strike,arr.ind = T),], strike_through)
+    
+  }
   
   yolo = unique(c(higg$variable1,higg$variable2)) #used to fill drop down menu
   
@@ -82,8 +94,9 @@ write_corr = function(vars,
   
 }
 
-# Write empty var for those where "off"
-write_pca_ini <- function(configs = config, var1 = "", var2 = "", var3 = "", var4 = "") {
+##
+write_pca_ini <- function(configs = config, var1 = "", var2 = "", var3 = "", var4 = "",
+                          var1_lab= "", var2_lab = "", var3_lab = "", var4_lab = "") {
   configs[[5]]$var_1 <- ifelse(var1 == "off", "", var1)
   configs[[5]]$var_2 <- ifelse(var2 == "off", "", var2)
   configs[[5]]$var_3 <- ifelse(var3 == "off", "", var3)
@@ -106,23 +119,44 @@ write_pca_ini <- function(configs = config, var1 = "", var2 = "", var3 = "", var
     conf_clust = append(conf_clust,var4)
   }
   
-  
   configs[[6]]$qualitative_clustering_columns = paste(conf_clust, collapse = ", ")
   
+  configs[[5]]$var_1_label <- ifelse(var1_lab == "off", "", var1_lab)
+  configs[[5]]$var_2_label <- ifelse(var2_lab == "off", "", var2_lab)
+  configs[[5]]$var_3_label <- ifelse(var3_lab == "off", "", var3_lab)
+  configs[[5]]$var_4_label <- ifelse(var4_lab == "off", "", var4_lab)
   
-  write.config(configs, file.path = "../input/config.ini", write.type = "ini")
-  
-}
-write_axis_ini <- function(configs = config,var1 = "", var2 = "", var3 = "", var4 = ""){
-  configs[[5]]$var_1_label <- ifelse(var1 == "off", "", var1)
-  configs[[5]]$var_2_label <- ifelse(var2 == "off", "", var2)
-  configs[[5]]$var_3_label <- ifelse(var3 == "off", "", var3)
-  configs[[5]]$var_4_label <- ifelse(var4 == "off", "", var4)
-  
-  write.config(configs, file.path = "../input/config.ini", write.type = "ini")
+  write.ini(configs, "../input/config.ini")
+  # write.config(configs, file.path = "../input/config.ini", write.type = "ini")
   
 }
 
+##
+write_cluster<- function(configs=config,min_cluster=0,max_cluster=0,fixed_cluster_boolean="true",fixed_clusters=7){
+  configs[[2]]$fixed_clusters_boolean = fixed_cluster_boolean
+  configs[[2]]$fixed_clusters = fixed_clusters
+  
+  configs[[2]]$min_clusters = min_cluster
+  configs[[2]]$max_clusters = max_cluster
+  
+  write.config(configs, file.path = "../input/config.ini", write.type = "ini")
+}
+
+##
+write_outl <- function(configs=config,handle_outliers_boolean="false",deviations_min=3,deviations_max=3,
+                        count_min=3,count_max=3,outlier_to_cluster_ratio=0.5){
+  
+  configs[[3]]$handle_outliers_boolean = handle_outliers_boolean
+  configs[[3]]$deviations_min = deviations_min
+  configs[[3]]$deviations_max = deviations_max
+  # configs[[3]]$deviations_step = deviations_step # not included in server yet
+  configs[[3]]$count_min = count_min
+  configs[[3]]$count_max = count_max
+  configs[[3]]$outlier_to_cluster_ratio = outlier_to_cluster_ratio
+  
+  write.config(configs, file.path = "../input/config.ini", write.type = "ini")
+  
+}
 
 
 
@@ -134,6 +168,7 @@ read_pca = function(con = config){
   return(pca_col)
 }
 
+## 
 read_config_plt = function(con = config,obj=T,axis=F){
   if(obj){
   var1 = config[[5]]$var_1
@@ -172,7 +207,5 @@ get_obj_range = function(filepath = "../data/pareto_fitness.txt",colnames=paste0
     max_val <- max(pf[[col_name]], na.rm = TRUE)
     range_df <- rbind(range_df, data.frame(column = col_name, min = min_val, max = max_val, stringsAsFactors = FALSE))
   }
-  
-  
   return(range_df)
 }

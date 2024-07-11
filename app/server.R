@@ -6,8 +6,11 @@ server <- function(input, output, session) {
   dp_done = reactiveVal(FALSE) # checking if data prep R output is done
   all_choices = reactiveVal()
   isElementVisible = reactiveVal(FALSE)
-  ### Data Prep ###
-  # Check if required files exist #####
+  
+  axiselected = reactiveVal(read_config_plt(config,obj=F,axis=T))
+  
+  ### Data Prep ####
+  # Check if required files exist 
   observeEvent(input$files_avail,{
      
      checkFiles <- reactive({sapply(required_files, function(file) file.exists(file))})
@@ -28,10 +31,12 @@ server <- function(input, output, session) {
    
    # Observe event for confirm button
    observeEvent(input$obj_conf, {
+     shinyjs::show(id="range_title")
      objs$data<- data.frame(Objective = c(input$col1, input$col2, input$col3, input$col4), stringsAsFactors = FALSE )
      
      objs$objectives <- c(input$col1, input$col2, input$col3, input$col4)
      
+     assigned_objnames = objs$objectives
      saveRDS(assigned_objnames,file="../input/object_names.RDS") #for later use in background script
      
      output$obj_conf <- renderTable({
@@ -97,7 +102,7 @@ server <- function(input, output, session) {
         paste(script_output(), collapse = "\n")
       })
       
-    ### Correlation Analysis ###
+  ### Correlation Analysis ####
    
   observeEvent(input$run,{
  
@@ -114,13 +119,14 @@ server <- function(input, output, session) {
   # Correlation Plot (does not change for different thresholds)
     csv_file <- "../output/correlation_matrix.csv"
     validate(need(file.exists(csv_file), "CSV file not found."))
-    corr = read.csv(csv_file, row.names = 1)
+    corr <<- read.csv(csv_file, row.names = 1) #global because of re-rendering of plot
     output$corrplot <- renderPlot({plt_corr(corr)})
    
   # events tied to a change in threshold, however also tied to change in selected variables, therefore also observe run
   observeEvent(input$thresh,{
-    # Highest correlation under selected threshold
-    output$corrtable <- renderTable({find_high_corr(corr,threshold=input$thresh, tab=T)}) #tab = T means this returns the full table, =F is for pulling variables
+    
+    # reprint highest correlation table marking removed 
+    output$corrtable <- renderDT({find_high_corr(corr,threshold=input$thresh, tab=T, strike=NULL)}) #tab = T means this returns the full table, =F is for pulling variables
    
     # Top Table with selected elements
     output$selements <- renderTable({input$selements},rownames = T,colnames = F)
@@ -134,6 +140,11 @@ server <- function(input, output, session) {
   observeEvent(input$confirm_selection,{
     pca_remove(input$excl)
 
+    output$corrtable <- renderDT({
+      datatable(
+      find_high_corr(corr,threshold=input$thresh, tab=T,strike = input$excl), escape = FALSE)}) #tab = T means this returns the full table, =F is for pulling variables
+    
+    
     pca_in$data = all_var[-which(all_var%in%pca_remove())]
     
     write_corr(pca_content = pca_in$data,pca = T,cor_analysis = F)#startup this is also called into the pca tab
@@ -144,6 +155,7 @@ server <- function(input, output, session) {
   
   })
   
+  ### PC Analysis ####
   # table with variables INCLUDED in PCA (renewed every time confirm selection is clicked in correlation tab)
   output$pca_incl <- renderTable({paste(pca_in$data)},rownames=T,colnames = F)
   # Reactive values to store selected choices
@@ -154,20 +166,23 @@ server <- function(input, output, session) {
     element4 = NULL
   )
  
-  observe({ 
-    if(input$tabs == "pca"){
-      
-    choices = readRDS("../input/object_names.RDS")
-    choices = c("off",choices)
-    all_choices(choices)
-    preselected = read_config_plt(config,obj=T,axis=F)
-    axiselected = read_config_plt(config,obj=F,axis=T)
-
+  observeEvent(input$tabs == "pca",{ 
+    if(!file.exists("../input/object_names.RDS")) {
+      choices = "Please select objectives in Data Preparation Tab"
+    } else{
+      choices = readRDS("../input/object_names.RDS")
+    }
     
-    updateTextInput(session, "axisx",  value  = axiselected[1])
-    updateTextInput(session, "axisy", value = axiselected[2])
-    updateTextInput(session, "colour", value = axiselected[3])
-    updateTextInput(session, "size", value = axiselected[4])
+    choices = c("off", choices)
+    all_choices(choices)
+    preselected = read_config_plt(config, obj = T, axis = F)
+    axiselected(read_config_plt(config, obj = F, axis = T))
+    
+    
+    updateTextInput(session, "axisx",  value  = axiselected()[1])
+    updateTextInput(session, "axisy", value = axiselected()[2])
+    updateTextInput(session, "colour", value = axiselected()[3])
+    updateTextInput(session, "size", value = axiselected()[4])
     
     
     updateSelectInput(session, "element1", choices = choices, selected = preselected[1])
@@ -177,7 +192,7 @@ server <- function(input, output, session) {
     
     
       
-    }
+    
       })
   
  
@@ -224,7 +239,8 @@ server <- function(input, output, session) {
   observeEvent(input$set_choices,{
     empty_count <- sum(input$element1 == "off", input$element2 == "off", input$element3 == "off", input$element4 == "off")
     if (empty_count < 2){
-      write_pca_ini(config,input$element1,input$element2,input$element3,input$element4)
+      write_pca_ini(config,var1=input$element1,var2=input$element2,var3=input$element3,var4=input$element4,
+                    var1_lab=input$axisx,var2_lab=input$axisy,var3_lab=input$colour,var4_lab=input$size)
     }
   
   output$selected_elements <- renderText({
@@ -244,7 +260,8 @@ server <- function(input, output, session) {
   observeEvent(input$confirm_axis,{
     empty_count2 <- sum(input$axisx == "", input$axisy == "", input$colour == "", input$size == "")
     if (empty_count2 < 2){
-      write_axis_ini(config,input$axisx,input$axisy,input$colour,input$size)
+      write_pca_ini(configs=config,var1=input$element1,var2=input$element2,var3=input$element3,var4=input$element4,
+                    var1_lab=input$axisx,var2_lab=input$axisy,var3_lab=input$colour,var4_lab=input$size)
     }
     
     output$axis_text <- renderText({
@@ -271,6 +288,10 @@ server <- function(input, output, session) {
     })
     isElementVisible(TRUE)
     
+    #this should be placed better...
+    hauptdat = read.csv("../input/var_corr_par.csv")
+    all_var <<- colnames(hauptdat)[5:ncol(hauptdat)] #assuming four variables here
+    
     ## Prepare config.ini
     write_corr(pca_content = all_var[-which(all_var%in%pca_remove())],pca=T, cor_analysis = F)# columns
     
@@ -287,6 +308,28 @@ server <- function(input, output, session) {
       paste(result, collapse = "\n")})
     
     })
+
+  # cluster specs
+  observeEvent(input$write_clust, {
+    fixbool = ifelse(input$clusyn == "No", "true", "false")
+    if (input$clusyn == "No") {
+      write_cluster(configs = config,
+        fixed_clusters = input$clus_fix,fixed_cluster_boolean = fixbool)
+      } else{
+      write_cluster(configs = config, min_cluster = input$clus_min,max_cluster = input$clus_max,fixed_cluster_boolean = fixbool)
+     }
+  })
+  # outlier specs
+  observeEvent(input$write_outl, {
+    outlbool = ifelse(input$outlyn == "No","false","true")
+    if(input$outlyn == "Yes"){
+      write_outl(configs=config,handle_outliers_boolean=outlbool,deviations_min=input$sd_min,deviations_max=input$sd_max, 
+                 count_min=input$count_min,count_max=input$count_max,outlier_to_cluster_ratio=input$outlier_ratio )
+    }else{
+      write_outl(configs=config,handle_outliers_boolean=outlbool)#bool is turning on all others, if false all others are ignored/default value works
+    }
+    
+  })
   
   # Pass the reactive value to output for use in conditionalPanel
   output$isElementVisible <- reactive({
