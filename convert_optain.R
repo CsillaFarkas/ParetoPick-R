@@ -1,13 +1,12 @@
-####################  Convert OPTAIN #############################
-# MISSING: some dynamism to make this run for other catchments
+####################  Convert OPTAIN ###############################################
+# MISSING: potentially some dynamism to make this run for other catchments
 # creates a .csv to be used in the Correlation and PCA
 # each row one Pareto-optimal solution
-# 1. ID = unique identifier
-# 2.- 5. = objectives to be maximised
-# 6 - end = variables to be considered in the clustering
+# 1.- 4. = objectives to be maximised
+# 5 - end = variables to be considered in the clustering (=all_var provided separately)
 # used files: pareto_genomes.txt, hru.con, measure_location.csv
 # Project: Clustering of pareto front to reduce objective space
-##################################################################
+####################################################################################
 
 # rm(list=ls())
 print(paste0("loading required packages..."),quote=F)
@@ -273,5 +272,9 @@ for(op in paste0("V", 1:nopt)){ #instable looping, Cordi...
    
   write.csv(test_clu, "../input/var_corr_par.csv",  row.names = FALSE, fileEncoding = "UTF8")  
   print("check: printed output ---> /input/var_corr_par...",quote=F)
+
+  all_var = colnames(test_clu)[5:ncol(test_clu)]  ##assuming four variables here
+  saveRDS(all_var,file = "../input/all_var.RDS") #required for PCA
+  print("check: provided variable names ---> /input/all_var...",quote=F)
   
   
