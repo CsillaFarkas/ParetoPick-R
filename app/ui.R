@@ -8,7 +8,7 @@ ui <-
                   menuItem("Introduction",tabName = "intro"),
       menuItem("Data Preparation", tabName = "data_prep"),
       menuItem("Correlation Analysis", tabName = "correlation_analysis",selected=TRUE),
-      menuItem("PCA", tabName = "pca")
+      menuItem("PCA", tabName = "pca")##
     )),
     dashboardBody(
       useShinyjs(),

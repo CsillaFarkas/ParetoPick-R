@@ -234,7 +234,7 @@ get_obj_range = function(filepath = "../data/pareto_fitness.txt",colnames=paste0
     max_val <- max(pf[[col_name]], na.rm = TRUE)
     range_df <- rbind(range_df, data.frame(column = col_name, min = min_val, max = max_val, stringsAsFactors = FALSE))
   }
-  return(range_df)
+  return(range_df)##
 }
 
 #### Python Caller ####
