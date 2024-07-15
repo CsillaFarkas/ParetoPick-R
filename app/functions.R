@@ -55,10 +55,10 @@ find_high_corr <- function(cor_matrix, threshold = 0.75, tab = T,strike = NULL) 
 ## pca and correlation update
 write_corr = function(vars,
                       measures = mes,
-                      configs = config,
                       cor_analysis = F,
                       pca_content = all_var,
                       pca = T) {
+  config <- read.ini("../input/config.ini")
   if (cor_analysis && pca) {
     stop("cannot write both PCA and Correlation ini at the same time, set pca = T OR cor_analysis = T, not both")
   }
@@ -78,86 +78,97 @@ write_corr = function(vars,
       varmes = append(varmes, paste(mes, "siim", sep = "_"))
     }
     
-    configs[[1]]$col_correlation_matrix = paste(varmes, collapse = ", ")
+    config[[1]]$col_correlation_matrix = paste(varmes, collapse = ", ")
     
-    write.ini(configs, "../input/config.ini")
+    write.ini(config, "../input/config.ini")
   } 
   if (pca) {
-    configs[[1]]$columns = paste(pca_content, collapse = ", ")
-    write.ini(configs, "../input/config.ini")
+    config[[1]]$columns = paste(pca_content, collapse = ", ")
+    write.ini(config, "../input/config.ini")
     
   }
   
 }
 
 ##
-write_pca_ini <- function(configs = config, var1 = "", var2 = "", var3 = "", var4 = "",
+write_pca_ini <- function(var1 = "", var2 = "", var3 = "", var4 = "",
                           var1_lab= "", var2_lab = "", var3_lab = "", var4_lab = "") {
-  configs[[5]]$var_1 <- ifelse(var1 == "off", "", var1)
-  configs[[5]]$var_2 <- ifelse(var2 == "off", "", var2)
-  configs[[5]]$var_3 <- ifelse(var3 == "off", "", var3)
-  configs[[5]]$var_4 <- ifelse(var4 == "off", "", var4)
+  config <- read.ini("../input/config.ini")
+  
+  config[[5]]$var_1 <- ifelse(var1 == "off", "", var1)
+  config[[5]]$var_2 <- ifelse(var2 == "off", "", var2)
+  config[[5]]$var_3 <- ifelse(var3 == "off", "", var3)
+  config[[5]]$var_4 <- ifelse(var4 == "off", "", var4)
   
   off_count <- sum(c(var1, var2, var3, var4) == "off")
-  configs[[5]]$num_variables_to_plot <- 4 - off_count
+  config[[5]]$num_variables_to_plot <- 4 - off_count
+  config[[5]]$var_1_label <- ifelse(var1_lab == "off", "", var1_lab)
+  config[[5]]$var_2_label <- ifelse(var2_lab == "off", "", var2_lab)
+  config[[5]]$var_3_label <- ifelse(var3_lab == "off", "", var3_lab)
+  config[[5]]$var_4_label <- ifelse(var4_lab == "off", "", var4_lab)
+  write.ini(config, "../input/config.ini") 
   
-  conf_clust = NULL
-  if(var1 != "off"){
-    conf_clust = append(conf_clust,var1)
-  }
-  if(var2 != "off"){
-    conf_clust = append(conf_clust,var2)
-  }
-  if(var3 != "off"){
-    conf_clust = append(conf_clust,var3)
-  }
-  if(var4 != "off"){
-    conf_clust = append(conf_clust,var4)
-  }
+}
+
+##
+write_quali_ini = function(var1 = "", var2 = "", var3 = "", var4 = ""){
+   config <- read.ini("../input/config.ini")
   
-  configs[[6]]$qualitative_clustering_columns = paste(conf_clust, collapse = ", ")
-  
-  configs[[5]]$var_1_label <- ifelse(var1_lab == "off", "", var1_lab)
-  configs[[5]]$var_2_label <- ifelse(var2_lab == "off", "", var2_lab)
-  configs[[5]]$var_3_label <- ifelse(var3_lab == "off", "", var3_lab)
-  configs[[5]]$var_4_label <- ifelse(var4_lab == "off", "", var4_lab)
-  
-  write.ini(configs, "../input/config.ini")
+    conf_clust = NULL
+    if (var1 != "off") {
+      conf_clust = append(conf_clust, var1)
+    }
+    if (var2 != "off") {
+      conf_clust = append(conf_clust, var2)
+    }
+    if (var3 != "off") {
+      conf_clust = append(conf_clust, var3)
+    }
+    if (var4 != "off") {
+      conf_clust = append(conf_clust, var4)
+    }
+    
+    config$Qualitative_Clustering$qualitative_clustering_columns = paste(conf_clust, collapse = ", ")
+    write.ini(config, "../input/config.ini")
 
 }
 
 ##
-write_cluster<- function(configs=config,min_cluster=0,max_cluster=0,fixed_cluster_boolean="true",fixed_clusters=7){
-  configs[[2]]$fixed_clusters_boolean = fixed_cluster_boolean
-  configs[[2]]$fixed_clusters = fixed_clusters
+write_cluster<- function(min_cluster=0,max_cluster=0,fixed_cluster_boolean="true",fixed_clusters=7){
+  config <- read.ini("../input/config.ini")
   
-  configs[[2]]$min_clusters = min_cluster
-  configs[[2]]$max_clusters = max_cluster
+  config[[2]]$fixed_clusters_boolean = fixed_cluster_boolean
+  config[[2]]$fixed_clusters = fixed_clusters
   
-  write.ini(configs, "../input/config.ini")
+  config[[2]]$min_clusters = min_cluster
+  config[[2]]$max_clusters = max_cluster
+  
+  write.ini(config, "../input/config.ini")
 }
 
 ##
-write_outl <- function(configs=config,handle_outliers_boolean="false",deviations_min=3,deviations_max=3,
+write_outl <- function(handle_outliers_boolean="false",deviations_min=3,deviations_max=3,
                         count_min=3,count_max=3,outlier_to_cluster_ratio=0.5){
+  config <- read.ini("../input/config.ini")
   
-  configs[[3]]$handle_outliers_boolean = handle_outliers_boolean
-  configs[[3]]$deviations_min = deviations_min
-  configs[[3]]$deviations_max = deviations_max
-  # configs[[3]]$deviations_step = deviations_step # not included in server yet
-  configs[[3]]$count_min = count_min
-  configs[[3]]$count_max = count_max
-  configs[[3]]$outlier_to_cluster_ratio = outlier_to_cluster_ratio
+  config[[3]]$handle_outliers_boolean = handle_outliers_boolean
+  config[[3]]$deviations_min = deviations_min
+  config[[3]]$deviations_max = deviations_max
+  config[[3]]$count_min = count_min
+  config[[3]]$count_max = count_max
+  config[[3]]$outlier_to_cluster_ratio = outlier_to_cluster_ratio
   
-  write.ini(configs, "../input/config.ini")
+  write.ini(config, "../input/config.ini")
   
 }
 
 ## 
-write_pcanum = function(configs=config,pcamin,pcamax){
-  configs[[4]]$min_components = pcamin
-  configs[[4]]$max_components = pcamax
-  write.ini(configs, "../input/config.ini")
+write_pcanum = function(pcamin,pcamax){
+  config <- read.ini("../input/config.ini")
+  
+  config[[4]]$min_components = pcamin
+  config[[4]]$max_components = pcamax
+  write.ini(config, "../input/config.ini")
   
   
 }
@@ -165,7 +176,9 @@ write_pcanum = function(configs=config,pcamin,pcamax){
 #### Read Config Functions ####
 
 ## config for pca on startup
-read_pca = function(con = config){
+read_pca = function(){
+  config <- read.ini("../input/config.ini")
+  
   if(!is.null(config[[1]]$columns)){pca_col_incl = unlist(strsplit(config[[1]]$columns,", "))
   pca_col = pca_col_incl[order(pca_col_incl)]}else(pca_col = NULL)
   
@@ -173,7 +186,9 @@ read_pca = function(con = config){
 }
 
 ## 
-read_config_plt = function(con = config,obj=T,axis=F){
+read_config_plt = function(obj=T,axis=F){
+  config <- read.ini("../input/config.ini")
+  
   if(obj){
   var1 = config[[5]]$var_1
   var2 = config[[5]]$var_2
@@ -220,4 +235,29 @@ get_obj_range = function(filepath = "../data/pareto_fitness.txt",colnames=paste0
     range_df <- rbind(range_df, data.frame(column = col_name, min = min_val, max = max_val, stringsAsFactors = FALSE))
   }
   return(range_df)
+}
+
+#### Python Caller ####
+
+run_python_script <- function(path_script="",pca_status) {
+  p <- processx::process$new(
+    "python",
+    c(path_script),
+    stdout = "|", stderr = "|"
+  )
+  
+  while (p$is_alive()) {
+    new_output <- p$read_output_lines()
+    new_output <- c(new_output, p$read_error_lines())
+    if (length(new_output) > 0) {
+      pca_status(paste(pca_status(), paste(new_output, collapse = "\n"), sep = "\n"))
+    }
+    Sys.sleep(0.1)
+  }
+  
+  final_output <- p$read_all_output_lines()
+  final_output <- c(final_output, p$read_all_error_lines())
+  if (length(final_output) > 0) {
+    pca_status(paste(pca_status(), paste(final_output, collapse = "\n"), sep = "\n"))
+  }
 }
