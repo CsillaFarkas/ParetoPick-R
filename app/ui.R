@@ -62,12 +62,13 @@ ui <-
       checkboxGroupInput("selements", "", 
                          choiceNames = c("Measure share in total catchment area (sit)", 
                                      "Measure share in used catchment area (siim)",
-                                     "Moran's I", "Ratio of structural to management options (linE)"),choiceValues=c("sit","siim","moran","linE")),
+                                     "Moran's I", "Ratio of structural to management options (linE)"),choiceValues=c("sit","siim","moran","linE"),selected = c("sit","siim","moran","linE")),
       textOutput("numbercorr"),
       div("2. Perform the Correlation Analysis", style = "text-align: left; font-size:150%"),
       actionButton("run", "Run Correlation Analysis"),
-      shinyWidgets::sliderTextInput(inputId = "thresh", label= "Choose threshold",choices = seq(0.65,0.95,0.05),selected=0.75),
-      div("3. Choose variables that shall be excluded from the PCA",style = "text-align: left; font-size:150%"),
+      div("3. Choose threshold for correlation",style = "text-align: left; font-size:150%"),
+      div(style = "margin-top: -15px;",shinyWidgets::sliderTextInput(inputId = "thresh", label= "",choices = seq(0.65,0.95,0.05),selected=0.75)),
+      div("4. Choose variables that shall be excluded from the PCA",style = "text-align: left; font-size:150%"),
       selectInput(inputId = "excl",label = "variables to exclude", choices = NULL,multiple = TRUE),
       actionButton("confirm_selection", "Confirm Selection"),
       
@@ -105,13 +106,19 @@ ui <-
           
           titlePanel("Principal Component Analysis"),
           sidebarLayout(sidebarPanel(div("Variables included in the PCA",style = "text-align: left; font-size:150%"),
+                                     div("to change these variables please return to the previous tab and choose variables to remove",style = "text-align: left; font-size:100%"),
                           tableOutput("pca_incl"),
-                          radioButtons("pcamethod", "Select a clustering option:",
+                          div("5. Select a clustering method", style = "text-align: left; font-size:150%"),
+                          
+                          div(style = "margin-top: -15px;",radioButtons("pcamethod", "",
                                        choices = c("k-means", "k-medoids"),
-                                       selected = "k-means"),
+                                       selected = "k-means")),
                           actionButton("runPCA", "Run Principal Component Analysis"),
                           uiOutput("pca_mess")),
-                          mainPanel(div("Please select how the objectives should be plotted", style = "text-align: left; font-size:150%"),
+                          mainPanel(
+                            div("Refine PCA Settings here and then click Run Principal Component Analysis on the left", style = "text-align: left; font-size:150%"),
+                            
+                            div("1. Please select how the objectives should be plotted", style = "margin-top: 10px; text-align: left; font-size:150%"),
                             fluidRow(column(6,
                                     selectInput("element1", "X Axis", choices = NULL),
                                     selectInput("element2", "Y Axis", choices = NULL),
@@ -127,12 +134,12 @@ ui <-
                                            actionButton("confirm_axis","Confirm Axis Labels"),
                                            htmlOutput("axis_text"))),
                             # PCA Clustering
-                            div("Shall several number of clusters be tested?", style = "text-align: left; font-size:150%"),
-                            div(style = "margin-top: -15px;",radioButtons("clusyn", "", choices = c("Yes", "No"))),
+                            div("2. Shall several number of clusters be tested?", style = "text-align: left; font-size:150%"),
+                            div(style = "margin-top: -15px;",radioButtons("clusyn", "", choices = c("Yes", "No"),selected = "No")),
                             
                             conditionalPanel(
                               condition = "input.clusyn == 'Yes'",
-                              h3("Please specify how many clusters to iterate through:"),
+                              h4("Please specify how many clusters to iterate through:"),
                               numericInput("clus_min", "Minimum number of Clusters", value = 0),
                               numericInput("clus_max", "Maximum number of Clusters", value = 0),
                               
@@ -140,23 +147,23 @@ ui <-
                             
                             conditionalPanel(
                               condition = "input.clusyn == 'No'",
-                              numericInput("clus_fix", "Fixed number of Clusters", value = 0)
+                              numericInput("clus_fix", "Fixed number of Clusters", value = 15)
                             ),
                             actionButton("write_clust", "Confirm Cluster Number"),
                             
                             # PCA Outlier
-                            div("Shall outliers be analysed and potentially removed?", style = "text-align: left; font-size:150%"),
-                            div(style = "margin-top: -15px;",radioButtons("outlyn", "", choices = c("Yes", "No"))),
+                            div("3. Shall outliers be analysed and potentially removed?", style = "text-align: left; font-size:150%"),
+                            div(style = "margin-top: -15px;",radioButtons("outlyn", "", choices = c("Yes", "No"),selected = "No")),
                             
                             conditionalPanel(
                               condition = "input.outlyn == 'Yes'",
-                              h3("Please specify the number of standard deviations that shall be tested:"),
+                              h4("3.1 Please specify the number of standard deviations that shall be tested:"),
                               numericInput("sd_min", "Minimum standard deviation from cluster mean", value = 0),
                               numericInput("sd_max", "Maximum standard deviation from cluster mean", value = 0),
-                              h3("Please specify how many extreme variables within a datapoint shall be tested:"),
+                              h4("3.2 Please specify how many extreme variables within a datapoint shall be tested:"),
                               numericInput("count_min", "Minimum number of extreme variables", value = 0),
                               numericInput("count_max", "Maximum number of extreme variables", value = 0),
-                              h3("Please specify set a limit for the number of extreme solutions allowed in the final clustering:"),
+                              h4("3.3 Please specify set a limit for the number of extreme solutions allowed in the final clustering:"),
                               numericInput("outlier_ratio", "Outlier to cluster ratio", value = 0.5, min=0.1, max=0.9),
                               actionButton("write_outl", "Confirm Outlier Testing")
                               ),
@@ -165,8 +172,10 @@ ui <-
                               condition = "input.outlyn == 'No'",
                               actionButton("write_outl", "Confirm No Outlier Testing") ),
                            
-                            
-                            
+                            div("4. Please specify the number of principal components that shall be tested", style = "text-align: left; font-size:150%"),
+                            numericInput("pca_min", "Minimum number of PCs", value = 7),
+                            numericInput("pca_max", "Maximum number of PCs", value = 7),
+                            actionButton("pcaminmax", "Confirm PC Testing"),
                             
                             # PCA printing Background Processes
                           conditionalPanel(condition = "output.isElementVisible == true",div("Python Background Processes",style = "text-align: left; font-size:150%"),        
