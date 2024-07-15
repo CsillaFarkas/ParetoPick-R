@@ -5,6 +5,7 @@ ui <-
     dashboardHeader(),
     dashboardSidebar(
       sidebarMenu(id = "tabs",
+                  menuItem("Introduction",tabName = "intro"),
       menuItem("Data Preparation", tabName = "data_prep"),
       menuItem("Correlation Analysis", tabName = "correlation_analysis",selected=TRUE),
       menuItem("PCA", tabName = "pca")
@@ -12,6 +13,13 @@ ui <-
     dashboardBody(
       useShinyjs(),
       tabItems(
+        tabItem(tabName = "intro",
+                titlePanel("Introduction and Background"),
+                mainPanel(div("This application allows to analyse OPTAIN Optimisation outputs. The aim is to reduce the high number of pareto-optimal solutions provided in the SWAT+ / COMOLA workflow.
+                              While all these solutions are pareto-optimal (none of the objectives can be improved without losses in other objectives), there are ways to structurally reduce the number of solutions while minimising information loss compared to the
+                              full pareto front. ",style="text-align; left; font-size:135%"))),
+        
+        
         tabItem(tabName = "data_prep",
                 titlePanel("OPTAIN Data Preparation"),
                 mainPanel(
@@ -19,14 +27,18 @@ ui <-
                   tags$head(tags$style("#fileStatusMessage{font-size:150%;}")),
                   
                   
-                          p("To run the data preparation and the subsequent Correlation and Principal Component Analysis the following files have to be provided in the data folder:",style =  "text-align: left; font-size:150%"),
-                         HTML(paste0("<ol>",
-                            "<li style=font-size:150%>","pareto_genomes.txt","</li>",
-                            "<li style=font-size:150%>","pareto_fitness.txt","</li>",
-                            "<li style=font-size:150%>","hru.con","</li>",
-                            "<li style=font-size:150%>","measure_location.csv","</li>",
-                            "</ol>")),
-                         actionButton("files_avail", "Check Files"),
+                          p("To run the data preparation and the subsequent Correlation and Principal Component Analysis, please provide the following files:",style =  "text-align: left; font-size:150%"),
+                         
+                  div("1. pareto_genomes.txt",style = "text-align: left; font-size:115%"),
+                  div(style = "margin-top: -15px;",fileInput("file1", "", accept = ".txt")), 
+                  div("2. pareto_fitness.txt",style = "text-align: left; font-size:115%"),
+                  
+                  div(style = "margin-top: -15px;",fileInput("file2", "", accept = ".txt")), 
+                  div("3. hru.con",style = "text-align: left; font-size:115%"),
+                  div(style = "margin-top: -15px;",fileInput("file3", "", accept = ".con")), 
+                  div("4. measure_location.csv",style = "text-align: left; font-size:115%"),
+                  div(style = "margin-top: -15px;",fileInput("file4", "", accept = ".csv")), 
+                  actionButton("files_avail", "Check Files"),
                          
                   uiOutput("fileStatusMessage"),
                   
