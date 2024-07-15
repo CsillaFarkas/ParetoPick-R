@@ -1,32 +1,28 @@
 ######################### GLOBAL #################################
 # comments: we assume four variables delineating pareto front
-# 
-# used files: config.ini,...
 # Project: Clustering of pareto front to reduce objective space
 ##################################################################
-library(configr)
-library(corrplot)
-library(shiny)
+library(configr)#
+library(corrplot)#
 library(reticulate)
-library(readr)
-library(dplyr)
-library(ini)
+library(shiny)#
+library(dplyr)#
+library(ini)#
 library(shinydashboard)
-library(shinyWidgets)
+library(shinyWidgets)#
+library(DT)#
 library(shinyjs) # for hiding parts of the app
 library(processx) # manage system processes from within shiny (e.g. for pulling R output into shiny)
+library(shinyFiles) #drag and drop
 source("functions.R")
 
-## Data Prep
-  required_files <- c("../data/pareto_genomes.txt", "../data/pareto_fitness.txt", "../data/hru.con", "../data/measure_location.csv")   # Example file names
+
 
 ## get measures
-  mes = read.csv("../data/measure_location.csv")
-  mes = unique(mes$nswrm)
-  nm = length(mes)
+  # mes = read.csv("../data/measure_location.csv")
+  # mes = unique(mes$nswrm)
+  # nm = length(mes)
 
-## read config
-  config <- read.config("../input/config.ini")
 
   
   
