@@ -1,20 +1,15 @@
 ################### FUNCTIONS #####################
 
-## Correlation Analysis - Plot
-# RColorBrewer::brewer.pal(4, "RdYlBu")
+#### Correlation Analysis Functions ####
+
+## plot
 plt_corr = function(corr,labelcol = "black",labelorder='alphabet',meth = 'square', tpe = 'lower'){
 corma = as.matrix(corr)
 plt = corrplot(corma, method = meth, order =labelorder,tl.col = labelcol, type=tpe,diag=FALSE)
 return(plt)
 }
 
-## Table formatting with strike through
-strike_through <- function(x) {
-  sprintf('<span style="text-decoration: line-through;">%s</span>', x)
-}
-
-
-## Correlation Analysis - Table
+## table
 find_high_corr <- function(cor_matrix, threshold = 0.75, tab = T,strike = NULL) {
   # Get the row and column names of the correlation matrix
   var_names <- colnames(cor_matrix)
@@ -27,7 +22,6 @@ find_high_corr <- function(cor_matrix, threshold = 0.75, tab = T,strike = NULL) 
     stringsAsFactors = FALSE
   )
   
-  # Loop through the upper triangle of the correlation matrix
   for (i in 1:(nrow(cor_matrix) - 1)) {
     for (j in (i + 1):ncol(cor_matrix)) {
       if (abs(cor_matrix[i, j]) > abs(threshold)) {
@@ -50,13 +44,15 @@ find_high_corr <- function(cor_matrix, threshold = 0.75, tab = T,strike = NULL) 
     higg[which(higg$variable2 %in% strike,arr.ind = T),] = sapply(higg[which(higg$variable2 %in% strike,arr.ind = T),], strike_through)
     
   }
-  
   yolo = unique(c(higg$variable1,higg$variable2)) #used to fill drop down menu
   
   if(tab==T){return(higg)}else(return(yolo))
 }
 
-## Update Config for PCA and Correlation
+
+#### Write Config Functions ####
+
+## pca and correlation update
 write_corr = function(vars,
                       measures = mes,
                       configs = config,
@@ -84,11 +80,11 @@ write_corr = function(vars,
     
     configs[[1]]$col_correlation_matrix = paste(varmes, collapse = ", ")
     
-    write.config(configs, file.path = "../input/config.ini", write.type = "ini")
+    write.ini(configs, "../input/config.ini")
   } 
   if (pca) {
     configs[[1]]$columns = paste(pca_content, collapse = ", ")
-    write.config(configs, file.path = "../input/config.ini", write.type = "ini")
+    write.ini(configs, "../input/config.ini")
     
   }
   
@@ -127,8 +123,7 @@ write_pca_ini <- function(configs = config, var1 = "", var2 = "", var3 = "", var
   configs[[5]]$var_4_label <- ifelse(var4_lab == "off", "", var4_lab)
   
   write.ini(configs, "../input/config.ini")
-  # write.config(configs, file.path = "../input/config.ini", write.type = "ini")
-  
+
 }
 
 ##
@@ -139,7 +134,7 @@ write_cluster<- function(configs=config,min_cluster=0,max_cluster=0,fixed_cluste
   configs[[2]]$min_clusters = min_cluster
   configs[[2]]$max_clusters = max_cluster
   
-  write.config(configs, file.path = "../input/config.ini", write.type = "ini")
+  write.ini(configs, "../input/config.ini")
 }
 
 ##
@@ -154,13 +149,22 @@ write_outl <- function(configs=config,handle_outliers_boolean="false",deviations
   configs[[3]]$count_max = count_max
   configs[[3]]$outlier_to_cluster_ratio = outlier_to_cluster_ratio
   
-  write.config(configs, file.path = "../input/config.ini", write.type = "ini")
+  write.ini(configs, "../input/config.ini")
   
 }
 
+## 
+write_pcanum = function(configs=config,pcamin,pcamax){
+  configs[[4]]$min_components = pcamin
+  configs[[4]]$max_components = pcamax
+  write.ini(configs, "../input/config.ini")
+  
+  
+}
 
+#### Read Config Functions ####
 
-## Read Config for PCA Table on startup 
+## config for pca on startup
 read_pca = function(con = config){
   if(!is.null(config[[1]]$columns)){pca_col_incl = unlist(strsplit(config[[1]]$columns,", "))
   pca_col = pca_col_incl[order(pca_col_incl)]}else(pca_col = NULL)
@@ -185,7 +189,10 @@ read_config_plt = function(con = config,obj=T,axis=F){
   
 }
 
-## Count number of decimals
+
+#### Table/Output Formatting Functions ####
+
+## count number of decimals
 num.decimals <- function(x) {
   stopifnot(class(x)=="numeric")
   x <- sub("0+$","",x)
@@ -193,7 +200,12 @@ num.decimals <- function(x) {
   nchar(x)
 }
 
-## Extract the Objective ranges
+## formatting with strike through
+strike_through <- function(x) {
+  sprintf('<span style="text-decoration: line-through;">%s</span>', x)
+}
+
+## extract objective ranges
 get_obj_range = function(filepath = "../data/pareto_fitness.txt",colnames=paste0("objective", seq(1, 4))){
   stopifnot(is.character(filepath))
   
