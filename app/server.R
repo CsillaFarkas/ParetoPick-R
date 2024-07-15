@@ -7,7 +7,18 @@ server <- function(input, output, session) {
   all_choices = reactiveVal()
   isElementVisible = reactiveVal(FALSE)
   
-  axiselected = reactiveVal(read_config_plt(config,obj=F,axis=T))
+  ## pca tab - pca table
+  pca_ini <- read_pca()
+  
+  pca_table <- reactiveVal(pca_ini)
+  
+  # PCA table
+  output$pca_incl <- renderTable({
+    pca_table()
+  }, rownames = T, colnames = F)
+  
+  
+  axiselected = reactiveVal(read_config_plt(obj=F,axis=T))
   
   ### Data Prep ####
   # Check if required files exist 
@@ -45,7 +56,7 @@ server <- function(input, output, session) {
        
        for(i in 1:4){
          for(j in 2:3){
-          bng[i,j] = formatC(rng[i,j],digits= unlist(lapply(rng[,2],num.decimals))[i])#same decimal for min and max
+          bng[i,j] = formatC(rng[i,j],digits= unlist(lapply(rng[,2],num.decimals))[i],drop0trailing = T,format="f")#same decimal for min and max
          }
        }
        bng
@@ -91,10 +102,12 @@ server <- function(input, output, session) {
          }
        })
      })
+      
+     
      
       output$script_output  <- renderUI({
         if(dp_done()){
-          tags$p("The data preparation was successful. You can now continue with the Correlation and Principal Component Analysis. You will not need this tab again.")
+          tags$strong("The data preparation was successful. You can now continue with the Correlation and Principal Component Analysis. You will not need this tab again.")
         }else{verbatimTextOutput("rscriptcmd")}
         
         })
@@ -105,7 +118,8 @@ server <- function(input, output, session) {
   ### Correlation Analysis ####
    
   observeEvent(input$run,{
- 
+    all_var <<- readRDS("../input/all_var.RDS")
+    
     write_corr(vars = input$selements,cor_analysis = T, pca = F)
     
     # Define the command to run the Python script
@@ -141,23 +155,25 @@ server <- function(input, output, session) {
     pca_remove(input$excl)
 
     output$corrtable <- renderDT({
-      datatable(
-      find_high_corr(corr,threshold=input$thresh, tab=T,strike = input$excl), escape = FALSE)}) #tab = T means this returns the full table, =F is for pulling variables
+      datatable(find_high_corr(corr,threshold = input$thresh,tab = T,strike = input$excl),escape = FALSE)}) #tab = T means this returns the full table, =F is for pulling variables
     
+    pca_in$data = all_var[-which(all_var %in% pca_remove())]
     
-    pca_in$data = all_var[-which(all_var%in%pca_remove())]
+    write_corr(pca_content = pca_in$data,
+               pca = T,
+               cor_analysis = F)#this is also called into the pca tab on startup
     
-    write_corr(pca_content = pca_in$data,pca = T,cor_analysis = F)#startup this is also called into the pca tab
-    
-    nonoval = paste(pca_remove(),collapse = ", ")
+    nonoval = paste(pca_remove(), collapse = ", ")
   # Display confirmed selection in the Correlation Analysis tab
    output$confirmed_selection <- renderText({HTML(paste0("Removed variables: ","<b>", nonoval,"</b>"))})
   
-  })
+
   
   ### PC Analysis ####
   # table with variables INCLUDED in PCA (renewed every time confirm selection is clicked in correlation tab)
-  output$pca_incl <- renderTable({paste(pca_in$data)},rownames=T,colnames = F)
+    pca_table(pca_in$data)
+
+  })
   # Reactive values to store selected choices
   selections <- reactiveValues(
     element1 = NULL,
@@ -175,8 +191,8 @@ server <- function(input, output, session) {
     
     choices = c("off", choices)
     all_choices(choices)
-    preselected = read_config_plt(config, obj = T, axis = F)
-    axiselected(read_config_plt(config, obj = F, axis = T))
+    preselected = read_config_plt(obj = T, axis = F)
+    axiselected(read_config_plt(obj = F, axis = T))
     
     
     updateTextInput(session, "axisx",  value  = axiselected()[1])
@@ -239,14 +255,15 @@ server <- function(input, output, session) {
   observeEvent(input$set_choices,{
     empty_count <- sum(input$element1 == "off", input$element2 == "off", input$element3 == "off", input$element4 == "off")
     if (empty_count < 2){
-      write_pca_ini(config,var1=input$element1,var2=input$element2,var3=input$element3,var4=input$element4,
+      write_pca_ini(var1=input$element1,var2=input$element2,var3=input$element3,var4=input$element4,
                     var1_lab=input$axisx,var2_lab=input$axisy,var3_lab=input$colour,var4_lab=input$size)
+      write_quali_ini(var1=input$element1,var2=input$element2,var3=input$element3,var4=input$element4)
     }
   
   output$selected_elements <- renderText({
     
-    if (empty_count >= 2) {
-      "Please make selections for at least three elements."
+    if (empty_count >= 1) {
+      "Please make selections for all four elements - the analysis currently does not support less than four objectives."
     } else {
       HTML(paste("X Axis: ", ifelse(input$element1 == "off", "No selection", input$element1),
             "<br/>Y Axis: ", ifelse(input$element2 == "off", "No selection", input$element2),
@@ -260,7 +277,7 @@ server <- function(input, output, session) {
   observeEvent(input$confirm_axis,{
     empty_count2 <- sum(input$axisx == "", input$axisy == "", input$colour == "", input$size == "")
     if (empty_count2 < 2){
-      write_pca_ini(configs=config,var1=input$element1,var2=input$element2,var3=input$element3,var4=input$element4,
+      write_pca_ini(var1=input$element1,var2=input$element2,var3=input$element3,var4=input$element4,
                     var1_lab=input$axisx,var2_lab=input$axisy,var3_lab=input$colour,var4_lab=input$size)
     }
     
@@ -281,16 +298,13 @@ server <- function(input, output, session) {
   
   
   observeEvent(input$runPCA,{
+    all_var <<- readRDS("../input/all_var.RDS")
     
     output$pca_mess <- renderUI({
       tags$p("If all data was provided in the right format, the PCA outputs will open in separate windows - you can discard or save them as necessary.")
       
     })
     isElementVisible(TRUE)
-    
-    #this should be placed better...
-    hauptdat = read.csv("../input/var_corr_par.csv")
-    all_var <<- colnames(hauptdat)[5:ncol(hauptdat)] #assuming four variables here
     
     ## Prepare config.ini
     write_corr(pca_content = all_var[-which(all_var%in%pca_remove())],pca=T, cor_analysis = F)# columns
@@ -313,20 +327,19 @@ server <- function(input, output, session) {
   observeEvent(input$write_clust, {
     fixbool = ifelse(input$clusyn == "No", "true", "false")
     if (input$clusyn == "No") {
-      write_cluster(configs = config,
-        fixed_clusters = input$clus_fix,fixed_cluster_boolean = fixbool)
+      write_cluster(fixed_clusters = input$clus_fix,fixed_cluster_boolean = fixbool)
       } else{
-      write_cluster(configs = config, min_cluster = input$clus_min,max_cluster = input$clus_max,fixed_cluster_boolean = fixbool)
+      write_cluster(min_cluster = input$clus_min,max_cluster = input$clus_max,fixed_cluster_boolean = fixbool)
      }
   })
   # outlier specs
   observeEvent(input$write_outl, {
     outlbool = ifelse(input$outlyn == "No","false","true")
     if(input$outlyn == "Yes"){
-      write_outl(configs=config,handle_outliers_boolean=outlbool,deviations_min=input$sd_min,deviations_max=input$sd_max, 
+      write_outl(handle_outliers_boolean=outlbool,deviations_min=input$sd_min,deviations_max=input$sd_max, 
                  count_min=input$count_min,count_max=input$count_max,outlier_to_cluster_ratio=input$outlier_ratio )
     }else{
-      write_outl(configs=config,handle_outliers_boolean=outlbool)#bool is turning on all others, if false all others are ignored/default value works
+      write_outl(handle_outliers_boolean=outlbool)#bool is turning on all others, if false all others are ignored/default value works
     }
     
   })
@@ -338,6 +351,12 @@ server <- function(input, output, session) {
   
   # Required for conditionalPanel to work with reactive output
   outputOptions(output, "isElementVisible", suspendWhenHidden = FALSE)
+  
+  
+  # pca min/max specs
+  observeEvent(input$pcaminmax,{
+    write_pcanum(pcamin=input$pca_min,pcamax=input$pca_max)
+  })
 }
 
 
