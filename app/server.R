@@ -433,7 +433,7 @@ server <- function(input, output, session) {
   observeEvent(input$tabs == "analysis",{
     if(file.exists("../output/kmeans_data_w_clusters_representativesolutions.csv")){
   sols = read.csv("../output/kmeans_data_w_clusters_representativesolutions.csv")
-  sols = sols %>% filter(!is.na(Representative_Solution))%>%mutate(across(is.numeric, round, digits = 3))}else{sols = "please run the PCA"}
+  sols = sols %>% filter(!is.na(Representative_Solution))%>%mutate(across(is.numeric, round, digits = 5))}else{sols = "please run the PCA"}
   output$antab <- renderDT({sols},options = list(pageLength = 20, autoWidth = TRUE))
   })
 }
