@@ -269,3 +269,97 @@ get_num_pca <- function() {
   pcc <- readRDS("../input/pca_content.RDS")
   return(length(pcc))
 }
+
+
+## pull pca settings for display
+
+pca_settings = function(input){
+  settings <- paste0("<ul>",
+                     "<li><strong>",input$element1,"</strong> is shown on the x-axis","</li>",
+                     "<li>", "The x-axis label is: \"<strong>",input$axisx,"</strong>\"</li>",
+                     "<li><strong>", input$element2,"</strong> is shown on the y-axis", "</li>",
+                     "<li>", "The y-axis label is: \"<strong>",input$axisy,"</strong>\"</li>",
+                     "<li>", "The colour hue is defined by <strong>", input$element3, "</strong></li>",
+                     "<li>", "The colour label is: \"<strong>",input$colour,"</strong>\"</li>",
+                     "<li>", "The size of the data points is defined by: <strong>", input$element4, "</strong></li>",
+                     "<li>", "The size label is: \"<strong>",input$size,"</strong>\"</li>",
+                     "<li>", "A range of <strong>",input$pca_min,"</strong> to <strong>",input$pca_max,"</strong> principal components is tested.","</li>","</ul>"
+  )
+  
+  # conditional settings
+  if (input$clusyn == "Yes" &
+      input$outlyn =="No") {
+    #only cluster
+    clus <- paste0(
+      "<ul>",
+      "<li>",
+      "A range of <strong>",
+      input$clus_min,
+      "</strong> to <strong>",
+      input$clus_max,
+      "</strong> clusters is tested.",
+      "</li>",
+      "</ul>"
+    )
+    settings <- paste(settings, clus, collapse= "<br>")
+  }else if (input$clusyn == "No" & input$outlyn == "No"){
+    clus <- paste0(
+      "<ul>", "<li>","Using a fixed number of <strong>",input$clus_fix,"</strong> of clusters","</li>",
+      "<li> Outliers are not considered </li></ul>")
+    settings <- paste(settings, clus, collapse= "<br>")
+  } else if (input$clusyn == "Yes" & input$outlyn == "Yes") {
+    #both
+    clus <- paste0(
+      "<ul>",
+      "<li>",
+      "A range of <strong>",
+      input$clus_min,
+      "</strong> to ",
+      input$clus_max,
+      "</strong> clusters is tested.",
+      "</li>",
+      "</ul>"
+    )
+    outly <- paste0(
+      "<ul>",
+      "<li>",
+      "A range of <strong>",
+      input$count_min,
+      "</strong> to <strong>",
+      input$count_max,
+      "</strong> extreme variables is tested for removing clusters.",
+      "</li>",
+      "<li>",
+      "The standard deviations tested range from <strong>",
+      input$sd_min,
+      "</strong> to <strong>",
+      input$sd_max,
+      "</strong></li>",
+      "<li>","The tested ratio of number of ouliers to cluster size is: <strong> ",input$outlier_ratio, "</strong></li>",
+      "</ul>"
+    )
+    settings <- paste(settings, clus, outly, collapse = "<br> ")
+  } else if (input$clusyn == "No" & input$outlyn == "Yes") {
+    outly <- paste0(
+      "<ul>",
+      "<li>","Using a fixed <strong>",input$clus_fix,"</strong> of clusters","</li>",
+      "<li>",
+      "A range of <strong>",
+      input$count_min,
+      "</strong> to <strong>",
+      input$count_max,
+      "</strong> extreme variables is tested for removing clusters.",
+      "</li>",
+      "<li>",
+      "The standard deviations tested range from <strong>",
+      input$sd_min,
+      "</strong> to <strong>",
+      input$sd_max,
+      "</strong></li>",
+      "<li>","The tested ratio of number of ouliers to cluster size is: <strong> ",input$outlier_ratio, "</strong></li>",
+      "</ul>"
+    )
+    settings <- paste(settings, outly,collapse = "<br>")}
+    
+  return(settings)
+    }

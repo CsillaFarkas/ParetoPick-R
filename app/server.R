@@ -6,10 +6,13 @@ server <- function(input, output, session) {
   dp_done = reactiveVal(FALSE) # checking if data prep R output is done
   all_choices = reactiveVal()
   isElementVisible = reactiveVal(FALSE)
-  
+  settings_text= reactiveVal("") #printing pca settings
+  update_settings <- function() {
+    settings <- pca_settings(input)
+    settings_text(settings)
+  }
   ## pca tab - pca table
   pca_ini <- read_pca()
-  
   pca_table <- reactiveVal(pca_ini)
   
   output$pca_incl <- renderTable({
@@ -78,9 +81,6 @@ server <- function(input, output, session) {
     to align with what is provided in the first four columns of pareto_fitness.txt", sep="<br/><br/>"))} else {paste("The following file(s) are missing:", paste(required_files[!checkFiles()], collapse = ", "))}})
      
      
-     mes = read.csv("../data/measure_location.csv")
-     mes = unique(mes$nswrm)
-     nm = length(mes)
   })
   
   
@@ -168,7 +168,15 @@ server <- function(input, output, session) {
       })
       
   ### Correlation Analysis ####
-   
+      observeEvent(input$tabs == "correlation_analysis",{ 
+        if(file.exists("../data/measure_location.csv")) {
+          mes = read.csv("../data/measure_location.csv")
+          mes <<- unique(mes$nswrm)
+          nm = length(mes)
+        }} )
+      
+      
+      
   observeEvent(input$run,{
     all_var <<- readRDS("../input/all_var.RDS")
     
@@ -331,7 +339,7 @@ server <- function(input, output, session) {
             "<br/>Size: ", ifelse(input$element4 == "off", "No selection", input$element4)))
     }
   })
-  
+  update_settings()
   })
   
   observeEvent(input$confirm_axis,{
@@ -352,12 +360,15 @@ server <- function(input, output, session) {
                    "<br/>Size: ", ifelse(input$element4 == "", "No selection", input$size)))
       }
     })
+    update_settings()
   })
 ##
  
   
   
   observeEvent(input$runPCA,{
+    # python status
+    output$pca_status <- renderText({pca_status()})
     pca_content <<- readRDS("../input/pca_content.RDS")
     
     output$pca_mess <- renderUI({
@@ -376,8 +387,7 @@ server <- function(input, output, session) {
     
     }, once = TRUE)
   
-   # python status
-   output$pca_status <- renderText({pca_status()})
+   
   
   
   # cluster specs
@@ -387,7 +397,8 @@ server <- function(input, output, session) {
       write_cluster(fixed_clusters = input$clus_fix,fixed_cluster_boolean = fixbool)
       } else{
       write_cluster(min_cluster = input$clus_min,max_cluster = input$clus_max,fixed_cluster_boolean = fixbool)
-     }
+      }
+    update_settings()
   })
   # outlier specs
   observeEvent(input$write_outl, {
@@ -398,7 +409,7 @@ server <- function(input, output, session) {
     }else{
       write_outl(handle_outliers_boolean=outlbool)#bool is turning on all others, if false all others are ignored/default value works
     }
-    
+    update_settings()
   })
   
   # Pass the reactive value to output for use in conditionalPanel
@@ -413,94 +424,18 @@ server <- function(input, output, session) {
   # pca min/max specs
   observeEvent(input$pcaminmax,{
     write_pcanum(pcamin=input$pca_min,pcamax=input$pca_max)
+    update_settings()
   })
+  output$pca_settings_summary <- renderUI({HTML(settings_text())})
   
-  pca_settings <- reactive({
-    settings <- paste0("<ul>",
-      "<li><strong>",input$element1,"</strong> is shown on the x-axis","</li>",
-      "<li>", "The x-axis label is: \"<strong>",input$axisx,"</strong>\"</li>",
-      "<li><strong>", input$element2,"</strong> is shown on the y-axis", "</li>",
-      "<li>", "The y-axis label is: \"<strong>",input$axisy,"</strong>\"</li>",
-      "<li>", "The colour hue is defined by <strong>", input$element3, "</strong></li>",
-      "<li>", "The colour label is: \"<strong>",input$colour,"</strong>\"</li>",
-      "<li>", "The size of the data points is defined by: <strong>", input$element4, "</strong></li>",
-      "<li>", "The size label is: \"<strong>",input$size,"</strong>\"</li>",
-      "<li>", "A range of <strong>",input$pca_min,"</strong> to <strong>",input$pca_max,"</strong> principal components is tested.","</li>","</ul>"
-      )
-    
-    # conditional settings
-    if (input$clusyn == "Yes" &
-        input$outlyn =="No") {
-      #only cluster
-      clus <- paste0(
-        "<ul>",
-        "<li>",
-        "A range of <strong>",
-        input$clus_min,
-        "</strong> to <strong>",
-        input$clus_max,
-        "</strong> clusters is tested.",
-        "</li>",
-        "</ul>"
-      )
-      settings <- paste(settings, clus, collapse= "<br>")
-    } else if (input$clusyn == "Yes" & input$outlyn == "Yes") {
-      #both
-      clus <- paste0(
-        "<ul>",
-        "<li>",
-        "A range of <strong>",
-        input$clus_min,
-        "</strong> to ",
-        input$clus_max,
-        "</strong> clusters is tested.",
-        "</li>",
-        "</ul>"
-      )
-      outly <- paste0(
-        "<ul>",
-        "<li>",
-        "A range of <strong>",
-        input$count_min,
-        "</strong> to <strong>",
-        input$count_max,
-        "</strong> extreme variables is tested for removing clusters.",
-        "</li>",
-        "<li>",
-        "The standard deviations tested range from <strong>",
-        input$sd_min,
-        "</strong> to <strong>",
-        input$sd_max,
-        "</strong></li>",
-        "</ul>"
-      )
-      settings <- paste(settings, clus, outly, collapse = "<br> ")
-    } else if (input$clusyn == "No" & input$outlyn == "Yes") {
-      outly <- paste0(
-        "<ul>",
-        "<li>",
-        "A range of <strong>",
-        input$count_min,
-        "</strong> to <strong>",
-        input$count_max,
-        "</strong> extreme variables is tested for removing clusters.",
-        "</li>",
-        "<li>",
-        "The standard deviations tested range from <strong>",
-        input$sd_min,
-        "</strong> to <strong>",
-        input$sd_max,
-        "</strong></li>",
-        "</ul>"
-      )
-      settings <- paste(settings, outly,collapse = "<br>")
-      
-    }
-    
-    return(settings)
+  
+  ## Analysis ####
+  observeEvent(input$tabs == "analysis",{
+    if(file.exists("../output/kmeans_data_w_clusters_representativesolutions.csv")){
+  sols = read.csv("../output/kmeans_data_w_clusters_representativesolutions.csv")
+  sols = sols %>% filter(!is.na(Representative_Solution))%>%mutate(across(is.numeric, round, digits = 3))}else{sols = "please run the PCA"}
+  output$antab <- renderDT({sols},options = list(pageLength = 20, autoWidth = TRUE))
   })
-  
-  output$pca_settings_summary <- renderUI({HTML(pca_settings())})
 }
 
 
