@@ -19,6 +19,8 @@ server <- function(input, output, session) {
   pca_status <- reactiveVal("")
   
   axiselected = reactiveVal(read_config_plt(obj=F,axis=T))
+  max_pca <- reactive({get_num_pca()})# required for max pc field
+  
   
   ### Data Prep ####
   required_files <- c("../data/pareto_genomes.txt", "../data/pareto_fitness.txt", "../data/hru.con", "../data/measure_location.csv")
@@ -242,6 +244,11 @@ server <- function(input, output, session) {
       choices = readRDS("../input/object_names.RDS")
     }
     
+    if(file.exists("../input/pca_content.RDS")){updateNumericInput(session, "pca_max", value = max_pca(), max=max_pca())}
+      
+    
+    
+    
     choices = c("off", choices)
     all_choices(choices)
     preselected = read_config_plt(obj = T, axis = F)
@@ -407,6 +414,93 @@ server <- function(input, output, session) {
   observeEvent(input$pcaminmax,{
     write_pcanum(pcamin=input$pca_min,pcamax=input$pca_max)
   })
+  
+  pca_settings <- reactive({
+    settings <- paste0("<ul>",
+      "<li><strong>",input$element1,"</strong> is shown on the x-axis","</li>",
+      "<li>", "The x-axis label is: \"<strong>",input$axisx,"</strong>\"</li>",
+      "<li><strong>", input$element2,"</strong> is shown on the y-axis", "</li>",
+      "<li>", "The y-axis label is: \"<strong>",input$axisy,"</strong>\"</li>",
+      "<li>", "The colour hue is defined by <strong>", input$element3, "</strong></li>",
+      "<li>", "The colour label is: \"<strong>",input$colour,"</strong>\"</li>",
+      "<li>", "The size of the data points is defined by: <strong>", input$element4, "</strong></li>",
+      "<li>", "The size label is: \"<strong>",input$size,"</strong>\"</li>",
+      "<li>", "A range of <strong>",input$pca_min,"</strong> to <strong>",input$pca_max,"</strong> principal components is tested.","</li>","</ul>"
+      )
+    
+    # conditional settings
+    if (input$clusyn == "Yes" &
+        input$outlyn =="No") {
+      #only cluster
+      clus <- paste0(
+        "<ul>",
+        "<li>",
+        "A range of <strong>",
+        input$clus_min,
+        "</strong> to <strong>",
+        input$clus_max,
+        "</strong> clusters is tested.",
+        "</li>",
+        "</ul>"
+      )
+      settings <- paste(settings, clus, collapse= "<br>")
+    } else if (input$clusyn == "Yes" & input$outlyn == "Yes") {
+      #both
+      clus <- paste0(
+        "<ul>",
+        "<li>",
+        "A range of <strong>",
+        input$clus_min,
+        "</strong> to ",
+        input$clus_max,
+        "</strong> clusters is tested.",
+        "</li>",
+        "</ul>"
+      )
+      outly <- paste0(
+        "<ul>",
+        "<li>",
+        "A range of <strong>",
+        input$count_min,
+        "</strong> to <strong>",
+        input$count_max,
+        "</strong> extreme variables is tested for removing clusters.",
+        "</li>",
+        "<li>",
+        "The standard deviations tested range from <strong>",
+        input$sd_min,
+        "</strong> to <strong>",
+        input$sd_max,
+        "</strong></li>",
+        "</ul>"
+      )
+      settings <- paste(settings, clus, outly, collapse = "<br> ")
+    } else if (input$clusyn == "No" & input$outlyn == "Yes") {
+      outly <- paste0(
+        "<ul>",
+        "<li>",
+        "A range of <strong>",
+        input$count_min,
+        "</strong> to <strong>",
+        input$count_max,
+        "</strong> extreme variables is tested for removing clusters.",
+        "</li>",
+        "<li>",
+        "The standard deviations tested range from <strong>",
+        input$sd_min,
+        "</strong> to <strong>",
+        input$sd_max,
+        "</strong></li>",
+        "</ul>"
+      )
+      settings <- paste(settings, outly,collapse = "<br>")
+      
+    }
+    
+    return(settings)
+  })
+  
+  output$pca_settings_summary <- renderUI({HTML(pca_settings())})
 }
 
 

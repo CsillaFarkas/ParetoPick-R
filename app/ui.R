@@ -15,9 +15,11 @@ ui <-
       tabItems(
         tabItem(tabName = "intro",
                 titlePanel("Introduction and Background"),
-                mainPanel(div("This application allows to analyse OPTAIN Optimisation outputs. The aim is to reduce the high number of pareto-optimal solutions provided in the SWAT+ / COMOLA workflow.
-                              While all these solutions are pareto-optimal (none of the objectives can be improved without losses in other objectives), there are ways to structurally reduce the number of solutions while minimising information loss compared to the
-                              full pareto front. ",style="text-align; left; font-size:135%"))),
+                mainPanel(p("This application allows to analyse OPTAIN Optimisation outputs. The aim is to support decision making and the analysis of results by reducing the high number of potential solutions provided by the SWAT+ / COMOLA workflow.
+                              While all these solutions are pareto-optimal (none of the objectives can be improved without losses in other objectives), choosing among a large number of solutions can be daunting. To reduce complexity while minimising information loss, this application selects a number
+                            of optimal solutions using a clustering algorithm based on a Principal Component Analysis (PCA). The user can select variables to be considered in the PCA, decide on the extend of correlation accepted across the considered variables, as well as modify the number of tested clusters and alter the way outliers are handled.",style="text-align; left; font-size:135%"),
+                          p("The first tab BLBLA",style="text-align; left; font-size:135%"),p("The second tab BLBLA",style="text-align; left; font-size:135%"),p("The third tab BLBLA",style="text-align; left; font-size:135%")
+                          )),
         
         
         tabItem(tabName = "data_prep",
@@ -120,6 +122,8 @@ ui <-
           sidebarLayout(sidebarPanel(div("Variables included in the PCA",style = "text-align: left; font-size:150%"),
                                      div("to change these variables please return to the previous tab and choose variables to remove",style = "text-align: left; font-size:100%"),
                           tableOutput("pca_incl"),
+                          div("PCA Settings (please specify on the right)", style = "text-align: left; font-size:150%"),
+                          htmlOutput("pca_settings_summary"),
                           div("5. Select a clustering method", style = "text-align: left; font-size:150%"),
                           
                           div(style = "margin-top: -15px;",radioButtons("pcamethod", "",
@@ -127,6 +131,8 @@ ui <-
                                        selected = "k-means")),
                           actionButton("runPCA", "Run Principal Component Analysis"),
                           uiOutput("pca_mess")),
+                        
+                        # PCA Main Panel
                           mainPanel(
                             div("Refine PCA Settings here and then click Run Principal Component Analysis on the left", style = "text-align: left; font-size:150%"),
                             

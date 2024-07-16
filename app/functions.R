@@ -261,3 +261,11 @@ run_python_script <- function(path_script="",pca_status) {
     pca_status(paste(pca_status(), paste(final_output, collapse = "\n"), sep = "\n"))
   }
 }
+
+#### Other Functions ####
+
+## default max number of pc
+get_num_pca <- function() {
+  pcc <- readRDS("../input/pca_content.RDS")
+  return(length(pcc))
+}
