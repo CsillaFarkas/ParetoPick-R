@@ -18,7 +18,6 @@ It then performs both and provides the relevant statistics, plots and analyses.
 
 * Front page explaining the process: Data Preparation only has to run once etc.
 * full list of nswrm implemented across all catchments to properly assign priorities
-* PCA - number of fixed clusters adapted to number of variables
 * Bigger collection of management and structural nswrm implemented in OPTAIN
 * Correlation Analysis: output largest accepted correlation, maybe in bold in table
 
