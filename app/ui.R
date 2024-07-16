@@ -2,17 +2,73 @@
 
 ui <- 
   dashboardPage(
-    dashboardHeader(),
+    dashboardHeader(title="OPTAIN"),
     dashboardSidebar(
       sidebarMenu(id = "tabs",
-      menuItem("Introduction",tabName = "intro"),
-      menuItem("Data Preparation", tabName = "data_prep"),
+      menuItem("Introduction",tabName = "intro", icon = icon("home")),
+      menuItem("Parallel Coordinates",tabName = "play_around",icon = icon("dashboard")),
+      menuItem("Data Preparation", icon = icon("th"),tabName = "data_prep"),
       menuItem("Correlation Analysis", tabName = "correlation_analysis",selected=TRUE),
       menuItem("PCA", tabName = "pca"),
       menuItem("Analysis",tabName = "analysis")
       
     )),
-    dashboardBody(
+    dashboardBody( tags$head(tags$style(HTML('
+                                /* logo */
+                                .skin-blue .main-header .logo {
+                                background-color: #9eb1cf;
+                                }
+                                
+                                /* logo when hovered */
+                                .skin-blue .main-header .logo:hover {
+                                background-color: #f4b943;
+                                }
+                                
+                                /* navbar (rest of the header) */
+                                .skin-blue .main-header .navbar {
+                                background-color: #f4b943;
+                                }
+                                
+                                /* main sidebar */
+                                .skin-blue .main-sidebar {
+                                background-color: #f4b943;
+                                }
+                                
+                                /* active selected tab in the sidebarmenu */
+                                .skin-blue .main-sidebar .sidebar .sidebar-menu .active a{
+                                background-color: #9eb1cf;
+                                }
+                                
+                                /* other links in the sidebarmenu */
+                                .skin-blue .main-sidebar .sidebar .sidebar-menu a{
+                                background-color: #a2a4b6;
+                                color: #000000;
+                                }
+                                
+                                /* other links in the sidebarmenu when hovered */
+                                .skin-blue .main-sidebar .sidebar .sidebar-menu a:hover{
+                                background-color: #9ec9cf;
+                                }
+                                /* toggle button when hovered  */
+                                .skin-blue .main-header .navbar .sidebar-toggle:hover{
+                                background-color: #ff69b4;
+                                }
+
+                                /* body */
+                                .content-wrapper, .right-side {
+                                background-color: #9eb1cf;
+                                }
+                                
+                                .well {
+                                background-color: #c4d0e2;
+                                }
+                                
+                                 /* Style the sidebar input labels */
+                                   .well label {
+                                   color: #2f353e;
+                                   }
+                                 
+                                '))),
       useShinyjs(),
       tabItems(
         tabItem(tabName = "intro",
@@ -21,6 +77,10 @@ ui <-
                               While all these solutions are pareto-optimal (none of the objectives can be improved without losses in other objectives), choosing among a large number of solutions can be daunting. To reduce complexity while minimising information loss, this application selects a number
                             of optimal solutions using a clustering algorithm based on a Principal Component Analysis (PCA). The user can select variables to be considered in the PCA, decide on the extend of correlation accepted across the considered variables, as well as modify the number of tested clusters and alter the way outliers are handled.",style="text-align; left; font-size:135%"),
                           p("The first tab BLBLA",style="text-align; left; font-size:135%"),p("The second tab BLBLA",style="text-align; left; font-size:135%"),p("The third tab BLBLA",style="text-align; left; font-size:135%")
+                          )),
+        tabItem(tabName = "play_around",
+                titlePanel("Visualising Optimisation Output"),
+                mainPanel(
                           )),
         
         
