@@ -108,6 +108,9 @@ ui <-
                   div("5. hru.shp",style = "text-align: left; font-size:115%"),
                   div(style = "margin-top: -15px;",fileInput("file5", "", accept = ".shp")),
                   
+                  div("6. hru.shx",style = "text-align: left; font-size:115%"),
+                  div(style = "margin-top: -15px;",fileInput("file6", "", accept = ".shx")),
+                  
                   actionButton("files_avail", "Check Files"),
                   uiOutput("fileStatusMessage"),
                   
@@ -273,6 +276,9 @@ ui <-
                         
           )), tabItem(tabName = "analysis",
                       titlePanel("Analysing the remaining optima"),
-                      mainPanel(DTOutput("antab")))
+                      mainPanel(DTOutput("antab"),
+                                actionButton("plt_opti","Plot Optimum"),
+                                leafletOutput("map")
+                                ))
       )))
   

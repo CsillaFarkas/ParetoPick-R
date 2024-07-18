@@ -262,6 +262,43 @@ run_python_script <- function(path_script="",pca_status) {
   }
 }
 
+#### Plotting the optima
+
+plt_latlon = function(conpath = "../data/hru.con"){
+  conny = read.table(conpath,skip = 1,header = T)
+  lon_map = mean(conny$lon)
+  lat_map = mean(conny$lat)
+  return(c(lon_map,lat_map))
+}
+
+
+## make large dataset
+plt_long = function(soltab){
+ 
+  
+  cm = read_sf(dsn = "../data/", layer = "hru") #adapt path
+  cm = st_buffer(cm, 0.0) #clean geometry
+  cm = cm %>% select(id, geometry)
+  
+  hio = readRDS("../input/hru_in_optima.RDS")
+  hio = hio %>% rename_with(~str_remove(., "^V"), starts_with("V"))
+  
+  hio = hio %>%select(sols[["optimum"]], id)#subset to only optima remaining after clustering
+  
+  hru_plt = left_join(cm,hio,  by=c("id")) %>%
+    st_transform(., 4326)
+  
+
+  return(hru_plt)
+}
+
+plt_sel = function(long_plt, opti_sel){
+
+  plt_sel = long_plt%>%select(id,geometry,all_of(opti_sel))%>%rename(optim=opti_sel)
+  return(plt_sel)
+}
+
+
 #### Other Functions ####
 
 ## default max number of pc

@@ -3,6 +3,12 @@
 # Project: Clustering of pareto front to reduce objective space
 ##################################################################
 library(configr)#
+library(leaflet)#
+library(sf)#
+library(tibble)
+library(tidyverse)
+library(fs)
+library(RColorBrewer)
 library(corrplot)#
 library(reticulate)
 library(shiny)#

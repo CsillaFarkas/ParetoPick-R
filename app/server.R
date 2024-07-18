@@ -7,6 +7,7 @@ server <- function(input, output, session) {
   all_choices = reactiveVal()
   isElementVisible = reactiveVal(FALSE)
   settings_text= reactiveVal("") #printing pca settings
+
   update_settings <- function() {
     settings <- pca_settings(input)
     settings_text(settings)
@@ -32,6 +33,7 @@ server <- function(input, output, session) {
   file_data3 <- reactiveVal(NULL)
   file_data4 <- reactiveVal(NULL)
   file_data5 <- reactiveVal(NULL)
+  file_data6 <- reactiveVal(NULL)
   
   # Check if required files exist 
   observeEvent(input$file1, { file <- input$file1
@@ -54,6 +56,10 @@ server <- function(input, output, session) {
   if (is.null(file)) {return(NULL)}
   file_data5(list(path = file$datapath, name = file$name))})
   
+  observeEvent(input$file6, { file <- input$file6
+  if (is.null(file)) {return(NULL)}
+  file_data6(list(path = file$datapath, name = file$name))})
+  
  
   
   observeEvent(input$files_avail,{
@@ -66,21 +72,24 @@ server <- function(input, output, session) {
      save_filename3 <- file_data3()$name
      save_filename4 <- file_data4()$name
      save_filename5 <- file_data5()$name
-
+     save_filename6 <- file_data6()$name
+     
      save_path1 <- file.path(save_dir, save_filename1)
      save_path2 <- file.path(save_dir, save_filename2)
      save_path3 <- file.path(save_dir, save_filename3)
      save_path4 <- file.path(save_dir, save_filename4)
      save_path5 <- file.path(save_dir, save_filename5)
-
+     save_path6 <- file.path(save_dir, save_filename6)
+     
 
      file.copy(file_data1()$path, save_path1, overwrite = TRUE)
      file.copy(file_data2()$path, save_path2, overwrite = TRUE)
      file.copy(file_data3()$path, save_path3, overwrite = TRUE)
      file.copy(file_data4()$path, save_path4, overwrite = TRUE)
      file.copy(file_data5()$path, save_path5, overwrite = TRUE)
+     file.copy(file_data6()$path, save_path6, overwrite = TRUE)
      
-     required_files <- c("../data/pareto_genomes.txt", "../data/pareto_fitness.txt",  "../data/measure_location.csv","../data/hru.con","../data/hru.shp")
+     required_files <- c("../data/pareto_genomes.txt", "../data/pareto_fitness.txt",  "../data/measure_location.csv","../data/hru.con","../data/hru.shp","../data/hru.shx")
      
      checkFiles <- sapply(required_files, function(file) file.exists(file))
      
@@ -193,7 +202,8 @@ server <- function(input, output, session) {
       observeEvent(input$tabs == "correlation_analysis",{ 
         if(file.exists("../data/measure_location.csv")) {
           mes = read.csv("../data/measure_location.csv")
-          mes <<- unique(mes$nswrm)
+          mes = unique(mes$nswrm)
+
           nm = length(mes)
         }} )
       
@@ -452,13 +462,89 @@ server <- function(input, output, session) {
   
   
   ## Analysis ####
-  observeEvent(input$tabs == "analysis",{
-    if(file.exists("../output/kmeans_data_w_clusters_representativesolutions.csv")){
-  sols = read.csv("../output/kmeans_data_w_clusters_representativesolutions.csv")
-  sols = sols %>% filter(!is.na(Representative_Solution))%>%mutate(across(is.numeric, round, digits = 5))}else{sols = "please run the PCA"}
-  output$antab <- renderDT({sols},options = list(pageLength = 20, autoWidth = TRUE))
+  observeEvent(input$tabs == "analysis", {
+    
+    
+    if (file.exists(dir("../output/", pattern = 'clusters_representativesolutions', full.names =TRUE))) {
+      sols = read.csv(dir("../output/", pattern = 'clusters_representativesolutions', full.names =TRUE))
+      sols <- sols %>% rownames_to_column("optimum") %>%
+        filter(!is.na(Representative_Solution)) %>%
+        mutate(across(is.numeric, round, digits = 5))
+      hru_plt=plt_long(soltab = sols)
+      
+    } else{
+      sols <- data.frame(Message = "please run again")
+    }
+    
+    output$antab <- renderDT({
+      datatable(sols,
+                selection = "single",
+                options = list(pageLength = 20, autoWidth = TRUE))
+    })
+    
+    
   })
   
+  observeEvent(input$plt_opti,{
+    selected_row <- input$antab_rows_selected
+    if (is.null(selected_row)) {
+      print("No row selected")
+    } else {
+      selected_data <- sols[selected_row,]
+
+      opti = selected_data$optimum
+     
+      hru_sel =  plt_sel(long_plt = hru_plt,opti_sel = opti)
+      
+      mes = read.csv("../data/measure_location.csv")
+      mes = unique(mes$nswrm)
+      dispal = colorFactor("Spectral", domain = mes, na.color = "grey")
+      
+      # Render the Leaflet map
+      output$map <- renderLeaflet({
+        leaflet(hru_sel) %>%
+          addPolygons(fillColor = ~dispal(optim), fillOpacity = 0.7,
+                      color = "#444444", weight = 1,
+                      highlightOptions = highlightOptions(color = "white", weight = 2,
+                                                          bringToFront = TRUE),
+                      label = ~optim) %>%
+          addLegend("bottomright", pal = dispal,
+                    title = "measures",values=mes)
+      })
+   
+      
+
+
+
+    }
+  })
+  
+
+  # 
+  # 
+  # dispal <- colorFactor("Spectral", domain = mes, na.color = "grey")
+  # 
+  # leaflet(data = hru_plt) %>%
+  #   addProviderTiles(providers$CartoDB.Positron) %>%
+  #   # addTiles() %>%
+  #   # choose land management here
+  #   addPolygons(fillColor = ~dispal(V85), fillOpacity = 0.7,
+  #               color = "#444444", weight = 1,
+  #               highlightOptions = highlightOptions(color = "white", weight = 2,
+  #                                                   bringToFront = TRUE),
+  #               label = ~V85) %>% 
+  #   addLegend("bottomright", pal = dispal, 
+  #             title = "v85",values=mes,
+  #             # labFormat = labelFormat(prefix = "$"),
+  #             opacity = 0.5,
+  #             labFormat = labelFormat(transform = function(x) sort(x, decreasing = TRUE)))
+  # 
+  # 
+  # # Render the Leaflet map
+  # output$map <- renderLeaflet({
+  #   leaflet() %>%
+  #     addTiles()
+  # })
   
 }
 
