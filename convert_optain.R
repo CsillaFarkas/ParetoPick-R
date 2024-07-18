@@ -61,29 +61,18 @@ suppressPackageStartupMessages({
 
 # Pivot 
   gen_act <- gen_act_hru %>%
-   pivot_longer(cols = paste0("hru_sep_", 1:35), names_to = "code", values_to = "name_new") %>% #name_new = hru
+   pivot_longer(cols = paste0("hru_sep_", 1:35), names_to = "code", values_to = "name_new") %>% #name_new = hru separated
    relocate(name_new, .after = obj_id)%>%drop_na(name_new)
 
 # Eliminate space before some "name_new"
-  gen_act$name_new <- str_remove(gen_act$name_new, " ")
-  prios <- read.csv("../input/nswrm_priorities.csv")
+  gen_act$name_new <- str_remove(gen_act$name_new, " ") 
+  prios <- read.csv("../input/nswrm_priorities.csv") ## this comes with the package
 
   gen_act_prio= gen_act %>%
     left_join(prios, by = c("nswrm" = "nswrm")) %>%
     relocate(priority, .after = nswrm)%>%arrange(priority)
   
-#   # Assign priority to AEP
-# gen_act_prio <- gen_act %>%
-#   mutate(priority = case_when(
-#     nswrm == "hedge" ~ 2,
-#     nswrm == "buffer" ~ 3,
-#     nswrm == "grassslope" ~ 4,
-#     nswrm == "pond" ~ 1,
-#     nswrm == "lowtillcc" ~ 5), .after = nswrm) %>%
-#   # order data frame based on priority
-#   arrange(priority)
-
- print("check: assigned priorities...",quote=F)
+  print("check: assigned priorities...",quote=F)
 
 
 #### Land use Cover of HRUs ####
@@ -130,11 +119,14 @@ for(op in paste0("V", 1:nopt)){ #instable looping, Cordi...
   print(paste0("check: calculated land use allocation in optima ",op,"..."),quote=F)
   
 }
-
+  ## hru represents the connection between the optima and plot
+  hru <- hru%>%mutate(id = as.integer(id))
+  saveRDS(hru,file= "../input/hru_in_optima.RDS")
+  print(paste0("check: made hru land use available for future plotting..."),quote=F)
+  
   
   ## Moran's, share in total and activated area and linE
   con = read.table("../data/hru.con",header=T,skip=1)
-  hru <- hru%>%mutate(id = as.integer(id))
   
   # could also use id as is the same as obj_id in con
   hru_donde <- con %>% select(obj_id,area,lat,lon)%>% inner_join(hru, by = c("obj_id"="id")) # Pareto front in columns
