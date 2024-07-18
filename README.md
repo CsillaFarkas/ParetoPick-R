@@ -14,10 +14,18 @@ It then performs both and provides the relevant statistics, plots and analyses.
 * config.ini (included in package)
 * nswrm_priorities.csv (included in package)
 
-## Missing/Nice to have
+### Files created and used in the process
+* var_corr_par.csv
+* hru_in_optima.RDS
+* object_names.RDS
+* pca_content.RDS
+* all_var.RDS
 
+## Missing/Nice to have
+* Plot: background, quicker through all in functions, buffer for visibility, if quicker we could do several next to each other
 * Front page explaining the process: Data Preparation only has to run once etc.
 * full list of nswrm implemented across all catchments to properly assign priorities
 * Bigger collection of management and structural nswrm implemented in OPTAIN
 * Correlation Analysis: output largest accepted correlation, maybe in bold in table
+* deviations_step is currently the default value 
 
