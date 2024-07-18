@@ -95,16 +95,23 @@ ui <-
                          
                   div("1. pareto_genomes.txt",style = "text-align: left; font-size:115%"),
                   div(style = "margin-top: -15px;",fileInput("file1", "", accept = ".txt")), 
-                  div("2. pareto_fitness.txt",style = "text-align: left; font-size:115%"),
                   
+                  div("2. pareto_fitness.txt",style = "text-align: left; font-size:115%"),
                   div(style = "margin-top: -15px;",fileInput("file2", "", accept = ".txt")), 
-                  div("3. hru.con",style = "text-align: left; font-size:115%"),
-                  div(style = "margin-top: -15px;",fileInput("file3", "", accept = ".con")), 
-                  div("4. measure_location.csv",style = "text-align: left; font-size:115%"),
-                  div(style = "margin-top: -15px;",fileInput("file4", "", accept = ".csv")), 
+                  
+                  div("3. measure_location.csv",style = "text-align: left; font-size:115%"),
+                  div(style = "margin-top: -15px;",fileInput("file3", "", accept = ".csv")), 
+                  
+                  div("4. hru.con",style = "text-align: left; font-size:115%"),
+                  div(style = "margin-top: -15px;",fileInput("file4", "", accept = ".con")),
+                  
+                  div("5. hru.shp",style = "text-align: left; font-size:115%"),
+                  div(style = "margin-top: -15px;",fileInput("file5", "", accept = ".shp")),
+                  
                   actionButton("files_avail", "Check Files"),
-                         
                   uiOutput("fileStatusMessage"),
+                  
+
                   
                   fluidRow(
                     id="sel_obj",

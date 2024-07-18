@@ -26,12 +26,12 @@ server <- function(input, output, session) {
   
   
   ### Data Prep ####
-  required_files <- c("../data/pareto_genomes.txt", "../data/pareto_fitness.txt", "../data/hru.con", "../data/measure_location.csv")
   
   file_data1 <- reactiveVal(NULL)
   file_data2 <- reactiveVal(NULL)
   file_data3 <- reactiveVal(NULL)
   file_data4 <- reactiveVal(NULL)
+  file_data5 <- reactiveVal(NULL)
   
   # Check if required files exist 
   observeEvent(input$file1, { file <- input$file1
@@ -46,39 +46,61 @@ server <- function(input, output, session) {
     if (is.null(file)) {return(NULL)}
     file_data3(list(path = file$datapath, name = file$name))})
   
-  observeEvent(input$file4, {file <- input$file4
-    if (is.null(file)) {return(NULL)}
-    file_data4(list(path = file$datapath, name = file$name))})
+  observeEvent(input$file4, { file <- input$file4
+  if (is.null(file)) {return(NULL)}
+  file_data4(list(path = file$datapath, name = file$name))})
   
+  observeEvent(input$file5, { file <- input$file5
+  if (is.null(file)) {return(NULL)}
+  file_data5(list(path = file$datapath, name = file$name))})
+  
+ 
   
   observeEvent(input$files_avail,{
-    # optional_inputs <- c(input$file1, input$file2, input$file3, input$file4)
-    # any_empty <- any(sapply(optional_inputs, function(x) x == ""))
-    # 
-    # if (!any_empty)
-      
-     req(file_data1(),file_data2(),file_data3(),file_data4())
+     #  
+
     
      save_dir <- "../data/"
      save_filename1 <- file_data1()$name
      save_filename2 <- file_data2()$name
      save_filename3 <- file_data3()$name
      save_filename4 <- file_data4()$name
+     save_filename5 <- file_data5()$name
+
      save_path1 <- file.path(save_dir, save_filename1)
      save_path2 <- file.path(save_dir, save_filename2)
      save_path3 <- file.path(save_dir, save_filename3)
      save_path4 <- file.path(save_dir, save_filename4)
-     
+     save_path5 <- file.path(save_dir, save_filename5)
+
+
      file.copy(file_data1()$path, save_path1, overwrite = TRUE)
      file.copy(file_data2()$path, save_path2, overwrite = TRUE)
      file.copy(file_data3()$path, save_path3, overwrite = TRUE)
      file.copy(file_data4()$path, save_path4, overwrite = TRUE)
+     file.copy(file_data5()$path, save_path5, overwrite = TRUE)
      
-     checkFiles <- reactive({sapply(required_files, function(file) file.exists(file))})
+     required_files <- c("../data/pareto_genomes.txt", "../data/pareto_fitness.txt",  "../data/measure_location.csv","../data/hru.con","../data/hru.shp")
      
-     output$fileStatusMessage <- renderText({if (all(checkFiles())) {HTML(paste("All Files found.", 
-    "Please provide the names of the objectives represented in the Pareto front. The names and the order in which they are given have 
-    to align with what is provided in the first four columns of pareto_fitness.txt", sep="<br/><br/>"))} else {paste("The following file(s) are missing:", paste(required_files[!checkFiles()], collapse = ", "))}})
+     checkFiles <- sapply(required_files, function(file) file.exists(file))
+     
+     if(all(checkFiles)){ shinyjs::show(id = "sel_obj")}
+     
+     output$fileStatusMessage <- renderText({
+       if (all(checkFiles)) {
+         HTML(paste(
+           "All Files found.",
+           "Please provide the names of the objectives represented in the Pareto front.
+            The names and the order in which they are given have
+            to align with what is provided in the first four columns of pareto_fitness.txt",
+           sep = "<br/><br/>"
+         ))
+         
+       } else {
+         missing_files = required_files[!checkFiles]
+         paste("The following file(s) are missing:", paste(missing_files, collapse = ", "))
+       }
+     })
      
      
   })
@@ -90,7 +112,7 @@ server <- function(input, output, session) {
    objs <- reactiveValues(data=NULL)
    
    # only show objective naming when files have been checked
-   observeEvent(input$files_avail, {shinyjs::show(id="sel_obj")})
+   # observeEvent(input$files_avail, {shinyjs::show(id="sel_obj")})
    
    # Observe event for confirm button
    observeEvent(input$obj_conf, {
@@ -436,6 +458,8 @@ server <- function(input, output, session) {
   sols = sols %>% filter(!is.na(Representative_Solution))%>%mutate(across(is.numeric, round, digits = 5))}else{sols = "please run the PCA"}
   output$antab <- renderDT({sols},options = list(pageLength = 20, autoWidth = TRUE))
   })
+  
+  
 }
 
 
