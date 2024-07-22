@@ -5,14 +5,19 @@ This code is part of the final analyses of the [OPTAIN Project](https://www.opta
 It provides a dashboard for the user to supply their own data, visualise it and alter a range of parameters. The code allows the user to select variables to be analysed in a correlation analysis and a PCA. 
 It then performs both and provides the relevant statistics, plots and analyses.
 
+## File Structure
+* app = all required functions
+* output folder (empty in beginning)
+* data folder (empty in beginning)
+* input folder (nswrm_priorities.csv and config.ini in beginning)
 
 ## Required files/input through the user
 * pareto_genomes.txt
 * pareto_fitness.txt
 * hru.con
 * measure_location.csv
-* config.ini (included in package)
-* nswrm_priorities.csv (included in package)
+* config.ini (included in package, please download)
+* nswrm_priorities.csv (included in package, please download)
 
 ### Files created and used in the process
 * var_corr_par.csv
@@ -29,5 +34,5 @@ It then performs both and provides the relevant statistics, plots and analyses.
 * Correlation Analysis: output largest accepted correlation, maybe in bold in table
 * deviations_step is currently the default value 
 * explain the effects of high correlation
-* falsify the selection of optima in Sydney's output
+* check if the selection of optima in Sydney's output is ordered the same way
 
