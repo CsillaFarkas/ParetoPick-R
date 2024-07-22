@@ -2,7 +2,7 @@ This code is part of the final analyses of the [OPTAIN Project](https://www.opta
 It provides a dashboard for the user to supply their own data, visualise it and alter a range of parameters. The code allows the user to select variables to be analysed in a correlation analysis and a PCA. 
 It then performs both and provides the relevant statistics, plots and analyses.
 ## File Structure
-* the project consists of five folders:
+* the project consists of four folders:
 1. app contains all required functions
 2. output folder (empty in beginning)
 3. data folder (empty in beginning): folder the user input is written to
