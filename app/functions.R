@@ -268,35 +268,54 @@ plt_latlon = function(conpath = "../data/hru.con"){
   conny = read.table(conpath,skip = 1,header = T)
   lon_map = mean(conny$lon)
   lat_map = mean(conny$lat)
-  return(c(lon_map,lat_map))
+  return(c(lat_map,lon_map))
 }
 
 
 ## make large dataset
-plt_long = function(soltab){
- 
+pull_shp = function(layername = "hru"){
+  if(file.exists(paste0("../data/",layername,".shp"))){
+    
+    cm = read_sf(dsn = "../data/", layer = layername) #adapt path
+    cm = st_buffer(cm, 0.0) #clean geometry
+    cm = cm %>% select(id, geometry)
+    return(cm)}else{return(NULL)}
   
-  cm = read_sf(dsn = "../data/", layer = "hru") #adapt path
-  cm = st_buffer(cm, 0.0) #clean geometry
-  cm = cm %>% select(id, geometry)
-  
-  hio = readRDS("../input/hru_in_optima.RDS")
-  hio = hio %>% rename_with(~str_remove(., "^V"), starts_with("V"))
-  
-  hio = hio %>%select(sols[["optimum"]], id)#subset to only optima remaining after clustering
-  
-  hru_plt = left_join(cm,hio,  by=c("id")) %>%
-    st_transform(., 4326)
-  
-
-  return(hru_plt)
 }
 
-plt_sel = function(long_plt, opti_sel){
+## 
+plt_sel = function(soltab, opti_sel, shp = cm){
 
-  plt_sel = long_plt%>%select(id,geometry,all_of(opti_sel))%>%rename(optim=opti_sel)
+  hio = readRDS("../input/hru_in_optima.RDS")
+  hio = hio %>% rename_with( ~ str_remove(., "^V"), starts_with("V"))
+  
+  hio = hio %>% select(soltab[["optimum"]], id)#subset to only optima remaining after clustering
+  
+  hru_plt = left_join(shp, hio, by = c("id")) %>% st_transform(., 4326)
+  
+  plt_sel = hru_plt %>% select(id, geometry, all_of(opti_sel)) %>% rename(optim =
+                                                                            opti_sel)
   return(plt_sel)
 }
+
+## plot leaflet
+plt_lf = function(dat=hru_sel,cols="optim", mes, lo, la){
+  dispal = colorFactor("Spectral", domain = mes, na.color = "lightgrey")
+  
+ m1 <- leaflet(data = dat) %>%
+   setView(lng = lo, lat = la, zoom = 10) %>%
+    addProviderTiles(providers$CartoDB.Positron) %>%
+    
+    addPolygons(fillColor = ~dispal(dat[[cols]]), fillOpacity = 0.7,
+                color = "#444444", weight = 1,
+                highlightOptions = highlightOptions(color = "white", weight = 2,
+                                                    bringToFront = TRUE),
+                label = ~dat[[cols]]) %>%
+    addLegend("bottomright", pal = dispal,
+              title = "measures",values=mes)
+ return(m1)
+  }
+
 
 
 #### Other Functions ####

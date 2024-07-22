@@ -73,9 +73,9 @@ ui <-
       tabItems(
         tabItem(tabName = "intro",
                 titlePanel("Introduction and Background"),
-                mainPanel(p("This application allows to analyse OPTAIN Optimisation outputs. The aim is to support decision making and the analysis of results by reducing the high number of potential solutions provided by the SWAT+ / COMOLA workflow.
-                              While all these solutions are pareto-optimal (none of the objectives can be improved without losses in other objectives), choosing among a large number of solutions can be daunting. To reduce complexity while minimising information loss, this application selects a number
-                            of optimal solutions using a clustering algorithm based on a Principal Component Analysis (PCA). The user can select variables to be considered in the PCA, decide on the extend of correlation accepted across the considered variables, as well as modify the number of tested clusters and alter the way outliers are handled.",style="text-align; left; font-size:135%"),
+                mainPanel(p("This application analyses OPTAIN Optimisation outputs and shall support decision making.  
+                              While all solutions provided by the SWAT+ / COMOLA workflow are pareto-optimal (none of the objectives can be improved without losses in other objectives), choosing among a large number of solutions can be daunting.",style="text-align; left; font-size:135%"),p("This application allows to visualise the relationships between different objectives and the pareto front in a parallel axis plot.
+                              To reduce complexity while minimising information loss, this application furthermore allows to reduce the number of optimal solutions through a clustering algorithm based on a Principal Component Analysis (PCA). The user can select variables to be considered in the PCA, can decide on the extend of correlation accepted across the considered variables, as well as modify the number of tested clusters and alter the way outliers are handled.",style="text-align; left; font-size:135%"),
                           p("The first tab BLBLA",style="text-align; left; font-size:135%"),p("The second tab BLBLA",style="text-align; left; font-size:135%"),p("The third tab BLBLA",style="text-align; left; font-size:135%")
                           )),
         tabItem(tabName = "play_around",
@@ -105,11 +105,11 @@ ui <-
                   div("4. hru.con",style = "text-align: left; font-size:115%"),
                   div(style = "margin-top: -15px;",fileInput("file4", "", accept = ".con")),
                   
-                  div("5. hru.shp",style = "text-align: left; font-size:115%"),
-                  div(style = "margin-top: -15px;",fileInput("file5", "", accept = ".shp")),
+                  div("5. shapefile called \"hru\" with four components (.shp .dbf .prj and .shx)",style = "text-align: left; font-size:115%"),
+                  div(style = "margin-top: -15px;",fileInput("shapefile", "", multiple = TRUE, 
+                                                             accept = c(".shp", ".shx", ".dbf", ".prj"))),
                   
-                  div("6. hru.shx",style = "text-align: left; font-size:115%"),
-                  div(style = "margin-top: -15px;",fileInput("file6", "", accept = ".shx")),
+                  
                   
                   actionButton("files_avail", "Check Files"),
                   uiOutput("fileStatusMessage"),
@@ -278,6 +278,7 @@ ui <-
                       titlePanel("Analysing the remaining optima"),
                       mainPanel(DTOutput("antab"),
                                 actionButton("plt_opti","Plot Optimum"),
+                                textOutput("no_row")%>%hidden(),
                                 leafletOutput("map")
                                 ))
       )))

@@ -25,6 +25,11 @@ server <- function(input, output, session) {
   axiselected = reactiveVal(read_config_plt(obj=F,axis=T))
   max_pca <- reactive({get_num_pca()})# required for max pc field
   
+  #results table
+  sols <- reactiveVal()
+  
+  #catchment shape
+  cm <- reactiveVal()
   
   ### Data Prep ####
   
@@ -32,9 +37,8 @@ server <- function(input, output, session) {
   file_data2 <- reactiveVal(NULL)
   file_data3 <- reactiveVal(NULL)
   file_data4 <- reactiveVal(NULL)
-  file_data5 <- reactiveVal(NULL)
-  file_data6 <- reactiveVal(NULL)
-  
+  shapefile <- reactiveVal(NULL)
+
   # Check if required files exist 
   observeEvent(input$file1, { file <- input$file1
     if (is.null(file)) {return(NULL)}
@@ -52,44 +56,51 @@ server <- function(input, output, session) {
   if (is.null(file)) {return(NULL)}
   file_data4(list(path = file$datapath, name = file$name))})
   
-  observeEvent(input$file5, { file <- input$file5
-  if (is.null(file)) {return(NULL)}
-  file_data5(list(path = file$datapath, name = file$name))})
   
-  observeEvent(input$file6, { file <- input$file6
+  observeEvent(input$shapefile, { file <- input$shapefile
   if (is.null(file)) {return(NULL)}
-  file_data6(list(path = file$datapath, name = file$name))})
-  
+  shapefile(list(path = file$datapath, name = file$name))})
  
   
   observeEvent(input$files_avail,{
      #  
 
-    
      save_dir <- "../data/"
      save_filename1 <- file_data1()$name
      save_filename2 <- file_data2()$name
      save_filename3 <- file_data3()$name
      save_filename4 <- file_data4()$name
-     save_filename5 <- file_data5()$name
-     save_filename6 <- file_data6()$name
-     
+
      save_path1 <- file.path(save_dir, save_filename1)
      save_path2 <- file.path(save_dir, save_filename2)
      save_path3 <- file.path(save_dir, save_filename3)
      save_path4 <- file.path(save_dir, save_filename4)
-     save_path5 <- file.path(save_dir, save_filename5)
-     save_path6 <- file.path(save_dir, save_filename6)
-     
+
 
      file.copy(file_data1()$path, save_path1, overwrite = TRUE)
      file.copy(file_data2()$path, save_path2, overwrite = TRUE)
      file.copy(file_data3()$path, save_path3, overwrite = TRUE)
      file.copy(file_data4()$path, save_path4, overwrite = TRUE)
-     file.copy(file_data5()$path, save_path5, overwrite = TRUE)
-     file.copy(file_data6()$path, save_path6, overwrite = TRUE)
+
+     shp_req = c(".shp",".shx", ".dbf", ".prj")
+     shapefile <- input$shapefile
+     shapefile_names <- shapefile$name
+     shapefile_paths <- shapefile$datapath
+     missing_shapefile_components <- shp_req[!sapply(shp_req, function(ext) any(grepl(paste0(ext, "$"), shapefile_names)))]
      
-     required_files <- c("../data/pareto_genomes.txt", "../data/pareto_fitness.txt",  "../data/measure_location.csv","../data/hru.con","../data/hru.shp","../data/hru.shx")
+     # Copy shapefile components if none are missing
+     if (length(missing_shapefile_components) == 0) {
+       lapply(seq_along(shapefile_paths), function(i) {
+         save_path <- file.path(save_dir, shapefile_names[i])
+         if (!file.exists(save_path)) {
+           file.copy(shapefile_paths[i], save_path, overwrite = TRUE)
+         }
+       })
+     }
+     
+     
+     required_files <- c("../data/pareto_genomes.txt", "../data/pareto_fitness.txt",  "../data/measure_location.csv","../data/hru.con",
+                         "../data/hru.shp","../data/hru.shx", "../data/hru.dbf", "../data/hru.prj")
      
      checkFiles <- sapply(required_files, function(file) file.exists(file))
      
@@ -107,7 +118,7 @@ server <- function(input, output, session) {
          
        } else {
          missing_files = required_files[!checkFiles]
-         paste("The following file(s) are missing:", paste(missing_files, collapse = ", "))
+         HTML(paste("The following file(s) are missing:<br/>", paste(sub('../data/', '', missing_files), collapse = "<br/> ")))
        }
      })
      
@@ -466,55 +477,39 @@ server <- function(input, output, session) {
     
     
     if (file.exists(dir("../output/", pattern = 'clusters_representativesolutions', full.names =TRUE))) {
-      sols = read.csv(dir("../output/", pattern = 'clusters_representativesolutions', full.names =TRUE))
-      sols <- sols %>% rownames_to_column("optimum") %>%
+      sols_data = read.csv(dir("../output/", pattern = 'clusters_representativesolutions', full.names =TRUE))
+      sols(sols_data %>% rownames_to_column("optimum") %>%
         filter(!is.na(Representative_Solution)) %>%
-        mutate(across(is.numeric, round, digits = 5))
-      hru_plt=plt_long(soltab = sols)
-      
-    } else{
-      sols <- data.frame(Message = "please run again")
+        mutate(across(is.numeric, round, digits = 5)))
+      } else{
+      sols(data.frame(Message = "something went wrong - has the PCA run properly"))
     }
-    
     output$antab <- renderDT({
-      datatable(sols,
+      datatable(sols(),
                 selection = "single",
                 options = list(pageLength = 20, autoWidth = TRUE))
     })
     
-    
+    cm(pull_shp(layername="hru"))
   })
   
   observeEvent(input$plt_opti,{
     selected_row <- input$antab_rows_selected
     if (is.null(selected_row)) {
-      print("No row selected")
-    } else {
-      selected_data <- sols[selected_row,]
-
-      opti = selected_data$optimum
-     
-      hru_sel =  plt_sel(long_plt = hru_plt,opti_sel = opti)
       
+      shinyjs::show(id = "no_row")
+      output$no_row = renderText({paste("No row selected")})
+    } else {
+      
+      shinyjs::hide(id = "no_row")
+      selected_data <- sols()[selected_row,]
+      lalo = plt_latlon()
+      hru_sel =  plt_sel(soltab = sols(), shp=cm(),opti_sel = selected_data$optimum)
       mes = read.csv("../data/measure_location.csv")
-      mes = unique(mes$nswrm)
-      dispal = colorFactor("Spectral", domain = mes, na.color = "grey")
       
       # Render the Leaflet map
-      output$map <- renderLeaflet({
-        leaflet(hru_sel) %>%
-          addPolygons(fillColor = ~dispal(optim), fillOpacity = 0.7,
-                      color = "#444444", weight = 1,
-                      highlightOptions = highlightOptions(color = "white", weight = 2,
-                                                          bringToFront = TRUE),
-                      label = ~optim) %>%
-          addLegend("bottomright", pal = dispal,
-                    title = "measures",values=mes)
-      })
+      output$map <- renderLeaflet({plt_lf(dat=hru_sel,cols = "optim", mes = unique(mes$nswrm),la = lalo[1],lo =lalo[2])})
    
-      
-
-
 
     }
   })

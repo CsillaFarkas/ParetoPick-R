@@ -8,7 +8,6 @@
 # Project: Clustering of pareto front to reduce objective space
 ####################################################################################
 
-# rm(list=ls())
 print(paste0("loading required packages..."),quote=F)
 suppressPackageStartupMessages({
   library(shiny)
