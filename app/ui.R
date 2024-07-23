@@ -80,8 +80,65 @@ ui <-
                           )),
         tabItem(tabName = "play_around",
                 titlePanel("Visualising Optimisation Output"),
+                
+                sidebarLayout(
+                 
+                    sidebarPanel( width="200px",align="left",
+                                  fluidRow(
+                                  id="parfit",
+                                  div("Please provide the pareto_fitness.txt file here",style = "text-align: left; font-size:115%"),
+                                  div(style = "margin-top: -15px;",fileInput("par_fit", "", accept = ".txt")), 
+                                  # Text input for short and long names of objectives
+                                  fluidRow(
+                                    column(6, textInput("short1", "Short Name 1")),
+                                    column(6, textInput("full1", "Full Name 1"))
+                                  ),
+                                  fluidRow(
+                                    column(6, textInput("short2", "Short Name 2")),
+                                    column(6, textInput("full2", "Full Name 2"))
+                                  ),
+                                  fluidRow(
+                                    column(6, textInput("short3", "Short Name 3")),
+                                    column(6, textInput("full3", "Full Name 3"))
+                                  ),
+                                  fluidRow(
+                                    column(6, textInput("short4", "Short Name 4")),
+                                    column(6, textInput("full4", "Full Name 4"))
+                                  ),
+                                  actionButton("save_par_fiti", "Save"),
+                                  textOutput("uploaded_pareto"))%>%hidden(),
+                                  
+                                  div("Objective Range", style="display: inline-block; width: 200px;font-size: 150%",
+                                      
+                                      #slider aesthetics
+                                      tags$style(HTML(".irs-grid-text {font-size: 13px;} 
+                            .js-irs-0 .irs-single, .js-irs-0 .irs-bar-edge, .js-irs-0 .irs-bar {background: #ffc61e ;border-top: 1px solid #ffc61e ;border-bottom: 1px solid #ffc61e;}.js-irs-0 .irs-from, .js-irs-0 .irs-to, .js-irs-0 .irs-single { font-size: 13px;background: #ffc61e !important }")),
+                                      tags$style(HTML(".js-irs-1 .irs-single, .js-irs-1 .irs-bar-edge, .js-irs-1 .irs-bar {background: #009ade ;border-top: 1px solid #009ade ;border-bottom: 1px solid #009ade;}.js-irs-1 .irs-from, .js-irs-1 .irs-to, .js-irs-1 .irs-single { font-size: 13px;background: #009ade !important }")),
+                                      tags$style(HTML(".js-irs-2 .irs-single, .js-irs-2 .irs-bar-edge, .js-irs-2 .irs-bar {background: #af58ba ;border-top: 1px solid #af58ba ;border-bottom: 1px solid #af58ba;}.js-irs-2 .irs-from, .js-irs-2 .irs-to, .js-irs-2 .irs-single { font-size: 13px;background: #af58ba !important }")),
+                                      tags$style(HTML(".js-irs-3 .irs-single, .js-irs-3 .irs-bar-edge, .js-irs-3 .irs-bar {background: #f28522 ;border-top: 1px solid #f28522 ;border-bottom: 1px solid #f28522;}.js-irs-3 .irs-from, .js-irs-3 .irs-to, .js-irs-3 .irs-single { font-size: 13px; background: #f28522 !important }")),
+                                      
+                                      sliderInput(inputId = "obj1", label= "Objective 1:",min = 0, max = 1, value = c(0,1)),
+                                      sliderInput(inputId = "obj2", label = "Objective 2:", min = 0, max = 1,value= c(0,1)),
+                                      sliderInput(inputId = "obj3", label = "Objective 3:", min = 0, max = 1, value = c(0,1)),
+                                      sliderInput(inputId = "obj4", label = "Objective 4:", min = 0, max = 1, value = c(0,1))
+                                      
+                                  )
+                    ),
                 mainPanel(
-                          )),
+                div("Parallel Axis plot", style = "text-align: left; font-size:150%"),
+                           plotOutput("linePlot",click="clickline"),
+                           verbatimTextOutput("lineDetails"),
+                           div("Selected Optimum", style = "text-align: left; font-size:150%"),
+                           tableOutput("click_info"),
+                           div("Selected Objective Ranges (scaled)", style = "text-align: left; font-size:150%"),
+                           tableOutput("sliders"), #needed for min and max
+                           div("Selected Objective Ranges (absolute)", style = "text-align: left; font-size:150%"),
+                           tableOutput("sliders_abs"),
+                           # div("Measure implementation under selected optimum", style = "text-align: left; font-size:150%"),
+                           # plotOutput("violin"),
+                           div("Difference between selection and the whole Pareto Front", style = "text-align: left; font-size:150%"),
+                           plotOutput("sliders_plot")
+                          ))),# PLAY AROUND MAIN PANEL END
         
         
         tabItem(tabName = "data_prep",

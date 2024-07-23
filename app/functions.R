@@ -179,8 +179,8 @@ write_pcanum = function(pcamin,pcamax){
 read_pca = function(){
   config <- read.ini("../input/config.ini")
   
-  if(!is.null(config[[1]]$columns)){pca_col_incl = unlist(strsplit(config[[1]]$columns,", "))
-  pca_col = pca_col_incl[order(pca_col_incl)]}else(pca_col = NULL)
+  if(!is.null(config[[1]]$columns)){pca_col_incl <- unlist(strsplit(config[[1]]$columns,", "))
+  pca_col <- pca_col_incl[order(pca_col_incl)]}else{pca_col <- NULL}
   
   return(pca_col)
 }
@@ -316,7 +316,99 @@ plt_lf = function(dat=hru_sel,cols="optim", mes, lo, la){
  return(m1)
   }
 
+#### Plotting the exploration tab
 
+## barplot THIS NEEDS DYNAMIC TESTING FOR NEG VALUES!
+prep_diff_bar = function(abs_tab,red_tab,allobs=c('HC', 'HQ', 'P', 'AP')){
+  #full dataset/all optima
+  req(fit())
+  absk = abs_tab%>%pivot_longer(everything())%>%group_by(name)%>%
+    summarise(min = min(value),
+              max = max(value),
+              median = median(value),
+              mean = mean(value))%>% 
+    column_to_rownames(var = "name")
+  
+  
+  #reduced (new) table of optima  
+  redk = red_tab%>% pivot_longer(everything())%>%group_by(name)%>%
+    summarise(min = min(value),
+              max = max(value),
+              median = median(value),
+              mean = mean(value))%>% 
+    column_to_rownames(var = "name")
+  
+  
+  #dumbest way possible for doing this
+  pct = as.data.frame(array(NA,dim = c(4,length(allobs))),row.names = rownames(redk))
+  colnames(pct) = allobs
+  colnames(pct) == colnames(redk)
+  
+  pct = 100*(redk-absk)/absk
+  
+  # correcting for values on a negative scale NOT DYNAMIC YET
+  pct["P",] = (pct["P",])*-1
+  
+  
+  return(pct)
+}
+
+
+##plot return of prep_diff_bar
+plot_diff_bar= function(pct){
+  pl2 <- pct %>% rownames_to_column(var = "objective")  %>%mutate(objective=factor(objective)) %>%
+    mutate(objective=forcats::fct_relevel(objective,c("HC","HQ","P","AP")))%>%
+    pivot_longer(-objective)%>%
+    
+    ggplot(aes(x = name, y = value, fill = objective)) +
+    geom_bar(position = "dodge",
+             stat = "identity",
+             alpha = 0.75) + labs(x = 'Objective', y = 'percentage change (%)') +
+    theme_bw() +
+    theme_minimal() +
+    scale_fill_manual(values = c( "#FFC61E", "#009ADE","#AF58BA", "#F28522", "#FF1F5B")) +
+    geom_text(aes(label = objective),size=10,
+              colour = "black",
+              position = position_dodge(width = 1), vjust = -0.5) +
+    theme(
+      plot.title = element_text(size = 19L),
+      axis.text.y = element_text(size = 17L),
+      axis.text.x = element_text(size = 20),
+      axis.title.y = element_text(size = 20),
+      axis.title.x = element_blank(),
+      legend.position = "none"
+    ) +
+    theme(plot.background = element_rect(fill = NA, color = NA))+scale_y_continuous(limits=c(-10,10))
+  
+  return(pl2)
+}
+
+
+## parallel axis plot
+plot_parline = function(datt,sizz=rep(.5, length(unique(datt$id))),colols=rep("grey50", length(unique(datt$id)))){
+  
+  pl1 <- ggplot(datt, aes(x = name, y = value,group=id,size=id, color=id)) +   # group = id is important!
+    geom_line(
+      aes(group = id),
+      alpha = 0.5,
+      lineend = 'round',
+      linejoin = 'round'
+    ) +
+    theme_minimal() +
+    theme(legend.position = "none",
+          plot.title = element_text(size = 19L),
+          axis.text.y = element_text(size = 15L),
+          axis.text.x = element_text(size = 16L),
+          axis.title.y = element_text(size = 15),
+          axis.title.x = element_blank()
+    )+scale_y_continuous(limits = c(0,1))+
+    scale_x_discrete(expand = c(0.04, 0.05)) + labs(x = "Factors", y = "Scaled Values")+
+    scale_size_manual(values = sizz) +
+    scale_color_manual(values = colols)
+  
+  return(pl1)
+  
+}
 
 #### Other Functions ####
 
@@ -418,4 +510,96 @@ pca_settings = function(input){
     settings <- paste(settings, outly,collapse = "<br>")}
     
   return(settings)
+}
+
+## return the original value and the position of scaled value in the original dataset
+scaled_abs_match = function(minval_s=c(0,0,0,0),
+                            maxval_s=c(1,1,1,1),
+                            scal_tab=NULL,abs_tab=NULL,
+                            allobs=c('HC', 'HQ', 'P', 'AP'),smll = TRUE){ 
+  
+  df <- as.data.frame(array(NA,dim=c(2,length(allobs))),row.names = c("max","min"))
+  colnames(df) = allobs
+  
+  # locate values in scaled dataframe 
+  for(i in 1:length(allobs)){
+    
+    sca_max <- scal_tab[which.min(abs(scal_tab[[allobs[i]]]-maxval_s[i])),]
+    df["max",allobs[i]] = abs_tab[rownames(sca_max),allobs[i]]  
+    
+    sca_min <- scal_tab[which.min(abs(minval_s[i]-scal_tab[[allobs[i]]])),]
+    df["min",allobs[i]] = abs_tab[rownames(sca_min),allobs[i]]
+  }
+  
+  # consider interactions between objectives (some are not attainable anymore)
+  # reduced dataframe of absolute values within all objective ranges
+  ch = abs_tab
+  
+  for(k in 1:length(allobs)){
+    valma = df["max",k]
+    valmi = df["min",k]
+    ch =  ch %>% filter(.data[[allobs[k]]]<= valma & .data[[allobs[k]]]>=valmi)
+  }
+  
+  # retain only min and max
+  cw = as.data.frame(array(NA,dim=c(2,length(allobs))),row.names = c("max","min"))
+  colnames(cw) = allobs
+  
+  
+  for (l in 1:length(allobs)) {
+    if(length(ch %>% slice_max(.data[[allobs[l]]]) %>% select(allobs[[l]]) %>% slice(1)) > 1 ||
+       length(ch %>% slice_min(.data[[allobs[l]]]) %>% select(allobs[[l]]) %>% slice(1)) > 1) {
+      cw["max", allobs[l]] = NA
+      cw["min", allobs[l]] = NA
+    }else{
+      
+      cw["max", allobs[l]] = ch %>% slice_max(.data[[allobs[l]]]) %>% select(allobs[[l]]) %>% slice(1)
+      cw["min", allobs[l]] = ch %>% slice_min(.data[[allobs[l]]]) %>% select(allobs[[l]]) %>% slice(1)
     }
+    
+    
+  }
+  #when smll is set to false the table with all absolute values is returned
+  if(smll){return(cw)}else{return(ch)} 
+  
+}
+
+
+## similar to ch in scaled_abs_match, matching input scaled data with a scaled dataframe
+match_scaled = function(minval_s=c(0,0,0,0),
+                        maxval_s=c(1,1,1,1),
+                        scal_tab = NULL,
+                        allobs=c('HC', 'HQ', 'P', 'AP')){
+  
+  df <- as.data.frame(array(NA,dim=c(2,length(allobs))),row.names = c("max","min"))
+  colnames(df) = allobs
+  
+  # locate values in scaled dataframe 
+  for(i in 1:length(allobs)){
+    
+    sca_max <- scal_tab[which.min(abs(scal_tab[[allobs[i]]]-maxval_s[i])),]
+    df["max",allobs[i]] = scal_tab[rownames(sca_max),allobs[i]]  
+    
+    sca_min <- scal_tab[which.min(abs(minval_s[i]-scal_tab[[allobs[i]]])),]
+    df["min",allobs[i]] = scal_tab[rownames(sca_min),allobs[i]]
+  }
+  
+  # surely this should be easier to achieve...
+  ch = scal_tab
+  
+  for(k in 1:length(allobs)){
+    valma = df["max",k]
+    valmi = df["min",k]
+    ch =  ch %>% filter(.data[[allobs[k]]]<valma & .data[[allobs[k]]]>valmi)
+  }
+  if(dim(ch)[1]==0){stop("no optima fulfill these conditions")}else{return(ch)}
+  
+}
+
+## find row of data containing specific value in specific column
+find_row = function(dat, colname, val, absdat){
+  
+  closest_index <- which.min(abs(dat[[colname]] - val))
+ 
+  return(absdat[closest_index, ]) #this works as fit and f_scaled have the same origin
+}

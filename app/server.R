@@ -1,6 +1,22 @@
 ################# SERVER #############################
 server <- function(input, output, session) {
-
+  
+  ## reactive values
+  
+  #MOVE
+  rv <-reactiveValues(sizes= NULL,
+  colls = NULL)
+  
+  objectives <- reactiveVal(tibble(short = character(),full = character()))
+  par_fiti <- reactiveVal(NULL)
+  fit <- reactiveVal(NULL)
+   #ADAPT FOR DYNAMIC OBJECTIVES
+  er <- reactiveValues(
+    HC = NA,
+    HQ = NA,
+    P = NA,
+    AP = NA
+  )
   pca_remove <- reactiveVal(NULL)
   script_output <- reactiveVal("") # data prep R output
   dp_done = reactiveVal(FALSE) # checking if data prep R output is done
@@ -30,6 +46,176 @@ server <- function(input, output, session) {
   
   #catchment shape
   cm <- reactiveVal()
+  
+  
+  ### Play Around Tab####
+  observe({
+    updated_objectives <- tibble(
+      short = c(input$short1, input$short2, input$short3, input$short4),
+      full = c(input$full1, input$full2, input$full3, input$full4)
+    )
+    objectives(updated_objectives)
+  })
+  
+  # Update slider labels based on objectives
+  observe({
+    obj <- objectives()
+    updateSliderInput(session, "slider1", label = obj$full[1])
+    updateSliderInput(session, "slider2", label = obj$full[2])
+    updateSliderInput(session, "slider3", label = obj$full[3])
+    updateSliderInput(session, "slider4", label = obj$full[4])
+  })
+  
+ if (file.exists(pareto_path)) {
+   data <- read.table(pareto_path, header = FALSE, stringsAsFactors = FALSE, sep = ',')
+   # names(data) <- objectives()$short
+   fit(data)
+   shinyjs::hide(id = "parfit")
+   output$uploaded_pareto <- renderText({ "All Files found." })
+ } else {
+   shinyjs::show(id = "parfit")
+ }
+   
+  
+  observeEvent(input$par_fit, { 
+    req(input$par_fit)
+    file <- input$par_fit
+    if (is.null(file)) {return(NULL)}
+    par_fiti(list(path = file$datapath, name = file$name))
+    })
+  
+  observeEvent(input$save_par_fiti,{
+    req(par_fiti())
+  save_par_fiti <- par_fiti()$name
+  save_path_par_fiti <- file.path(save_dir, save_par_fiti)
+  file.copy(par_fiti()$path, save_path_par_fiti, overwrite = TRUE)
+  
+    data = read.table(pareto_path, header=F,stringsAsFactors=FALSE,sep = ',')
+    names(data) = objectives$short
+    fit(data)
+  }) 
+  
+    
+  f_scaled <- reactive({
+    req(fit())  
+   fit() %>% 
+      mutate(across(everything(), ~ scales::rescale(.)))%>%mutate(id = row_number())
+   
+  })
+  
+  # ggplot melt and change plotting order
+  pp <- reactive({
+    req(f_scaled())
+     f_scaled()%>% pivot_longer(.,cols=-id)%>%mutate(name=factor(name,levels=c("HC","HQ","P","AP")),id=as.factor(id))
+     })
+
+  observe({
+    req(pp())
+    rv$sizes= rep(0.5, length(unique(pp()$id)))
+      rv$colls = rep("grey50", length(unique(pp()$id)))
+  })
+ 
+
+  observeEvent(input$clickline,{
+    req(fit())
+    x = round(input$clickline$x)
+    val = input$clickline$y
+
+    sc= match_scaled(minval_s=c(input$obj1[1],input$obj2[1],input$obj3[1],input$obj4[1]),
+                     maxval_s=c(input$obj1[2],input$obj2[2],input$obj3[2],input$obj4[2]), scal_tab=f_scaled())
+
+    # Turn into required format (NOT DYNAMIC YET)
+    yo= sc%>% mutate(id = row_number())%>%slice(which.min(abs(.[[x]] - val)))
+
+    rom = as.numeric(yo[["id"]])
+  
+     # change size vector
+    rv$sizes[rom] = 1.3
+    rv$colls[rom] = "#FF5666"# "#797596"
+  
+    # Reset other sizes and colors
+    rv$sizes[-rom] = 0.5
+    rv$colls[-rom] = "grey50"
+  
+  
+  # for table ADAPT FOR DYNAMIC OBJECTIVES and decimals..
+    te  <- find_row(dat = f_scaled(),  colname = objectives$short()[[x]], val = val,absdat = fit())
+    er$HC <- formatC(te$HC, digits = 5)
+    er$HQ <- formatC(te$HQ, digits = 5)
+    er$P <- te$P
+    er$AP <- te$AP
+    }, ignoreNULL = TRUE)
+  #
+  # # Render line Plot
+  output$linePlot <- renderPlot({
+    req(input$short1)
+    req(f_scaled)
+    sk= match_scaled(minval_s=c(input$obj1[1],input$obj2[1],input$obj3[1],input$obj4[1]),
+                     maxval_s=c(input$obj1[2],input$obj2[2],input$obj3[2],input$obj4[2]),scal_tab = f_scaled())
+
+    # Turn into required format (NOT DYNAMIC YET)
+
+    ko= sk%>% mutate(id = factor(row_number()))%>%pivot_longer(.,cols=-id)%>%
+      mutate(name=factor(name))%>%mutate(name=forcats::fct_relevel(name,c(input$short1,input$short2,input$short3,input$short4)))
+
+    # levels(ko$id) = rv$lvls
+    plot_parline(datt=ko,colols=rv$colls,sizz=rv$sizes)
+
+  })
+  #
+  # #table of chosen line ADAPT FOR DYNAMIC OBJECTIVES
+  output$click_info <- renderTable({
+    data.frame(
+      HC = er$HC,
+      HQ = er$HQ,
+      P = er$P,
+      AP = er$AP)},include.rownames=F)
+  #
+  #
+  # # scaled table NAMING NOT DYNAMIC
+  output$sliders <- renderTable({
+    slid =data.frame(
+      HC = c(input$obj1[2],input$obj1[1]),
+      HQ = c(input$obj2[2],input$obj2[1]),
+      P = c(input$obj3[2],input$obj3[1]),
+      AP = c(input$obj4[2],input$obj4[1]),
+      row.names = c("max","min")
+    )
+    slid},
+    include.rownames=TRUE)
+  #
+  # # absolute table
+  output$sliders_abs <- renderTable({
+    req(f_scaled())
+    req(fit())
+    dt <- scaled_abs_match(minval_s=c(input$obj1[1],input$obj2[1],input$obj3[1],input$obj4[1]),
+                           maxval_s=c(input$obj1[2],input$obj2[2],input$obj3[2],input$obj4[2]),
+                           scal_tab = f_scaled(),
+                           abs_tab = fit())
+    
+    # varying number of decimals
+    dt$HC <-formatC(dt$HC, digits = 5)
+    dt$HQ<-formatC(dt$HQ, digits = 5)
+
+    dt},
+    include.rownames = TRUE)
+  #
+  # # barplot
+  output$sliders_plot <- renderPlot({
+   req(fit())
+    req(f_scaled())
+    matchi = reactive({scaled_abs_match(
+      minval_s = c(input$obj1[1], input$obj2[1], input$obj3[1], input$obj4[1]),
+      maxval_s = c(input$obj1[2], input$obj2[2], input$obj3[2], input$obj4[2]),
+      scal_tab = f_scaled(),
+      abs_tab = fit(),
+      smll = F)})
+  #
+    pldat<- reactive({prep_diff_bar(abs_tab=fit(),red_tab=matchi())})
+  #
+    plot_diff_bar(pldat())
+  #
+  })
   
   ### Data Prep ####
   
@@ -63,9 +249,7 @@ server <- function(input, output, session) {
  
   
   observeEvent(input$files_avail,{
-     #  
-
-     save_dir <- "../data/"
+     
      save_filename1 <- file_data1()$name
      save_filename2 <- file_data2()$name
      save_filename3 <- file_data3()$name
@@ -132,7 +316,7 @@ server <- function(input, output, session) {
    objs <- reactiveValues(data=NULL)
    
    # only show objective naming when files have been checked
-   # observeEvent(input$files_avail, {shinyjs::show(id="sel_obj")})
+   observeEvent(input$files_avail, {shinyjs::show(id="sel_obj")})
    
    # Observe event for confirm button
    observeEvent(input$obj_conf, {
