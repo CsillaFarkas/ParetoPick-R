@@ -76,7 +76,8 @@ ui <-
                 mainPanel(p("This application analyses OPTAIN Optimisation outputs and shall support decision making.  
                               While all solutions provided by the SWAT+ / COMOLA workflow are pareto-optimal (none of the objectives can be improved without losses in other objectives), choosing among a large number of solutions can be daunting.",style="text-align; left; font-size:135%"),p("This application allows to visualise the relationships between different objectives and the pareto front in a parallel axis plot.
                               To reduce complexity while minimising information loss, this application furthermore allows to reduce the number of optimal solutions through a clustering algorithm based on a Principal Component Analysis (PCA). The user can select variables to be considered in the PCA, can decide on the extend of correlation accepted across the considered variables, as well as modify the number of tested clusters and alter the way outliers are handled.",style="text-align; left; font-size:135%"),
-                          p("The first tab BLBLA",style="text-align; left; font-size:135%"),p("The second tab BLBLA",style="text-align; left; font-size:135%"),p("The third tab BLBLA",style="text-align; left; font-size:135%")
+                          p(" The second tab visualises the optimisation results. The user can select preferred objective ranges and assess a reduced objective space affects the pareto front.",
+                            style="text-align; left; font-size:135%"),p("The second tab BLBLA",style="text-align; left; font-size:135%"),p("The third tab BLBLA",style="text-align; left; font-size:135%")
                           )),
         tabItem(tabName = "play_around",
                 titlePanel("Visualising Optimisation Output"),
@@ -90,21 +91,13 @@ ui <-
                                   div(style = "margin-top: -15px;",fileInput("par_fit", "", accept = ".txt")), 
                                   # Text input for short and long names of objectives
                                   fluidRow(
-                                    column(6, textInput("short1", "Short Name 1")),
-                                    column(6, textInput("full1", "Full Name 1"))
-                                  ),
-                                  fluidRow(
-                                    column(6, textInput("short2", "Short Name 2")),
-                                    column(6, textInput("full2", "Full Name 2"))
-                                  ),
-                                  fluidRow(
-                                    column(6, textInput("short3", "Short Name 3")),
-                                    column(6, textInput("full3", "Full Name 3"))
-                                  ),
-                                  fluidRow(
-                                    column(6, textInput("short4", "Short Name 4")),
-                                    column(6, textInput("full4", "Full Name 4"))
-                                  ),
+                                    id="obj_first",
+                                    column(6, textInput("short1", "Short Name Column 1")),
+                                    column(6, textInput("short2", "Short Name Column 2")),
+                                    column(6, textInput("short3", "Short Name Column 3")),
+                                    column(6, textInput("short4", "Short Name Column 4")),
+                                  )%>% hidden(),
+        
                                   actionButton("save_par_fiti", "Save"),
                                   textOutput("uploaded_pareto"))%>%hidden(),
                                   

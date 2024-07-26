@@ -319,9 +319,9 @@ plt_lf = function(dat=hru_sel,cols="optim", mes, lo, la){
 #### Plotting the exploration tab
 
 ## barplot THIS NEEDS DYNAMIC TESTING FOR NEG VALUES!
-prep_diff_bar = function(abs_tab,red_tab,allobs=c('HC', 'HQ', 'P', 'AP')){
+prep_diff_bar = function(abs_tab,red_tab,allobs){
   #full dataset/all optima
-  req(fit())
+  
   absk = abs_tab%>%pivot_longer(everything())%>%group_by(name)%>%
     summarise(min = min(value),
               max = max(value),
@@ -355,9 +355,9 @@ prep_diff_bar = function(abs_tab,red_tab,allobs=c('HC', 'HQ', 'P', 'AP')){
 
 
 ##plot return of prep_diff_bar
-plot_diff_bar= function(pct){
+plot_diff_bar= function(pct,obj_choices=NULL){
   pl2 <- pct %>% rownames_to_column(var = "objective")  %>%mutate(objective=factor(objective)) %>%
-    mutate(objective=forcats::fct_relevel(objective,c("HC","HQ","P","AP")))%>%
+    mutate(objective=forcats::fct_relevel(objective,obj_choices))%>%
     pivot_longer(-objective)%>%
     
     ggplot(aes(x = name, y = value, fill = objective)) +
@@ -516,7 +516,7 @@ pca_settings = function(input){
 scaled_abs_match = function(minval_s=c(0,0,0,0),
                             maxval_s=c(1,1,1,1),
                             scal_tab=NULL,abs_tab=NULL,
-                            allobs=c('HC', 'HQ', 'P', 'AP'),smll = TRUE){ 
+                            allobs=NULL,smll = TRUE){ 
   
   df <- as.data.frame(array(NA,dim=c(2,length(allobs))),row.names = c("max","min"))
   colnames(df) = allobs
