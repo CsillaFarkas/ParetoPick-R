@@ -1,15 +1,17 @@
-############################### UI ###############################
-
+############################### UI #################################
+# comments: 
+# Project: Clustering Pareto Solutions/Multi-objective visualisation
+####################################################################
 ui <- 
   dashboardPage(
     dashboardHeader(title="OPTAIN"),
     dashboardSidebar(
       sidebarMenu(id = "tabs",
       menuItem("Introduction",tabName = "intro", icon = icon("home")),
-      menuItem("Parallel Coordinates",tabName = "play_around",icon = icon("dashboard")),
+      menuItem("Visualising the Pareto Front",tabName = "play_around",icon = icon("dashboard")),
       menuItem("Data Preparation", icon = icon("th"),tabName = "data_prep"),
       menuItem("Correlation Analysis", tabName = "correlation_analysis",selected=TRUE),
-      menuItem("PCA", tabName = "pca"),
+      menuItem("Clustering", tabName = "pca"),
       menuItem("Analysis",tabName = "analysis")
       
     )),
@@ -73,12 +75,21 @@ ui <-
       tabItems(
         tabItem(tabName = "intro",
                 titlePanel("Introduction and Background"),
-                mainPanel(p("This application analyses OPTAIN Optimisation outputs and shall support decision making.  
-                              While all solutions provided by the SWAT+ / COMOLA workflow are pareto-optimal (none of the objectives can be improved without losses in other objectives), choosing among a large number of solutions can be daunting.",style="text-align; left; font-size:135%"),p("This application allows to visualise the relationships between different objectives and the pareto front in a parallel axis plot.
-                              To reduce complexity while minimising information loss, this application furthermore allows to reduce the number of optimal solutions through a clustering algorithm based on a Principal Component Analysis (PCA). The user can select variables to be considered in the PCA, can decide on the extend of correlation accepted across the considered variables, as well as modify the number of tested clusters and alter the way outliers are handled.",style="text-align; left; font-size:135%"),
-                          p(" The second tab visualises the optimisation results. The user can select preferred objective ranges and assess a reduced objective space affects the pareto front.",
-                            style="text-align; left; font-size:135%"),p("The second tab BLBLA",style="text-align; left; font-size:135%"),p("The third tab BLBLA",style="text-align; left; font-size:135%")
+                mainPanel( div(
+                  style = "width: 100%; text-align: justify; font-size:135%;",
+                  p("This application analyses OPTAIN Optimisation outputs and shall support decision making.  
+                              While all solutions provided by the SWAT+ / COMOLA workflow are pareto-optimal (none of the objectives can be improved without losses 
+                            in other objectives), choosing among a large number of solutions can be daunting."),
+                              br(), p("To reduce complexity while minimising information loss, this application provides a clustering algorithm based on a Principal Component Analysis (PCA).
+                              The user can modify the clustering process, alter the number of tested clusters and the way outliers are handled or how much correlation is accepted across the considered variables.
+                              Finally, those optima representative for different clusters can be plotted.
+                                "),br(),br(),
+                          p(" The application is structured the following way:"),
+                          p(HTML("The second tab <strong>Visualising the Pareto Front</strong> plots the optimisation results. The user can select preferred objective ranges and assess how a reduced objective space affects the pareto front.")),
+                          p(HTML("The third tab <b>Data Preparation</b>is needed to produce the data required for the subsequent analyses.")),
+                          p(HTML("The fourth tab <strong>Correlation Analysis</strong> allows to run alter the considered variables and assess the correlation among variables in detail.")))
                           )),
+        # PLAY AROUND TAB
         tabItem(tabName = "play_around",
                 titlePanel("Visualising Optimisation Output"),
                 
@@ -127,12 +138,13 @@ ui <-
                            tableOutput("sliders"), #needed for min and max
                            div("Selected Objective Ranges (absolute)", style = "text-align: left; font-size:150%"),
                            tableOutput("sliders_abs"),
-                           # div("Measure implementation under selected optimum", style = "text-align: left; font-size:150%"),
-                           # plotOutput("violin"),
+                          
                            div("Difference between selection and the whole Pareto Front", style = "text-align: left; font-size:150%"),
                            plotOutput("sliders_plot")
-                          ))),# PLAY AROUND MAIN PANEL END
+                          )## PLAY AROUND MAIN PANEL END
+                )),
         
+        ## DATA PREP PANEL
         
         tabItem(tabName = "data_prep",
                 titlePanel("OPTAIN Data Preparation"),
@@ -140,8 +152,7 @@ ui <-
                   
                   tags$head(tags$style("#fileStatusMessage{font-size:150%;}")),
                   
-                  
-                          p("To run the data preparation and the subsequent Correlation and Principal Component Analysis, please provide the following files:",style =  "text-align: left; font-size:150%"),
+                                p("To run the data preparation and the subsequent Correlation and Principal Component Analysis, please provide the following files:",style =  "text-align: left; font-size:150%"),
                          
                   div("1. pareto_genomes.txt",style = "text-align: left; font-size:115%"),
                   div(style = "margin-top: -15px;",fileInput("file1", "", accept = ".txt")), 
@@ -159,12 +170,8 @@ ui <-
                   div(style = "margin-top: -15px;",fileInput("shapefile", "", multiple = TRUE, 
                                                              accept = c(".shp", ".shx", ".dbf", ".prj"))),
                   
-                  
-                  
                   actionButton("files_avail", "Check Files"),
                   uiOutput("fileStatusMessage"),
-                  
-
                   
                   fluidRow(
                     id="sel_obj",
@@ -186,11 +193,7 @@ ui <-
         
       ## CORRELATION ANALYSIS PANEL
         tabItem(tabName = "correlation_analysis",
-         
-            # tags$style(HTML(".js-irs-0 .irs-single, .js-irs-0 .irs-bar-edge, .js-irs-0 .irs-bar {background: darkslateblue}")),
-            # #https://htmlcolorcodes.com/color-names/
-            # 
-            titlePanel("Correlation Analysis"),
+           titlePanel("Correlation Analysis"),
            sidebarLayout(
               sidebarPanel(
       # Display message about file status
@@ -221,14 +224,9 @@ ui <-
       div("Most correlated variables", style = "text-align: left; font-size:150%"),
       DTOutput("corrtable"), 
     
-     
-      # print confirmed selectoin
+      # print confirmed selection
       uiOutput(outputId = "confirmed_selection")
-      # textOutput("excla")
-       
-      # div("Accepted Correlation under this decision",style = "text-align: left; font-size:150%"),
-      # tableOutput("remtab")
-      
+     
       )## CORRELATION ANALYSIS MAIN PANEL END
     
     )
@@ -240,7 +238,7 @@ ui <-
           tags$style(HTML(".js-irs-0 .irs-single, .js-irs-0 .irs-bar-edge, .js-irs-0 .irs-bar {background: darkslateblue}")),
           #https://htmlcolorcodes.com/color-names/
           
-          titlePanel("Principal Component Analysis"),
+          titlePanel("Clustering"),
           sidebarLayout(sidebarPanel(div("Variables included in the PCA",style = "text-align: left; font-size:150%"),
                                      div("to change these variables please return to the previous tab and choose variables to remove",style = "text-align: left; font-size:100%"),
                           tableOutput("pca_incl"),

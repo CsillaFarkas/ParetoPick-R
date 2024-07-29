@@ -1,4 +1,7 @@
-################# SERVER #############################
+######################## SERVER ####################################
+# comments: 
+# Project: Clustering Pareto Solutions/Multi-objective visualisation
+####################################################################
 server <- function(input, output, session) {
   
   ## reactive values
@@ -12,13 +15,13 @@ server <- function(input, output, session) {
   dp_done = reactiveVal(FALSE) # checking if data prep R output is done
   all_choices = reactiveVal()
   isElementVisible = reactiveVal(FALSE)
+  
+  ## pca tab - pca table
   settings_text= reactiveVal("") #printing pca settings
-
   update_settings <- function() {
     settings <- pca_settings(input)
     settings_text(settings)
   }
-  ## pca tab - pca table
   pca_ini <- read_pca()
   pca_table <- reactiveVal(pca_ini)
   
@@ -40,6 +43,8 @@ server <- function(input, output, session) {
   ### Introduction ####
  
   ### Play Around Tab ####
+  
+  ##check if names of objectives have to be supplied or already present
   observeEvent(input$tabs == "play_around",{ 
     if(!file.exists("../input/object_names.RDS")) {
       
@@ -55,7 +60,7 @@ server <- function(input, output, session) {
       objectives(short)
     }})
     
-  # Update slider labels based on objectives
+  ## update slider labels based on objectives
   observe({
     obj <- objectives()
     updateSliderInput(session, "obj1", label = obj[1])
@@ -79,7 +84,7 @@ server <- function(input, output, session) {
     shinyjs::show(id = "parfit")
   }
    
-  
+  ## user supplies pareto_fitness.txt
   observeEvent(input$par_fit, { 
     req(input$par_fit)
     file <- input$par_fit
@@ -102,14 +107,14 @@ server <- function(input, output, session) {
     
   }) 
   
-    
+    ## base dataframe for all further operations in play_around tab
   f_scaled <- reactive({
     req(fit())  
     fit() %>% mutate(across(everything(), ~ scales::rescale(.)))%>%mutate(id = row_number())
    
   })
   
-  # ggplot melt and change plotting order
+  ## ggplot melt and change plotting order
   pp <- reactive({
     req(f_scaled())
     f_scaled()%>% pivot_longer(.,cols=-id)%>%mutate(name=factor(name,levels=c("HC","HQ","P","AP")),id=as.factor(id))
@@ -121,7 +126,7 @@ server <- function(input, output, session) {
     rv$colls = rep("grey50", length(unique(pp()$id)))
   })
  
-
+  ## pull values from parallel axis line when clicked
   observeEvent(input$clickline,{
     req(fit())
     x = round(input$clickline$x)
@@ -130,21 +135,19 @@ server <- function(input, output, session) {
     sc= match_scaled(minval_s=c(input$obj1[1],input$obj2[1],input$obj3[1],input$obj4[1]),
                      maxval_s=c(input$obj1[2],input$obj2[2],input$obj3[2],input$obj4[2]), scal_tab=f_scaled())
 
-    # Turn into required format (NOT DYNAMIC YET)
+    # pull the closest value
     yo= sc%>% mutate(id = row_number())%>%slice(which.min(abs(.[[x]] - val)))
 
     rom = as.numeric(yo[["id"]])
   
-     # change size vector
+    # change size vector
     rv$sizes[rom] = 1.3
     rv$colls[rom] = "#FF5666"# "#797596"
   
-    # Reset other sizes and colors
+    # reset other sizes and colors
     rv$sizes[-rom] = 0.5
     rv$colls[-rom] = "grey50"
   
-  
-  # for table ADAPT FOR DYNAMIC OBJECTIVES and decimals..
     te  <- find_row(dat = f_scaled(),  colname = objectives()[[x]], val = val,absdat = fit())
     # er$HC <- formatC(te$HC, digits = 5)
     # er$HQ <- formatC(te$HQ, digits = 5)
@@ -166,20 +169,14 @@ server <- function(input, output, session) {
     sk= match_scaled(minval_s=c(input$obj1[1],input$obj2[1],input$obj3[1],input$obj4[1]),
                      maxval_s=c(input$obj1[2],input$obj2[2],input$obj3[2],input$obj4[2]),scal_tab = f_scaled())
 
-    ## turn into required format (NOT DYNAMIC YET)
-
     ko= sk%>% mutate(id = factor(row_number()))%>%pivot_longer(.,cols=-id)%>%
       mutate(name=factor(name))%>%mutate(name=forcats::fct_relevel(name,objectives()))
 
-    # levels(ko$id) = rv$lvls
     plot_parline(datt=ko,colols=rv$colls,sizz=rv$sizes)
 
   })
   
   ## scaled table 
-
-    
-    
     output$sliders <- renderTable({
       req(f_scaled(),fit(),objectives())
       
@@ -195,7 +192,6 @@ server <- function(input, output, session) {
      slid},
      include.rownames=TRUE)
 
-  
   
   ## absolute table
   output$sliders_abs <- renderTable({
@@ -274,7 +270,6 @@ server <- function(input, output, session) {
      save_path3 <- file.path(save_dir, save_filename3)
      save_path4 <- file.path(save_dir, save_filename4)
 
-
      file.copy(file_data1()$path, save_path1, overwrite = TRUE)
      file.copy(file_data2()$path, save_path2, overwrite = TRUE)
      file.copy(file_data3()$path, save_path3, overwrite = TRUE)
@@ -286,7 +281,7 @@ server <- function(input, output, session) {
      shapefile_paths <- shapefile$datapath
      missing_shapefile_components <- shp_req[!sapply(shp_req, function(ext) any(grepl(paste0(ext, "$"), shapefile_names)))]
      
-     # Copy shapefile components if none are missing
+     # copy shapefile components if none are missing
      if (length(missing_shapefile_components) == 0) {
        lapply(seq_along(shapefile_paths), function(i) {
          save_path <- file.path(save_dir, shapefile_names[i])
@@ -302,19 +297,19 @@ server <- function(input, output, session) {
      
      checkFiles <- sapply(required_files, function(file) file.exists(file))
      
-     if(all(checkFiles)){ shinyjs::show(id = "sel_obj")}
+     ## only show objective naming when files have been checked
+      if(all(checkFiles) ==F | !file.exists("../input/object_names.RDS")){ shinyjs::show(id = "sel_obj")}
      
      output$fileStatusMessage <- renderText({
-       if (all(checkFiles)) {
-         HTML(paste(
-           "All Files found.",
-           "Please provide the names of the objectives represented in the Pareto front.
-            The names and the order in which they are given have
-            to align with what is provided in the first four columns of pareto_fitness.txt",
-           sep = "<br/><br/>"
-         ))
+       if (all(checkFiles) & file.exists("../input/object_names.RDS")) {
+         HTML(
+           "All Files found.")
          
-       } else {
+       } else if(all(checkFiles) & !file.exists("../input/object_names.RDS")){
+         HTML("All files found. <br>Please provide the names of the objectives represented in the Pareto front.
+             The names and the order in which they are given have
+             to align with what is provided in the first four columns of pareto_fitness.txt")
+         }else {
          missing_files = required_files[!checkFiles]
          HTML(paste("The following file(s) are missing:<br/>", paste(sub('../data/', '', missing_files), collapse = "<br/> ")))
        }
@@ -323,16 +318,12 @@ server <- function(input, output, session) {
      
   })
   
-  
-   # initialise PCA table when app starts
+   ## initialise PCA table when app starts
    pca_in <- reactiveValues(data = read_pca()) #this only reads config$columns, NULL if opening for the first time
    
    objs <- reactiveValues(data=NULL)
    
-   # only show objective naming when files have been checked
-   observeEvent(input$files_avail, {shinyjs::show(id="sel_obj")})
-   
-   # Observe event for confirm button
+   ## observe event for confirm button
    if(!file.exists("../input/object_names.RDS")){
    observeEvent(input$obj_conf, {
      shinyjs::show(id="range_title")
@@ -356,7 +347,7 @@ server <- function(input, output, session) {
        
      },rownames = T)})}else{assigned_objnames <<- readRDS("../input/object_names.RDS")
      output$obj_conf <- renderTable({
-       rng = get_obj_range(colnames = objs$objectives)
+       rng = get_obj_range(colnames = assigned_objnames)
        bng = rng
        
        for(i in 1:4){
@@ -369,7 +360,7 @@ server <- function(input, output, session) {
      },rownames = T)}
    
 
-   # Data Prep with external script
+   ## run external script that calculates all variables considered in the clustering
     
      observeEvent(input$runprep,{
        
@@ -385,7 +376,7 @@ server <- function(input, output, session) {
            if (length(new_output) > 0) {
              current_output <- script_output()
              
-             # Append new output lines and limit to last 10 lines
+             # append new output lines and limit to last 10 lines
              updated_output <- c(current_output, new_output)
              if (length(updated_output) > 10) {
                updated_output <- tail(updated_output, 10)
@@ -424,9 +415,9 @@ server <- function(input, output, session) {
       observeEvent(input$tabs == "correlation_analysis",{ 
         if(file.exists("../data/measure_location.csv")) {
           mes = read.csv("../data/measure_location.csv")
-          mes = unique(mes$nswrm)
+          mes <<- unique(mes$nswrm)
 
-          nm = length(mes)
+          nm <<- length(mes)
         }} )
       
       
@@ -436,21 +427,21 @@ server <- function(input, output, session) {
     
     write_corr(vars = input$selements,cor_analysis = T, pca = F)
     
-    # Define the command to run the Python script
+    # define the command to run the Python script
     py_script <- "../python_files/correlation_matrix.py"
     cmd <- paste("python", py_script)
     
-    # Run the command and capture the output
+    # run the command and capture the output
     result <- system(cmd, intern = TRUE)
     
     
-  # Correlation Plot (does not change for different thresholds)
+  # correlation Plot (does not change for different thresholds)
     csv_file <- "../output/correlation_matrix.csv"
     validate(need(file.exists(csv_file), "CSV file not found."))
     corr <<- read.csv(csv_file, row.names = 1) #global because of re-rendering of plot
     output$corrplot <- renderPlot({plt_corr(corr)})
    
-  # events tied to a change in threshold, however also tied to change in selected variables, therefore also observe run
+  ## events tied to a change in threshold, however also tied to change in selected variables, therefore also observe run
   observeEvent(input$thresh,{
     
     # reprint highest correlation table marking removed 
@@ -464,7 +455,7 @@ server <- function(input, output, session) {
     observe({updateSelectInput(session, "excl",choices = find_high_corr(corr,threshold=input$thresh, tab=F))})
   })
   
-  # on clicking confirm selection the config ini is updated
+  ## on clicking confirm selection the config ini is updated
   observeEvent(input$confirm_selection,{
     pca_remove(input$excl)
 
@@ -481,17 +472,17 @@ server <- function(input, output, session) {
                cor_analysis = F)#this is also called into the pca tab on startup
     
     nonoval = paste(pca_remove(), collapse = ", ")
-  # Display confirmed selection in the Correlation Analysis tab
+    
+  # display confirmed selection in the Correlation Analysis tab
    output$confirmed_selection <- renderText({HTML(paste0("Removed variables: ","<b>", nonoval,"</b>"))})
   
-
   
   ### PC Analysis ####
   # table with variables INCLUDED in PCA (renewed every time confirm selection is clicked in correlation tab)
     pca_table(pca_in$data)
 
   })
-  # Reactive values to store selected choices
+  # reactive values to store selected choices
   selections <- reactiveValues(
     element1 = NULL,
     element2 = NULL,
@@ -508,49 +499,39 @@ server <- function(input, output, session) {
     
     if(file.exists("../input/pca_content.RDS")){updateNumericInput(session, "pca_max", value = max_pca(), max=max_pca())}
       
-    
-    
-    
     choices = c("off", choices)
     all_choices(choices)
     preselected = read_config_plt(obj = T, axis = F)
     axiselected(read_config_plt(obj = F, axis = T))
-    
     
     updateTextInput(session, "axisx",  value  = axiselected()[1])
     updateTextInput(session, "axisy", value = axiselected()[2])
     updateTextInput(session, "colour", value = axiselected()[3])
     updateTextInput(session, "size", value = axiselected()[4])
     
-    
     updateSelectInput(session, "element1", choices = choices, selected = preselected[1])
     updateSelectInput(session, "element2", choices = choices, selected = preselected[2])
     updateSelectInput(session, "element3", choices = choices, selected = preselected[3])
     updateSelectInput(session, "element4", choices = choices, selected = preselected[4])
     
-    
-      
-    
       })
-  
- 
   
   observe({
     req(all_choices())
     
-    # Get the current selections
+    # current selections
     selected1 <- input$element1
     selected2 <- input$element2
     selected3 <- input$element3
     selected4 <- input$element4
     
-    # Determine the available choices for each dropdown
+    # available choices for each dropdown
     choices1 <- setdiff(all_choices(), c(selected2, selected3, selected4))
     choices2 <- setdiff(all_choices(), c(selected1, selected3, selected4))
     choices3 <- setdiff(all_choices(), c(selected1, selected2, selected4))
     choices4 <- setdiff(all_choices(), c(selected1, selected2, selected3))
     
-    # Update the choices for each dropdown, maintaining the current selection if it's valid
+    # update the choices for each dropdown
     updateSelectInput(session, "element1", choices = choices1, selected = selected1)
     updateSelectInput(session, "element2", choices = choices2, selected = selected2)
     updateSelectInput(session, "element3", choices = choices3, selected = selected3)
@@ -561,13 +542,11 @@ server <- function(input, output, session) {
     selected3_2 <- input$colour
     selected4_2 <- input$size
     
-    # Determine the available choices for each dropdown in the second set
     choices1_2 <- setdiff(all_choices(), c(selected2_2, selected3_2, selected4_2))
     choices2_2 <- setdiff(all_choices(), c(selected1_2, selected3_2, selected4_2))
     choices3_2 <- setdiff(all_choices(), c(selected1_2, selected2_2, selected4_2))
     choices4_2 <- setdiff(all_choices(), c(selected1_2, selected2_2, selected3_2))
     
-    # Update the choices for each dropdown in the second set, maintaining the current selection if it's valid
     updateTextInput(session, "axisx", value = selected1_2)
     updateTextInput(session, "axisy", value = selected2_2)
     updateTextInput(session, "colour",  value = selected3_2)
@@ -616,9 +595,7 @@ server <- function(input, output, session) {
     })
     update_settings()
   })
-##
- 
-  
+
   
   observeEvent(input$runPCA,{
     # python status
@@ -631,20 +608,17 @@ server <- function(input, output, session) {
     
     isElementVisible(TRUE)
     
-    ## Prepare config.ini
+    ## prepare config.ini
     write_corr(pca_content = pca_content,pca=T, cor_analysis = F)# columns
     
-    # Define the command to run the Python script
+    # command to run the Python script
     if(input$pcamethod=="k-means"){pca_script <- "../python_files/kmeans.py"}else{pca_script <- "../python_files/kmedoid.py"}
     
     run_python_script(path_script=pca_script,pca_status)
     
     }, once = TRUE)
   
-   
-  
-  
-  # cluster specs
+  ## cluster specs
   observeEvent(input$write_clust, {
     fixbool = ifelse(input$clusyn == "No", "true", "false")
     if (input$clusyn == "No") {
@@ -654,7 +628,7 @@ server <- function(input, output, session) {
       }
     update_settings()
   })
-  # outlier specs
+  ## outlier specs
   observeEvent(input$write_outl, {
     outlbool = ifelse(input$outlyn == "No","false","true")
     if(input$outlyn == "Yes"){
@@ -666,16 +640,16 @@ server <- function(input, output, session) {
     update_settings()
   })
   
-  # Pass the reactive value to output for use in conditionalPanel
+  ## reactive value to output for use in conditionalPanel
   output$isElementVisible <- reactive({
     isElementVisible()
   })
   
-  # Required for conditionalPanel to work with reactive output
+  ## conditionalPanel to work with reactive output
   outputOptions(output, "isElementVisible", suspendWhenHidden = FALSE)
   
   
-  # pca min/max specs
+  ## pca min/max specs
   observeEvent(input$pcaminmax,{
     write_pcanum(pcamin=input$pca_min,pcamax=input$pca_max)
     update_settings()
@@ -683,15 +657,14 @@ server <- function(input, output, session) {
   output$pca_settings_summary <- renderUI({HTML(settings_text())})
   
   
-  ## Analysis ####
+  ### Analysis ####
   observeEvent(input$tabs == "analysis", {
-    
     
     if (file.exists(dir("../output/", pattern = 'clusters_representativesolutions', full.names =TRUE))) {
       sols_data = read.csv(dir("../output/", pattern = 'clusters_representativesolutions', full.names =TRUE))
       sols(sols_data %>% rownames_to_column("optimum") %>%
         filter(!is.na(Representative_Solution)) %>%
-        mutate(across(is.numeric, round, digits = 5)))
+        mutate(across(where(is.numeric), round, digits = 5)))
       } else{
       sols(data.frame(Message = "something went wrong - has the PCA run properly"))
     }
@@ -718,39 +691,11 @@ server <- function(input, output, session) {
       hru_sel =  plt_sel(soltab = sols(), shp=cm(),opti_sel = selected_data$optimum)
       mes = read.csv("../data/measure_location.csv")
       
-      # Render the Leaflet map
+      # render the leaflet map
       output$map <- renderLeaflet({plt_lf(dat=hru_sel,cols = "optim", mes = unique(mes$nswrm),la = lalo[1],lo =lalo[2])})
    
-
     }
   })
-  
-
-  # 
-  # 
-  # dispal <- colorFactor("Spectral", domain = mes, na.color = "grey")
-  # 
-  # leaflet(data = hru_plt) %>%
-  #   addProviderTiles(providers$CartoDB.Positron) %>%
-  #   # addTiles() %>%
-  #   # choose land management here
-  #   addPolygons(fillColor = ~dispal(V85), fillOpacity = 0.7,
-  #               color = "#444444", weight = 1,
-  #               highlightOptions = highlightOptions(color = "white", weight = 2,
-  #                                                   bringToFront = TRUE),
-  #               label = ~V85) %>% 
-  #   addLegend("bottomright", pal = dispal, 
-  #             title = "v85",values=mes,
-  #             # labFormat = labelFormat(prefix = "$"),
-  #             opacity = 0.5,
-  #             labFormat = labelFormat(transform = function(x) sort(x, decreasing = TRUE)))
-  # 
-  # 
-  # # Render the Leaflet map
-  # output$map <- renderLeaflet({
-  #   leaflet() %>%
-  #     addTiles()
-  # })
   
 }
 

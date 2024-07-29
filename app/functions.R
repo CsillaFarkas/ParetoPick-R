@@ -1,20 +1,22 @@
-######################## FUNCTIONS #####################
+######################## FUNCTIONS #################################
+# comments: 
+# Project: Clustering Pareto Solutions/Multi-objective visualisation
+####################################################################
 
 #### Correlation Analysis Functions ####
 
-## plot
+## correlation plot
 plt_corr = function(corr,labelcol = "black",labelorder='alphabet',meth = 'square', tpe = 'lower'){
 corma = as.matrix(corr)
 plt = corrplot(corma, method = meth, order =labelorder,tl.col = labelcol, type=tpe,diag=FALSE)
 return(plt)
 }
 
-## table
+## correlation table
 find_high_corr <- function(cor_matrix, threshold = 0.75, tab = T,strike = NULL) {
-  # Get the row and column names of the correlation matrix
   var_names <- colnames(cor_matrix)
   
-  # Initialize an empty data frame to store the pairs
+  # empty dataframe
   high_cor_pairs <- data.frame(
     variable1 = character(),
     variable2 = character(),
@@ -25,7 +27,6 @@ find_high_corr <- function(cor_matrix, threshold = 0.75, tab = T,strike = NULL) 
   for (i in 1:(nrow(cor_matrix) - 1)) {
     for (j in (i + 1):ncol(cor_matrix)) {
       if (abs(cor_matrix[i, j]) > abs(threshold)) {
-        # Add the pair and the correlation to the data frame
         high_cor_pairs <- rbind(high_cor_pairs, data.frame(
           variable1 = var_names[i],
           variable2 = var_names[j],
@@ -264,6 +265,7 @@ run_python_script <- function(path_script="",pca_status) {
 
 #### Plotting the optima
 
+## get map extent
 plt_latlon = function(conpath = "../data/hru.con"){
   conny = read.table(conpath,skip = 1,header = T)
   lon_map = mean(conny$lon)
@@ -283,7 +285,7 @@ pull_shp = function(layername = "hru"){
   
 }
 
-## 
+## merge hrus with optima
 plt_sel = function(soltab, opti_sel, shp = cm){
 
   hio = readRDS("../input/hru_in_optima.RDS")
@@ -354,7 +356,7 @@ prep_diff_bar = function(abs_tab,red_tab,allobs){
 }
 
 
-##plot return of prep_diff_bar
+## plot (return of prep_diff_bar)
 plot_diff_bar= function(pct,obj_choices=NULL){
   pl2 <- pct %>% rownames_to_column(var = "objective")  %>%mutate(objective=factor(objective)) %>%
     mutate(objective=forcats::fct_relevel(objective,obj_choices))%>%
@@ -419,8 +421,7 @@ get_num_pca <- function() {
 }
 
 
-## pull pca settings for display
-
+## display selected pca settings
 pca_settings = function(input){
   settings <- paste0("<ul>",
                      "<li><strong>",input$element1,"</strong> is shown on the x-axis","</li>",
