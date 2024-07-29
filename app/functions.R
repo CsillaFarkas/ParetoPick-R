@@ -305,7 +305,7 @@ plt_lf = function(dat=hru_sel,cols="optim", mes, lo, la){
   dispal = colorFactor("Spectral", domain = mes, na.color = "lightgrey")
   
  m1 <- leaflet(data = dat) %>%
-   setView(lng = lo, lat = la, zoom = 10) %>%
+   setView(lng = lo, lat = la, zoom = 11) %>%
     addProviderTiles(providers$CartoDB.Positron) %>%
     
     addPolygons(fillColor = ~dispal(dat[[cols]]), fillOpacity = 0.7,
@@ -321,7 +321,7 @@ plt_lf = function(dat=hru_sel,cols="optim", mes, lo, la){
 #### Plotting the exploration tab
 
 ## barplot THIS NEEDS DYNAMIC TESTING FOR NEG VALUES!
-prep_diff_bar = function(abs_tab,red_tab,allobs){
+prep_diff_bar = function(abs_tab,red_tab,allobs, neg_var=NULL){
   #full dataset/all optima
   
   absk = abs_tab%>%pivot_longer(everything())%>%group_by(name)%>%
@@ -348,8 +348,9 @@ prep_diff_bar = function(abs_tab,red_tab,allobs){
   
   pct = 100*(redk-absk)/absk
   
-  # correcting for values on a negative scale NOT DYNAMIC YET
-  pct["P",] = (pct["P",])*-1
+  # correcting for values on a negative scale 
+  if(!is.null(neg_var)){
+  pct[neg_var,] = (pct[neg_var,])*-1}
   
   
   return(pct)

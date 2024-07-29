@@ -91,7 +91,7 @@ ui <-
                           )),
         # PLAY AROUND TAB
         tabItem(tabName = "play_around",
-                titlePanel("Visualising Optimisation Output"),
+                titlePanel("Visualising the Optimisation Output"),
                 
                 sidebarLayout(
                  
@@ -126,7 +126,8 @@ ui <-
                                       sliderInput(inputId = "obj3", label = "Objective 3:", min = 0, max = 1, value = c(0,1)),
                                       sliderInput(inputId = "obj4", label = "Objective 4:", min = 0, max = 1, value = c(0,1))
                                       
-                                  )
+                                  ),
+                                  checkboxGroupInput("sel_neg", "Are any of the objectives provided on the negative scale?", choices = NULL, inline = TRUE)
                     ),
                 mainPanel(
                 div("Parallel Axis plot", style = "text-align: left; font-size:150%"),
@@ -184,8 +185,8 @@ ui <-
                   hr(),
                   div(id="range_title","Range of objective values",style = "text-align: left; font-size:120%"),
                   tableOutput("obj_conf"),
-                  p("Run Preparation Script when ready",style =  "text-align: left; font-size:150%"),
-                  actionButton("runprep", "Run Prep"),
+                  div(p("Run Preparation Script when ready",style =  "text-align: left; font-size:150%"),
+                  actionButton("runprep", "Run Prep"))%>%hidden,
                   uiOutput("script_output") 
                   
                 )# DATA PREP MAIN PANEL END
@@ -232,7 +233,7 @@ ui <-
     )
   ),
   
-  ## PCA PANEL
+  ## Clustering/PCA PANEL
   tabItem(tabName = "pca",
          
           tags$style(HTML(".js-irs-0 .irs-single, .js-irs-0 .irs-bar-edge, .js-irs-0 .irs-bar {background: darkslateblue}")),

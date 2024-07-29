@@ -62,12 +62,16 @@ server <- function(input, output, session) {
     
   ## update slider labels based on objectives
   observe({
+    req(objectives())
     obj <- objectives()
     updateSliderInput(session, "obj1", label = obj[1])
     updateSliderInput(session, "obj2", label = obj[2])
     updateSliderInput(session, "obj3", label = obj[3])
     updateSliderInput(session, "obj4", label = obj[4])
+    updateCheckboxGroupInput(session, "sel_neg", choices = objectives())
   })
+  
+ 
   
   if (file.exists(pareto_path)) {
     observe({
@@ -149,16 +153,15 @@ server <- function(input, output, session) {
     rv$colls[-rom] = "grey50"
   
     te  <- find_row(dat = f_scaled(),  colname = objectives()[[x]], val = val,absdat = fit())
-    # er$HC <- formatC(te$HC, digits = 5)
-    # er$HQ <- formatC(te$HQ, digits = 5)
-    # er$P <- te$P
-    # er$AP <- te$AP
-    
-    er<- reactive({te})
+    ete <- te
+    for(i in 1:4){
+      ete[,i] = formatC(te[,i],digits =num.decimals(te[,i]),drop0trailing = T,format = "f")
+    }
+   
+    er<- reactive({ete})
     
     ## table of chosen line 
     output$click_info <- renderTable({as.data.frame(er(),col.names=objectives())},include.rownames=F)
-    
     
     }, ignoreNULL = TRUE)
   
@@ -187,8 +190,8 @@ server <- function(input, output, session) {
       col4 = c(input$obj4[2],input$obj4[1]),
       row.names = c("max","min")
     )
-      colnames(slid) = objectives()
-      
+     colnames(slid) = objectives()
+     
      slid},
      include.rownames=TRUE)
 
@@ -204,10 +207,15 @@ server <- function(input, output, session) {
                            allobs = objectives())
     
     # varying number of decimals
-    # dt$HC <-formatC(dt$HC, digits = 5)
-    # dt$HQ<-formatC(dt$HQ, digits = 5)
+    # min and max the same number of dec
+    dn = dt
+    for(j in 1:2){
+      for(i in 1:4){
+        dn[j,i] = formatC(dt[j,i],digits =num.decimals(as.numeric(dt[1,i])),drop0trailing = T,format = "f")
+      }}
+    
 
-    dt},
+    dn},
     include.rownames = TRUE)
   
   ## barplot
@@ -221,7 +229,7 @@ server <- function(input, output, session) {
       abs_tab = fit(),allobs = objectives(),
       smll = F)})
     
-    pldat<- prep_diff_bar(abs_tab=fit(),red_tab=matchi(),allobs= objectives())
+    pldat<- prep_diff_bar(abs_tab=fit(),red_tab=matchi(),allobs= objectives(), neg_var=input$sel_neg)
   
     plot_diff_bar(pldat,obj_choices=objectives())
   
@@ -317,6 +325,10 @@ server <- function(input, output, session) {
      
      
   })
+  
+  if(!file.exists("../var_corr_par.csv")){
+    shinyjs::show(id="runprep")
+  }
   
    ## initialise PCA table when app starts
    pca_in <- reactiveValues(data = read_pca()) #this only reads config$columns, NULL if opening for the first time
