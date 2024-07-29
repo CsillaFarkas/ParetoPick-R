@@ -1,5 +1,4 @@
 ####################  Convert OPTAIN ###############################################
-# MISSING: potentially some dynamism to make this run for other catchments
 # creates a .csv to be used in the Correlation and PCA
 # each row one Pareto-optimal solution
 # 1.- 4. = objectives to be maximised
