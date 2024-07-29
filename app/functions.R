@@ -309,7 +309,7 @@ plt_lf = function(dat=hru_sel,cols="optim", mes, lo, la){
     addProviderTiles(providers$CartoDB.Positron) %>%
     
     addPolygons(fillColor = ~dispal(dat[[cols]]), fillOpacity = 0.7,
-                color = "#444444", weight = 1,
+                color = "lightgrey", weight = 1,
                 highlightOptions = highlightOptions(color = "white", weight = 2,
                                                     bringToFront = TRUE),
                 label = ~dat[[cols]]) %>%

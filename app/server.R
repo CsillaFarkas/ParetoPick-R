@@ -16,7 +16,6 @@ server <- function(input, output, session) {
   all_choices = reactiveVal()
   isElementVisible = reactiveVal(FALSE)
   
-  ## pca tab - pca table
   settings_text= reactiveVal("") #printing pca settings
   update_settings <- function() {
     settings <- pca_settings(input)
@@ -25,9 +24,8 @@ server <- function(input, output, session) {
   pca_ini <- read_pca()
   pca_table <- reactiveVal(pca_ini)
   
-  output$pca_incl <- renderTable({
-    pca_table()
-  }, rownames = T, colnames = F)
+  #empty pca table
+  output$pca_incl <- renderTable({pca_table()}, rownames = T, colnames = F)
   
   pca_status <- reactiveVal("")
   
