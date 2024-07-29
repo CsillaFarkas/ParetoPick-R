@@ -377,7 +377,7 @@ server <- function(input, output, session) {
        dp_done(FALSE)
        script_output(character()) #clear old output
        
-       optain <- process$new("Rscript",c("../convert_optain.R"),stdout = "|", stderr = NULL) #stdout | ---> pipe output, stderr ---> ignore
+       optain <- process$new("Rscript",c("convert_optain.R"),stdout = "|", stderr = NULL) #stdout | ---> pipe output, stderr ---> ignore
        autoInvalidate <- reactiveTimer(100)
        
        observe({autoInvalidate()

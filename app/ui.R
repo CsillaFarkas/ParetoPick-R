@@ -69,6 +69,11 @@ ui <-
                                    .well label {
                                    color: #2f353e;
                                    }
+                                   
+                                  /* content height covers full view*/
+                                 .content {
+                                   min-height: 100vh; 
+                                 }
                                  
                                 '))),
       useShinyjs(),
