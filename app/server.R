@@ -673,7 +673,7 @@ server <- function(input, output, session) {
     if (file.exists(dir("../output/", pattern = 'clusters_representativesolutions', full.names =TRUE))) {
       sols_data = read.csv(dir("../output/", pattern = 'clusters_representativesolutions', full.names =TRUE))
       sols(sols_data %>% rownames_to_column("optimum") %>%
-        filter(!is.na(Representative_Solution)) %>%
+        filter(!is.na(Representative_Solution)) %>%select(optimum,objectives())%>%
         mutate(across(where(is.numeric), round, digits = 5)))
       } else{
       sols(data.frame(Message = "something went wrong - has the PCA run properly"))
