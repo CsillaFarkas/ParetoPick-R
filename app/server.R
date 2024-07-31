@@ -56,7 +56,14 @@ server <- function(input, output, session) {
     } else{
       short = readRDS("../input/object_names.RDS")
       objectives(short)
-    }})
+    }
+    
+    if(file.exists("../data/pareto_fitness.txt")){
+      shinyjs::hide(id="parfit")
+    }
+      
+    })
+    
     
   ## update slider labels based on objectives
   observe({
@@ -166,9 +173,9 @@ server <- function(input, output, session) {
   
   ## line plot
   output$linePlot <- renderPlot({
-    req(f_scaled)
+    req(f_scaled,objectives())
     sk= match_scaled(minval_s=c(input$obj1[1],input$obj2[1],input$obj3[1],input$obj4[1]),
-                     maxval_s=c(input$obj1[2],input$obj2[2],input$obj3[2],input$obj4[2]),scal_tab = f_scaled())
+                     maxval_s=c(input$obj1[2],input$obj2[2],input$obj3[2],input$obj4[2]),scal_tab = f_scaled(),allobs = objectives())
 
     ko= sk%>% mutate(id = factor(row_number()))%>%pivot_longer(.,cols=-id)%>%
       mutate(name=factor(name))%>%mutate(name=forcats::fct_relevel(name,objectives()))
@@ -223,8 +230,7 @@ server <- function(input, output, session) {
     matchi =  reactive({scaled_abs_match(
       minval_s = c(input$obj1[1], input$obj2[1], input$obj3[1], input$obj4[1]),
       maxval_s = c(input$obj1[2], input$obj2[2], input$obj3[2], input$obj4[2]),
-      scal_tab = f_scaled(),
-      abs_tab = fit(),allobs = objectives(),
+      abs_tab = fit(),allobs = objectives(),scal_tab = f_scaled(),
       smll = F)})
     
     pldat<- prep_diff_bar(abs_tab=fit(),red_tab=matchi(),allobs= objectives(), neg_var=input$sel_neg)
@@ -232,6 +238,32 @@ server <- function(input, output, session) {
     plot_diff_bar(pldat,obj_choices=objectives())
   
   })
+  
+  ## scatter plot
+  output$scatter_plot <- renderPlot({
+    req(fit(), objectives())
+    
+    scat_abs = scaled_abs_match(minval_s=c(input$obj1[1],input$obj2[1],input$obj3[1],input$obj4[1]),
+                                maxval_s=c(input$obj1[2],input$obj2[2],input$obj3[2],input$obj4[2]),
+                                abs_tab = fit(),scal_tab = f_scaled(),
+                                allobs = objectives(),smll=F)
+    
+    ggpairs(scat_abs,
+          lower = list(continuous = "points"),  # Lower triangle: scatter plots
+          diag = list(continuous = "blank"),    # Diagonal: blank
+          upper = list(continuous = "blank"),   # Upper triangle: blank
+          axisLabels = "show"                   # Show axis labels
+  )+ 
+    theme_bw(base_size = 10) +  # Apply a theme with smaller base size
+    theme(
+      strip.background = element_blank(),  # Remove background from facet labels
+      strip.text = element_text(size = 10, face = "bold"),  # Smaller facet labels
+      axis.text = element_text(size = 8),  # Smaller axis text
+      axis.title = element_text(size = 10, face = "bold"),  # Smaller axis titles
+      panel.spacing = unit(0.1, "lines"),  # Reduce space between panels
+      plot.margin = margin(5, 5, 5, 5)  # Reduce plot margins
+    )})
+  
   
   ### Data Prep ####
   
@@ -305,9 +337,6 @@ server <- function(input, output, session) {
      
      checkFiles <- sapply(required_files, function(file) file.exists(file))
      
-     ## only show objective naming when files have been checked
-      if(all(checkFiles) ==F | !file.exists("../input/object_names.RDS")){ shinyjs::show(id = "sel_obj")}
-     
      output$fileStatusMessage <- renderText({
        if (all(checkFiles) & file.exists("../input/object_names.RDS")) {
          HTML(
@@ -326,8 +355,8 @@ server <- function(input, output, session) {
      
   })
   
-  if(!file.exists("../var_corr_par.csv")){
-    shinyjs::show(id="runprep")
+  if(!file.exists("../input/var_corr_par.csv") | !file.exists("../input/hru_in_optima.RDS") | !file.exists("../input/all_var.RDS")){
+    shinyjs::show(id="runprep_show")
   }
   
    ## initialise PCA table when app starts
@@ -337,6 +366,7 @@ server <- function(input, output, session) {
    
    ## observe event for confirm button
    if(!file.exists("../input/object_names.RDS")){
+     shinyjs::show(id = "sel_obj")
    observeEvent(input$obj_conf, {
      shinyjs::show(id="range_title")
      objs$data<- data.frame(Objective = c(input$col1, input$col2, input$col3, input$col4), stringsAsFactors = FALSE )
@@ -435,21 +465,37 @@ server <- function(input, output, session) {
           "../data/hru.shx",
           "../data/hru.dbf",
           "../data/hru.prj",
-          "../data/pareto_fitness.txt"
+          "../data/pareto_fitness.txt",
+          "../input/object_names.RDS",
+          "../input/all_var.RDS"
         )
         
         checkFiles <- sapply(required_files, function(file) file.exists(file))
         
         ## only show correlation tab when all files are available
-        if (all(checkFiles) == F |  !file.exists("../input/object_names.RDS")) {
+        if (all(checkFiles) == F) {
           shinyjs::hide(id = "corr_content")
           shinyjs::show(id = "corr_notthere")
           shinyjs::hide(id = "corr_sidebar")
           
           output$corr_notthere <- renderText({
             missing_files = required_files[!checkFiles]
+            if ("../input/object_names.RDS" %in% missing_files) {
+              missing_files <- missing_files[missing_files != "../input/object_names.RDS"]
+              whatsmissing = "All files have been provided, to be able to proceed please define the objective names in the previous tab."
+              
+            } else if ("../input/all_var.RDS" %in% missing_files){
+              missing_files <- missing_files[missing_files != "../input/all_var.RDS"]
+              
+              whatsmissing = "All files have been provided, to be able to proceed please rerun the Data Prep in the previous tab."
+              
+            }else{
+              whatsmissing = "The following file(s) are missing and have to be provided in the Data Prep tab:<br/>"
+              
+            }
+            
             HTML(paste(
-              "The following file(s) are missing and have to be provided in the Data Prep tab:<br/>",
+              whatsmissing,
               paste(sub('../data/', '', missing_files), collapse = "<br/> ")
             ))
           })
@@ -510,6 +556,7 @@ server <- function(input, output, session) {
       datatable(find_high_corr(corr,threshold = input$thresh,tab = T,strike = input$excl),escape = FALSE)}) #tab = T means this returns the full table, =F is for pulling variables
     
     pca_content = all_var[-which(all_var %in% pca_remove())]
+    print(pca_content)
     saveRDS(pca_content,file = "../input/pca_content.RDS") #required for PCA
     
     pca_in$data = pca_content
@@ -722,8 +769,8 @@ server <- function(input, output, session) {
                 selection = "single",
                 options = list(pageLength = 20, autoWidth = TRUE))
     })
-
-    cm(pull_shp(layername="hru", optims = sols())) 
+    if(file.exists("../input/hru_in_optima.RDS")){
+    cm(pull_shp(layername="hru", optims = sols(),hru_in_opt_path = "../input/hru_in_optima.RDS")) }
     needs_buffer(pull_buffer())
     if(file.exists("../data/hru.con")){lalo <<- plt_latlon(conpath = "../data/hru.con")}
 
