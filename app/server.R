@@ -37,6 +37,7 @@ server <- function(input, output, session) {
   
   #catchment shape
   cm <- reactiveVal()
+  needs_buffer <- reactiveVal()
   
   ### Introduction ####
  
@@ -669,13 +670,15 @@ server <- function(input, output, session) {
   
   ### Analysis ####
   observeEvent(input$tabs == "analysis", {
-    
-    if (file.exists(dir("../output/", pattern = 'clusters_representativesolutions', full.names =TRUE))) {
-      sols_data = read.csv(dir("../output/", pattern = 'clusters_representativesolutions', full.names =TRUE))
+    if (file.exists(dir("../output/", pattern = 'clusters_representativesolutions', full.names = TRUE))) {
+      
+      sols_data = read.csv(dir("../output/", pattern = 'clusters_representativesolutions', full.names = TRUE))
+      
       sols(sols_data %>% rownames_to_column("optimum") %>%
-        filter(!is.na(Representative_Solution)) %>%select(optimum,objectives())%>%
-        mutate(across(where(is.numeric), round, digits = 5)))
-      } else{
+          filter(!is.na(Representative_Solution)) %>% select(1:5) %>%
+          mutate(across(where(is.numeric), round, digits = 5))
+      )
+    } else{
       sols(data.frame(Message = "something went wrong - has the PCA run properly"))
     }
     output$antab <- renderDT({
@@ -683,8 +686,11 @@ server <- function(input, output, session) {
                 selection = "single",
                 options = list(pageLength = 20, autoWidth = TRUE))
     })
-    
-    cm(pull_shp(layername="hru"))
+
+    cm(pull_shp(layername="hru", optims = sols())) 
+    needs_buffer(pull_buffer())
+    lalo <<- plt_latlon()
+
   })
   
   observeEvent(input$plt_opti,{
@@ -694,19 +700,23 @@ server <- function(input, output, session) {
       shinyjs::show(id = "no_row")
       output$no_row = renderText({paste("No row selected")})
     } else {
-      
       shinyjs::hide(id = "no_row")
-      selected_data <- sols()[selected_row,]
-      lalo = plt_latlon()
-      hru_sel =  plt_sel(soltab = sols(), shp=cm(),opti_sel = selected_data$optimum)
-      mes = read.csv("../data/measure_location.csv")
       
-      # render the leaflet map
-      output$map <- renderLeaflet({plt_lf(dat=hru_sel,cols = "optim", mes = unique(mes$nswrm),la = lalo[1],lo =lalo[2])})
+      selected_data <- sols()[selected_row,]
+
+      buffs = needs_buffer()
+
+      # opti_sell = sapply(selected_data$optimum,standardize_quotes)
+      hru_sel =  plt_sel(shp=cm(),opti_sel = selected_data$optimum)
+
+      mes = read.csv("../data/measure_location.csv")
+    
+      output$map <- renderLeaflet({plt_lf(dat=hru_sel,cols = "optim", mes = unique(mes$nswrm),la = lalo[1],lo =lalo[2], buff_els=buffs)})
    
     }
   })
   
 }
 
-
+# setwd("C:/Users/wittekin/Documents/cle2024/projects/src/pareto_optain/app")
+# profvis(runApp())
