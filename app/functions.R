@@ -264,6 +264,12 @@ run_python_script <- function(path_script="",pca_status) {
 }
 
 #### Plotting the optima
+## get linear elements requiring a buffer
+pull_buffer = function(prios= "../input/nswrm_priorities.csv"){
+  priodf = read.csv(prios)
+  strct_obj = priodf%>%filter(mngmt ==0)%>%select(nswrm)%>%pull()#structural measures
+  return(strct_obj)
+}
 
 ## get map extent
 plt_latlon = function(conpath = "../data/hru.con"){
@@ -275,39 +281,46 @@ plt_latlon = function(conpath = "../data/hru.con"){
 
 
 ## make large dataset
-pull_shp = function(layername = "hru"){
+pull_shp = function(layername = "hru", optims){
   if(file.exists(paste0("../data/",layername,".shp"))){
     
+    hio = readRDS("../input/hru_in_optima.RDS")
+    hio = hio %>% rename_with( ~ str_remove(., "^V"), starts_with("V"))
+    hio = hio %>% select(optims[["optimum"]], id)#subset to only optima remaining after clustering
+    
+    
     cm = read_sf(dsn = "../data/", layer = layername) #adapt path
+    cm = cm %>% filter(id %in% hio$id)#remove all hrus that are never activated in this pareto front
+    
     cm = st_buffer(cm, 0.0) #clean geometry
-    cm = cm %>% select(id, geometry)
+    cm = cm %>%select(id,geometry)
+    
+    cm = left_join(cm, hio, by = c("id")) %>% st_transform(., 4326)
+    
     return(cm)}else{return(NULL)}
   
 }
 
 ## merge hrus with optima
-plt_sel = function(soltab, opti_sel, shp = cm){
+plt_sel = function(opti_sel, shp){
 
-  hio = readRDS("../input/hru_in_optima.RDS")
-  hio = hio %>% rename_with( ~ str_remove(., "^V"), starts_with("V"))
-  
-  hio = hio %>% select(soltab[["optimum"]], id)#subset to only optima remaining after clustering
-  
-  hru_plt = left_join(shp, hio, by = c("id")) %>% st_transform(., 4326)
-  
-  plt_sel = hru_plt %>% select(id, geometry, all_of(opti_sel)) %>% rename(optim =
+  plt_sel = shp %>% dplyr::select(id, geometry, all_of(opti_sel)) %>% rename(optim =
                                                                             opti_sel)
+  plt_sel = st_make_valid(plt_sel) # too slow annoyingly
+  
   return(plt_sel)
 }
 
 ## plot leaflet
-plt_lf = function(dat=hru_sel,cols="optim", mes, lo, la){
+plt_lf = function(dat=hru_sel,cols="optim", mes, lo, la, buff_els){#hru_sel created with plt_sel() and buff_els created with pull_buffer()
+  # st_agr(dat) <- "constant" # Set spatial attribute relationship for speed-up
+
   dispal = colorFactor("Spectral", domain = mes, na.color = "lightgrey")
-  
- m1 <- leaflet(data = dat) %>%
+
+ lf_map <- leaflet(data = dat) %>%
    setView(lng = lo, lat = la, zoom = 11) %>%
     addProviderTiles(providers$CartoDB.Positron) %>%
-    
+
     addPolygons(fillColor = ~dispal(dat[[cols]]), fillOpacity = 0.7,
                 color = "lightgrey", weight = 1,
                 highlightOptions = highlightOptions(color = "white", weight = 2,
@@ -315,7 +328,20 @@ plt_lf = function(dat=hru_sel,cols="optim", mes, lo, la){
                 label = ~dat[[cols]]) %>%
     addLegend("bottomright", pal = dispal,
               title = "measures",values=mes)
- return(m1)
+
+
+ relevant_data <- dat[dat[[cols]] %in% buff_els, ]
+
+ buffered_data <- st_buffer(relevant_data, dist = 80)
+
+ lf_map <- lf_map %>%
+   addPolygons(data = buffered_data,
+               fillColor = NA,
+               color = ~dispal(relevant_data[[cols]]), weight = 1, dashArray = "3",
+               fillOpacity = 0.2,
+               highlightOptions = highlightOptions(color = ~dispal(relevant_data[[cols]]), weight = 2, bringToFront = TRUE))
+
+ return(lf_map)
   }
 
 #### Plotting the exploration tab
