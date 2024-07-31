@@ -91,66 +91,85 @@ ui <-
                                 "),br(),br(),
                           p(" The application is structured the following way:"),
                           p(HTML("The second tab <strong>Visualising the Pareto Front</strong> plots the optimisation results. The user can select preferred objective ranges and assess how a reduced objective space affects the pareto front.")),
-                          p(HTML("The third tab <b>Data Preparation</b>is needed to produce the data required for the subsequent analyses.")),
-                          p(HTML("The fourth tab <strong>Correlation Analysis</strong> allows to run alter the considered variables and assess the correlation among variables in detail.")))
+                          p(HTML("The third tab <b>Data Preparation</b> is needed to produce the data required for the subsequent analyses. Several files need to be provided so the clustering can be performed.")),
+                          p(HTML("The fourth tab <strong>Correlation Analysis</strong> allows to assess and alter variables considered in the subsequent clustering.")),
+                          p(HTML("The fifth tab <strong>Clustering</strong> provides the possibility to adapt and modify the clustering process.")),
+                          p(HTML("The last tab <strong>Analysis</strong> lets the user plot the optima remaining after the clustering. Each of these optima is representative for one cluster."))
+                )
                           )),
-        # PLAY AROUND TAB
+        ### PLAY AROUND TAB ####
         tabItem(tabName = "play_around",
                 titlePanel("Visualising the Optimisation Output"),
                 
                 sidebarLayout(
                  
-                    sidebarPanel( width="200px",align="left",
-                                  fluidRow(
+                    sidebarPanel( 
+                                  div(
                                   id="parfit",
-                                  div("Please provide the pareto_fitness.txt file here",style = "text-align: left; font-size:115%"),
-                                  div(style = "margin-top: -15px;",fileInput("par_fit", "", accept = ".txt")), 
+                                  "Please provide the pareto_fitness.txt file here and click Save:",style = "text-align: left; font-size:115%",
+                                  fileInput("par_fit", "", accept = ".txt")), 
                                   # Text input for short and long names of objectives
-                                  fluidRow(
-                                    id="obj_first",
-                                    column(6, textInput("short1", "Short Name Column 1")),
-                                    column(6, textInput("short2", "Short Name Column 2")),
-                                    column(6, textInput("short3", "Short Name Column 3")),
-                                    column(6, textInput("short4", "Short Name Column 4")),
-                                  )%>% hidden(),
+                                  div(
+                                    id = "obj_first",
+                                    "Please provide the objective names as given in the first four columns of the pareto_fitness.txt file:",
+                                    style = "text-align: left; font-size:115%", 
+                                  textInput("short1", "Short Name Column 1"), 
+                                  textInput("short2", "Short Name Column 2"), 
+                                  textInput("short3", "Short Name Column 3"), 
+                                  textInput("short4", "Short Name Column 4"),
+                                  actionButton("save_par_fiti", "Save"))
+                                  %>% hidden(), 
         
-                                  actionButton("save_par_fiti", "Save"),
-                                  textOutput("uploaded_pareto"))%>%hidden(),
-                                  
-                                  div("Objective Range", style="display: inline-block; width: 200px;font-size: 150%",
-                                      
-                                      #slider aesthetics
-                                      tags$style(HTML(".irs-grid-text {font-size: 13px;} 
-                            .js-irs-0 .irs-single, .js-irs-0 .irs-bar-edge, .js-irs-0 .irs-bar {background: #ffc61e ;border-top: 1px solid #ffc61e ;border-bottom: 1px solid #ffc61e;}.js-irs-0 .irs-from, .js-irs-0 .irs-to, .js-irs-0 .irs-single { font-size: 13px;background: #ffc61e !important }")),
-                                      tags$style(HTML(".js-irs-1 .irs-single, .js-irs-1 .irs-bar-edge, .js-irs-1 .irs-bar {background: #009ade ;border-top: 1px solid #009ade ;border-bottom: 1px solid #009ade;}.js-irs-1 .irs-from, .js-irs-1 .irs-to, .js-irs-1 .irs-single { font-size: 13px;background: #009ade !important }")),
-                                      tags$style(HTML(".js-irs-2 .irs-single, .js-irs-2 .irs-bar-edge, .js-irs-2 .irs-bar {background: #af58ba ;border-top: 1px solid #af58ba ;border-bottom: 1px solid #af58ba;}.js-irs-2 .irs-from, .js-irs-2 .irs-to, .js-irs-2 .irs-single { font-size: 13px;background: #af58ba !important }")),
-                                      tags$style(HTML(".js-irs-3 .irs-single, .js-irs-3 .irs-bar-edge, .js-irs-3 .irs-bar {background: #f28522 ;border-top: 1px solid #f28522 ;border-bottom: 1px solid #f28522;}.js-irs-3 .irs-from, .js-irs-3 .irs-to, .js-irs-3 .irs-single { font-size: 13px; background: #f28522 !important }")),
-                                      
-                                      sliderInput(inputId = "obj1", label= "Objective 1:",min = 0, max = 1, value = c(0,1)),
-                                      sliderInput(inputId = "obj2", label = "Objective 2:", min = 0, max = 1,value= c(0,1)),
-                                      sliderInput(inputId = "obj3", label = "Objective 3:", min = 0, max = 1, value = c(0,1)),
-                                      sliderInput(inputId = "obj4", label = "Objective 4:", min = 0, max = 1, value = c(0,1))
-                                      
-                                  ),
-                                  checkboxGroupInput("sel_neg", "Are any of the objectives provided on the negative scale?", choices = NULL, inline = TRUE)
+                                  textOutput("uploaded_pareto"),
+                                  checkboxGroupInput("sel_neg", "Are any of the objectives provided on the negative scale?", choices = NULL, inline = TRUE),
+                                
                     ),
                 mainPanel(
+                  
+                  #slider aesthetics
+                  tags$style(HTML(".irs-grid-text {font-size: 13px;} 
+                            .js-irs-0 .irs-single, .js-irs-0 .irs-bar-edge, .js-irs-0 .irs-bar {background: #ffc61e ;border-top: 1px solid #ffc61e ;border-bottom: 1px solid #ffc61e;}.js-irs-0 .irs-from, .js-irs-0 .irs-to, .js-irs-0 .irs-single { font-size: 13px;background: #ffc61e !important }")),
+                  tags$style(HTML(".js-irs-1 .irs-single, .js-irs-1 .irs-bar-edge, .js-irs-1 .irs-bar {background: #009ade ;border-top: 1px solid #009ade ;border-bottom: 1px solid #009ade;}.js-irs-1 .irs-from, .js-irs-1 .irs-to, .js-irs-1 .irs-single { font-size: 13px;background: #009ade !important }")),
+                  tags$style(HTML(".js-irs-2 .irs-single, .js-irs-2 .irs-bar-edge, .js-irs-2 .irs-bar {background: #af58ba ;border-top: 1px solid #af58ba ;border-bottom: 1px solid #af58ba;}.js-irs-2 .irs-from, .js-irs-2 .irs-to, .js-irs-2 .irs-single { font-size: 13px;background: #af58ba !important }")),
+                  tags$style(HTML(".js-irs-3 .irs-single, .js-irs-3 .irs-bar-edge, .js-irs-3 .irs-bar {background: #f28522 ;border-top: 1px solid #f28522 ;border-bottom: 1px solid #f28522;}.js-irs-3 .irs-from, .js-irs-3 .irs-to, .js-irs-3 .irs-single { font-size: 13px; background: #f28522 !important }")),
+                  
+                  fluidRow(column(4,
+                                  div("Objective Range", style = "text-align: left; font-size:150%"),
+                                  
+                                  sliderInput(inputId = "obj1", label= "Objective 1:",min = 0, max = 1, value = c(0,1)),
+                                  sliderInput(inputId = "obj2", label = "Objective 2:", min = 0, max = 1,value= c(0,1)),
+                                  sliderInput(inputId = "obj3", label = "Objective 3:", min = 0, max = 1, value = c(0,1)),
+                                  sliderInput(inputId = "obj4", label = "Objective 4:", min = 0, max = 1, value = c(0,1))),
+                           column(8,
+                                  fluidRow(column(12,
+                                                    
+                                                    div("Selected Objective Ranges (scaled)", style = "text-align: left; font-size:150%"),
+                                                    tableOutput("sliders")
+                                                  )),
+                                  fluidRow(column(12,
+                                                    
+                                                    div("Selected Objective Ranges (absolute)", style = "text-align: left; font-size:150%"),
+                                                    tableOutput("sliders_abs")
+                                                  )),
+                                  fluidRow(column(12,
+                                                    div("Selected Optimum", style = "text-align: left; font-size:150%"),
+                                                    tableOutput("click_info")
+                                                  ))
+                                  )),
+                  
+                  
+                  
                 div("Parallel Axis plot", style = "text-align: left; font-size:150%"),
                            plotOutput("linePlot",click="clickline"),
                            verbatimTextOutput("lineDetails"),
-                           div("Selected Optimum", style = "text-align: left; font-size:150%"),
-                           tableOutput("click_info"),
-                           div("Selected Objective Ranges (scaled)", style = "text-align: left; font-size:150%"),
-                           tableOutput("sliders"), #needed for min and max
-                           div("Selected Objective Ranges (absolute)", style = "text-align: left; font-size:150%"),
-                           tableOutput("sliders_abs"),
+                           
                           
                            div("Difference between selection and the whole Pareto Front", style = "text-align: left; font-size:150%"),
                            plotOutput("sliders_plot")
                           )## PLAY AROUND MAIN PANEL END
                 )),
         
-        ## DATA PREP PANEL
+        ## DATA PREP PANEL #####
         
         tabItem(tabName = "data_prep",
                 titlePanel("OPTAIN Data Preparation"),
@@ -163,18 +182,21 @@ ui <-
                   div("1. pareto_genomes.txt",style = "text-align: left; font-size:115%"),
                   div(style = "margin-top: -15px;",fileInput("file1", "", accept = ".txt")), 
                   
-                  div("2. pareto_fitness.txt",style = "text-align: left; font-size:115%"),
-                  div(style = "margin-top: -15px;",fileInput("file2", "", accept = ".txt")), 
+                  div("2. hru.con",style = "text-align: left; font-size:115%"),
+                  div(style = "margin-top: -15px;",fileInput("file2", "", accept = ".con")),
                   
+                 
                   div("3. measure_location.csv",style = "text-align: left; font-size:115%"),
                   div(style = "margin-top: -15px;",fileInput("file3", "", accept = ".csv")), 
                   
-                  div("4. hru.con",style = "text-align: left; font-size:115%"),
-                  div(style = "margin-top: -15px;",fileInput("file4", "", accept = ".con")),
                   
-                  div("5. shapefile called \"hru\" with four components (.shp .dbf .prj and .shx)",style = "text-align: left; font-size:115%"),
+                  div("4. shapefile called \"hru\" with four components (.shp .dbf .prj and .shx)",style = "text-align: left; font-size:115%"),
                   div(style = "margin-top: -15px;",fileInput("shapefile", "", multiple = TRUE, 
                                                              accept = c(".shp", ".shx", ".dbf", ".prj"))),
+                  
+                  div(id="fitness_avail",div("5. pareto_fitness.txt",style = "text-align: left; font-size:115%"),
+                  div(style = "margin-top: -15px;",fileInput("file4", "", accept = ".txt")))%>%hidden(), 
+                  
                   
                   actionButton("files_avail", "Check Files"),
                   uiOutput("fileStatusMessage"),
@@ -188,7 +210,7 @@ ui <-
                     actionButton("obj_conf", "Confirm Objective Names")
                   )%>% hidden(), 
                   hr(),
-                  div(id="range_title","Range of objective values",style = "text-align: left; font-size:120%"),
+                  div(id="range_title","Range of objective values as given in pareto_fitness.txt",style = "text-align: left; font-size:120%"),
                   tableOutput("obj_conf"),
                   div(p("Run Preparation Script when ready",style =  "text-align: left; font-size:150%"),
                   actionButton("runprep", "Run Prep"))%>%hidden,
@@ -197,11 +219,12 @@ ui <-
                 )# DATA PREP MAIN PANEL END
         ), 
         
+     
       ## CORRELATION ANALYSIS PANEL
         tabItem(tabName = "correlation_analysis",
            titlePanel("Correlation Analysis"),
            sidebarLayout(
-              sidebarPanel(
+              sidebarPanel(div(id="corr_sidebar",
       # Display message about file status
       div("1. Choose variables to be included in the Correlation Analysis:", style = "text-align: left; font-size:150%"),
       checkboxGroupInput("selements", "", 
@@ -217,8 +240,8 @@ ui <-
       selectInput(inputId = "excl",label = "variables to exclude", choices = NULL,multiple = TRUE),
       actionButton("confirm_selection", "Confirm Selection"),
       
-    ),
-    mainPanel(
+    )),
+     mainPanel(div(id="corr_content", 
               
       # Display the selected elements from the checkbox group
       div("Selected Variables", style = "text-align: left; font-size:150%"),
@@ -233,7 +256,8 @@ ui <-
       # print confirmed selection
       uiOutput(outputId = "confirmed_selection")
      
-      )## CORRELATION ANALYSIS MAIN PANEL END
+     ),
+     uiOutput("corr_notthere"))## CORRELATION ANALYSIS MAIN PANEL END
     
     )
   ),

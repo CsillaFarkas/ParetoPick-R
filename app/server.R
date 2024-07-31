@@ -46,6 +46,7 @@ server <- function(input, output, session) {
   ##check if names of objectives have to be supplied or already present
   observeEvent(input$tabs == "play_around",{ 
     if(!file.exists("../input/object_names.RDS")) {
+      shinyjs::show(id = "obj_first")
       
       observe({
         updated_objectives <- c(input$short1, input$short2, input$short3, input$short4)
@@ -53,8 +54,6 @@ server <- function(input, output, session) {
         objectives(updated_objectives)
       })
     } else{
-      shinyjs::hide(id = "obj_first")
-      
       short = readRDS("../input/object_names.RDS")
       objectives(short)
     }})
@@ -236,6 +235,8 @@ server <- function(input, output, session) {
   
   ### Data Prep ####
   
+  if(!file.exists("../data/pareto_fitness.txt")){shinyjs::show(id="fitness_avail")}
+  
   file_data1 <- reactiveVal(NULL)
   file_data2 <- reactiveVal(NULL)
   file_data3 <- reactiveVal(NULL)
@@ -299,8 +300,8 @@ server <- function(input, output, session) {
      }
      
      
-     required_files <- c("../data/pareto_genomes.txt", "../data/pareto_fitness.txt",  "../data/measure_location.csv","../data/hru.con",
-                         "../data/hru.shp","../data/hru.shx", "../data/hru.dbf", "../data/hru.prj")
+     required_files <- c("../data/pareto_genomes.txt","../data/hru.con",   "../data/measure_location.csv",
+                         "../data/hru.shp","../data/hru.shx", "../data/hru.dbf", "../data/hru.prj","../data/pareto_fitness.txt")
      
      checkFiles <- sapply(required_files, function(file) file.exists(file))
      
@@ -423,6 +424,42 @@ server <- function(input, output, session) {
       })
       
   ### Correlation Analysis ####
+      
+      ## hide tab if user has not supplied all data files
+      observeEvent(input$tabs == "correlation_analysis", {
+        required_files <- c(
+          "../data/pareto_genomes.txt",
+          "../data/hru.con",
+          "../data/measure_location.csv",
+          "../data/hru.shp",
+          "../data/hru.shx",
+          "../data/hru.dbf",
+          "../data/hru.prj",
+          "../data/pareto_fitness.txt"
+        )
+        
+        checkFiles <- sapply(required_files, function(file) file.exists(file))
+        
+        ## only show correlation tab when all files are available
+        if (all(checkFiles) == F |  !file.exists("../input/object_names.RDS")) {
+          shinyjs::hide(id = "corr_content")
+          shinyjs::show(id = "corr_notthere")
+          shinyjs::hide(id = "corr_sidebar")
+          
+          output$corr_notthere <- renderText({
+            missing_files = required_files[!checkFiles]
+            HTML(paste(
+              "The following file(s) are missing and have to be provided in the Data Prep tab:<br/>",
+              paste(sub('../data/', '', missing_files), collapse = "<br/> ")
+            ))
+          })
+        }else{ shinyjs::show(id = "corr_content")
+          shinyjs::show(id = "corr_sidebar")
+          shinyjs::hide(id = "corr_notthere")}
+      })
+      
+      
+      ## actual tab
       observeEvent(input$tabs == "correlation_analysis",{ 
         if(file.exists("../data/measure_location.csv")) {
           mes = read.csv("../data/measure_location.csv")
@@ -430,8 +467,7 @@ server <- function(input, output, session) {
 
           nm <<- length(mes)
         }} )
-      
-      
+
       
   observeEvent(input$run,{
     all_var <<- readRDS("../input/all_var.RDS")
@@ -689,7 +725,7 @@ server <- function(input, output, session) {
 
     cm(pull_shp(layername="hru", optims = sols())) 
     needs_buffer(pull_buffer())
-    lalo <<- plt_latlon()
+    if(file.exists("../data/hru.con")){lalo <<- plt_latlon(conpath = "../data/hru.con")}
 
   })
   
