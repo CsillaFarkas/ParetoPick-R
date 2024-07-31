@@ -706,7 +706,6 @@ server <- function(input, output, session) {
 
       buffs = needs_buffer()
 
-      # opti_sell = sapply(selected_data$optimum,standardize_quotes)
       hru_sel =  plt_sel(shp=cm(),opti_sel = selected_data$optimum)
 
       mes = read.csv("../data/measure_location.csv")
