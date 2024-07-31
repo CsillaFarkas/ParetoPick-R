@@ -272,7 +272,7 @@ pull_buffer = function(prios= "../input/nswrm_priorities.csv"){
 }
 
 ## get map extent
-plt_latlon = function(conpath = "../data/hru.con"){
+plt_latlon = function(conpath){
   conny = read.table(conpath,skip = 1,header = T)
   lon_map = mean(conny$lon)
   lat_map = mean(conny$lat)
