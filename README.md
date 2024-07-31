@@ -28,7 +28,6 @@ It then performs both and provides the relevant statistics, plots and analyses.
 * all_var.RDS
 
 ## Missing/Nice to have
-* measure_location.csv - how produced? Does every catchment have it?
 * reorder required files so pareto_fitness.txt is not shown when already provided earlier
 * Plot: background, quicker through all in functions, buffer for visibility, if quicker we could do several next to each other
 * Front page explaining the process: Data Preparation only has to run once etc.

@@ -336,4 +336,4 @@ ui <-
                                 leafletOutput("map")
                                 ))
       )))
-  
+
