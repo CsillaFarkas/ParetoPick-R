@@ -12,7 +12,8 @@ It then performs both and provides the relevant statistics, plots and analyses.
 * config.ini (provided in package)
 * nswrm_priorities.csv (provided in package)
 
-## Input through the user
+## Input through the user 
+(app copies these into the data folder)
 * pareto_genomes.txt
 * pareto_fitness.txt
 * hru.con
@@ -22,17 +23,18 @@ It then performs both and provides the relevant statistics, plots and analyses.
  
 ### Files created and used in the process
 * var_corr_par.csv (created in convert_optain.R, contains all variables considered in the clustering)
-* hru_in_optima.RDS (created based on measure_location.csv, connection between activated HRUs and optima)
+* hru_in_optima.RDS (created in convert_optain.R based on measure_location.csv, connection between activated HRUs and optima)
 * object_names.RDS
 * pca_content.RDS
 * all_var.RDS
 
 ## Missing/Nice to have
-* reorder required files so pareto_fitness.txt is not shown when already provided earlier
-* Plot: background, quicker through all in functions, buffer for visibility, if quicker we could do several next to each other
-* Front page explaining the process: Data Preparation only has to run once etc.
-* full list of nswrm implemented across all catchments to properly assign priorities
-* Bigger collection of management and structural nswrm implemented in OPTAIN
+* Plot last tab: four next to each other to allow proper comparison
+* Plots on second tab: extended with pareto point plot(s)
+* Plot: currently only activated hrus, doesn't look great, if quicker we could do several next to each other
+* Front page some more explanation
+* Klaipeda: full list of nswrm implemented across all catchments to properly assign priorities
+* Klaipeda: bigger collection of management and structural nswrm implemented in OPTAIN
 * Correlation Analysis: output largest accepted correlation, maybe in bold in table
 * deviations_step is currently the default value 
 * explain the effects of high correlation

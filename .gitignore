@@ -1,7 +1,4 @@
 .Rproj.user
 .Rhistory
-data
-input
-python_files
-data for container
-output
+.RData
+.Ruserdata

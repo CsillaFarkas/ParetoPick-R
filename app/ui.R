@@ -165,7 +165,11 @@ ui <-
                            
                           
                            div("Difference between selection and the whole Pareto Front", style = "text-align: left; font-size:150%"),
-                           plotOutput("sliders_plot")
+                           plotOutput("sliders_plot"),
+                
+                
+                div(id="scatter","Scatter Plot",
+                    plotOutput("scatter_plot"))
                           )## PLAY AROUND MAIN PANEL END
                 )),
         
@@ -177,7 +181,7 @@ ui <-
                   
                   tags$head(tags$style("#fileStatusMessage{font-size:150%;}")),
                   
-                                p("To run the data preparation and the subsequent Correlation and Principal Component Analysis, please provide the following files:",style =  "text-align: left; font-size:150%"),
+                                p("To prepare the data for the subsequent correlation and cluster analysis, please provide the following files:",style =  "text-align: left; font-size:150%"),
                          
                   div("1. pareto_genomes.txt",style = "text-align: left; font-size:115%"),
                   div(style = "margin-top: -15px;",fileInput("file1", "", accept = ".txt")), 
@@ -212,7 +216,7 @@ ui <-
                   hr(),
                   div(id="range_title","Range of objective values as given in pareto_fitness.txt",style = "text-align: left; font-size:120%"),
                   tableOutput("obj_conf"),
-                  div(p("Run Preparation Script when ready",style =  "text-align: left; font-size:150%"),
+                  div(id="runprep_show",p("Run Preparation Script when ready (this should take no more than five minutes)",style =  "text-align: left; font-size:150%"),
                   actionButton("runprep", "Run Prep"))%>%hidden,
                   uiOutput("script_output") 
                   
@@ -235,10 +239,10 @@ ui <-
       div("2. Perform the Correlation Analysis", style = "text-align: left; font-size:150%"),
       actionButton("run", "Run Correlation Analysis"),
       div("3. Choose threshold for correlation",style = "text-align: left; font-size:150%"),
-      div(style = "margin-top: -15px;",shinyWidgets::sliderTextInput(inputId = "thresh", label= "",choices = seq(0.65,0.95,0.05),selected=0.75)),
+      div(style = "margin-top: -15px;",shinyWidgets::sliderTextInput(inputId = "thresh", label= "",choices = seq(0.65,0.95,0.05), selected=0.75)),
       div("4. Choose variables that shall be excluded from the PCA",style = "text-align: left; font-size:150%"),
-      selectInput(inputId = "excl",label = "variables to exclude", choices = NULL,multiple = TRUE),
-      actionButton("confirm_selection", "Confirm Selection"),
+      selectInput(inputId = "excl",label = "variables to exclude", choices = NULL, multiple = TRUE),
+      actionButton("confirm_selection", "Confirm Selection")
       
     )),
      mainPanel(div(id="corr_content", 
@@ -279,7 +283,7 @@ ui <-
                           div(style = "margin-top: -15px;",radioButtons("pcamethod", "",
                                        choices = c("k-means", "k-medoids"),
                                        selected = "k-means")),
-                          actionButton("runPCA", "Run Principal Component Analysis"),
+                          actionButton("runPCA", "Run PCA and Cluster Analysis"),
                           uiOutput("pca_mess")),
                         
                         # PCA Main Panel

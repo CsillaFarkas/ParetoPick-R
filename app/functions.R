@@ -281,10 +281,10 @@ plt_latlon = function(conpath){
 
 
 ## make large dataset
-pull_shp = function(layername = "hru", optims){
+pull_shp = function(layername = "hru", optims, hru_in_opt_path){
   if(file.exists(paste0("../data/",layername,".shp"))){
     
-    hio = readRDS("../input/hru_in_optima.RDS")
+    hio = readRDS(hru_in_opt_path)
     hio = hio %>% rename_with( ~ str_remove(., "^V"), starts_with("V"))
     hio = hio %>% select(optims[["optimum"]], id)#subset to only optima remaining after clustering
     
@@ -550,7 +550,7 @@ scaled_abs_match = function(minval_s=c(0,0,0,0),
   colnames(df) = allobs
   
   # locate values in scaled dataframe 
-  for(i in 1:length(allobs)){
+  for(i in 1:length(allobs)){ #this does not have to run for those where we only want abs_tab/output(ch)
     
     sca_max <- scal_tab[which.min(abs(scal_tab[[allobs[i]]]-maxval_s[i])),]
     df["max",allobs[i]] = abs_tab[rownames(sca_max),allobs[i]]  
@@ -597,7 +597,7 @@ scaled_abs_match = function(minval_s=c(0,0,0,0),
 match_scaled = function(minval_s=c(0,0,0,0),
                         maxval_s=c(1,1,1,1),
                         scal_tab = NULL,
-                        allobs=c('HC', 'HQ', 'P', 'AP')){
+                        allobs){
   
   df <- as.data.frame(array(NA,dim=c(2,length(allobs))),row.names = c("max","min"))
   colnames(df) = allobs
