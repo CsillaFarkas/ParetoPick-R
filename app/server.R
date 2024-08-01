@@ -46,21 +46,27 @@ server <- function(input, output, session) {
   ##check if names of objectives have to be supplied or already present
   observeEvent(input$tabs == "play_around",{ 
     if(!file.exists("../input/object_names.RDS")) {
+      
       shinyjs::show(id = "obj_first")
       
+      #get new objective names
       observe({
-        updated_objectives <- c(input$short1, input$short2, input$short3, input$short4)
-        
+        req(input$short1, input$short2, input$short3, input$short4)
+        updated_objectives <<- c(input$short1, input$short2, input$short3, input$short4)
         objectives(updated_objectives)
       })
+      
+      observeEvent(input$save_par_fiti, {
+        saveRDS(updated_objectives, file = "../input/object_names.RDS")
+      }) 
+      
     } else{
+      shinyjs::hide(id="obj_first")
       short = readRDS("../input/object_names.RDS")
       objectives(short)
     }
     
-    if(file.exists("../data/pareto_fitness.txt")){
-      shinyjs::hide(id="parfit")
-    }
+    if(file.exists("../data/pareto_fitness.txt")){shinyjs::hide(id="parfit")}
       
     })
     
@@ -76,7 +82,7 @@ server <- function(input, output, session) {
     updateCheckboxGroupInput(session, "sel_neg", choices = objectives())
   })
   
- 
+  
   
   if (file.exists(pareto_path)) {
     observe({
@@ -101,20 +107,19 @@ server <- function(input, output, session) {
     par_fiti(list(path = file$datapath, name = file$name))
     })
   
-  observeEvent(input$save_par_fiti,{
-    req(par_fiti())
+  
+  observeEvent(input$save_paretofit,{
+    req(par_fiti(),objectives())
     save_par_fiti <- par_fiti()$name
     save_path_par_fiti <- file.path(save_dir, save_par_fiti)
     file.copy(par_fiti()$path, save_path_par_fiti, overwrite = TRUE)
-  
+    
     data = read.table(pareto_path, header=F,stringsAsFactors=FALSE,sep = ',')
     names(data) = objectives()
     fit(data)
-    assigned_objnames <<- c(input$short1,input$short2,input$short3,input$short4)
-    print(assigned_objnames)
-    saveRDS(assigned_objnames,file="../input/object_names.RDS")
     
-  }) 
+  })
+
   
     ## base dataframe for all further operations in play_around tab
   f_scaled <- reactive({
@@ -125,8 +130,8 @@ server <- function(input, output, session) {
   
   ## ggplot melt and change plotting order
   pp <- reactive({
-    req(f_scaled())
-    f_scaled()%>% pivot_longer(.,cols=-id)%>%mutate(name=factor(name,levels=c("HC","HQ","P","AP")),id=as.factor(id))
+    req(f_scaled(),objectives())
+    f_scaled()%>% pivot_longer(.,cols=-id)%>%mutate(name=factor(name,levels=objectives()),id=as.factor(id))
      })
 
   observe({
@@ -137,12 +142,12 @@ server <- function(input, output, session) {
  
   ## pull values from parallel axis line when clicked
   observeEvent(input$clickline,{
-    req(fit())
+    req(fit(), objectives())
     x = round(input$clickline$x)
     val = input$clickline$y
 
     sc= match_scaled(minval_s=c(input$obj1[1],input$obj2[1],input$obj3[1],input$obj4[1]),
-                     maxval_s=c(input$obj1[2],input$obj2[2],input$obj3[2],input$obj4[2]), scal_tab=f_scaled())
+                     maxval_s=c(input$obj1[2],input$obj2[2],input$obj3[2],input$obj4[2]), scal_tab=f_scaled(),allobs=objectives())
 
     # pull the closest value
     yo= sc%>% mutate(id = row_number())%>%slice(which.min(abs(.[[x]] - val)))
@@ -165,8 +170,26 @@ server <- function(input, output, session) {
    
     er<- reactive({ete})
     
+    colnms = objectives()
+    #get unit input 
+    uns = c(input$unit1,input$unit2,input$unit3,input$unit4)
+    
+    new_colnms <- mapply(function(col, unit) {
+      if (unit != "") {
+        paste(col, " (", unit, ")", sep = "")
+      } else {
+        col
+      }
+    }, col = colnms, unit = uns, SIMPLIFY = TRUE)
+   
+    
     ## table of chosen line 
-    output$click_info <- renderTable({as.data.frame(er(),col.names=objectives())},include.rownames=F)
+    output$click_info <- renderTable({
+      lclick = as.data.frame(er())
+      colnames(lclick) = new_colnms
+      
+      lclick
+        }, include.rownames = F)
     
     }, ignoreNULL = TRUE)
   
@@ -204,6 +227,7 @@ server <- function(input, output, session) {
   ## absolute table
   output$sliders_abs <- renderTable({
     req(f_scaled(),fit(),objectives())
+    colnms = objectives()
     
     dt <- scaled_abs_match(minval_s=c(input$obj1[1],input$obj2[1],input$obj3[1],input$obj4[1]),
                            maxval_s=c(input$obj1[2],input$obj2[2],input$obj3[2],input$obj4[2]),
@@ -219,7 +243,19 @@ server <- function(input, output, session) {
         dn[j,i] = formatC(dt[j,i],digits =num.decimals(as.numeric(dt[1,i])),drop0trailing = T,format = "f")
       }}
     
-
+    #get unit input 
+    uns = c(input$unit1,input$unit2,input$unit3,input$unit4)
+    
+    new_colnms <- mapply(function(col, unit) {
+      if (unit != "") {
+        paste(col, " (", unit, ")", sep = "")
+      } else {
+        col
+      }
+    }, col = colnms, unit = uns, SIMPLIFY = TRUE)
+    
+    colnames(dn) = new_colnms  
+    
     dn},
     include.rownames = TRUE)
   
@@ -355,6 +391,8 @@ server <- function(input, output, session) {
      
   })
   
+  
+  
   if(!file.exists("../input/var_corr_par.csv") | !file.exists("../input/hru_in_optima.RDS") | !file.exists("../input/all_var.RDS")){
     shinyjs::show(id="runprep_show")
   }
@@ -477,17 +515,27 @@ server <- function(input, output, session) {
           shinyjs::hide(id = "corr_content")
           shinyjs::show(id = "corr_notthere")
           shinyjs::hide(id = "corr_sidebar")
-          
+          neednames = ""
+          whatsmissing = ""
           output$corr_notthere <- renderText({
             missing_files = required_files[!checkFiles]
-            if ("../input/object_names.RDS" %in% missing_files) {
-              missing_files <- missing_files[missing_files != "../input/object_names.RDS"]
-              whatsmissing = "All files have been provided, to be able to proceed please define the objective names in the previous tab."
+            if ("../input/object_names.RDS" %in% missing_files & length(missing_files) != 1) {
+              whatsmissing = "The following file(s) are missing and have to be provided in the Data Prep tab:<br/>"
               
-            } else if ("../input/all_var.RDS" %in% missing_files){
+              missing_files <- missing_files[missing_files != "../input/object_names.RDS"]
+              neednames = "To be able to proceed please also define the objective names in the previous tab."
+              
+            } else if ("../input/object_names.RDS" %in% missing_files & length(missing_files) == 1){
+              whatsmissing = "All files have been provided, please specify the objective names in the previous tab."
+              
+            } else if ("../input/all_var.RDS" %in% missing_files & length(missing_files) != 1){
               missing_files <- missing_files[missing_files != "../input/all_var.RDS"]
               
-              whatsmissing = "All files have been provided, to be able to proceed please rerun the Data Prep in the previous tab."
+              whatsmissing = "The following file(s) are missing and have to be provided in the Data Prep tab:<br/>"
+              neednames = "Please also define the objective names in the previous tab."
+              
+            }else if ("../input/all_var.RDS" %in% missing_files & length(missing_files) == 1){
+              neednames = "Please rerun the Data Preparation in the previous tab."
               
             }else{
               whatsmissing = "The following file(s) are missing and have to be provided in the Data Prep tab:<br/>"
@@ -496,7 +544,7 @@ server <- function(input, output, session) {
             
             HTML(paste(
               whatsmissing,
-              paste(sub('../data/', '', missing_files), collapse = "<br/> ")
+              paste(sub('../data/', '', missing_files), collapse = "<br/> "), "<br/> ",neednames
             ))
           })
         }else{ shinyjs::show(id = "corr_content")

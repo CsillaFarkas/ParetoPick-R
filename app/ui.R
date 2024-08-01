@@ -107,18 +107,27 @@ ui <-
                                   div(
                                   id="parfit",
                                   "Please provide the pareto_fitness.txt file here and click Save:",style = "text-align: left; font-size:115%",
-                                  fileInput("par_fit", "", accept = ".txt")), 
+                                  fileInput("par_fit", "", accept = ".txt"),
+                                  actionButton("save_paretofit","Save")), 
                                   # Text input for short and long names of objectives
                                   div(
                                     id = "obj_first",
                                     "Please provide the objective names as given in the first four columns of the pareto_fitness.txt file:",
                                     style = "text-align: left; font-size:115%", 
-                                  textInput("short1", "Short Name Column 1"), 
-                                  textInput("short2", "Short Name Column 2"), 
-                                  textInput("short3", "Short Name Column 3"), 
-                                  textInput("short4", "Short Name Column 4"),
+                                  textInput("short1", "Objective 1\n (Column 1)"), 
+                                  textInput("short2", "Objective 2\n (Column 2)"), 
+                                  textInput("short3", "Objective 3\n (Column 3)"), 
+                                  textInput("short4", "Objective 4\n (Column 4)"),
                                   actionButton("save_par_fiti", "Save"))
                                   %>% hidden(), 
+                                  div(id="units",
+                                      "If you want you can here supply the objectives' units:",
+                                      style= "text-align: left; font-size:115%",
+                                      textInput("unit1","unit Objective 1", value = ""),
+                                      textInput("unit2","unit Objective 2", value = ""),
+                                      textInput("unit3","unit Objective 3", value = ""),
+                                      textInput("unit4","unit Objective 4", value = "")
+                                      ),
         
                                   textOutput("uploaded_pareto"),
                                   checkboxGroupInput("sel_neg", "Are any of the objectives provided on the negative scale?", choices = NULL, inline = TRUE),
