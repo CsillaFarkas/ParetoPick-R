@@ -8,8 +8,8 @@ library(dplyr)#
 library(DT)#
 library(fs)
 library(fst)
-library(GGally)
 library(ggplot2)
+library(gridExtra) # or patchwork
 library(htmltools)
 library(ini)#
 library(leaflet)#

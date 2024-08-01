@@ -171,14 +171,15 @@ ui <-
                 div("Parallel Axis plot", style = "text-align: left; font-size:150%"),
                            plotOutput("linePlot",click="clickline"),
                            verbatimTextOutput("lineDetails"),
-                           
+                
+                           div(id="scatter","Scatter Plot",
+                      plotOutput("scatter_plot")),
                           
                            div("Difference between selection and the whole Pareto Front", style = "text-align: left; font-size:150%"),
-                           plotOutput("sliders_plot"),
+                           plotOutput("sliders_plot")
                 
                 
-                div(id="scatter","Scatter Plot",
-                    plotOutput("scatter_plot"))
+               
                           )## PLAY AROUND MAIN PANEL END
                 )),
         

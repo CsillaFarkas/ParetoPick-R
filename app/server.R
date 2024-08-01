@@ -284,21 +284,26 @@ server <- function(input, output, session) {
                                 abs_tab = fit(),scal_tab = f_scaled(),
                                 allobs = objectives(),smll=F)
     
-    ggpairs(scat_abs,
-          lower = list(continuous = "points"),  # Lower triangle: scatter plots
-          diag = list(continuous = "blank"),    # Diagonal: blank
-          upper = list(continuous = "blank"),   # Upper triangle: blank
-          axisLabels = "show"                   # Show axis labels
-  )+ 
-    theme_bw(base_size = 10) +  # Apply a theme with smaller base size
-    theme(
-      strip.background = element_blank(),  # Remove background from facet labels
-      strip.text = element_text(size = 10, face = "bold"),  # Smaller facet labels
-      axis.text = element_text(size = 8),  # Smaller axis text
-      axis.title = element_text(size = 10, face = "bold"),  # Smaller axis titles
-      panel.spacing = unit(0.1, "lines"),  # Reduce space between panels
-      plot.margin = margin(5, 5, 5, 5)  # Reduce plot margins
-    )})
+    plots <- list()
+    vars <- colnames(scat_abs)
+    num_vars <- length(vars)
+    
+    # Generate unique scatterplots
+    plot_index <- 1
+    for (i in 1:(num_vars - 1)) {
+      for (j in (i + 1):num_vars) {
+        p <- ggplot(scat_abs, aes_string(x = vars[i], y = vars[j])) +
+          geom_point() +
+          theme_minimal() +
+          labs(x = vars[i], y = vars[j])
+        plots[[plot_index]] <- p
+        plot_index <- plot_index + 1
+      }
+    }
+    
+    # Arrange plots in a grid using gridExtra
+    grid.arrange(grobs = plots, nrow = 2, ncol = 3)
+    })
   
   
   ### Data Prep ####
