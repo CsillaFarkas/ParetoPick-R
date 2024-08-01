@@ -29,6 +29,8 @@ It then performs both and provides the relevant statistics, plots and analyses.
 * all_var.RDS
 
 ## Missing/Nice to have
+* transfer units to other tab and paste to config (easy to do)
+* color the points in scatterplot when selected in line plot
 * Plot last tab: four next to each other to allow proper comparison
 * Plots on second tab: extended with pareto point plot(s)
 * Plot: currently only activated hrus, doesn't look great, if quicker we could do several next to each other
