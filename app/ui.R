@@ -172,8 +172,8 @@ ui <-
                            plotOutput("linePlot",click="clickline"),
                            verbatimTextOutput("lineDetails"),
                 
-                           div(id="scatter","Scatter Plot",
-                      plotOutput("scatter_plot")),
+                           div(id="scatter","Scatter Plot",style = "text-align: left; font-size:150%"),
+                      plotOutput("scatter_plot"),
                           
                            div("Difference between selection and the whole Pareto Front", style = "text-align: left; font-size:150%"),
                            plotOutput("sliders_plot")

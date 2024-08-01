@@ -439,7 +439,61 @@ plot_parline = function(datt,sizz=rep(.5, length(unique(datt$id))),colols=rep("g
   
 }
 
+## scatter plot
+plt_sc = function(dat, ranges){
+  plots <- list()
+  vars <- colnames(dat)
+  num_vars <- length(vars)
+  
+  plot_index <- 1
+  for (i in 1:(num_vars - 1)) {
+    for (j in (i + 1):num_vars) {
+      
+      x_min = ranges[vars[i],2]
+      x_max = ranges[vars[i],3]
+        y_min = ranges[vars[j],2]
+        y_max = ranges[vars[j],3]
+        
+      
+      
+      p <- ggplot(dat, aes_string(x = vars[i], y = vars[j])) +
+        geom_point(color = "grey50", size = 1.1) +
+        theme_bw() + theme(
+          panel.background = element_blank(),
+          panel.grid.major = element_line(color = "lightgray", size = 0.3),
+          panel.grid.minor = element_blank(),
+          panel.border = element_blank(),
+          axis.text = element_text(size = 12),
+          axis.title = element_text(size = 16)
+        ) +
+        labs(x = vars[i], y = vars[j])+
+        scale_x_continuous(limits = c(x_min, x_max)) +
+        scale_y_continuous(limits = c(y_min, y_max))
+      plots[[plot_index]] <- p
+      plot_index <- plot_index + 1
+    }
+  }
+
+return(plots)
+}
 #### Other Functions ####
+
+get_mima = function(df){
+  min_values <- sapply(df, min, na.rm = TRUE)
+  max_values <- sapply(df, max, na.rm = TRUE)
+  
+  # Create a dataframe with the results
+  min_max_df <- data.frame(
+    Variable = names(min_values),
+    Min = min_values,
+    Max = max_values,
+    stringsAsFactors = FALSE
+  )
+  
+  return(min_max_df)
+}
+
+
 
 ## default max number of pc
 get_num_pca <- function() {

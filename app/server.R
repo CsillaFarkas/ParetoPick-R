@@ -171,6 +171,7 @@ server <- function(input, output, session) {
     er<- reactive({ete})
     
     colnms = objectives()
+    
     #get unit input 
     uns = c(input$unit1,input$unit2,input$unit3,input$unit4)
     
@@ -284,25 +285,12 @@ server <- function(input, output, session) {
                                 abs_tab = fit(),scal_tab = f_scaled(),
                                 allobs = objectives(),smll=F)
     
-    plots <- list()
-    vars <- colnames(scat_abs)
-    num_vars <- length(vars)
-    
-    # Generate unique scatterplots
-    plot_index <- 1
-    for (i in 1:(num_vars - 1)) {
-      for (j in (i + 1):num_vars) {
-        p <- ggplot(scat_abs, aes_string(x = vars[i], y = vars[j])) +
-          geom_point() +
-          theme_minimal() +
-          labs(x = vars[i], y = vars[j])
-        plots[[plot_index]] <- p
-        plot_index <- plot_index + 1
-      }
-    }
+    mima = get_mima(fit())
+
+    plot_scatter = plt_sc(dat = scat_abs, ranges=mima)
     
     # Arrange plots in a grid using gridExtra
-    grid.arrange(grobs = plots, nrow = 2, ncol = 3)
+    grid.arrange(grobs = plot_scatter, nrow = 2, ncol = 3)
     })
   
   
