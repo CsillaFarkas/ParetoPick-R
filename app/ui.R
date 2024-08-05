@@ -62,7 +62,7 @@ ui <-
                                 }
                                 
                                 .well {
-                                background-color: #c4d0e2;
+                                background-color: #c4d0e2; 
                                 }
                                 
                                  /* Style the sidebar input labels */
@@ -103,7 +103,7 @@ ui <-
                 
                 sidebarLayout(
                  
-                    sidebarPanel( 
+                    sidebarPanel( width = 3,
                                   div(
                                   id="parfit",
                                   "Please provide the pareto_fitness.txt file here and click Save:",style = "text-align: left; font-size:115%",
@@ -130,7 +130,17 @@ ui <-
                                       actionButton("save_unit","Save")),
         
                                   textOutput("uploaded_pareto"),
-                                  checkboxGroupInput("sel_neg", "Are any of the objectives provided on the negative scale?", choices = NULL, inline = TRUE),
+                                  br(),
+                                  br(),
+                                  div(
+                                  column(10,
+                                         div("Objective Range", style = "text-align: left; font-size:150%; margin-top: 40px;"),
+                                         
+                                         sliderInput(inputId = "obj1", label= "Objective 1:",min = 0, max = 1, value = c(0,1), width = "110%"),
+                                         sliderInput(inputId = "obj2", label = "Objective 2:", min = 0, max = 1,value= c(0,1), width = "110%"),
+                                         sliderInput(inputId = "obj3", label = "Objective 3:", min = 0, max = 1, value = c(0,1), width = "110%"),
+                                         sliderInput(inputId = "obj4", label = "Objective 4:", min = 0, max = 1, value = c(0,1), width = "110%")))
+                                  
                                 
                     ),
                 mainPanel(
@@ -142,31 +152,15 @@ ui <-
                   tags$style(HTML(".js-irs-2 .irs-single, .js-irs-2 .irs-bar-edge, .js-irs-2 .irs-bar {background: #af58ba ;border-top: 1px solid #af58ba ;border-bottom: 1px solid #af58ba;}.js-irs-2 .irs-from, .js-irs-2 .irs-to, .js-irs-2 .irs-single { font-size: 13px;background: #af58ba !important }")),
                   tags$style(HTML(".js-irs-3 .irs-single, .js-irs-3 .irs-bar-edge, .js-irs-3 .irs-bar {background: #f28522 ;border-top: 1px solid #f28522 ;border-bottom: 1px solid #f28522;}.js-irs-3 .irs-from, .js-irs-3 .irs-to, .js-irs-3 .irs-single { font-size: 13px; background: #f28522 !important }")),
                   
-                  fluidRow(column(4,
-                                  div("Objective Range", style = "text-align: left; font-size:150%"),
-                                  
-                                  sliderInput(inputId = "obj1", label= "Objective 1:",min = 0, max = 1, value = c(0,1)),
-                                  sliderInput(inputId = "obj2", label = "Objective 2:", min = 0, max = 1,value= c(0,1)),
-                                  sliderInput(inputId = "obj3", label = "Objective 3:", min = 0, max = 1, value = c(0,1)),
-                                  sliderInput(inputId = "obj4", label = "Objective 4:", min = 0, max = 1, value = c(0,1))),
-                           column(8,
-                                  fluidRow(column(12,
-                                                    
-                                                    div("Selected Objective Ranges (scaled)", style = "text-align: left; font-size:150%"),
-                                                    tableOutput("sliders")
-                                                  )),
-                                  fluidRow(column(12,
-                                                    
-                                                    div("Selected Objective Ranges (absolute)", style = "text-align: left; font-size:150%"),
-                                                    tableOutput("sliders_abs")
-                                                  )),
-                                  fluidRow(column(12,
-                                                    div("Selected Optimum", style = "text-align: left; font-size:150%"),
-                                                    tableOutput("click_info")
-                                                  ))
-                                  )),
-                  
-                  
+                fluidRow(
+                    column(12,
+                           fluidRow(column(6, div("Selected Objective Ranges (scaled)", style = "text-align: left; font-size:150%"),
+                                    tableOutput("sliders")),
+                             column(6, div("Selected Objective Ranges (absolute)", style = "text-align: left; font-size:150%"),
+                                    tableOutput("sliders_abs"))),
+                           fluidRow(column(12,
+                                    div("Selected Optimum", style = "text-align: left; font-size:150%"),
+                                    tableOutput("click_info"))))),
                   
                 div("Parallel Axis plot", style = "text-align: left; font-size:150%"),
                            plotOutput("linePlot",click="clickline"),
@@ -176,6 +170,7 @@ ui <-
                       plotOutput("scatter_plot"),
                           
                            div("Difference between selection and the whole Pareto Front", style = "text-align: left; font-size:150%"),
+                          checkboxGroupInput("sel_neg", "Are any of the objectives provided on the negative scale?", choices = NULL, inline = FALSE),
                            plotOutput("sliders_plot")
                 
                 
