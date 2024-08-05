@@ -20,6 +20,7 @@ It then performs both and provides the relevant statistics, plots and analyses.
 * object_names.RDS
 * pca_content.RDS
 * all_var.RDS
+* units.RDS
 
 ## Input through the user 
 (app copies these into the data folder)
