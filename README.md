@@ -31,7 +31,7 @@ It then performs both and provides the relevant statistics, plots and analyses.
 ## Missing/Nice to have
 * transfer units to other tab and paste to config (easy to do)
 * color the points in scatterplot when selected in line plot
-* Plot last tab: four next to each other to allow proper comparison
+* Plot last tab: parallel legend and zoom
 * Plot: currently only activated hrus, doesn't look great, if quicker we could do several next to each other
 * Front page some more explanation
 * Klaipeda: full list of nswrm implemented across all catchments to properly assign priorities
