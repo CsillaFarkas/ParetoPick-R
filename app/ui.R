@@ -368,10 +368,22 @@ ui <-
                         
           )), tabItem(tabName = "analysis",
                       titlePanel("Analysing the remaining optima"),
+                      htmlOutput("tabtext"),
                       mainPanel(DTOutput("antab"),
                                 actionButton("plt_opti","Plot Optimum"),
                                 textOutput("no_row")%>%hidden(),
-                                leafletOutput("map")
+                                fluidRow(
+                                  lapply(1:12, function(i) {
+                                    column(3, leafletOutput(paste0("map", i))
+                                    )
+                                  })
+                                ),
+                                tags$style(type = "text/css", "
+                                .map-title {
+                                font-weight: bold;
+                                font-size: 16px;
+                                margin-bottom: 5px;
+                                text-align: center;}")
                                 ))
       )))
 

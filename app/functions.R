@@ -303,46 +303,62 @@ pull_shp = function(layername = "hru", optims, hru_in_opt_path){
 
 ## merge hrus with optima
 plt_sel = function(opti_sel, shp){
-
-  plt_sel = shp %>% dplyr::select(id, geometry, all_of(opti_sel)) %>% rename(optim =
-                                                                            opti_sel)
+  new_names <- paste0("Optimum_",opti_sel)
+  
+  plt_sel = shp %>% dplyr::select(id, geometry, all_of(opti_sel)) %>%  rename_with(.fn = ~ new_names, .cols = all_of(opti_sel))
   plt_sel = st_make_valid(plt_sel) # too slow annoyingly
   
   return(plt_sel)
 }
 
-## plot leaflet
-plt_lf = function(dat=hru_sel,cols="optim", mes, lo, la, buff_els){#hru_sel created with plt_sel() and buff_els created with pull_buffer()
-  # st_agr(dat) <- "constant" # Set spatial attribute relationship for speed-up
-
+## plot leaflet w/ specific column
+plt_lf <- function(data, col, mes, lo, la, buff_els) {
+  
+  #palette
   dispal = colorFactor("Spectral", domain = mes, na.color = "lightgrey")
-
- lf_map <- leaflet(data = dat) %>%
-   setView(lng = lo, lat = la, zoom = 11) %>%
+  
+  #buffer
+  relevant_data <- data[data[[col]] %in% buff_els, ]
+  buffered_data <- st_buffer(relevant_data, dist = 80)
+  
+  lm= leaflet(data = data) %>%
+    setView(lng = lo, lat = la, zoom = 10) %>%
     addProviderTiles(providers$CartoDB.Positron) %>%
+    addPolygons(
+      fillColor = ~ dispal(data[[col]]),
+      fillOpacity = 0.7,
+      color = "lightgrey",
+      weight = 1,
+      popup = ~paste0("Value: ", data[[col]]),
+      highlightOptions = highlightOptions(
+        color = "white",
+        weight = 2,
+        bringToFront = TRUE),
+      label = ~ data[[col]] )%>%
+    addControl(html = paste(col, "</b>"), position = "topright", className = "map-title")
+  
+   lm %>%
+    addPolygons(
+      data = buffered_data,
+      fillColor = NA,
+      color = ~ dispal(relevant_data[[col]]),
+      weight = 1,
+      dashArray = "3",
+      fillOpacity = 0.2,
+      highlightOptions = highlightOptions(
+        color = ~ dispal(relevant_data[[col]]),
+        weight = 2,
+        bringToFront = TRUE
+      )
+    ) %>%
+    addLegend("bottomright",
+              pal = dispal,
+              title = "measures",
+              values = mes)
+  
+}
 
-    addPolygons(fillColor = ~dispal(dat[[cols]]), fillOpacity = 0.7,
-                color = "lightgrey", weight = 1,
-                highlightOptions = highlightOptions(color = "white", weight = 2,
-                                                    bringToFront = TRUE),
-                label = ~dat[[cols]]) %>%
-    addLegend("bottomright", pal = dispal,
-              title = "measures",values=mes)
 
-
- relevant_data <- dat[dat[[cols]] %in% buff_els, ]
-
- buffered_data <- st_buffer(relevant_data, dist = 80)
-
- lf_map <- lf_map %>%
-   addPolygons(data = buffered_data,
-               fillColor = NA,
-               color = ~dispal(relevant_data[[cols]]), weight = 1, dashArray = "3",
-               fillOpacity = 0.2,
-               highlightOptions = highlightOptions(color = ~dispal(relevant_data[[cols]]), weight = 2, bringToFront = TRUE))
-
- return(lf_map)
-  }
 
 #### Plotting the exploration tab
 

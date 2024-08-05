@@ -799,17 +799,20 @@ server <- function(input, output, session) {
       sols_data = read.csv(dir("../output/", pattern = 'clusters_representativesolutions', full.names = TRUE))
       
       sols(sols_data %>% rownames_to_column("optimum") %>%
-          filter(!is.na(Representative_Solution)) %>% select(1:5) %>%
+          filter(!is.na(Representative_Solution)) %>% select(1:5) %>%#PCA content is hard to read/limited additional value for user
           mutate(across(where(is.numeric), round, digits = 5))
       )
     } else{
-      sols(data.frame(Message = "something went wrong - has the PCA run properly"))
+      sols(data.frame(Message = "something went wrong - has the PCA run properly?"))
     }
     output$antab <- renderDT({
       datatable(sols(),
-                selection = "single",
+                selection = list(mode = "multiple", target = 'row', max = 12),
                 options = list(pageLength = 20, autoWidth = TRUE))
     })
+    
+    output$tabtext = renderText({HTML("You can select up to 12 optima and compare the implementation of measures in the catchment.")})
+    
     if(file.exists("../input/hru_in_optima.RDS")){
     cm(pull_shp(layername="hru", optims = sols(),hru_in_opt_path = "../input/hru_in_optima.RDS")) }
     needs_buffer(pull_buffer())
@@ -830,11 +833,23 @@ server <- function(input, output, session) {
 
       buffs = needs_buffer()
 
-      hru_sel =  plt_sel(shp=cm(),opti_sel = selected_data$optimum)
+      hru_sel = plt_sel(shp=cm(),opti_sel = selected_data$optimum)
 
       mes = read.csv("../data/measure_location.csv")
     
-      output$map <- renderLeaflet({plt_lf(dat=hru_sel,cols = "optim", mes = unique(mes$nswrm),la = lalo[1],lo =lalo[2], buff_els=buffs)})
+      col_sel = names(hru_sel)[grep("Optim",names(hru_sel))]  #variable length of columns selected
+      
+      
+      for (i in seq_along(col_sel)) {
+        local({
+          col = col_sel[i]
+          output[[paste0("map", i)]] = renderLeaflet({
+            plt_lf(data=hru_sel,col = col, mes = unique(mes$nswrm),la = lalo[1],lo =lalo[2], buff_els=buffs)
+          })
+        })
+      }
+      
+      # output$map <- renderLeaflet({plt_lf(data=hru_sel,col = col_sel, mes = unique(mes$nswrm),la = lalo[1],lo =lalo[2], buff_els=buffs)})
    
     }
   })
