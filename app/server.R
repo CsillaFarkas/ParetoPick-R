@@ -79,7 +79,7 @@ server <- function(input, output, session) {
     updateSliderInput(session, "obj2", label = obj[2])
     updateSliderInput(session, "obj3", label = obj[3])
     updateSliderInput(session, "obj4", label = obj[4])
-    updateCheckboxGroupInput(session, "sel_neg", choices = objectives())
+    updateCheckboxGroupInput(session, "sel_neg", choices = objectives(), selected = NULL)
   })
   
   
