@@ -9,8 +9,8 @@ It then performs both and provides the relevant statistics, plots and analyses.
 4. input folder (containing nswrm_priorities.csv and config.ini): folder the datafiles are written/read to/from 
 
 ### Files provided in the package
-* config.ini (provided in package)
-* nswrm_priorities.csv (provided in package)
+* config.ini 
+* nswrm_priorities.csv 
 
 ## Input through the user 
 (app copies these into the data folder)
@@ -32,7 +32,6 @@ It then performs both and provides the relevant statistics, plots and analyses.
 * transfer units to other tab and paste to config (easy to do)
 * color the points in scatterplot when selected in line plot
 * Plot last tab: four next to each other to allow proper comparison
-* Plots on second tab: extended with pareto point plot(s)
 * Plot: currently only activated hrus, doesn't look great, if quicker we could do several next to each other
 * Front page some more explanation
 * Klaipeda: full list of nswrm implemented across all catchments to properly assign priorities
