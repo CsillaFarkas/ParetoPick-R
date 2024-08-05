@@ -72,7 +72,7 @@ ui <-
                                    
                                   /* content height covers full view*/
                                  .content {
-                                   min-height: 100vh; 
+                                   min-height: 300vh; 
                                  }
                                  
                                 '))),
@@ -364,26 +364,29 @@ ui <-
                           verbatimTextOutput("pca_status"))
                           
                           ), ## PCA MAIN PANEL END
+                       
                         
-                        
-          )), tabItem(tabName = "analysis",
-                      titlePanel("Analysing the remaining optima"),
-                      htmlOutput("tabtext"),
-                      mainPanel(DTOutput("antab"),
-                                actionButton("plt_opti","Plot Optimum"),
-                                textOutput("no_row")%>%hidden(),
-                                fluidRow(
-                                  lapply(1:12, function(i) {
-                                    column(3, leafletOutput(paste0("map", i))
-                                    )
-                                  })
-                                ),
-                                tags$style(type = "text/css", "
-                                .map-title {
-                                font-weight: bold;
-                                font-size: 16px;
-                                margin-bottom: 5px;
-                                text-align: center;}")
+          )), tabItem(
+            tabName = "analysis",
+            titlePanel("Analysing the remaining optima"),
+            htmlOutput("tabtext"),
+            mainPanel(
+              DTOutput("antab"),
+              actionButton("plt_opti", "Plot Optimum"),
+              textOutput("no_row") %>% hidden(),
+              fluidRow(lapply(1:12, function(i) {
+                column(3, leafletOutput(paste0("map", i))
+                       )
+              })
+              ),
+                tags$style(type = "text/css", "
+                 .map-title {font-weight: bold; 
+                 font-size: 16px; 
+                 margin-bottom: 5px;
+                 text-align: center;}")
                                 ))
-      )))
+              
+            )
+          )
+      )
 
