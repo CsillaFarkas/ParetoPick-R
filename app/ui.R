@@ -121,13 +121,13 @@ ui <-
                                   actionButton("save_par_fiti", "Save"))
                                   %>% hidden(), 
                                   div(id="units",
-                                      "If you want you can here supply the objectives' units:",
+                                      "If you want you can supply the objectives' units and save them for future use:",
                                       style= "text-align: left; font-size:115%",
                                       textInput("unit1","unit Objective 1", value = ""),
                                       textInput("unit2","unit Objective 2", value = ""),
                                       textInput("unit3","unit Objective 3", value = ""),
-                                      textInput("unit4","unit Objective 4", value = "")
-                                      ),
+                                      textInput("unit4","unit Objective 4", value = ""),
+                                      actionButton("save_unit","Save")),
         
                                   textOutput("uploaded_pareto"),
                                   checkboxGroupInput("sel_neg", "Are any of the objectives provided on the negative scale?", choices = NULL, inline = TRUE),
