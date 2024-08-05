@@ -68,6 +68,14 @@ server <- function(input, output, session) {
     
     if(file.exists("../data/pareto_fitness.txt")){shinyjs::hide(id="parfit")}
       
+    #get unit input 
+      if(file.exists("../input/units.RDS")){shinyjs::hide(id="units")
+        uns <<-  readRDS("../input/units.RDS")
+      }else{
+        uns <<- c(input$unit1,input$unit2,input$unit3,input$unit4)
+        
+        observeEvent(input$save_unit,{saveRDS(uns, file="../input/units.RDS")})
+      }
     })
     
     
@@ -140,6 +148,8 @@ server <- function(input, output, session) {
     rv$colls = rep("grey50", length(unique(pp()$id)))
   })
  
+  
+  
   ## pull values from parallel axis line when clicked
   observeEvent(input$clickline,{
     req(fit(), objectives())
@@ -172,20 +182,17 @@ server <- function(input, output, session) {
     
     colnms = objectives()
     
-    #get unit input 
-    uns = c(input$unit1,input$unit2,input$unit3,input$unit4)
-    
-    new_colnms <- mapply(function(col, unit) {
-      if (unit != "") {
-        paste(col, " (", unit, ")", sep = "")
-      } else {
-        col
-      }
-    }, col = colnms, unit = uns, SIMPLIFY = TRUE)
-   
-    
+ 
     ## table of chosen line 
     output$click_info <- renderTable({
+      new_colnms <- mapply(function(col, unit) {
+        if (unit != "") {
+          paste(col, " (", unit, ")", sep = "")
+        } else {
+          col
+        }
+      }, col = colnms, unit = uns, SIMPLIFY = TRUE)
+      
       lclick = as.data.frame(er())
       colnames(lclick) = new_colnms
       
@@ -245,7 +252,6 @@ server <- function(input, output, session) {
       }}
     
     #get unit input 
-    uns = c(input$unit1,input$unit2,input$unit3,input$unit4)
     
     new_colnms <- mapply(function(col, unit) {
       if (unit != "") {
