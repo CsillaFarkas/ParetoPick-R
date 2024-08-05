@@ -173,8 +173,6 @@ ui <-
                           checkboxGroupInput("sel_neg", "Are any of the objectives provided on the negative scale?", choices = NULL, inline = FALSE),
                            plotOutput("sliders_plot")
                 
-                
-               
                           )## PLAY AROUND MAIN PANEL END
                 )),
         
@@ -369,11 +367,10 @@ ui <-
               DTOutput("antab"),
               actionButton("plt_opti", "Plot Optimum"),
               textOutput("no_row") %>% hidden(),
-              fluidRow(lapply(1:12, function(i) {
-                column(3, leafletOutput(paste0("map", i))
-                       )
-              })
-              ),
+              
+              fluidRow(lapply(1:12, function(i) {column(3, leafletOutput(paste0("map", i)),
+                                                        style = "margin-bottom: 7px; padding-right: 7px;")})),
+              
                 tags$style(type = "text/css", "
                  .map-title {font-weight: bold; 
                  font-size: 16px; 
