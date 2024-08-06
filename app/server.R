@@ -490,6 +490,45 @@ server <- function(input, output, session) {
         paste(script_output(), collapse = "\n")
       })
       
+      if(length(list.files(save_dir, full.names = TRUE))==0){ #do not show reset option if there haven't been files uploaded
+        shinyjs::hide(id="reset")
+       
+      }else{
+      output$reset_prompt <- renderText({
+        HTML(paste("<p style='color: red;'> If you would like to restart the app if it crashes or behaves inconsistently, you can hard reset it here. Clicking this button
+                   deletes all files you provided. Please proceed with caution!</p>"))
+      })
+      
+
+      observeEvent(input$reset_btn, {
+        if (dir.exists(save_dir) & dir.exists(input_dir)) {
+          files1 <- list.files(save_dir, full.names = TRUE)
+          files2 <- list.files(input_dir, full.names = TRUE)
+          
+          sapply(files1, file.remove)
+          sapply(files2, file.remove)
+          
+          remaining_files <- list.files(save_dir, full.names = TRUE)
+          if (length(remaining_files) == 0) {
+            status <- "All files have been deleted."
+            
+            file.copy("../data for container/nswrm_priorities.csv", input_dir, overwrite = TRUE)
+            
+            file.copy("../data for container/config.ini", input_dir, overwrite = TRUE)
+            
+            
+          } else {
+            status <- "Some files could not be deleted."
+          }
+        } else {
+          status <- "Directory does not exist."
+        }
+        
+        # Update the status text output
+        output$reset_status <- renderText(status)
+      })
+      }
+      
   ### Correlation Analysis ####
       
       ## hide tab if user has not supplied all data files
@@ -518,22 +557,25 @@ server <- function(input, output, session) {
           whatsmissing = ""
           output$corr_notthere <- renderText({
             missing_files = required_files[!checkFiles]
-            if ("../input/object_names.RDS" %in% missing_files & length(missing_files) != 1) {
+            if ("../input/object_names.RDS" %in% missing_files && length(missing_files) != 1) {
               whatsmissing = "The following file(s) are missing and have to be provided in the Data Prep tab:<br/>"
               
               missing_files <- missing_files[missing_files != "../input/object_names.RDS"]
               neednames = "To be able to proceed please also define the objective names in the previous tab."
-              
-            } else if ("../input/object_names.RDS" %in% missing_files & length(missing_files) == 1){
+              if ("../input/all_var.RDS" %in% missing_files){missing_files <- missing_files[! missing_files %in% "../input/all_var.RDS"]
+              }
+            } else if ("../input/object_names.RDS" %in% missing_files && length(missing_files) == 1){
               whatsmissing = "All files have been provided, please specify the objective names in the previous tab."
               
-            } else if ("../input/all_var.RDS" %in% missing_files & length(missing_files) != 1){
-              missing_files <- missing_files[missing_files != "../input/all_var.RDS"]
+            } else if ("../input/all_var.RDS" %in% missing_files && length(missing_files) != 1){
+              missing_files <- missing_files[! missing_files %in% "../input/all_var.RDS"]
               
               whatsmissing = "The following file(s) are missing and have to be provided in the Data Prep tab:<br/>"
               neednames = "Please also define the objective names in the previous tab."
               
-            }else if ("../input/all_var.RDS" %in% missing_files & length(missing_files) == 1){
+            }else if ("../input/all_var.RDS" %in% missing_files && length(missing_files) == 1){
+              missing_files <- missing_files[missing_files != "../input/all_var.RDS"]
+              
               neednames = "Please rerun the Data Preparation in the previous tab."
               
             }else{
@@ -866,6 +908,117 @@ server <- function(input, output, session) {
   
   })
   
+  ### AHP ####
+  criteria <- reactiveVal(NULL)
+  alternatives <- reactiveVal(NULL)
+  
+  # Load criteria and alternatives on server start
+  observe({
+  
+    # Replace these paths with your actual file paths
+    criteria_path <- "../input/object_names.RDS"
+    alternatives_path <- "../data/pareto_fitness.txt"
+    
+    if(file.exists(criteria_path)){
+    criteria_data <- readRDS(criteria_path)
+    criteria(criteria_data)}
+    
+    # Load alternatives from text file
+    if(file.exists(alternatives_path)){
+    alternatives_data <- read.table(alternatives_path, header = FALSE, sep=",")
+    alternatives(alternatives_data)}
+    
+    # Generate UI for pairwise comparison of criteria
+    output$criteria_pairwise_inputs <- renderUI({
+      req(criteria())  # Ensure criteria are loaded
+      crits <- criteria()
+      lapply(seq_along(crits), function(i) {
+        lapply(seq_along(crits), function(j) {
+          if (i < j) {
+            numericInput(
+              paste0("criteria_", i, "_", j), 
+              paste(crits[i], "vs", crits[j]), 
+              value = 1, min = 1, max = 9, step = 1
+            )
+          }
+        })
+      })
+    })
+  })
+  
+  # Calculate AHP
+  observeEvent(input$calculate_ahp, {
+    req(criteria(), alternatives())
+    crits <- criteria()
+    alts_df <- alternatives()
+    
+    # Create criteria pairwise comparison matrix
+    n <- length(crits)
+    crit_matrix <- matrix(1, nrow = n, ncol = n)
+    rownames(crit_matrix) <- colnames(crit_matrix) <- crits
+    
+    for (i in seq_along(crits)) {
+      for (j in seq_along(crits)) {
+        if (i < j) {
+          crit_matrix[i, j] <- input[[paste0("criteria_", i, "_", j)]]
+          crit_matrix[j, i] <- 1 / crit_matrix[i, j]
+        }
+      }
+    }
+    
+    # Normalize the criteria matrix
+    norm_crit_matrix <- crit_matrix / rowSums(crit_matrix)
+    
+    # Calculate criteria weights
+    crit_weights <- colMeans(norm_crit_matrix)
+    
+    # Calculate the consistency ratio
+    # 1. Calculate the weighted sum matrix
+    weighted_sum_matrix <- crit_matrix %*% crit_weights
+    
+    # 2. Calculate the consistency vector
+    consistency_vector <- weighted_sum_matrix / crit_weights
+    
+    # 3. Calculate lambda_max, CI, and CR
+    lambda_max <- mean(consistency_vector)
+    CI <- (lambda_max - n) / (n - 1)
+    RI <- 0.9 # Random Index for n = 4
+    CR <- CI / RI
+    
+    # Calculate alternative weights for each criterion
+    alt_matrices <- lapply(1:ncol(alts_df), function(i) {
+      alt_data <- as.matrix(alts_df[, i, drop = FALSE])
+      rownames(alt_data) <- rownames(alts_df)
+      alt_matrix <- outer(alt_data, alt_data, FUN = function(x, y) x / y)
+      alt_matrix[is.na(alt_matrix)] <- 1 # Replace NA with 1 for self-comparisons
+      norm_alt_matrix <- alt_matrix / rowSums(alt_matrix)
+      colMeans(norm_alt_matrix)
+    })
+    
+    # Combine alternative weights with criteria weights to get final scores
+    final_scores <- sapply(alt_matrices, function(x) x * crit_weights) #HERE alt_matrices IS THE ERROR POTENTIALLY BECAUSE OF P ON NEG SCALE
+    final_scores <- rowSums(final_scores)
+    print(crit_weights)
+    print(alt_matrices)
+    # Display results
+    output$criteria_weights <- renderTable({
+      data.frame(Criteria = crits, Weight = crit_weights)
+    })
+    
+    output$alternative_weights <- renderTable({
+      alt_weights <- do.call(cbind, alt_matrices)
+      colnames(alt_weights) <- crits
+      data.frame(Alternative = rownames(alts_df), alt_weights)
+    })
+    
+    output$final_ranking <- renderTable({
+      data.frame(Alternative = rownames(alts_df), Score = final_scores)
+    })
+    
+    output$consistency_ratio <- renderText({
+      paste("Consistency Ratio (CR):", round(CR, 4))
+    })
+  })
 }
 
 
