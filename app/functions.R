@@ -350,15 +350,21 @@ plt_lf <- function(data, col, mes, lo, la, buff_els) {
         weight = 2,
         bringToFront = TRUE
       )
-    ) %>%
-    addLegend("bottomright",
-              pal = dispal,
-              title = "measures",
-              values = mes)
+    )# %>%
+    # addLegend("bottomright",
+    #           pal = dispal,
+    #           title = "measures",
+    #           values = mes)
   
 }
 
-
+## legend plot
+plt_leg = function(mes){
+  dispal = colorFactor("Spectral", domain = mes, na.color = "lightgrey")
+  
+  leaflet() %>%
+    addLegend( pal = dispal, title = "measures", values = mes, opacity = 1)
+}
 
 #### Plotting the exploration tab
 

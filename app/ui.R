@@ -367,16 +367,30 @@ ui <-
               DTOutput("antab"),
               actionButton("plt_opti", "Plot Optimum"),
               textOutput("no_row") %>% hidden(),
+              fluidRow(
+                column(9,  # Adjusted width to accommodate maps and legend
+                       fluidRow(
+                         # Generate a dynamic number of maps
+                         lapply(1:12, function(i) {
+                           column(3, 
+                                  leafletOutput(paste0("map", i)),
+                                  style = "margin-bottom: 7px; padding-right: 7px;"
+                           )
+                         })
+                       )
+                ),
+                column(3,  # Column for the shared legend
+                       leafletOutput("shared_leg"),
+                       style = "margin-bottom: 10px; padding-right: 5px;"
+                )
+              ),
               
-              fluidRow(lapply(1:12, function(i) {column(3, leafletOutput(paste0("map", i)),
-                                                        style = "margin-bottom: 7px; padding-right: 7px;")})),
-              
-                tags$style(type = "text/css", "
+              tags$style(type = "text/css", "
                  .map-title {font-weight: bold; 
                  font-size: 16px; 
                  margin-bottom: 5px;
                  text-align: center;}")
-                                ))
+            ))
               
             )
           )

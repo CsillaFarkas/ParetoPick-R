@@ -813,7 +813,7 @@ server <- function(input, output, session) {
     }
     output$antab <- renderDT({
       datatable(sols(),
-                selection = list(mode = "multiple", target = 'row', max = 12),
+                selection = list(mode = "multiple", target = 'row', max = 12), rownames= FALSE,
                 options = list(pageLength = 20, autoWidth = TRUE))
     })
     
@@ -836,13 +836,13 @@ server <- function(input, output, session) {
       shinyjs::hide(id = "no_row")
       
       selected_data <- sols()[selected_row,]
-
+      
       buffs = needs_buffer()
-
+      
       hru_sel = plt_sel(shp=cm(),opti_sel = selected_data$optimum)
-
+      
       mes = read.csv("../data/measure_location.csv")
-    
+      
       col_sel = names(hru_sel)[grep("Optim",names(hru_sel))]  #variable length of columns selected
       
       
@@ -856,11 +856,18 @@ server <- function(input, output, session) {
       }
       
       # output$map <- renderLeaflet({plt_lf(data=hru_sel,col = col_sel, mes = unique(mes$nswrm),la = lalo[1],lo =lalo[2], buff_els=buffs)})
-   
+      # render shared legend
+      output$shared_leg <- renderLeaflet({
+
+        plt_leg(mes = unique(mes$nswrm))
+      })
     }
+ 
+  
   })
   
 }
+
 
 # setwd("C:/Users/wittekin/Documents/cle2024/projects/src/pareto_optain/app")
 # profvis(runApp())
