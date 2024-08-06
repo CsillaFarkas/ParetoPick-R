@@ -8,6 +8,7 @@ It then performs both and provides the relevant statistics, plots and analyses.
 2. output folder (empty in beginning)
 3. data folder (empty in beginning): folder the user input is written to
 4. input folder (containing nswrm_priorities.csv and config.ini): folder the datafiles are written/read to/from 
+5. data for container (containig config.ini for hard reset)
 
 ## Files provided in the package
 * config.ini 
@@ -56,4 +57,3 @@ It then performs both and provides the relevant statistics, plots and analyses.
 * deviations_step is currently the default value 
 * explain the effects of high correlation
 * check if the selection of optima in Sydney's output is ordered the same way
-* reset button to be able to rerun all processes
