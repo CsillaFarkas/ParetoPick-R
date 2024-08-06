@@ -32,4 +32,5 @@ library(tidyverse)
 
 source("functions.R")
 save_dir <- "../data/"
+input_dir <- "../input/"
 pareto_path <- "../data/pareto_fitness.txt"
