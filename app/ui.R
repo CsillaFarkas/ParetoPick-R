@@ -12,7 +12,8 @@ ui <-
       menuItem("Data Preparation", icon = icon("th"),tabName = "data_prep"),
       menuItem("Correlation Analysis", tabName = "correlation_analysis",selected=TRUE),
       menuItem("Clustering", tabName = "pca"),
-      menuItem("Analysis",tabName = "analysis")
+      menuItem("Analysis",tabName = "analysis"),
+      menuItem("AHP",tabName = "ahp")
       
     )),
     dashboardBody( tags$head(tags$style(HTML('
@@ -221,7 +222,10 @@ ui <-
                   tableOutput("obj_conf"),
                   div(id="runprep_show",p("Run Preparation Script when ready (this should take no more than five minutes)",style =  "text-align: left; font-size:150%"),
                   actionButton("runprep", "Run Prep"))%>%hidden,
-                  uiOutput("script_output") 
+                  uiOutput("script_output"),
+                  div(id="reset", htmlOutput("reset_prompt"),
+                      actionButton("reset_btn", "Hard Reset",style = "color: white; background-color: red; font-size: 15px; padding: 8px 8px; border-radius: 5px;"),
+                      textOutput("reset_status"))
                   
                 )# DATA PREP MAIN PANEL END
         ), 
@@ -359,10 +363,13 @@ ui <-
                           ), ## PCA MAIN PANEL END
                        
                         
-          )), tabItem(
+          )), 
+  
+     tabItem(
             tabName = "analysis",
             titlePanel("Analysing the remaining optima"),
-            htmlOutput("tabtext"),
+                          htmlOutput("tabtext"),
+
             mainPanel(
               DTOutput("antab"),
               actionButton("plt_opti", "Plot Optimum"),
@@ -390,7 +397,26 @@ ui <-
                  font-size: 16px; 
                  margin-bottom: 5px;
                  text-align: center;}")
-            ))
+            )),
+  tabItem(
+    tabName = "ahp",
+    titlePanel("Analytical Hierarchy Process"),
+    sidebarLayout(
+      sidebarPanel(
+        uiOutput("criteria_pairwise_inputs"),
+        actionButton("calculate_ahp", "Calculate AHP")
+      ),
+      
+      mainPanel(
+        tabsetPanel(
+          tabPanel("Criteria Weights", tableOutput("criteria_weights")),
+          tabPanel("Alternative Weights", tableOutput("alternative_weights")),
+          tabPanel("Consistency Ratios", tableOutput("consistency_ratios")),
+          tabPanel("Final Ranking", tableOutput("final_ranking"))
+        )
+      )
+    )
+    )
               
             )
           )
