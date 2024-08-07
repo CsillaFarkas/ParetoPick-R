@@ -609,35 +609,39 @@ server <- function(input, output, session) {
       })
       
       
-      ## actual tab
+      ## actual CORRELATION tab
       observeEvent(input$tabs == "correlation_analysis",{ 
         if(file.exists("../data/measure_location.csv")) {
           mes = read.csv("../data/measure_location.csv")
           mes <<- unique(mes$nswrm)
 
           nm <<- length(mes)
-        }} )
+        }
+        if(file.exists("../output/correlation_matrix.csv")){
+          shinyjs::show("show_conf")
+          
+          corr <<- read.csv("../output/correlation_matrix.csv", row.names = 1) #global because of re-rendering of plot
+          
+          # correlation Plot (does not change for different thresholds)
+          output$corrplot <- renderPlot({plt_corr(corr)})
+        }else{ shinyjs::hide("show_conf")}
+        
+        
+        } )
 
-      
-  observeEvent(input$run,{
-    all_var <<- readRDS("../input/all_var.RDS")
     
-    write_corr(vars = input$selements,cor_analysis = T, pca = F)
+      observeEvent(input$run,{
+          all_var <<- readRDS("../input/all_var.RDS")
+          
+          write_corr(vars = input$selements,cor_analysis = T, pca = F)
+          
+          # define the command to run the Python script
+          py_script <- "../python_files/correlation_matrix.py"
+          cmd <- paste("python", py_script)
+          
+          # run the command and capture the output
+          result <- system(cmd, intern = TRUE)
     
-    # define the command to run the Python script
-    py_script <- "../python_files/correlation_matrix.py"
-    cmd <- paste("python", py_script)
-    
-    # run the command and capture the output
-    result <- system(cmd, intern = TRUE)
-    
-    
-  # correlation Plot (does not change for different thresholds)
-    csv_file <- "../output/correlation_matrix.csv"
-    validate(need(file.exists(csv_file), "CSV file not found."))
-    corr <<- read.csv(csv_file, row.names = 1) #global because of re-rendering of plot
-    output$corrplot <- renderPlot({plt_corr(corr)})
-   
   ## events tied to a change in threshold, however also tied to change in selected variables, therefore also observe run
   observeEvent(input$thresh,{
     
@@ -679,6 +683,7 @@ server <- function(input, output, session) {
     pca_table(pca_in$data)
 
   })
+  
   # reactive values to store selected choices
   selections <- reactiveValues(
     element1 = NULL,
@@ -924,50 +929,50 @@ server <- function(input, output, session) {
   
   ### AHP ####
   
-  # criteria_choices <- reactive({
-  #   req(fit())
-  #   colnames(fit())
-  # })
-  # 
-  # # Generate the UI for selecting the first criterion dynamically based on the uploaded data
-  # output$criterion1_ui <- renderUI({
-  #   choices <- criteria_choices()
-  #   selectInput("criterion1", "Select X-axis Criterion", choices = choices)
-  # })
-  # 
-  # # Generate the UI for selecting the second criterion dynamically based on the uploaded data
-  # output$criterion2_ui <- renderUI({
-  #   req(input$criterion1)
-  #   choices <- setdiff(criteria_choices(), input$criterion1)
-  #   selectInput("criterion2", "Select Y-axis Criterion", choices = choices)
-  # })
-  # 
-  # # Update the choices for the second criterion whenever the first criterion changes
-  # observeEvent(input$criterion1, {
-  #   updateSelectInput(session, "criterion2", choices = setdiff(criteria_choices(), input$criterion1))
-  # })
-  # 
-  # 
-  # observeEvent(input$plot_sc,{
-  #   req(fit(),input$criterion1, input$criterion2)
-  #   selected_data <- fit()[, c(input$criterion1, input$criterion2)]
-  #   colnames(selected_data) <- c("X", "Y")
-  #   
-  #   output$scatterPlot <- renderPlot({
-  #     ## MOVE TO FUNCTIONS!
-  #     ggplot(fit(), aes(x = !!sym(input$criterion1), y = !!sym(input$criterion2))) +
-  #       geom_point(color="grey50",size=1.1)+ 
-  #       theme_bw() + theme(
-  #         panel.background = element_blank(),
-  #         panel.grid.major = element_line(color = "lightgray", size = 0.3),
-  #         panel.grid.minor = element_blank(),
-  #         panel.border = element_blank(),
-  #         axis.text = element_text(size = 12),
-  #         axis.title = element_text(size = 16)
-  #       )
-  #     
-  #   })
-  # })
+  criteria_choices <- reactive({
+    req(fit())
+    colnames(fit())
+  })
+
+  # Generate the UI for selecting the first criterion dynamically based on the uploaded data
+  output$criterion1_ui <- renderUI({
+    choices <- criteria_choices()
+    selectInput("criterion1", "Select X-axis Criterion", choices = choices)
+  })
+
+  # Generate the UI for selecting the second criterion dynamically based on the uploaded data
+  output$criterion2_ui <- renderUI({
+    req(input$criterion1)
+    choices <- setdiff(criteria_choices(), input$criterion1)
+    selectInput("criterion2", "Select Y-axis Criterion", choices = choices)
+  })
+
+  # Update the choices for the second criterion whenever the first criterion changes
+  observeEvent(input$criterion1, {
+    updateSelectInput(session, "criterion2", choices = setdiff(criteria_choices(), input$criterion1))
+  })
+
+
+  observeEvent(input$plot_sc,{
+    req(fit(),input$criterion1, input$criterion2)
+    selected_data <- fit()[, c(input$criterion1, input$criterion2)]
+    colnames(selected_data) <- c("X", "Y")
+
+    output$scatterPlot <- renderPlot({
+      ## MOVE TO FUNCTIONS!
+      ggplot(fit(), aes(x = !!sym(input$criterion1), y = !!sym(input$criterion2))) +
+        geom_point(color="grey50",size=1.1)+
+        theme_bw() + theme(
+          panel.background = element_blank(),
+          panel.grid.major = element_line(color = "lightgray", size = 0.3),
+          panel.grid.minor = element_blank(),
+          panel.border = element_blank(),
+          axis.text = element_text(size = 12),
+          axis.title = element_text(size = 16)
+        )
+
+    })
+  })
 }
 
 
