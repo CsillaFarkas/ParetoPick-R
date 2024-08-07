@@ -573,6 +573,7 @@ pca_settings = function(input){
     )
     outly <- paste0(
       "<ul>",
+      "<li>","Outliers are tested.","</li>",
       "<li>",
       "A range of <strong>",
       input$count_min,
@@ -593,6 +594,7 @@ pca_settings = function(input){
   } else if (input$clusyn == "No" & input$outlyn == "Yes") {
     outly <- paste0(
       "<ul>",
+      "<li>","Outliers are tested.","</li>",
       "<li>","Using a fixed <strong>",input$clus_fix,"</strong> of clusters","</li>",
       "<li>",
       "A range of <strong>",
