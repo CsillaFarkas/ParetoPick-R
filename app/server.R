@@ -659,11 +659,16 @@ server <- function(input, output, session) {
   ## on clicking confirm selection the config ini is updated
   observeEvent(input$confirm_selection,{
     pca_remove(input$excl)
-
+    
     output$corrtable <- renderDT({
       datatable(find_high_corr(corr,threshold = input$thresh,tab = T,strike = input$excl),escape = FALSE)}) #tab = T means this returns the full table, =F is for pulling variables
     
-    pca_content = all_var[-which(all_var %in% pca_remove())]
+    if (is.null(pca_remove())) {
+      pca_content = all_var
+    } else{
+      pca_content = all_var[-which(all_var %in% pca_remove())]
+    }
+   
     saveRDS(pca_content,file = "../input/pca_content.RDS") #required for PCA
     
     pca_in$data = pca_content
@@ -675,7 +680,10 @@ server <- function(input, output, session) {
     nonoval = paste(pca_remove(), collapse = ", ")
     
   # display confirmed selection in the Correlation Analysis tab
-   output$confirmed_selection <- renderText({HTML(paste0("Removed variables: ","<b>", nonoval,"</b>"))})
+   if(is.null(pca_remove())){
+     conf_text = HTML(paste0("All variables will be considered in the Clustering.","<br>"," If you change your mind please select variables above"))
+   }else{conf_text =HTML(paste0("Removed variables: ","<b>", nonoval,"</b>")) }
+   output$confirmed_selection <- renderText({conf_text})
   
   
   ### PC Analysis ####

@@ -251,7 +251,9 @@ ui <-
       selectInput(inputId = "excl",label = "variables to exclude", choices = NULL, multiple = TRUE),
       
       div(id="show_conf","5. Please confirm your choice before proceeding to the next tab.",style = "text-align: left; font-size:150%"
-          ,actionButton("confirm_selection", "Confirm Selection"))%>%hidden
+          ,actionButton("confirm_selection", "Confirm Selection"))%>%hidden,
+      # print confirmed selection
+      uiOutput(outputId = "confirmed_selection")
       
     )),
      mainPanel(div(id="corr_content", 
@@ -264,10 +266,7 @@ ui <-
       plotOutput("corrplot"),
       
       div("Most correlated variables", style = "text-align: left; font-size:150%"),
-      DTOutput("corrtable"), 
-    
-      # print confirmed selection
-      uiOutput(outputId = "confirmed_selection")
+      DTOutput("corrtable")
      
      ),
      uiOutput("corr_notthere"))## CORRELATION ANALYSIS MAIN PANEL END
