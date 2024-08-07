@@ -8,7 +8,7 @@ It then performs both and provides the relevant statistics, plots and analyses.
 2. output folder (empty in beginning)
 3. data folder (empty in beginning): folder the user input is written to
 4. input folder (containing nswrm_priorities.csv and config.ini): folder the datafiles are written/read to/from 
-5. data for container (containig config.ini for hard reset)
+5. data for container (containing config.ini and nswrm_priorities.csv for hard reset)
 
 ## Files provided in the package
 * config.ini 
@@ -47,13 +47,11 @@ It then performs both and provides the relevant statistics, plots and analyses.
 
 # Missing/Nice to have
 * color the points in scatterplot when selected in line plot
-* Plot last tab: quicker plotting somehow?
-* Plot last tab: parallel zoom across all maps
+* Plot last tab: quicker plotting somehow? parallel zoom across all maps?
 * Plot: currently only activated hrus, doesn't look great, if quicker we could do several next to each other
 * Front page some more explanation
 * Klaipeda: full list of nswrm implemented across all catchments to properly assign priorities
-* Klaipeda: bigger collection of management and structural nswrm implemented in OPTAIN
+* Klaipeda: bigger collection of management vs. structural nswrm implemented in OPTAIN
 * Correlation Analysis: output largest accepted correlation, maybe in bold in table
 * deviations_step is currently the default value 
 * explain the effects of high correlation
-* check if the selection of optima in Sydney's output is ordered the same way

@@ -6,6 +6,7 @@ server <- function(input, output, session) {
   
   ## reactive values
   rv <-reactiveValues(sizes= NULL,colls = NULL) #color for parallel axes
+  er <- reactiveVal(NULL)
   
   objectives <- reactiveVal(character())
   par_fiti <- reactiveVal(NULL)
@@ -146,6 +147,7 @@ server <- function(input, output, session) {
     req(pp())
     rv$sizes= rep(0.5, length(unique(pp()$id)))
     rv$colls = rep("grey50", length(unique(pp()$id)))
+    
   })
  
   
@@ -154,6 +156,7 @@ server <- function(input, output, session) {
   observeEvent(input$clickline,{
     req(fit(), objectives())
     x = round(input$clickline$x)
+   
     val = input$clickline$y
 
     sc= match_scaled(minval_s=c(input$obj1[1],input$obj2[1],input$obj3[1],input$obj4[1]),
@@ -161,9 +164,8 @@ server <- function(input, output, session) {
 
     # pull the closest value
     yo= sc%>% mutate(id = row_number())%>%slice(which.min(abs(.[[x]] - val)))
-
-    rom = as.numeric(yo[["id"]])
-  
+    rom = as.numeric(yo[["id"]]) #length(rv) has to align with sc and NOT with fit()
+    
     # change size vector
     rv$sizes[rom] = 1.3
     rv$colls[rom] = "#FF5666"# "#797596"
@@ -172,13 +174,20 @@ server <- function(input, output, session) {
     rv$sizes[-rom] = 0.5
     rv$colls[-rom] = "grey50"
   
-    te  <- find_row(dat = f_scaled(),  colname = objectives()[[x]], val = val,absdat = fit())
+    # selected optimum from reduced table
+    fml = scaled_abs_match(minval_s=c(input$obj1[1],input$obj2[1],input$obj3[1],input$obj4[1]),
+                           maxval_s=c(input$obj1[2],input$obj2[2],input$obj3[2],input$obj4[2]),
+                           abs_tab = fit(),scal_tab = f_scaled(),
+                           allobs = objectives(),smll=F)
+   
+    te = fml[yo$id,]   # te <- fit()[yo$id,] wouldn't work!!
+   
     ete <- te
     for(i in 1:4){
       ete[,i] = formatC(te[,i],digits =num.decimals(te[,i]),drop0trailing = T,format = "f")
     }
    
-    er<- reactive({ete})
+    er(ete)
     
     colnms = objectives()
     
@@ -243,8 +252,7 @@ server <- function(input, output, session) {
                            abs_tab = fit(),
                            allobs = objectives())
     
-    # varying number of decimals
-    # min and max the same number of dec
+    # varying number of decimals, but min and max the same number of dec
     dn = dt
     for(j in 1:2){
       for(i in 1:4){
@@ -252,7 +260,6 @@ server <- function(input, output, session) {
       }}
     
     #get unit input 
-    
     new_colnms <- mapply(function(col, unit) {
       if (unit != "") {
         paste(col, " (", unit, ")", sep = "")
@@ -285,17 +292,25 @@ server <- function(input, output, session) {
   ## scatter plot
   output$scatter_plot <- renderPlot({
     req(fit(), objectives())
-    
     scat_abs = scaled_abs_match(minval_s=c(input$obj1[1],input$obj2[1],input$obj3[1],input$obj4[1]),
                                 maxval_s=c(input$obj1[2],input$obj2[2],input$obj3[2],input$obj4[2]),
                                 abs_tab = fit(),scal_tab = f_scaled(),
                                 allobs = objectives(),smll=F)
     
+    if(!is.null(er())){
+      rom = which(apply(scat_abs, 1, function(row) all(row == er())))
+      col = rep("grey",nrow(scat_abs))
+      col[rom] = "red"
+      sizz = rep(1.1, nrow(scat_abs))
+      sizz[rom] = 1.5
+    }else{col = rep("grey",nrow(scat_abs))
+    sizz = rep(1.1, nrow(scat_abs))}
+    
+    
     mima = get_mima(fit())
 
-    plot_scatter = plt_sc(dat = scat_abs, ranges=mima)
+    plot_scatter = plt_sc(dat = scat_abs, ranges=mima, col = col, size= sizz)
     
-    # Arrange plots in a grid using gridExtra
     grid.arrange(grobs = plot_scatter, nrow = 2, ncol = 3)
     })
   

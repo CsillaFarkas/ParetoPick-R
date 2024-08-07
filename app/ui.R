@@ -137,10 +137,10 @@ ui <-
                                   column(10,
                                          div("Objective Range", style = "text-align: left; font-size:150%; margin-top: 40px;"),
                                          
-                                         sliderInput(inputId = "obj1", label= "Objective 1:",min = 0, max = 1, value = c(0,1), width = "110%"),
-                                         sliderInput(inputId = "obj2", label = "Objective 2:", min = 0, max = 1,value= c(0,1), width = "110%"),
-                                         sliderInput(inputId = "obj3", label = "Objective 3:", min = 0, max = 1, value = c(0,1), width = "110%"),
-                                         sliderInput(inputId = "obj4", label = "Objective 4:", min = 0, max = 1, value = c(0,1), width = "110%")))
+                                         sliderInput(inputId = "obj1", label= "Objective 1:",min = 0, max = 1, value = c(0,1), step = 0.01,width = "110%"),
+                                         sliderInput(inputId = "obj2", label = "Objective 2:", min = 0, max = 1,value= c(0,1),  step = 0.01,width = "110%"),
+                                         sliderInput(inputId = "obj3", label = "Objective 3:", min = 0, max = 1, value = c(0,1), step = 0.01, width = "110%"),
+                                         sliderInput(inputId = "obj4", label = "Objective 4:", min = 0, max = 1, value = c(0,1),  step = 0.01,width = "110%")))
                                   
                                 
                     ),

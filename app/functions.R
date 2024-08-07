@@ -462,11 +462,11 @@ plot_parline = function(datt,sizz=rep(.5, length(unique(datt$id))),colols=rep("g
 }
 
 ## scatter plot
-plt_sc = function(dat, ranges){
+plt_sc = function(dat, ranges,col=rep("grey",nrow(dat)),size=rep(1.1, nrow(dat))){
   plots <- list()
   vars <- colnames(dat)
   num_vars <- length(vars)
-  
+
   plot_index <- 1
   for (i in 1:(num_vars - 1)) {
     for (j in (i + 1):num_vars) {
@@ -475,11 +475,10 @@ plt_sc = function(dat, ranges){
       x_max = ranges[vars[i],3]
         y_min = ranges[vars[j],2]
         y_max = ranges[vars[j],3]
-        
-      
+     
       
       p <- ggplot(dat, aes_string(x = vars[i], y = vars[j])) +
-        geom_point(color = "grey50", size = 1.1) +
+       geom_point(size=size,color= col)+ 
         theme_bw() + theme(
           panel.background = element_blank(),
           panel.grid.major = element_line(color = "lightgray", size = 0.3),
@@ -642,8 +641,10 @@ scaled_abs_match = function(minval_s=c(0,0,0,0),
   for(k in 1:length(allobs)){
     valma = df["max",k]
     valmi = df["min",k]
-    ch =  ch %>% filter(.data[[allobs[k]]]<= valma & .data[[allobs[k]]]>=valmi)
+    ch =  ch %>% filter(.data[[allobs[k]]]<=valma & .data[[allobs[k]]]>=valmi)
+
   }
+
   
   # retain only min and max
   cw = as.data.frame(array(NA,dim=c(2,length(allobs))),row.names = c("max","min"))
@@ -678,7 +679,7 @@ match_scaled = function(minval_s=c(0,0,0,0),
   df <- as.data.frame(array(NA,dim=c(2,length(allobs))),row.names = c("max","min"))
   colnames(df) = allobs
   
-  # locate values in scaled dataframe 
+  # locate values in scaled data frame 
   for(i in 1:length(allobs)){
     
     sca_max <- scal_tab[which.min(abs(scal_tab[[allobs[i]]]-maxval_s[i])),]
@@ -688,14 +689,15 @@ match_scaled = function(minval_s=c(0,0,0,0),
     df["min",allobs[i]] = scal_tab[rownames(sca_min),allobs[i]]
   }
   
-  # surely this should be easier to achieve...
+  # surely this should be easier 
   ch = scal_tab
   
   for(k in 1:length(allobs)){
     valma = df["max",k]
     valmi = df["min",k]
-    ch =  ch %>% filter(.data[[allobs[k]]]<valma & .data[[allobs[k]]]>valmi)
+    ch =  ch %>% filter(.data[[allobs[k]]]<=valma & .data[[allobs[k]]]>=valmi)
   }
+
   if(dim(ch)[1]==0){stop("no optima fulfill these conditions")}else{return(ch)}
   
 }
