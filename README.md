@@ -46,10 +46,8 @@ It then performs both and provides the relevant statistics, plots and analyses.
 * min_components & max_components
 
 # Missing/Nice to have
-* color the points in scatterplot when selected in line plot
-* Plot last tab: quicker plotting somehow? parallel zoom across all maps?
-* Plot: currently only activated hrus, doesn't look great, if quicker we could do several next to each other
-* Front page some more explanation
+* Plot last tab: quicker plotting somehow? parallel zoom across all maps? currently only activated hrus, unsure if visibility is good for all catchments
+* Front page needs some more explanation
 * Klaipeda: full list of nswrm implemented across all catchments to properly assign priorities
 * Klaipeda: bigger collection of management vs. structural nswrm implemented in OPTAIN
 * Correlation Analysis: output largest accepted correlation, maybe in bold in table
