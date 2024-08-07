@@ -47,9 +47,11 @@ It then performs both and provides the relevant statistics, plots and analyses.
 
 # Missing/Nice to have
 * Plot last tab: quicker plotting somehow? parallel zoom across all maps? currently only activated hrus, unsure if visibility is good for all catchments
+* fully variable control of min and max, currently the lowering of min when max is lowered does not work
 * Front page needs some more explanation
 * Klaipeda: full list of nswrm implemented across all catchments to properly assign priorities
 * Klaipeda: bigger collection of management vs. structural nswrm implemented in OPTAIN
+* Klaipeda: other variables to consider in the PCA
 * Correlation Analysis: output largest accepted correlation, maybe in bold in table
 * deviations_step is currently the default value 
 * explain the effects of high correlation
