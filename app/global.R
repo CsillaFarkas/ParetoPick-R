@@ -33,4 +33,7 @@ library(tidyverse)
 source("functions.R")
 save_dir <- "../data/"
 input_dir <- "../input/"
+output_dir <- "../output/"
 pareto_path <- "../data/pareto_fitness.txt"
+if(!dir.exists(save_dir)){  dir.create(save_dir)}
+if(!dir.exists(output_dir)){  dir.create(output_dir)}
