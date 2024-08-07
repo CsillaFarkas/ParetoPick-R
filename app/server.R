@@ -839,6 +839,43 @@ server <- function(input, output, session) {
     update_settings()
   })
   ## outlier specs
+  
+  # align cluster number
+  observe({
+    minch = input$count_min
+    maxch = input$count_max
+    
+    if(minch > maxch){
+      updateNumericInput(session, "count_max",value=minch)
+    }else if (maxch < minch) {
+      updateNumericInput(session, "count_min", value = maxch)
+    }
+  })
+  
+  # align sd
+  observe({
+    minch = input$sd_min
+    maxch = input$sd_max
+    
+    if(minch > maxch){
+      updateNumericInput(session, "sd_max",value=minch)
+    }else if (maxch < minch) {
+      updateNumericInput(session, "sd_min", value = maxch)
+    }
+  })
+  
+  # align number of pca
+  observe({
+    minch = input$pca_min
+    maxch = input$pca_max
+    
+    if(minch > maxch){
+      updateNumericInput(session, "pca_max",value=minch)
+    }else if (maxch < minch) {
+      updateNumericInput(session, "pca_min", value = maxch)
+    }
+  })
+  
   observeEvent(input$write_outl, {
     outlbool = ifelse(input$outlyn == "No","false","true")
     if(input$outlyn == "Yes"){
