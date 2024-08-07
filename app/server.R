@@ -660,7 +660,6 @@ server <- function(input, output, session) {
       datatable(find_high_corr(corr,threshold = input$thresh,tab = T,strike = input$excl),escape = FALSE)}) #tab = T means this returns the full table, =F is for pulling variables
     
     pca_content = all_var[-which(all_var %in% pca_remove())]
-    print(pca_content)
     saveRDS(pca_content,file = "../input/pca_content.RDS") #required for PCA
     
     pca_in$data = pca_content
@@ -857,7 +856,7 @@ server <- function(input, output, session) {
   
   ### Analysis ####
   observeEvent(input$tabs == "analysis", {
-    if (file.exists(dir("../output/", pattern = 'clusters_representativesolutions', full.names = TRUE))) {
+    if (file.exists("../output/kmeans_data_w_clusters_representativesolutions.csv")) {
       
       sols_data = read.csv(dir("../output/", pattern = 'clusters_representativesolutions', full.names = TRUE))
       
@@ -924,116 +923,51 @@ server <- function(input, output, session) {
   })
   
   ### AHP ####
-  criteria <- reactiveVal(NULL)
-  alternatives <- reactiveVal(NULL)
   
-  # Load criteria and alternatives on server start
-  observe({
-  
-    # Replace these paths with your actual file paths
-    criteria_path <- "../input/object_names.RDS"
-    alternatives_path <- "../data/pareto_fitness.txt"
-    
-    if(file.exists(criteria_path)){
-    criteria_data <- readRDS(criteria_path)
-    criteria(criteria_data)}
-    
-    # Load alternatives from text file
-    if(file.exists(alternatives_path)){
-    alternatives_data <- read.table(alternatives_path, header = FALSE, sep=",")
-    alternatives(alternatives_data)}
-    
-    # Generate UI for pairwise comparison of criteria
-    output$criteria_pairwise_inputs <- renderUI({
-      req(criteria())  # Ensure criteria are loaded
-      crits <- criteria()
-      lapply(seq_along(crits), function(i) {
-        lapply(seq_along(crits), function(j) {
-          if (i < j) {
-            numericInput(
-              paste0("criteria_", i, "_", j), 
-              paste(crits[i], "vs", crits[j]), 
-              value = 1, min = 1, max = 9, step = 1
-            )
-          }
-        })
-      })
-    })
-  })
-  
-  # Calculate AHP
-  observeEvent(input$calculate_ahp, {
-    req(criteria(), alternatives())
-    crits <- criteria()
-    alts_df <- alternatives()
-    
-    # Create criteria pairwise comparison matrix
-    n <- length(crits)
-    crit_matrix <- matrix(1, nrow = n, ncol = n)
-    rownames(crit_matrix) <- colnames(crit_matrix) <- crits
-    
-    for (i in seq_along(crits)) {
-      for (j in seq_along(crits)) {
-        if (i < j) {
-          crit_matrix[i, j] <- input[[paste0("criteria_", i, "_", j)]]
-          crit_matrix[j, i] <- 1 / crit_matrix[i, j]
-        }
-      }
-    }
-    
-    # Normalize the criteria matrix
-    norm_crit_matrix <- crit_matrix / rowSums(crit_matrix)
-    
-    # Calculate criteria weights
-    crit_weights <- colMeans(norm_crit_matrix)
-    
-    # Calculate the consistency ratio
-    # 1. Calculate the weighted sum matrix
-    weighted_sum_matrix <- crit_matrix %*% crit_weights
-    
-    # 2. Calculate the consistency vector
-    consistency_vector <- weighted_sum_matrix / crit_weights
-    
-    # 3. Calculate lambda_max, CI, and CR
-    lambda_max <- mean(consistency_vector)
-    CI <- (lambda_max - n) / (n - 1)
-    RI <- 0.9 # Random Index for n = 4
-    CR <- CI / RI
-    
-    # Calculate alternative weights for each criterion
-    alt_matrices <- lapply(1:ncol(alts_df), function(i) {
-      alt_data <- as.matrix(alts_df[, i, drop = FALSE])
-      rownames(alt_data) <- rownames(alts_df)
-      alt_matrix <- outer(alt_data, alt_data, FUN = function(x, y) x / y)
-      alt_matrix[is.na(alt_matrix)] <- 1 # Replace NA with 1 for self-comparisons
-      norm_alt_matrix <- alt_matrix / rowSums(alt_matrix)
-      colMeans(norm_alt_matrix)
-    })
-    
-    # Combine alternative weights with criteria weights to get final scores
-    final_scores <- sapply(alt_matrices, function(x) x * crit_weights) #HERE alt_matrices IS THE ERROR POTENTIALLY BECAUSE OF P ON NEG SCALE
-    final_scores <- rowSums(final_scores)
-    print(crit_weights)
-    print(alt_matrices)
-    # Display results
-    output$criteria_weights <- renderTable({
-      data.frame(Criteria = crits, Weight = crit_weights)
-    })
-    
-    output$alternative_weights <- renderTable({
-      alt_weights <- do.call(cbind, alt_matrices)
-      colnames(alt_weights) <- crits
-      data.frame(Alternative = rownames(alts_df), alt_weights)
-    })
-    
-    output$final_ranking <- renderTable({
-      data.frame(Alternative = rownames(alts_df), Score = final_scores)
-    })
-    
-    output$consistency_ratio <- renderText({
-      paste("Consistency Ratio (CR):", round(CR, 4))
-    })
-  })
+  # criteria_choices <- reactive({
+  #   req(fit())
+  #   colnames(fit())
+  # })
+  # 
+  # # Generate the UI for selecting the first criterion dynamically based on the uploaded data
+  # output$criterion1_ui <- renderUI({
+  #   choices <- criteria_choices()
+  #   selectInput("criterion1", "Select X-axis Criterion", choices = choices)
+  # })
+  # 
+  # # Generate the UI for selecting the second criterion dynamically based on the uploaded data
+  # output$criterion2_ui <- renderUI({
+  #   req(input$criterion1)
+  #   choices <- setdiff(criteria_choices(), input$criterion1)
+  #   selectInput("criterion2", "Select Y-axis Criterion", choices = choices)
+  # })
+  # 
+  # # Update the choices for the second criterion whenever the first criterion changes
+  # observeEvent(input$criterion1, {
+  #   updateSelectInput(session, "criterion2", choices = setdiff(criteria_choices(), input$criterion1))
+  # })
+  # 
+  # 
+  # observeEvent(input$plot_sc,{
+  #   req(fit(),input$criterion1, input$criterion2)
+  #   selected_data <- fit()[, c(input$criterion1, input$criterion2)]
+  #   colnames(selected_data) <- c("X", "Y")
+  #   
+  #   output$scatterPlot <- renderPlot({
+  #     ## MOVE TO FUNCTIONS!
+  #     ggplot(fit(), aes(x = !!sym(input$criterion1), y = !!sym(input$criterion2))) +
+  #       geom_point(color="grey50",size=1.1)+ 
+  #       theme_bw() + theme(
+  #         panel.background = element_blank(),
+  #         panel.grid.major = element_line(color = "lightgray", size = 0.3),
+  #         panel.grid.minor = element_blank(),
+  #         panel.border = element_blank(),
+  #         axis.text = element_text(size = 12),
+  #         axis.title = element_text(size = 16)
+  #       )
+  #     
+  #   })
+  # })
 }
 
 

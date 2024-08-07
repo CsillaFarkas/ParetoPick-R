@@ -7,10 +7,10 @@ ui <-
     dashboardHeader(title="OPTAIN"),
     dashboardSidebar(
       sidebarMenu(id = "tabs",
-      menuItem("Introduction",tabName = "intro", icon = icon("home")),
+      menuItem("Introduction",tabName = "intro", icon = icon("home"),selected=TRUE),
       menuItem("Visualising the Pareto Front",tabName = "play_around",icon = icon("dashboard")),
       menuItem("Data Preparation", icon = icon("th"),tabName = "data_prep"),
-      menuItem("Correlation Analysis", tabName = "correlation_analysis",selected=TRUE),
+      menuItem("Correlation Analysis", tabName = "correlation_analysis"),
       menuItem("Clustering", tabName = "pca"),
       menuItem("Analysis",tabName = "analysis"),
       menuItem("AHP",tabName = "ahp")
@@ -160,7 +160,7 @@ ui <-
                              column(6, div("Selected Objective Ranges (absolute)", style = "text-align: left; font-size:150%"),
                                     tableOutput("sliders_abs"))),
                            fluidRow(column(12,
-                                    div("Selected Optimum", style = "text-align: left; font-size:150%"),
+                                    div("Selected Optimum (select in line plot)", style = "text-align: left; font-size:150%"),
                                     tableOutput("click_info"))))),
                   
                 div("Parallel Axis plot", style = "text-align: left; font-size:150%"),
@@ -403,17 +403,18 @@ ui <-
     titlePanel("Analytical Hierarchy Process"),
     sidebarLayout(
       sidebarPanel(
-        uiOutput("criteria_pairwise_inputs"),
-        actionButton("calculate_ahp", "Calculate AHP")
+        # fluidRow(
+        #   column(6, uiOutput("criterion1_ui")),
+        #   column(6, uiOutput("criterion2_ui")),
+        #   
+        #   column(6,actionButton("plot_sc", label="analyse objectives"))
+        # )
       ),
       
       mainPanel(
-        tabsetPanel(
-          tabPanel("Criteria Weights", tableOutput("criteria_weights")),
-          tabPanel("Alternative Weights", tableOutput("alternative_weights")),
-          tabPanel("Consistency Ratios", tableOutput("consistency_ratios")),
-          tabPanel("Final Ranking", tableOutput("final_ranking"))
-        )
+        
+          # plotOutput("scatterPlot")
+        
       )
     )
     )
