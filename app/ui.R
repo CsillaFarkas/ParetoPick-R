@@ -249,7 +249,9 @@ ui <-
       div(style = "margin-top: -15px;",shinyWidgets::sliderTextInput(inputId = "thresh", label= "",choices = seq(0.65,0.95,0.05), selected=0.75)),
       div("4. Choose variables that shall be excluded from the PCA",style = "text-align: left; font-size:150%"),
       selectInput(inputId = "excl",label = "variables to exclude", choices = NULL, multiple = TRUE),
-      actionButton("confirm_selection", "Confirm Selection")
+      
+      div(id="show_conf","5. Please confirm your choice before proceeding to the next tab.",style = "text-align: left; font-size:150%"
+          ,actionButton("confirm_selection", "Confirm Selection"))%>%hidden
       
     )),
      mainPanel(div(id="corr_content", 
@@ -403,17 +405,17 @@ ui <-
     titlePanel("Analytical Hierarchy Process"),
     sidebarLayout(
       sidebarPanel(
-        # fluidRow(
-        #   column(6, uiOutput("criterion1_ui")),
-        #   column(6, uiOutput("criterion2_ui")),
-        #   
-        #   column(6,actionButton("plot_sc", label="analyse objectives"))
-        # )
+        fluidRow(
+          column(6, uiOutput("criterion1_ui")),
+          column(6, uiOutput("criterion2_ui")),
+
+          column(6,actionButton("plot_sc", label="analyse objectives"))
+        )
       ),
       
       mainPanel(
         
-          # plotOutput("scatterPlot")
+          plotOutput("scatterPlot")
         
       )
     )
