@@ -54,3 +54,4 @@ It then performs both and provides the relevant statistics, plots and analyses.
 * Correlation Analysis: output largest accepted correlation, maybe in bold in table
 * deviations_step is currently the default value 
 * explain the effects of high correlation
+* Analysis tab: nicer plot with variable selection of which objective in which plot location
