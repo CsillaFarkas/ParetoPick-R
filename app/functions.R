@@ -312,49 +312,60 @@ plt_sel = function(opti_sel, shp){
 }
 
 ## plot leaflet w/ specific column
-plt_lf <- function(data, col, mes, lo, la, buff_els) {
-  
+plt_lf <- function(data, mes, lo, la, buff_els, col_sel) {
   #palette
   dispal = colorFactor("Spectral", domain = mes, na.color = "lightgrey")
   
-  #buffer
-  relevant_data <- data[data[[col]] %in% buff_els, ]
-  buffered_data <- st_buffer(relevant_data, dist = 80)
   
-  lm= leaflet(data = data) %>%
-    setView(lng = lo, lat = la, zoom = 10) %>%
-    addProviderTiles(providers$CartoDB.Positron) %>%
-    addPolygons(
-      fillColor = ~ dispal(data[[col]]),
-      fillOpacity = 0.7,
-      color = "lightgrey",
-      weight = 1,
-      popup = ~paste0("Value: ", data[[col]]),
-      highlightOptions = highlightOptions(
-        color = "white",
-        weight = 2,
-        bringToFront = TRUE),
-      label = ~ data[[col]] )%>%
-    addControl(html = paste(col, "</b>"), position = "topright", className = "map-title")
+  m <- vector("list", length = length(col_sel))
   
-   lm %>%
-    addPolygons(
-      data = buffered_data,
-      fillColor = NA,
-      color = ~ dispal(relevant_data[[col]]),
-      weight = 1,
-      dashArray = "3",
-      fillOpacity = 0.2,
-      highlightOptions = highlightOptions(
+  for (i in seq_along(col_sel)) {
+    col = col_sel[i]
+    
+    #buffer
+    relevant_data <- data[data[[col]] %in% buff_els, ]
+    buffered_data <- st_buffer(relevant_data, dist = 80)
+    
+    
+    m[[i]] =    leaflet(data = data) %>%
+      setView(lng = lo, lat = la, zoom = 10) %>%
+      addProviderTiles(providers$CartoDB.Positron) %>%
+      addPolygons(
+        fillColor = ~ dispal(data[[col]]),
+        fillOpacity = 0.7,
+        color = "lightgrey",
+        weight = 1,
+        popup = ~ paste0("Value: ", data[[col]]),
+        highlightOptions = highlightOptions(
+          color = "white",
+          weight = 2,
+          bringToFront = TRUE
+        ),
+        label = ~ data[[col]]
+      ) %>%
+      addControl(
+        html = paste(col, "</b>"),
+        position = "topright",
+        className = "map-title"
+      ) %>%
+      addPolygons(
+        data = buffered_data,
+        fillColor = NA,
         color = ~ dispal(relevant_data[[col]]),
-        weight = 2,
-        bringToFront = TRUE
+        weight = 1,
+        dashArray = "3",
+        fillOpacity = 0.2,
+        highlightOptions = highlightOptions(
+          color = ~ dispal(relevant_data[[col]]),
+          weight = 2,
+          bringToFront = TRUE
+        )
       )
-    )# %>%
-    # addLegend("bottomright",
-    #           pal = dispal,
-    #           title = "measures",
-    #           values = mes)
+    
+    
+  }
+  return(m)
+  
   
 }
 
@@ -365,6 +376,21 @@ plt_leg = function(mes){
   leaflet() %>%
     addLegend( pal = dispal, title = "measures", values = mes, opacity = 1)
 }
+
+
+## scatterplot in AHP
+plt_scat2 = function(dat, x, y){
+ggplot(dat, aes(x = !!sym(x), y = !!sym(y))) +
+  geom_point(color="grey50",size=1.1)+
+  geom_smooth(method = "lm", se = FALSE, color = "darkblue") +  
+  theme_bw() + theme(
+    panel.background = element_blank(),
+    panel.grid.major = element_line(color = "lightgray", size = 0.3),
+    panel.grid.minor = element_blank(),
+    panel.border = element_blank(),
+    axis.text = element_text(size = 12),
+    axis.title = element_text(size = 16)
+  )}
 
 #### Plotting the exploration tab
 

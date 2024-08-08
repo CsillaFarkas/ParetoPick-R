@@ -13,9 +13,9 @@ library(gridExtra) # or patchwork
 library(htmltools)
 library(ini)#
 library(leaflet)#
-library(plotly)
 library(processx) # manage system processes from within shiny (e.g. for pulling R output into shiny)
 library(purrr)
+library(leafsync)
 library(quanteda)
 library(RColorBrewer)
 library(reticulate)
@@ -31,6 +31,7 @@ library(tidyr)
 library(tidyverse)
 
 source("functions.R")
+options(warn = -1)
 save_dir <- "../data/"
 input_dir <- "../input/"
 output_dir <- "../output/"

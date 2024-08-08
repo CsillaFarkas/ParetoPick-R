@@ -376,7 +376,7 @@ ui <-
                           conditionalPanel(condition = "output.isElementVisible == true",div("Python Background Processes",style = "text-align: left; font-size:150%"),        
                           verbatimTextOutput("pca_status"))
                           
-                          ), ## PCA MAIN PANEL END
+                          ) ## PCA MAIN PANEL END
                        
                         
           )), 
@@ -394,23 +394,24 @@ ui <-
               DTOutput("antab"),
               actionButton("plt_opti", "Plot Optimum"),
               textOutput("no_row") %>% hidden(),
-              fluidRow(
-                column(9,  # Adjusted width to accommodate maps and legend
-                       fluidRow(
-                         # Generate a dynamic number of maps
-                         lapply(1:12, function(i) {
-                           column(3, 
-                                  leafletOutput(paste0("map", i)),
-                                  style = "margin-bottom: 7px; padding-right: 7px;"
-                           )
-                         })
-                       )
-                ),
-                column(3,  # Column for the shared legend
-                       leafletOutput("shared_leg"),
-                       style = "margin-bottom: 10px; padding-right: 5px;"
-                )
-              ),
+              uiOutput('comp_map'),
+              # fluidRow(
+              #   column(9,  # Adjusted width to accommodate maps and legend
+              #          fluidRow(
+              #            # Generate a dynamic number of maps
+              #            lapply(1:12, function(i) {
+              #              column(3, 
+              #                     leafletOutput(paste0("map", i)),
+              #                     style = "margin-bottom: 7px; padding-right: 7px;"
+              #              )
+              #            })
+              #          )
+              #   ),
+              #   column(3,  # Column for the shared legend
+              #          leafletOutput("shared_leg"),
+              #          style = "margin-bottom: 10px; padding-right: 5px;"
+              #   )
+              # ),
               
               tags$style(type = "text/css", "
                  .map-title {font-weight: bold; 
@@ -436,10 +437,16 @@ ui <-
              column(6, uiOutput("criterion2_ui")),
           
              column(6, actionButton("plot_sc", label = "analyse objectives"))
-            )
+            ),
+           
+           div(id = "ahp_weights",
+               "2. Setting limits and deciding on minimum objective values.",
+               style = "text-align: left; font-size:150%"
+           )
           ),
       
-      mainPanel(tags$style(
+      mainPanel(
+        tags$style(
         HTML(
           "#relation {
               font-size: 18px;
@@ -447,15 +454,16 @@ ui <-
               #relation th,
               #relation td {
                border: none;
-               padding: 8px;}"
-        )
-      ), fluidRow(
+               padding: 8px;}")),
+      fluidRow(
         column(9, plotOutput("scatterPlot")), # 9/12 of the width for the plot
-        column(3, tableOutput("relation")) # 3/12 of the width for the table)
-        
-      ))
+        column(3, tableOutput("relation")) # 3/12 of the width for the table
+        ),
+        uiOutput("sliders_ui")  # Dynamic sliders UI
       
-    )
-  )
-        ) ))
+      )
+       )
+        )
+         )
+    ))
 

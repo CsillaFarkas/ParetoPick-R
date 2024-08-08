@@ -907,15 +907,20 @@ server <- function(input, output, session) {
   
   ### Analysis ####
   observeEvent(input$tabs == "analysis", {
-    if (file.exists("../output/kmeans_data_w_clusters_representativesolutions.csv")) {
+    if (file.exists(paste0(output_dir,(dir(output_dir, pattern = 'clusters_representativesolutions', full.names = T))))) {
       
-      sols_data = read.csv(dir("../output/", pattern = 'clusters_representativesolutions', full.names = TRUE))
+      
+      all_py_out <- file.info(list.files(output_dir,pattern = 'clusters_representativesolutions', full.names = T))
+      current_py_out <- rownames(all_py_out)[which.max(all_py_out$mtime)]
+      
+      sols_data = read.csv(current_py_out)
+      coco <<- sols_data
       
       sols(sols_data %>% rownames_to_column("optimum") %>%
-          filter(!is.na(Representative_Solution)) %>% select(1:5) %>%#PCA content is hard to read/limited additional value for user
-          mutate(across(where(is.numeric), round, digits = 5))
-      )
-    } else{
+          dplyr::filter(!is.na(Representative_Solution)& Representative_Solution != "") %>% select(1:5) %>%#PCA content is hard to read/limited additional value for user
+          mutate(across(where(is.numeric), round, digits = 5)))
+      
+    }else{
       sols(data.frame(Message = "something went wrong - has the PCA run properly?"))
     }
     output$antab <- renderDT({
@@ -923,6 +928,7 @@ server <- function(input, output, session) {
                 selection = list(mode = "multiple", target = 'row', max = 12), rownames= FALSE,
                 options = list(pageLength = 20, autoWidth = TRUE))
     })
+    
     
     output$tabtext = renderText({HTML("You can select up to 12 optima and compare the implementation of measures in the catchment.")})
     
@@ -952,22 +958,24 @@ server <- function(input, output, session) {
       
       col_sel = names(hru_sel)[grep("Optim",names(hru_sel))]  #variable length of columns selected
       
-      
-      for (i in seq_along(col_sel)) {
-        local({
-          col = col_sel[i]
-          output[[paste0("map", i)]] = renderLeaflet({
-            plt_lf(data=hru_sel,col = col, mes = unique(mes$nswrm),la = lalo[1],lo =lalo[2], buff_els=buffs, map_id=i)
-          })
-        })
-      }
-      
-      # output$map <- renderLeaflet({plt_lf(data=hru_sel,col = col_sel, mes = unique(mes$nswrm),la = lalo[1],lo =lalo[2], buff_els=buffs)})
-      # render shared legend
-      output$shared_leg <- renderLeaflet({
-
-        plt_leg(mes = unique(mes$nswrm))
-      })
+      m = plt_lf(data=hru_sel, col_sel = col_sel, mes = unique(mes$nswrm),la = lalo[1],lo =lalo[2], buff_els=buffs)
+     
+     
+      output$comp_map <- renderUI({sync(m)})
+      # for (i in seq_along(col_sel)) {
+      #   local({
+      #     col = col_sel[i]
+      #     output[[paste0("map", i)]] = renderLeaflet({
+      #       plt_lf(data=hru_sel,col = col, mes = unique(mes$nswrm),la = lalo[1],lo =lalo[2], buff_els=buffs)
+      #     })
+      #   })
+      # }
+      # 
+      # # render shared legend
+      # output$shared_leg <- renderLeaflet({
+      # 
+      #   plt_leg(mes = unique(mes$nswrm))
+      # })
       
       observe({
         session$sendCustomMessage(type = "syncMaps", message = list(mapIds = 1:4))
