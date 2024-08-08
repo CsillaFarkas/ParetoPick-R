@@ -102,6 +102,9 @@ ui <-
         tabItem(tabName = "play_around",
                 titlePanel("Visualising the Optimisation Output"),
                 
+                wellPanel(  style = "background-color:  #a2a4b6; border: 1px solid #444;",
+                            p("This tab allows to determine...")),
+                
                 sidebarLayout(
                  
                     sidebarPanel( width = 3,
@@ -181,6 +184,10 @@ ui <-
         
         tabItem(tabName = "data_prep",
                 titlePanel("OPTAIN Data Preparation"),
+                
+                wellPanel(  style = "background-color:  #a2a4b6; border: 1px solid #444;",
+                            p("This tab allows to determine...")),
+                
                 mainPanel(
                   
                   tags$head(tags$style("#fileStatusMessage{font-size:150%;}")),
@@ -232,8 +239,12 @@ ui <-
         
      
       ## CORRELATION ANALYSIS PANEL
-        tabItem(tabName = "correlation_analysis",
+    tabItem(tabName = "correlation_analysis",
            titlePanel("Correlation Analysis"),
+           
+           wellPanel(  style = "background-color:  #a2a4b6; border: 1px solid #444;",
+                       p("This tab allows to determine...")),
+           
            sidebarLayout(
               sidebarPanel(div(id="corr_sidebar",
       # Display message about file status
@@ -281,6 +292,10 @@ ui <-
           #https://htmlcolorcodes.com/color-names/
           
           titlePanel("Clustering"),
+          
+          wellPanel(  style = "background-color:  #a2a4b6; border: 1px solid #444;",
+                      p("This tab allows to determine...")),
+          
           sidebarLayout(sidebarPanel(div("Variables included in the PCA",style = "text-align: left; font-size:150%"),
                                      div("to change these variables please return to the previous tab and choose variables to remove",style = "text-align: left; font-size:100%"),
                           tableOutput("pca_incl"),
@@ -368,6 +383,10 @@ ui <-
   
      tabItem(
             tabName = "analysis",
+            
+            wellPanel(  style = "background-color:  #a2a4b6; border: 1px solid #444;",
+                        p("This tab allows to determine...")),
+            
             titlePanel("Analysing the remaining optima"),
                           htmlOutput("tabtext"),
 
@@ -400,27 +419,43 @@ ui <-
                  text-align: center;}")
             )),
   tabItem(
-    tabName = "ahp",
-    titlePanel("Analytical Hierarchy Process"),
-    sidebarLayout(
-      sidebarPanel(
-        fluidRow(
-          column(6, uiOutput("criterion1_ui")),
-          column(6, uiOutput("criterion2_ui")),
-
-          column(6,actionButton("plot_sc", label="analyse objectives"))
-        )
-      ),
-      
-      mainPanel(
+        tabName = "ahp",
+        titlePanel("Analytical Hierarchy Process"),
         
-          plotOutput("scatterPlot")
-        
-      )
-    )
-    )
-              
+       wellPanel(  style = "background-color:  #a2a4b6; border: 1px solid #444;",
+              p("This tab allows to determine...")),
+       
+        sidebarLayout(
+          sidebarPanel(
+           div(id = "ahp_analysis",
+             "1. Examining the relationship between the objectives.",
+              style = "text-align: left; font-size:150%"
+                ),
+            fluidRow(
+             column(6, uiOutput("criterion1_ui")),
+             column(6, uiOutput("criterion2_ui")),
+          
+             column(6, actionButton("plot_sc", label = "analyse objectives"))
             )
-          )
-      )
+          ),
+      
+      mainPanel(tags$style(
+        HTML(
+          "#relation {
+              font-size: 18px;
+              font-weight: bold;}
+              #relation th,
+              #relation td {
+               border: none;
+               padding: 8px;}"
+        )
+      ), fluidRow(
+        column(9, plotOutput("scatterPlot")), # 9/12 of the width for the plot
+        column(3, tableOutput("relation")) # 3/12 of the width for the table)
+        
+      ))
+      
+    )
+  )
+        ) ))
 
