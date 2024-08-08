@@ -16,7 +16,27 @@ ui <-
       menuItem("AHP",tabName = "ahp")
       
     )),
-    dashboardBody( tags$head(tags$style(HTML('
+    dashboardBody( tags$style(HTML('
+                                #fileStatusMessage{font-size:150%;}
+                               
+                                /* R2 and Pearson table AHP tab */
+                                 .relation {
+                                  font-size: 18px;
+                                 font-weight: bold;
+                                 }
+                                   .relation th,
+                                   .relation td {
+                                    border: none;
+                                    padding: 8px;
+                                    }
+                                
+                                /* title on maps in analysis tab */
+                                .map-title {font-weight: bold; 
+                                  font-size: 16px; 
+                                  margin-bottom: 5px;
+                                  text-align: center;}  
+                                  
+                                    
                                 /* logo */
                                 .skin-blue .main-header .logo {
                                 background-color: #9eb1cf;
@@ -52,6 +72,7 @@ ui <-
                                 .skin-blue .main-sidebar .sidebar .sidebar-menu a:hover{
                                 background-color: #9ec9cf;
                                 }
+                                
                                 /* toggle button when hovered  */
                                 .skin-blue .main-header .navbar .sidebar-toggle:hover{
                                 background-color: #ff69b4;
@@ -66,17 +87,38 @@ ui <-
                                 background-color: #c4d0e2; 
                                 }
                                 
-                                 /* Style the sidebar input labels */
-                                   .well label {
-                                   color: #2f353e;
-                                   }
+                                /* Style the sidebar input labels */
+                                .well label {
+                                 color: #2f353e;
+                                }
                                    
-                                  /* content height covers full view*/
-                                 .content {
-                                   min-height: 300vh; 
+                                /* content height covers full view */
+                                 .content { min-height: 300vh;}
+                                 
+                                /* slider aesthetics */
+                                 .irs-grid-text {font-size: 13px;} 
+                                 .js-irs-0 .irs-single,
+                                 .js-irs-0 .irs-bar-edge,
+                                 .js-irs-0 .irs-bar {
+                                 background: #ffc61e ;
+                                 border-top: 1px solid #ffc61e ;
+                                 border-bottom: 1px solid #ffc61e;}
+                                 
+                                 .js-irs-0 .irs-from, 
+                                 .js-irs-0 .irs-to, 
+                                 .js-irs-0 .irs-single {
+                                 font-size: 13px;
+                                 background: #ffc61e 
+                                 !important
                                  }
                                  
-                                '))),
+                                 .js-irs-0 .irs-single,
+                                 .js-irs-0 .irs-bar-edge,
+                                 .js-irs-0 .irs-bar {
+                                 background: darkslateblue
+                                 }
+                                 
+                                ')),
       useShinyjs(),
       tabItems(
         tabItem(tabName = "intro",
@@ -150,8 +192,7 @@ ui <-
                 mainPanel(
                   
                   #slider aesthetics
-                  tags$style(HTML(".irs-grid-text {font-size: 13px;} 
-                            .js-irs-0 .irs-single, .js-irs-0 .irs-bar-edge, .js-irs-0 .irs-bar {background: #ffc61e ;border-top: 1px solid #ffc61e ;border-bottom: 1px solid #ffc61e;}.js-irs-0 .irs-from, .js-irs-0 .irs-to, .js-irs-0 .irs-single { font-size: 13px;background: #ffc61e !important }")),
+                 
                   tags$style(HTML(".js-irs-1 .irs-single, .js-irs-1 .irs-bar-edge, .js-irs-1 .irs-bar {background: #009ade ;border-top: 1px solid #009ade ;border-bottom: 1px solid #009ade;}.js-irs-1 .irs-from, .js-irs-1 .irs-to, .js-irs-1 .irs-single { font-size: 13px;background: #009ade !important }")),
                   tags$style(HTML(".js-irs-2 .irs-single, .js-irs-2 .irs-bar-edge, .js-irs-2 .irs-bar {background: #af58ba ;border-top: 1px solid #af58ba ;border-bottom: 1px solid #af58ba;}.js-irs-2 .irs-from, .js-irs-2 .irs-to, .js-irs-2 .irs-single { font-size: 13px;background: #af58ba !important }")),
                   tags$style(HTML(".js-irs-3 .irs-single, .js-irs-3 .irs-bar-edge, .js-irs-3 .irs-bar {background: #f28522 ;border-top: 1px solid #f28522 ;border-bottom: 1px solid #f28522;}.js-irs-3 .irs-from, .js-irs-3 .irs-to, .js-irs-3 .irs-single { font-size: 13px; background: #f28522 !important }")),
@@ -189,10 +230,7 @@ ui <-
                             p("This tab allows to determine...")),
                 
                 mainPanel(
-                  
-                  tags$head(tags$style("#fileStatusMessage{font-size:150%;}")),
-                  
-                                p("To prepare the data for the subsequent correlation and cluster analysis, please provide the following files:",style =  "text-align: left; font-size:150%"),
+                  p("To prepare the data for the subsequent correlation and cluster analysis, please provide the following files:",style =  "text-align: left; font-size:150%"),
                          
                   div("1. pareto_genomes.txt",style = "text-align: left; font-size:115%"),
                   div(style = "margin-top: -15px;",fileInput("file1", "", accept = ".txt")), 
@@ -288,7 +326,6 @@ ui <-
   ## Clustering/PCA PANEL
   tabItem(tabName = "pca",
          
-          tags$style(HTML(".js-irs-0 .irs-single, .js-irs-0 .irs-bar-edge, .js-irs-0 .irs-bar {background: darkslateblue}")),
           #https://htmlcolorcodes.com/color-names/
           
           titlePanel("Clustering"),
@@ -394,7 +431,7 @@ ui <-
               DTOutput("antab"),
               actionButton("plt_opti", "Plot Optimum"),
               textOutput("no_row") %>% hidden(),
-              uiOutput('comp_map'),
+              uiOutput('comp_map')
               # fluidRow(
               #   column(9,  # Adjusted width to accommodate maps and legend
               #          fluidRow(
@@ -413,11 +450,7 @@ ui <-
               #   )
               # ),
               
-              tags$style(type = "text/css", "
-                 .map-title {font-weight: bold; 
-                 font-size: 16px; 
-                 margin-bottom: 5px;
-                 text-align: center;}")
+             
             )),
   tabItem(
         tabName = "ahp",
@@ -446,15 +479,7 @@ ui <-
           ),
       
       mainPanel(
-        tags$style(
-        HTML(
-          "#relation {
-              font-size: 18px;
-              font-weight: bold;}
-              #relation th,
-              #relation td {
-               border: none;
-               padding: 8px;}")),
+       
       fluidRow(
         column(9, plotOutput("scatterPlot")), # 9/12 of the width for the plot
         column(3, tableOutput("relation")) # 3/12 of the width for the table
