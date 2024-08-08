@@ -102,7 +102,8 @@ server <- function(input, output, session) {
       colnames(data) = new_col_data
       fit(data)
       shinyjs::hide(id = "parfit")
-      output$uploaded_pareto <- renderText({"All Files found."})
+      output$uploaded_pareto <- renderText({"All Files found. You can now examine the Pareto front. 
+        How does it change when the objective ranges are modified?"})
     })
   } else {
     shinyjs::show(id = "parfit")
@@ -826,7 +827,7 @@ server <- function(input, output, session) {
     
     run_python_script(path_script=pca_script,pca_status)
     
-    }, once = TRUE)
+    }, once = FALSE)
   
   ## cluster specs
   observeEvent(input$write_clust, {
@@ -956,7 +957,7 @@ server <- function(input, output, session) {
         local({
           col = col_sel[i]
           output[[paste0("map", i)]] = renderLeaflet({
-            plt_lf(data=hru_sel,col = col, mes = unique(mes$nswrm),la = lalo[1],lo =lalo[2], buff_els=buffs)
+            plt_lf(data=hru_sel,col = col, mes = unique(mes$nswrm),la = lalo[1],lo =lalo[2], buff_els=buffs, map_id=i)
           })
         })
       }
@@ -966,6 +967,10 @@ server <- function(input, output, session) {
       output$shared_leg <- renderLeaflet({
 
         plt_leg(mes = unique(mes$nswrm))
+      })
+      
+      observe({
+        session$sendCustomMessage(type = "syncMaps", message = list(mapIds = 1:4))
       })
     }
  
@@ -982,14 +987,14 @@ server <- function(input, output, session) {
   # Generate the UI for selecting the first criterion dynamically based on the uploaded data
   output$criterion1_ui <- renderUI({
     choices <- criteria_choices()
-    selectInput("criterion1", "Select X-axis Criterion", choices = choices)
+    selectInput("criterion1", "Select the first objective (x-axis)", choices = choices)
   })
 
   # Generate the UI for selecting the second criterion dynamically based on the uploaded data
   output$criterion2_ui <- renderUI({
     req(input$criterion1)
     choices <- setdiff(criteria_choices(), input$criterion1)
-    selectInput("criterion2", "Select Y-axis Criterion", choices = choices)
+    selectInput("criterion2", "Select the second objective (y-axis)", choices = choices)
   })
 
   # Update the choices for the second criterion whenever the first criterion changes
@@ -1000,23 +1005,55 @@ server <- function(input, output, session) {
 
   observeEvent(input$plot_sc,{
     req(fit(),input$criterion1, input$criterion2)
-    selected_data <- fit()[, c(input$criterion1, input$criterion2)]
-    colnames(selected_data) <- c("X", "Y")
-
+    
+    x <- fit()[,input$criterion1]
+    y <- fit()[,input$criterion2]
+    
+    # Fit a linear model
+    model <- lm(y ~ x)
+    
+    
+    
+    
     output$scatterPlot <- renderPlot({
-      ## MOVE TO FUNCTIONS!
-      ggplot(fit(), aes(x = !!sym(input$criterion1), y = !!sym(input$criterion2))) +
-        geom_point(color="grey50",size=1.1)+
-        theme_bw() + theme(
-          panel.background = element_blank(),
-          panel.grid.major = element_line(color = "lightgray", size = 0.3),
-          panel.grid.minor = element_blank(),
-          panel.border = element_blank(),
-          axis.text = element_text(size = 12),
-          axis.title = element_text(size = 16)
-        )
-
+      
+      plt_scat2(dat= fit(), x= input$criterion1, y=input$criterion2)
+   
+     
     })
+    
+    output$relation <- renderTable({
+      metrics_df <- data.frame(
+        Metric = c("R<sup>2</sup>", "Pearson's r"),  # HTML for R²
+        Value = c(round(summary(model)$r.squared, 3), round(cor(x, y), 3))
+      )
+    
+      metrics_df
+    }, rownames = F, colnames = F, sanitize.text.function = function(x) x)
+  })
+  
+
+  # Create sliders dynamically based on criteria names
+  output$sliders_ui <- renderUI({
+    req(objectives())
+    sliders <- list()
+    num_criteria <- length(objectives())
+    
+    # Generate sliders for each pair of criteria
+    for (i in 1:(num_criteria - 1)) {
+      for (j in (i + 1):num_criteria) {
+        slider_id <- paste0("c", i, "_c", j)
+        sliders[[slider_id]] <- sliderInput(
+          slider_id,
+          paste(objectives()[i], "vs", objectives()[j], ":"),
+          min = 1,
+          max = 9,
+          value = 1
+        )
+      }
+    }
+    
+    do.call(tagList, sliders)
   })
 }
 
