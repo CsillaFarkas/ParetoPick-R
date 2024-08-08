@@ -914,11 +914,11 @@ server <- function(input, output, session) {
       current_py_out <- rownames(all_py_out)[which.max(all_py_out$mtime)]
       
       sols_data = read.csv(current_py_out)
-      coco <<- sols_data
-      
+
       sols(sols_data %>% rownames_to_column("optimum") %>%
           dplyr::filter(!is.na(Representative_Solution)& Representative_Solution != "") %>% select(1:5) %>%#PCA content is hard to read/limited additional value for user
           mutate(across(where(is.numeric), round, digits = 5)))
+      
       
     }else{
       sols(data.frame(Message = "something went wrong - has the PCA run properly?"))
@@ -927,6 +927,14 @@ server <- function(input, output, session) {
       datatable(sols(),
                 selection = list(mode = "multiple", target = 'row', max = 12), rownames= FALSE,
                 options = list(pageLength = 20, autoWidth = TRUE))
+    })
+    sol<-sols()[,objectives()]
+    
+    
+    output$par_plot_optima <- renderPlot({
+      req(objectives())
+
+      plt_sc_optima(dat=sol,x_var=objectives()[1],y_var=objectives()[2],col_var=objectives()[3],size_var=objectives()[4])
     })
     
     

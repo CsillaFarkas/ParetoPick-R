@@ -427,8 +427,11 @@ ui <-
             titlePanel("Analysing the remaining optima"),
                           htmlOutput("tabtext"),
 
-            mainPanel(
-              DTOutput("antab"),
+            mainPanel(fluidRow(column(
+              6, div(style = "overflow-x: auto;", DTOutput("antab"))
+            ), column(6, plotOutput("par_plot_optima"))), 
+              
+              
               actionButton("plt_opti", "Plot Optimum"),
               textOutput("no_row") %>% hidden(),
               uiOutput('comp_map')

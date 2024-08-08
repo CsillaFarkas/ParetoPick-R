@@ -487,7 +487,7 @@ plot_parline = function(datt,sizz=rep(.5, length(unique(datt$id))),colols=rep("g
   
 }
 
-## scatter plot
+## scatter plot in play around
 plt_sc = function(dat, ranges,col=rep("grey",nrow(dat)),size=rep(1.1, nrow(dat))){
   plots <- list()
   vars <- colnames(dat)
@@ -523,6 +523,23 @@ plt_sc = function(dat, ranges,col=rep("grey",nrow(dat)),size=rep(1.1, nrow(dat))
 
 return(plots)
 }
+
+## scatter plot in analysis
+
+plt_sc_optima = function(dat,x_var,y_var,col_var,size_var){
+  ggplot(dat, aes_string(x=x_var, y=y_var, color = col_var, size = size_var))+
+    geom_point()+         # Plot points
+    scale_size(range = c(1, 10)) +
+    theme_bw() + theme(
+      panel.background = element_blank(),
+      panel.grid.major = element_line(color = "lightgray", size = 0.3),
+      panel.grid.minor = element_blank(),
+      panel.border = element_blank(),
+      axis.text = element_text(size = 12),
+      axis.title = element_text(size = 16)
+    )
+}
+
 #### Other Functions ####
 
 get_mima = function(df){
