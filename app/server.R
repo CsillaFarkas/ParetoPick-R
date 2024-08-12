@@ -1059,17 +1059,75 @@ server <- function(input, output, session) {
     for (i in 1:(num_criteria - 1)) {
       for (j in (i + 1):num_criteria) {
         slider_id <- paste0("c", i, "_c", j)
-        sliders[[slider_id]] <- sliderInput(
-          slider_id,
-          paste(objectives()[i], "vs", objectives()[j], ":"),
-          min = 1,
-          max = 9,
-          value = 1
+        sliders[[slider_id]] <- sliderTextInput(
+          inputId = slider_id,
+          label =paste0(objectives()[j]," vs. ",objectives()[i]),  # No label for the slider
+          choices = c(paste0("9 -", objectives()[j]),"8", "7", "6", "5", "4", "3", "2", "Equal", "2", "3", "4", "5", "6", "7", "8",paste0("9 -", objectives()[i])),
+         
+          selected = "Equal",
+          grid = TRUE,
+          hide_min_max = FALSE,
+          animate = FALSE,
+          width = "100%"
+          
         )
       }
     }
     
     do.call(tagList, sliders)
+  })
+  
+  calculate_weights = reactive({
+    req(objectives())
+      num_criteria <- length(objectives())
+      comparison_matrix <- matrix(1, nrow = num_criteria, ncol = num_criteria,dimnames = list(objectives(), objectives()))
+
+      for (i in 1:(num_criteria - 1)) {
+        for (j in (i + 1):num_criteria) {
+          slider_id <- paste0("c", i, "_c", j)
+          value =  input[[slider_id]]
+          
+          if(is.null(value) || value == "Equal"){
+            comparison_value = 1
+          }else if(startsWith(value, "9 -")){
+            comparison_value = 9
+          }else{comparison_value = as.numeric(value)}
+          
+          comparison_matrix[i, j] <- comparison_value
+          comparison_matrix[j, i] <- 1 / comparison_value
+        }
+      }
+
+      normalized_matrix <- comparison_matrix / rowSums(comparison_matrix)#normalise so sum is 1
+
+      weights <- colMeans(normalized_matrix)
+
+      weights
+  })
+  
+  
+  output$weights_output <- renderTable({
+                                       req(calculate_weights())
+                                       wgt=(t(calculate_weights()))
+                                       wgt
+                                       }, colnames = T)
+  
+  
+  output$best_option_output <- renderTable({
+    req(objectives(),fit())
+    
+    df = fit()
+    if (!all(names(calculate_weights()) %in% colnames(df))) {
+      return("Dataframe columns do not match criteria names.")
+    }
+    
+    weights <- calculate_weights()
+    df$Score <- rowSums(df[ , names(weights)] * weights)
+    
+    best_option_index <- which.max(df$Score)
+    best_option <- df[best_option_index, ]
+    
+    best_option
   })
 }
 

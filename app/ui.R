@@ -19,22 +19,22 @@ ui <-
     dashboardBody( tags$style(HTML('
                                 #fileStatusMessage{font-size:150%;}
                                
-                                /* R2 and Pearson table AHP tab */
-                                 .relation {
+                                 /* R2 and Pearson table AHP tab */
+                                 #relation {
                                   font-size: 18px;
-                                 font-weight: bold;
+                                  font-weight: bold;
                                  }
-                                   .relation th,
-                                   .relation td {
-                                    border: none;
-                                    padding: 8px;
+                                 #relation th, #relation td {
+                                   border: none;
+                                   padding: 8px;
                                     }
-                                
+                                    
                                 /* title on maps in analysis tab */
                                 .map-title {font-weight: bold; 
                                   font-size: 16px; 
                                   margin-bottom: 5px;
-                                  text-align: center;}  
+                                  text-align: center;
+                                  }  
                                   
                                     
                                 /* logo */
@@ -476,18 +476,23 @@ ui <-
             ),
            
            div(id = "ahp_weights",
-               "2. Setting limits and deciding on minimum objective values.",
-               style = "text-align: left; font-size:150%"
+               "2. Setting weights.",
+               style = "text-align: left; font-size:150%",
+               uiOutput("sliders_ui"),
+               "Selected Weights",
+               tableOutput("weights_output") 
+               
            )
           ),
       
       mainPanel(
-       
+        
       fluidRow(
         column(9, plotOutput("scatterPlot")), # 9/12 of the width for the plot
         column(3, tableOutput("relation")) # 3/12 of the width for the table
         ),
-        uiOutput("sliders_ui")  # Dynamic sliders UI
+      div(id="pareto_weighted", "Best Option under selected weighting",
+          style = "text-align: left; font-size:150%",tableOutput("best_option_output"))
       
       )
        )
