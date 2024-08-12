@@ -46,6 +46,8 @@ It then performs both and provides the relevant statistics, plots and analyses.
 * min_components & max_components
 
 # Missing/Nice to have
+* Analysis tab: drop down for plotting structure
+* AHP tab: structured presentation of decisions, explanations
 * Plot last tab: status message so user knows the plot is being rendered!!
 * fully variable control of min and max, currently the lowering of min when max is lowered does not work
 * Front page needs some more explanation
