@@ -15,7 +15,10 @@ server <- function(input, output, session) {
   script_output <- reactiveVal("") # data prep R output
   dp_done = reactiveVal(FALSE) # checking if data prep R output is done
   all_choices = reactiveVal()
+  ahp_choices = reactiveVal()
   isElementVisible = reactiveVal(FALSE)
+  
+  best_option = reactiveVal(NULL)
   
   settings_text= reactiveVal("") #printing pca settings
   update_settings <- function() {
@@ -39,6 +42,14 @@ server <- function(input, output, session) {
   #catchment shape
   cm <- reactiveVal()
   needs_buffer <- reactiveVal()
+  
+  #ahp
+  previous_vals = reactiveValues(
+    x_var = NULL,
+    y_var = NULL,
+    color_var = NULL,
+    size_var = NULL
+  )
   
   ### Introduction ####
  
@@ -148,11 +159,8 @@ server <- function(input, output, session) {
     req(pp())
     rv$sizes= rep(0.5, length(unique(pp()$id)))
     rv$colls = rep("grey50", length(unique(pp()$id)))
-    
   })
  
-  
-  
   ## pull values from parallel axis line when clicked
   observeEvent(input$clickline,{
     req(fit(), objectives())
@@ -205,7 +213,6 @@ server <- function(input, output, session) {
       
       lclick = as.data.frame(er())
       colnames(lclick) = new_colnms
-      
       lclick
         }, include.rownames = F)
     
@@ -970,21 +977,7 @@ server <- function(input, output, session) {
      
      
       output$comp_map <- renderUI({sync(m)})
-      # for (i in seq_along(col_sel)) {
-      #   local({
-      #     col = col_sel[i]
-      #     output[[paste0("map", i)]] = renderLeaflet({
-      #       plt_lf(data=hru_sel,col = col, mes = unique(mes$nswrm),la = lalo[1],lo =lalo[2], buff_els=buffs)
-      #     })
-      #   })
-      # }
-      # 
-      # # render shared legend
-      # output$shared_leg <- renderLeaflet({
-      # 
-      #   plt_leg(mes = unique(mes$nswrm))
-      # })
-      
+     
       observe({
         session$sendCustomMessage(type = "syncMaps", message = list(mapIds = 1:4))
       })
@@ -994,6 +987,28 @@ server <- function(input, output, session) {
   })
   
   ### AHP ####
+  observeEvent(input$tabs == "ahp",{
+    if(!file.exists("../input/object_names.RDS")) {
+      choices = "Please select objectives in Data Preparation Tab"
+    } else{
+      choices = readRDS("../input/object_names.RDS")
+    }
+    ahp_choices(choices)
+    preselect = ahp_choices()
+    
+    preselect1 = preselect[1]
+    preselect2 = preselect[2]
+    preselect3 = preselect[3]
+    preselect4 = preselect[4]
+    
+   
+    updateSelectInput(session,inputId = "x_var",choices = choices,selected = preselect1)
+    updateSelectInput(session,inputId = "y_var",choices = choices, selected = preselect2)
+    updateSelectInput(session,inputId = "col_var", choices = choices, selected = preselect3)
+    updateSelectInput(session,inputId = "size_var", choices = choices, selected = preselect4)
+    
+    })
+
   
   criteria_choices <- reactive({
     req(fit())
@@ -1027,15 +1042,12 @@ server <- function(input, output, session) {
     
     # Fit a linear model
     model <- lm(y ~ x)
-    
-    
-    
+  
     
     output$scatterPlot <- renderPlot({
       
       plt_scat2(dat= fit(), x= input$criterion1, y=input$criterion2)
-   
-     
+
     })
     
     output$relation <- renderTable({
@@ -1049,13 +1061,12 @@ server <- function(input, output, session) {
   })
   
 
-  # Create sliders dynamically based on criteria names
+  ## AHP sliders
   output$sliders_ui <- renderUI({
     req(objectives())
     sliders <- list()
     num_criteria <- length(objectives())
     
-    # Generate sliders for each pair of criteria
     for (i in 1:(num_criteria - 1)) {
       for (j in (i + 1):num_criteria) {
         slider_id <- paste0("c", i, "_c", j)
@@ -1080,7 +1091,7 @@ server <- function(input, output, session) {
   calculate_weights = reactive({
     req(objectives())
       num_criteria <- length(objectives())
-      comparison_matrix <- matrix(1, nrow = num_criteria, ncol = num_criteria,dimnames = list(objectives(), objectives()))
+      comparison_matrix <- matrix(1, nrow = num_criteria, ncol = num_criteria, dimnames = list(objectives(), objectives()))
 
       for (i in 1:(num_criteria - 1)) {
         for (j in (i + 1):num_criteria) {
@@ -1112,9 +1123,7 @@ server <- function(input, output, session) {
                                        wgt
                                        }, colnames = T)
   
-  
   output$best_option_output <- renderTable({
-    req(objectives(),fit())
     
     df = fit()
     if (!all(names(calculate_weights()) %in% colnames(df))) {
@@ -1124,11 +1133,27 @@ server <- function(input, output, session) {
     weights <- calculate_weights()
     df$Score <- rowSums(df[ , names(weights)] * weights)
     
-    best_option_index <- which.max(df$Score)
-    best_option <- df[best_option_index, ]
+    best_option_index <<- which.max(df$Score)
+    df$Score <- NULL
+    best_option(df[best_option_index, ])
     
-    best_option
+    bo = best_option()
+    bo
   })
+  
+ 
+  observe({
+    
+  output$weights_plot <- renderPlot({
+    req(objectives(),fit(),best_option())
+    
+    bo = best_option()
+    plt_sc_optima(dat=fit(),x_var=input$x_var,y_var=input$y_var,
+                  col_var=input$col_var,size_var=input$size_var,high_point=bo)
+    
+    })
+  })
+ 
 }
 
 
