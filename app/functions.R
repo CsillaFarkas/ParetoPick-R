@@ -380,17 +380,19 @@ plt_leg = function(mes){
 
 ## scatterplot in AHP
 plt_scat2 = function(dat, x, y){
-ggplot(dat, aes(x = !!sym(x), y = !!sym(y))) +
-  geom_point(color="grey50",size=1.1)+
-  geom_smooth(method = "lm", se = FALSE, color = "darkblue") +  
-  theme_bw() + theme(
-    panel.background = element_blank(),
-    panel.grid.major = element_line(color = "lightgray", size = 0.3),
-    panel.grid.minor = element_blank(),
-    panel.border = element_blank(),
-    axis.text = element_text(size = 12),
-    axis.title = element_text(size = 16)
-  )}
+   ggplot(dat, aes(x = !!sym(x), y = !!sym(y))) +
+    geom_point(color="grey50",size=1.1)+
+    geom_smooth(method = "loess", se = FALSE,colour="darkblue")  +
+    theme_bw() + theme(
+      panel.background = element_blank(),
+      panel.grid.major = element_line(color = "lightgray", size = 0.3),
+      panel.grid.minor = element_blank(),
+      panel.border = element_blank(),
+      axis.text = element_text(size = 12),
+      axis.title = element_text(size = 16))
+      
+  
+  }
 
 #### Plotting the exploration tab
 
@@ -526,18 +528,23 @@ return(plots)
 
 ## scatter plot in analysis
 
-plt_sc_optima = function(dat,x_var,y_var,col_var,size_var){
-  ggplot(dat, aes_string(x=x_var, y=y_var, color = col_var, size = size_var))+
-    geom_point()+         # Plot points
-    scale_size(range = c(1, 10)) +
-    theme_bw() + theme(
-      panel.background = element_blank(),
-      panel.grid.major = element_line(color = "lightgray", size = 0.3),
-      panel.grid.minor = element_blank(),
-      panel.border = element_blank(),
-      axis.text = element_text(size = 12),
-      axis.title = element_text(size = 16)
+plt_sc_optima = function(dat,x_var,y_var,col_var,size_var,high_point=NULL){
+  p= ggplot(dat, aes_string(x=x_var, y=y_var, color = col_var, size = size_var))+
+     geom_point()+        
+     scale_size(range = c(1, 10)) +
+       theme_bw() + theme(
+        panel.background = element_blank(),
+        panel.grid.major = element_line(color = "lightgray", size = 0.3),
+        panel.grid.minor = element_blank(),
+        panel.border = element_blank(),
+        axis.text = element_text(size = 12),
+        axis.title = element_text(size = 16)
     )
+  if(!is.null(high_point)){
+  p = p + geom_point(data = high_point, aes_string(x = x_var, y = y_var), size = 4, shape = 17, color="darkred")
+    }
+  
+  return(p)
 }
 
 #### Other Functions ####
