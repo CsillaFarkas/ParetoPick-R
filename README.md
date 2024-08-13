@@ -47,7 +47,7 @@ It then performs both and provides the relevant statistics, plots and analyses.
 
 # Missing/Nice to have
 * Analysis tab: drop down for plotting structure
-* AHP tab: structured presentation of decisions, explanations, pareto plot with marked selection as well as map!
+* AHP tab: structured presentation of decisions, explanations, map with measure implementation of selected optimum, legend in pareto plot, control for non-existant objectives() requires direct reading from file after file.exists()
 * Plot last tab: status message so user knows the plot is being rendered!!
 * fully variable control of min and max, currently the lowering of min when max is lowered does not work
 * Front page needs some more explanation
