@@ -435,23 +435,7 @@ ui <-
               actionButton("plt_opti", "Plot Optimum"),
               textOutput("no_row") %>% hidden(),
               uiOutput('comp_map')
-              # fluidRow(
-              #   column(9,  # Adjusted width to accommodate maps and legend
-              #          fluidRow(
-              #            # Generate a dynamic number of maps
-              #            lapply(1:12, function(i) {
-              #              column(3, 
-              #                     leafletOutput(paste0("map", i)),
-              #                     style = "margin-bottom: 7px; padding-right: 7px;"
-              #              )
-              #            })
-              #          )
-              #   ),
-              #   column(3,  # Column for the shared legend
-              #          leafletOutput("shared_leg"),
-              #          style = "margin-bottom: 10px; padding-right: 5px;"
-              #   )
-              # ),
+        
               
              
             )),
@@ -475,14 +459,13 @@ ui <-
              column(6, actionButton("plot_sc", label = "analyse objectives"))
             ),
            
-           div(id = "ahp_weights",
-               "2. Setting weights.",
-               style = "text-align: left; font-size:150%",
-               uiOutput("sliders_ui"),
-               "Selected Weights",
-               tableOutput("weights_output") 
-               
-           )
+           div(
+             id = "ahp_weights",
+             "2. Setting weights.",
+             style = "text-align: left; font-size:150%",
+             uiOutput("sliders_ui")),
+           div(id="sel_wgt","Selected Weights",style = "text-align: center; font-size: 150%;",
+           div(tableOutput("weights_output") , style = "margin: 0 auto; width: fit-content;"))
           ),
       
       mainPanel(
@@ -491,12 +474,25 @@ ui <-
         column(9, plotOutput("scatterPlot")), # 9/12 of the width for the plot
         column(3, tableOutput("relation")) # 3/12 of the width for the table
         ),
-      div(id="pareto_weighted", "Best Option under selected weighting",
-          style = "text-align: left; font-size:150%",tableOutput("best_option_output"))
+      div(
+        id = "pareto_weighted", 
+        "Best Option under selected weighting",
+        style = "text-align: center; font-size: 150%;", 
+        div( tableOutput("best_option_output"),
+        style = "margin: 0 auto; width: fit-content;")
+      ),
+      
+      plotOutput({"weights_plot"}),
+      fluidRow(
+        column(3, selectInput(inputId = "x_var",label = "X-Axis", choices = NULL, multiple = F, selected=NULL)),
+               column(3,selectInput(inputId = "y_var",label = "Y-Axis", choices = NULL, multiple = F,selected=NULL)),
+                      column(3,selectInput(inputId = "col_var",label = "Colour", choices = NULL, multiple = F,selected=NULL)),
+                             column(3,selectInput(inputId = "size_var",label = "Size", choices = NULL, multiple = F,selected=NULL)))
       
       )
        )
         )
          )
-    ))
+          ) 
+           )
 
