@@ -1145,7 +1145,7 @@ server <- function(input, output, session) {
   observe({
     
   output$weights_plot <- renderPlot({
-    req(objectives(),fit(),best_option())
+    req(objectives(),fit(),best_option(),input$x_var)
     
     bo = best_option()
     plt_sc_optima(dat=fit(),x_var=input$x_var,y_var=input$y_var,

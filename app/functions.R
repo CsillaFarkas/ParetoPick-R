@@ -529,9 +529,9 @@ return(plots)
 ## scatter plot in analysis
 
 plt_sc_optima = function(dat,x_var,y_var,col_var,size_var,high_point=NULL){
-  p= ggplot(dat, aes_string(x=x_var, y=y_var, color = col_var, size = size_var))+
-     geom_point()+
-    scale_color_viridis_c()+
+  p= ggplot(dat, aes_string(x=x_var, y=y_var, fill = col_var, size = size_var))+
+     geom_point(shape=21,stroke=0.5)+
+    scale_fill_viridis(alpha=0.8)+
      scale_size(range = c(1, 10)) +
        theme_bw() + theme(
         panel.background = element_blank(),

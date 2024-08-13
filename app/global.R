@@ -29,6 +29,7 @@ library(shinyWidgets)#
 library(tibble)
 library(tidyr)
 library(tidyverse)
+library(viridis)
 
 source("functions.R")
 options(warn = -1)
