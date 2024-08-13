@@ -39,9 +39,10 @@ server <- function(input, output, session) {
   #results table
   sols <- reactiveVal()
   
-  #catchment shape
+  #catchment shapes
   cm <- reactiveVal()
   needs_buffer <- reactiveVal()
+  cm_clean <- reactiveVal()
   
   #ahp
   previous_vals = reactiveValues(
@@ -916,7 +917,6 @@ server <- function(input, output, session) {
   observeEvent(input$tabs == "analysis", {
     if (file.exists(paste0(output_dir,(dir(output_dir, pattern = 'clusters_representativesolutions', full.names = T))))) {
       
-      
       all_py_out <- file.info(list.files(output_dir,pattern = 'clusters_representativesolutions', full.names = T))
       current_py_out <- rownames(all_py_out)[which.max(all_py_out$mtime)]
       
@@ -925,7 +925,6 @@ server <- function(input, output, session) {
       sols(sols_data %>% rownames_to_column("optimum") %>%
           dplyr::filter(!is.na(Representative_Solution)& Representative_Solution != "") %>% select(1:5) %>%#PCA content is hard to read/limited additional value for user
           mutate(across(where(is.numeric), round, digits = 5)))
-      
       
     }else{
       sols(data.frame(Message = "something went wrong - has the PCA run properly?"))
@@ -947,9 +946,21 @@ server <- function(input, output, session) {
     
     output$tabtext = renderText({HTML("You can select up to 12 optima and compare the implementation of measures in the catchment.")})
     
-    if(file.exists("../input/hru_in_optima.RDS")){
-    cm(pull_shp(layername="hru", optims = sols(),hru_in_opt_path = "../input/hru_in_optima.RDS")) }
-    needs_buffer(pull_buffer())
+    if(file.exists("../data/hru.shp")) {
+      #shp for location plot
+      cm_clean(pull_shp_pure(layername = "hru"))
+      #shps for maps
+      if (file.exists("../input/hru_in_optima.RDS")) {
+        cm(
+          pull_shp(
+            layername = "hru",
+            optims = sols(),
+            hru_in_opt_path = "../input/hru_in_optima.RDS"
+          )
+        )
+      }
+      needs_buffer(pull_buffer())
+    }
     if(file.exists("../data/hru.con")){lalo <<- plt_latlon(conpath = "../data/hru.con")}
 
   })
@@ -972,15 +983,19 @@ server <- function(input, output, session) {
       mes = read.csv("../data/measure_location.csv")
       
       col_sel = names(hru_sel)[grep("Optim",names(hru_sel))]  #variable length of columns selected
+      nplots = length(col_sel)+1
       
-      m = plt_lf(data=hru_sel, col_sel = col_sel, mes = unique(mes$nswrm),la = lalo[1],lo =lalo[2], buff_els=buffs)
-     
-     
-      output$comp_map <- renderUI({sync(m)})
-     
-      observe({
-        session$sendCustomMessage(type = "syncMaps", message = list(mapIds = 1:4))
-      })
+      m1 = plt_lf(data=hru_sel, col_sel = col_sel, mes = unique(mes$nswrm),la = lalo[1],lo =lalo[2], buff_els=buffs)
+      
+      # observe({
+      #   session$sendCustomMessage(type = "syncMaps", message = list(mapIds = 1:4))
+      # })
+      
+      cm2 = plt_cm_pure(data=cm_clean(), la = lalo[1],lo =lalo[2])
+      m <- c(list(cm2), m1)
+      
+      output$comp_map <- renderUI({sync(m,sync = list(2:nplots),sync.cursor = F)})
+      
     }
  
   
@@ -1073,7 +1088,7 @@ server <- function(input, output, session) {
         sliders[[slider_id]] <- sliderTextInput(
           inputId = slider_id,
           label =paste0(objectives()[j]," vs. ",objectives()[i]),  # No label for the slider
-          choices = c(paste0("9 -", objectives()[j]),"8", "7", "6", "5", "4", "3", "2", "Equal", "2", "3", "4", "5", "6", "7", "8",paste0("9 -", objectives()[i])),
+          choices = c(paste0( objectives()[j],"- 9"),"8", "7", "6", "5", "4", "3", "2", "Equal", "2", "3", "4", "5", "6", "7", "8",paste0("9 -", objectives()[i])),
          
           selected = "Equal",
           grid = TRUE,
@@ -1100,12 +1115,12 @@ server <- function(input, output, session) {
           
           if(is.null(value) || value == "Equal"){
             comparison_value = 1
-          }else if(startsWith(value, "9 -")){
+          }else if(startsWith(value, "9 -") || endsWith(value, "- 9")){
             comparison_value = 9
           }else{comparison_value = as.numeric(value)}
           
-          comparison_matrix[i, j] <- comparison_value
-          comparison_matrix[j, i] <- 1 / comparison_value
+          comparison_matrix[j, i] <- comparison_value
+          comparison_matrix[i, j] <- 1 / comparison_value
         }
       }
 
