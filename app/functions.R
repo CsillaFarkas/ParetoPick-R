@@ -279,6 +279,18 @@ plt_latlon = function(conpath){
   return(c(lat_map,lon_map))
 }
 
+## whole cm for location plot
+pull_shp_pure = function(layername = "hru"){
+  if(file.exists(paste0("../data/",layername,".shp"))){
+
+    cm = read_sf(dsn = "../data/", layer = layername) #adapt path
+    
+    cm = st_buffer(cm, 0.0) #clean geometry
+    cm = cm %>%select(id,geometry) %>% st_transform(., 4326)
+    
+    return(cm)}else{return(NULL)}
+  
+}
 
 ## make large dataset
 pull_shp = function(layername = "hru", optims, hru_in_opt_path){
@@ -304,18 +316,14 @@ pull_shp = function(layername = "hru", optims, hru_in_opt_path){
 ## merge hrus with optima
 plt_sel = function(opti_sel, shp){
   new_names <- paste0("Optimum_",opti_sel)
-  
   plt_sel = shp %>% dplyr::select(id, geometry, all_of(opti_sel)) %>%  rename_with(.fn = ~ new_names, .cols = all_of(opti_sel))
   plt_sel = st_make_valid(plt_sel) # too slow annoyingly
-  
   return(plt_sel)
 }
 
 ## plot leaflet w/ specific column
 plt_lf <- function(data, mes, lo, la, buff_els, col_sel) {
-  #palette
   dispal = colorFactor("Spectral", domain = mes, na.color = "lightgrey")
-  
   
   m <- vector("list", length = length(col_sel))
   
@@ -325,7 +333,6 @@ plt_lf <- function(data, mes, lo, la, buff_els, col_sel) {
     #buffer
     relevant_data <- data[data[[col]] %in% buff_els, ]
     buffered_data <- st_buffer(relevant_data, dist = 80)
-    
     
     m[[i]] =    leaflet(data = data) %>%
       setView(lng = lo, lat = la, zoom = 10) %>%
@@ -361,13 +368,21 @@ plt_lf <- function(data, mes, lo, la, buff_els, col_sel) {
           bringToFront = TRUE
         )
       )
-    
-    
   }
   return(m)
-  
-  
 }
+
+## cm for location
+plt_cm_pure = function(data = cm,
+                       la = lalo[1],
+                       lo = lalo[2]) {
+  p = leaflet(data) %>%
+    setView(lng = lo, lat = la, zoom = 10) %>%
+    addPolygons(fillColor = "white",color = "black",weight=0.4)
+  
+  return(p)
+}
+
 
 ## legend plot
 plt_leg = function(mes){
@@ -390,9 +405,7 @@ plt_scat2 = function(dat, x, y){
       panel.border = element_blank(),
       axis.text = element_text(size = 12),
       axis.title = element_text(size = 16))
-      
-  
-  }
+}
 
 #### Plotting the exploration tab
 
@@ -416,7 +429,6 @@ prep_diff_bar = function(abs_tab,red_tab,allobs, neg_var=NULL){
               mean = mean(value))%>% 
     column_to_rownames(var = "name")
   
-  
   #dumbest way possible for doing this
   pct = as.data.frame(array(NA,dim = c(4,length(allobs))),row.names = rownames(redk))
   colnames(pct) = allobs
@@ -427,7 +439,6 @@ prep_diff_bar = function(abs_tab,red_tab,allobs, neg_var=NULL){
   # correcting for values on a negative scale 
   if(!is.null(neg_var)){
   pct[neg_var,] = (pct[neg_var,])*-1}
-  
   
   return(pct)
 }
