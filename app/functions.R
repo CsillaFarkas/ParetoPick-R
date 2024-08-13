@@ -530,7 +530,8 @@ return(plots)
 
 plt_sc_optima = function(dat,x_var,y_var,col_var,size_var,high_point=NULL){
   p= ggplot(dat, aes_string(x=x_var, y=y_var, color = col_var, size = size_var))+
-     geom_point()+        
+     geom_point()+
+    scale_color_viridis_c()+
      scale_size(range = c(1, 10)) +
        theme_bw() + theme(
         panel.background = element_blank(),
@@ -541,7 +542,7 @@ plt_sc_optima = function(dat,x_var,y_var,col_var,size_var,high_point=NULL){
         axis.title = element_text(size = 16)
     )
   if(!is.null(high_point)){
-  p = p + geom_point(data = high_point, aes_string(x = x_var, y = y_var), size = 4, shape = 17, color="darkred")
+  p = p + geom_point(data = high_point, aes_string(x = x_var, y = y_var), size = 4.5, shape = 15, color="darkred")
     }
   
   return(p)

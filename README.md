@@ -49,12 +49,18 @@ It then performs both and provides the relevant statistics, plots and analyses.
 * Analysis tab: drop down for plotting structure
 * AHP tab: 
   * structured presentation of decisions
-  * explanations, map with measure implementation of selected optimum, legend in pareto plot, better labels on sliders
+  * explanations
+  * map with measure implementation of selected optimum
+  * legend in pareto plot
+  * better labels on sliders
+  * Schmerzgrenzen
+  * selection if the whole pareto front or the clustering results shall be plotted
 * Plot last tab: status message so user knows the plot is being rendered!!
 * fully variable control of min and max, currently the lowering of min when max is lowered does not work
 * Front page needs some more explanation
-* Klaipeda: full list of nswrm implemented across all catchments to properly assign priorities incl. info on weather management or structural
-* Klaipeda: other variables to consider in the PCA
+* Klaipeda:
+  * full list of nswrm implemented across all catchments to properly assign priorities incl. info on weather management or structural
+  * other variables to consider in the PCA
 * Correlation Analysis: output largest accepted correlation, maybe in bold in table
 * deviations_step is currently the default value 
 * explain the effects of high correlation
