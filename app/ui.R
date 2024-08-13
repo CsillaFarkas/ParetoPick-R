@@ -432,9 +432,8 @@ ui <-
             ), column(6, plotOutput("par_plot_optima"))), 
               
               
-              actionButton("plt_opti", "Plot Optimum"),
-              textOutput("no_row") %>% hidden(),
-              uiOutput('comp_map')
+            actionButton("plt_opti", "Plot Optimum"), textOutput("no_row") %>% hidden(), 
+            uiOutput("comp_map")
         
               
              
@@ -461,7 +460,7 @@ ui <-
            
            div(
              id = "ahp_weights",
-             "2. Setting weights.",
+             "2. Deciding on priorities and weighting the objectives.",
              style = "text-align: left; font-size:150%",
              uiOutput("sliders_ui")),
            div(id="sel_wgt","Selected Weights",style = "text-align: center; font-size: 150%;",
