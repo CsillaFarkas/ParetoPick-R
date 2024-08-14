@@ -949,7 +949,7 @@ server <- function(input, output, session) {
     
     if(file.exists("../data/hru.shp")) {
       #shp for location plot
-      cm_clean(pull_shp_pure(layername = "hru"))
+      cm_clean(pull_shp_pure(layername = "basin"))
       #shps for maps
       if (file.exists("../input/hru_in_optima.RDS")) {
         cm(
