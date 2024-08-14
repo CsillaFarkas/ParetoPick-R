@@ -51,6 +51,7 @@ server <- function(input, output, session) {
     color_var = NULL,
     size_var = NULL
   )
+  coma = reactiveVal()
   
   ### Introduction ####
  
@@ -1088,8 +1089,8 @@ server <- function(input, output, session) {
         sliders[[slider_id]] <- sliderTextInput(
           inputId = slider_id,
           label =paste0(objectives()[j]," vs. ",objectives()[i]),  # No label for the slider
-          choices = c(paste0( objectives()[j],"- 9"),"8", "7", "6", "5", "4", "3", "2", "Equal", "2", "3", "4", "5", "6", "7", "8",paste0("9 -", objectives()[i])),
-         
+          choices = c(paste0(objectives()[j]," - ",9:2),"Equal",paste0(2:9," - ",objectives()[i])),
+          
           selected = "Equal",
           grid = TRUE,
           hide_min_max = FALSE,
@@ -1105,33 +1106,52 @@ server <- function(input, output, session) {
   
   calculate_weights = reactive({
     req(objectives())
-      num_criteria <- length(objectives())
-      comparison_matrix <- matrix(1, nrow = num_criteria, ncol = num_criteria, dimnames = list(objectives(), objectives()))
-
-      for (i in 1:(num_criteria - 1)) {
-        for (j in (i + 1):num_criteria) {
-          slider_id <- paste0("c", i, "_c", j)
-          value =  input[[slider_id]]
-          
-          if(is.null(value) || value == "Equal"){
-            comparison_value = 1
-          }else if(startsWith(value, "9 -") || endsWith(value, "- 9")){
-            comparison_value = 9
-          }else{comparison_value = as.numeric(value)}
-          
+    n_criteria <- length(objectives())
+    
+    comparison_matrix <- matrix(1, nrow = n_criteria, ncol = n_criteria,dimnames = list(objectives(),objectives()))
+    
+    for (i in 1:(n_criteria - 1)) {
+      for (j in (i + 1):n_criteria) {
+        slider_id <- paste0("c", i, "_c", j)
+        value = input[[slider_id]]
+        if(is.null(value) || value=="Equal"){
+          comparison_value =1
           comparison_matrix[j, i] <- comparison_value
           comparison_matrix[i, j] <- 1 / comparison_value
-        }
+        }else{ 
+        parts <- strsplit(value, " - ")[[1]]
+        
+        if (length(parts) == 2) {
+          # first part is numeric
+          if (grepl("^\\d+$", parts[1])) {
+            # First part is weight, second part is criteria
+            comparison_value <- as.numeric(parts[1])
+            comparison_matrix[i, j] <- comparison_value
+            comparison_matrix[j, i] <- 1 / comparison_value
+            
+          } else {
+            # First part is objective
+            comparison_value <- as.numeric(parts[2])
+            comparison_matrix[j, i] <- comparison_value
+            comparison_matrix[i, j] <- 1 / comparison_value
+          }
+        }}
+
+        
       }
+    }
+    
+      coma(comparison_matrix)
+      
+      normalized_matrix <- comparison_matrix / colSums(comparison_matrix)
 
-      normalized_matrix <- comparison_matrix / rowSums(comparison_matrix)#normalise so sum is 1
+      weights <- rowMeans(normalized_matrix)
 
-      weights <- colMeans(normalized_matrix)
-
+      weights <- weights/sum(weights)
+      
       weights
   })
-  
-  
+
   output$weights_output <- renderTable({
                                        req(calculate_weights())
                                        wgt=(t(calculate_weights()))
@@ -1168,7 +1188,58 @@ server <- function(input, output, session) {
     
     })
   })
- 
+  
+  
+  observe({
+    req(coma(), calculate_weights())
+    
+    ## consistency checks
+    ci = consistency_index(coma())
+
+    cr = consistency_ratio(ci, length(objectives()))
+    
+
+   
+  output$consistency_check = renderText({
+
+    matrix = coma()
+
+    approx_matrix = outer(calculate_weights(), calculate_weights(), "/")
+
+    error_matrix <- matrix/approx_matrix
+
+    inconsistent_threshold = 0.1
+
+    inconsistencies = vector("character")
+
+    for (i in 1:nrow(error_matrix)) {
+      for (j in 1:ncol(error_matrix)) {
+        if (i != j &&
+            abs(error_matrix[i, j] - 1) > inconsistent_threshold) {
+
+          inconsistencies = 
+
+            paste("Inconsistent relationship between criteria",
+              i, "and",j,
+             # ": original =", matrix[i, j],
+             # "approx =", round(approx_matrix[i, j], 2),
+              "error =", round(error_matrix[i, j], 2),
+             sep= "\n"
+            )
+          
+        }
+
+        }
+      }
+    if (length(inconsistencies) == 0) {
+      inconsistencies <- paste("No major inconsistencies, the inconsistency ratio is:",
+                               round(cr, 3))
+    }
+    
+    inconsistencies
+  })
+  
+  })
 }
 
 
