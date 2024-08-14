@@ -559,6 +559,25 @@ plt_sc_optima = function(dat,x_var,y_var,col_var,size_var,high_point=NULL){
   return(p)
 }
 
+#### AHP Functions ####
+
+## consistency index for AHP
+consistency_index <- function(m) {
+  eig <- eigen(m)$values
+  lambda_max <- Re(eig[which.max(Re(eig))])
+  n <- nrow(m)
+  return((lambda_max - n) / (n - 1))
+}
+
+## consistency ratio for AHP
+consistency_ratio <- function(ci, n) {
+  ri_values <- c(0.00, 0.00, 0.52, 0.89, 1.11, 1.25, 1.35, 1.40, 1.45, 
+                 1.49, 1.51, 1.54, 1.56, 1.57, 1.59) #predefined values found online
+  ri <- ri_values[n]
+  return(ci / ri)
+}
+
+
 #### Other Functions ####
 
 get_mima = function(df){
@@ -773,3 +792,4 @@ find_row = function(dat, colname, val, absdat){
  
   return(absdat[closest_index, ]) #this works as fit and f_scaled have the same origin
 }
+
