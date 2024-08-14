@@ -487,9 +487,10 @@ ui <-
         column(3, selectInput(inputId = "x_var",label = "X-Axis", choices = NULL, multiple = F, selected=NULL)),
                column(3,selectInput(inputId = "y_var",label = "Y-Axis", choices = NULL, multiple = F,selected=NULL)),
                       column(3,selectInput(inputId = "col_var",label = "Colour", choices = NULL, multiple = F,selected=NULL)),
-                             column(3,selectInput(inputId = "size_var",label = "Size", choices = NULL, multiple = F,selected=NULL)))
+                             column(3,selectInput(inputId = "size_var",label = "Size", choices = NULL, multiple = F,selected=NULL))),
       
-      )
+       checkboxInput("show_extra_dat", label = "Show the cluster solutions", value = FALSE))
+      
        )
         )
          )

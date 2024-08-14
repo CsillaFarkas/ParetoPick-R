@@ -924,24 +924,25 @@ server <- function(input, output, session) {
       sols_data = read.csv(current_py_out)
 
       sols(sols_data %>% rownames_to_column("optimum") %>%
-          dplyr::filter(!is.na(Representative_Solution)& Representative_Solution != "") %>% select(1:5) %>%#PCA content is hard to read/limited additional value for user
-          mutate(across(where(is.numeric), round, digits = 5)))
+          dplyr::filter(!is.na(Representative_Solution)& Representative_Solution != "") %>% select(1:5)) #PCA content is hard to read/limited additional value for user
+          
       
     }else{
       sols(data.frame(Message = "something went wrong - has the PCA run properly?"))
     }
     output$antab <- renderDT({
-      datatable(sols(),
+      datatable(sols()%>%mutate(across(where(is.numeric), round, digits = 5)),
                 selection = list(mode = "multiple", target = 'row', max = 12), rownames= FALSE,
                 options = list(pageLength = 20, autoWidth = TRUE))
     })
-    sol<-sols()[,objectives()]
+    sol<<-sols()[,objectives()]
     
     
     output$par_plot_optima <- renderPlot({
       req(objectives())
 
-      plt_sc_optima(dat=sol,x_var=objectives()[1],y_var=objectives()[2],col_var=objectives()[3],size_var=objectives()[4])
+      plt_sc_optima(dat=sol,x_var=objectives()[1],y_var=objectives()[2],
+                    col_var=objectives()[3],size_var=objectives()[4])
     })
     
     
@@ -1180,11 +1181,10 @@ server <- function(input, output, session) {
   observe({
     
   output$weights_plot <- renderPlot({
-    req(objectives(),fit(),best_option(),input$x_var)
-    
+    req(objectives(),fit(),best_option(),input$x_var,sol)
     bo = best_option()
     plt_sc_optima(dat=fit(),x_var=input$x_var,y_var=input$y_var,
-                  col_var=input$col_var,size_var=input$size_var,high_point=bo)
+                  col_var=input$col_var,size_var=input$size_var,high_point=bo,extra_dat = sol,plt_extra = input$show_extra_dat)
     
     })
   })

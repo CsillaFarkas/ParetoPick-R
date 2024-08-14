@@ -394,7 +394,7 @@ plt_leg = function(mes){
 }
 
 
-## scatterplot in AHP
+## scatterplot in AHP, comparing two objectives
 plt_scat2 = function(dat, x, y){
    ggplot(dat, aes(x = !!sym(x), y = !!sym(y))) +
     geom_point(color="grey50",size=1.1)+
@@ -538,27 +538,59 @@ plt_sc = function(dat, ranges,col=rep("grey",nrow(dat)),size=rep(1.1, nrow(dat))
 return(plots)
 }
 
-## scatter plot in analysis
+## scatter plot in analysis tab and AHP tab
+library(ggplot2)
+library(viridis)
 
-plt_sc_optima = function(dat,x_var,y_var,col_var,size_var,high_point=NULL){
+plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NULL, extra_dat = NULL, plt_extra=F) {
   p= ggplot(dat, aes_string(x=x_var, y=y_var, fill = col_var, size = size_var))+
-     geom_point(shape=21,stroke=0.5)+
-    scale_fill_viridis(alpha=0.8)+
-     scale_size(range = c(1, 10)) +
-       theme_bw() + theme(
-        panel.background = element_blank(),
-        panel.grid.major = element_line(color = "lightgray", size = 0.3),
-        panel.grid.minor = element_blank(),
-        panel.border = element_blank(),
-        axis.text = element_text(size = 12),
-        axis.title = element_text(size = 16)
-    )
-  if(!is.null(high_point)){
-  p = p + geom_point(data = high_point, aes_string(x = x_var, y = y_var), size = 4.5, shape = 15, color="darkred")
-    }
+         geom_point(shape=21,stroke=0.5)+
+        scale_fill_viridis(alpha=0.8)+
+         scale_size(range = c(1, 10)) +
+           theme_bw() + theme(
+            panel.background = element_blank(),
+            panel.grid.major = element_line(color = "lightgray", size = 0.3),
+            panel.grid.minor = element_blank(),
+            panel.border = element_blank(),
+            axis.text = element_text(size = 12),
+            axis.title = element_text(size = 16))
+  
+  if (!is.null(extra_dat) && plt_extra) {
+    p <- p +
+      geom_point(data = extra_dat, aes_string(x = x_var, y = y_var, fill=col_var, size = size_var), 
+                 shape = 21, stroke = 0.5, alpha=0.9, fill= "#00FFFF",show.legend = F)
+      
+  }
+  
+  # Highlight specific points if provided
+  if (!is.null(high_point)) {
+    p <- p + 
+      geom_point(data = high_point, aes_string(x = x_var, y = y_var), 
+                 size = 4.5, shape = 15, color = "darkred")
+  }
   
   return(p)
 }
+
+# plt_sc_optima = function(dat,x_var,y_var,col_var,size_var,high_point=NULL){
+#   p= ggplot(dat, aes_string(x=x_var, y=y_var, fill = col_var, size = size_var))+
+#      geom_point(shape=21,stroke=0.5)+
+#     scale_fill_viridis(alpha=0.8)+
+#      scale_size(range = c(1, 10)) +
+#        theme_bw() + theme(
+#         panel.background = element_blank(),
+#         panel.grid.major = element_line(color = "lightgray", size = 0.3),
+#         panel.grid.minor = element_blank(),
+#         panel.border = element_blank(),
+#         axis.text = element_text(size = 12),
+#         axis.title = element_text(size = 16)
+#     )
+#   if(!is.null(high_point)){
+#   p = p + geom_point(data = high_point, aes_string(x = x_var, y = y_var), size = 4.5, shape = 15, color="darkred")
+#     }
+#   
+#   return(p)
+# }
 
 #### AHP Functions ####
 
