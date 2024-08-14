@@ -464,7 +464,8 @@ ui <-
              style = "text-align: left; font-size:150%",
              uiOutput("sliders_ui")),
            div(id="sel_wgt","Selected Weights",style = "text-align: center; font-size: 150%;",
-           div(tableOutput("weights_output") , style = "margin: 0 auto; width: fit-content;"))
+           div(tableOutput("weights_output") , style = "margin: 0 auto; width: fit-content;")),
+           uiOutput("consistency_check")
           ),
       
       mainPanel(
