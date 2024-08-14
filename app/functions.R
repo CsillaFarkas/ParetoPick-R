@@ -279,14 +279,14 @@ plt_latlon = function(conpath){
   return(c(lat_map,lon_map))
 }
 
-## whole cm for location plot
-pull_shp_pure = function(layername = "hru"){
+## whole basin for location plot
+pull_shp_pure = function(layername = "basin"){
   if(file.exists(paste0("../data/",layername,".shp"))){
 
     cm = read_sf(dsn = "../data/", layer = layername) #adapt path
     
     cm = st_buffer(cm, 0.0) #clean geometry
-    cm = cm %>%select(id,geometry) %>% st_transform(., 4326)
+    cm = cm %>%st_transform(., 4326)
     
     return(cm)}else{return(NULL)}
   
@@ -377,6 +377,7 @@ plt_cm_pure = function(data = cm,
                        la = lalo[1],
                        lo = lalo[2]) {
   p = leaflet(data) %>%
+    addProviderTiles(providers$CartoDB.Positron) %>%
     setView(lng = lo, lat = la, zoom = 10) %>%
     addPolygons(fillColor = "white",color = "black",weight=0.4)
   
