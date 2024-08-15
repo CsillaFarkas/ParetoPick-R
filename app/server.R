@@ -374,7 +374,8 @@ server <- function(input, output, session) {
      file.copy(file_data2()$path, save_path2, overwrite = TRUE)
      file.copy(file_data3()$path, save_path3, overwrite = TRUE)
      file.copy(file_data4()$path, save_path4, overwrite = TRUE)
-
+     
+     #cm shapefile
      shp_req = c(".shp",".shx", ".dbf", ".prj")
      shapefile <- input$shapefile
      shapefile_names <- shapefile$name
@@ -391,9 +392,27 @@ server <- function(input, output, session) {
        })
      }
      
+     #basin shapefile
+     bas_req = c(".shp",".shx", ".dbf", ".prj")
+     basfile <- input$basfile
+     basfile_names <- basfile$name
+     basfile_paths <- basfile$datapath
+     missing_basfile_components <- bas_req[!sapply(bas_req, function(ext) any(grepl(paste0(ext, "$"), basfile_names)))]
+     
+     # copy basfile components if none are missing
+     if (length(missing_basfile_components) == 0) {
+       lapply(seq_along(basfile_paths), function(i) {
+         save_path <- file.path(save_dir, basfile_names[i])
+         if (!file.exists(save_path)) {
+           file.copy(basfile_paths[i], save_path, overwrite = TRUE)
+         }
+       })
+     }
      
      required_files <- c("../data/pareto_genomes.txt","../data/hru.con",   "../data/measure_location.csv",
-                         "../data/hru.shp","../data/hru.shx", "../data/hru.dbf", "../data/hru.prj","../data/pareto_fitness.txt")
+                         "../data/hru.shp","../data/hru.shx", "../data/hru.dbf", "../data/hru.prj",
+                         "../data/basin.shp","../data/basin.shx", "../data/basin.dbf", "../data/basin.prj",
+                         "../data/pareto_fitness.txt")
      
      checkFiles <- sapply(required_files, function(file) file.exists(file))
      
@@ -925,8 +944,7 @@ server <- function(input, output, session) {
 
       sols(sols_data %>% rownames_to_column("optimum") %>%
           dplyr::filter(!is.na(Representative_Solution)& Representative_Solution != "") %>% select(1:5)) #PCA content is hard to read/limited additional value for user
-          
-      
+  
     }else{
       sols(data.frame(Message = "something went wrong - has the PCA run properly?"))
     }
@@ -937,13 +955,27 @@ server <- function(input, output, session) {
     })
     sol<<-sols()[,objectives()]
     
-    
+
     output$par_plot_optima <- renderPlot({
       req(objectives())
-
-      plt_sc_optima(dat=sol,x_var=objectives()[1],y_var=objectives()[2],
-                    col_var=objectives()[3],size_var=objectives()[4])
+      
+      if(!is.null(input$antab_rows_selected)){
+        
+        selected_row <- input$antab_rows_selected
+        selected_data <- sols()[selected_row,]
+        
+      }else{selected_data <- NULL}
+        
+      plt_sc_optima(
+        dat = sol,
+        x_var = objectives()[1],
+        y_var = objectives()[2],
+        col_var = objectives()[3],
+        size_var = objectives()[4],
+        sel_tab = selected_data
+      )
     })
+    
     
     
     output$tabtext = renderText({HTML("You can select up to 12 optima and compare the implementation of measures in the catchment.")})
@@ -988,10 +1020,6 @@ server <- function(input, output, session) {
       nplots = length(col_sel)+1
       
       m1 = plt_lf(data=hru_sel, col_sel = col_sel, mes = unique(mes$nswrm),la = lalo[1],lo =lalo[2], buff_els=buffs)
-      
-      # observe({
-      #   session$sendCustomMessage(type = "syncMaps", message = list(mapIds = 1:4))
-      # })
       
       cm2 = plt_cm_pure(data=cm_clean(), la = lalo[1],lo =lalo[2])
       m <- c(list(cm2), m1)
@@ -1131,14 +1159,12 @@ server <- function(input, output, session) {
             comparison_matrix[j, i] <- 1 / comparison_value
             
           } else {
-            # First part is objective
+            # first part is objective
             comparison_value <- as.numeric(parts[2])
             comparison_matrix[j, i] <- comparison_value
             comparison_matrix[i, j] <- 1 / comparison_value
           }
         }}
-
-        
       }
     }
     
@@ -1160,8 +1186,13 @@ server <- function(input, output, session) {
                                        }, colnames = T)
   
   output$best_option_output <- renderTable({
+    req(sols())
+    if (input$best_cluster) {
+      df = subset(sols(),select= -optimum) #best option out of optima
+    } else{
+      df = fit()   #best option out of whole pareto front (=default)
+    }
     
-    df = fit()
     if (!all(names(calculate_weights()) %in% colnames(df))) {
       return("Dataframe columns do not match criteria names.")
     }
@@ -1241,7 +1272,3 @@ server <- function(input, output, session) {
   
   })
 }
-
-
-# setwd("C:/Users/wittekin/Documents/cle2024/projects/src/pareto_optain/app")
-# profvis(runApp())

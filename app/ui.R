@@ -247,7 +247,11 @@ ui <-
                   div(style = "margin-top: -15px;",fileInput("shapefile", "", multiple = TRUE, 
                                                              accept = c(".shp", ".shx", ".dbf", ".prj"))),
                   
-                  div(id="fitness_avail",div("5. pareto_fitness.txt",style = "text-align: left; font-size:115%"),
+                  div("5. shapefile called \"basin\" with four components (.shp .dbf .prj and .shx)",style = "text-align: left; font-size:115%"),
+                  div(style = "margin-top: -15px;",fileInput("basfile", "", multiple = TRUE, 
+                                                             accept = c(".shp", ".shx", ".dbf", ".prj"))),
+                  
+                  div(id="fitness_avail",div("6. pareto_fitness.txt",style = "text-align: left; font-size:115%"),
                   div(style = "margin-top: -15px;",fileInput("file4", "", accept = ".txt")))%>%hidden(), 
                   
                   
@@ -479,9 +483,11 @@ ui <-
         "Best Option under selected weighting",
         style = "text-align: center; font-size: 150%;", 
         div( tableOutput("best_option_output"),
-        style = "margin: 0 auto; width: fit-content;")
-      ),
-      
+        style = "margin: 0 auto; width: fit-content;")),
+      div(
+        checkboxInput("best_cluster", label = "Best option among cluster solutions", value = FALSE),
+        style= "margin: 0 auto; width: fit-content;font-size: 100%;"),
+          
       plotOutput({"weights_plot"}),
       fluidRow(
         column(3, selectInput(inputId = "x_var",label = "X-Axis", choices = NULL, multiple = F, selected=NULL)),
@@ -489,7 +495,7 @@ ui <-
                       column(3,selectInput(inputId = "col_var",label = "Colour", choices = NULL, multiple = F,selected=NULL)),
                              column(3,selectInput(inputId = "size_var",label = "Size", choices = NULL, multiple = F,selected=NULL))),
       
-       checkboxInput("show_extra_dat", label = "Show the cluster solutions", value = FALSE))
+       checkboxInput("show_extra_dat", label = "Show cluster solutions", value = FALSE))
       
        )
         )

@@ -379,7 +379,7 @@ plt_cm_pure = function(data = cm,
   p = leaflet(data) %>%
     addProviderTiles(providers$CartoDB.Positron) %>%
     setView(lng = lo, lat = la, zoom = 10) %>%
-    addPolygons(fillColor = "white",color = "black",weight=0.4)
+    addPolygons(fillColor = "white",color = "black",weight=0.7)
   
   return(p)
 }
@@ -542,7 +542,11 @@ return(plots)
 library(ggplot2)
 library(viridis)
 
-plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NULL, extra_dat = NULL, plt_extra=F) {
+plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NULL, 
+                          extra_dat = NULL, #highlight optima in AHP tab
+                          plt_extra=F, #potentially redundant tbf
+                          sel_tab = NULL #highlight table selection Analysis tab
+                          ) {
   p= ggplot(dat, aes_string(x=x_var, y=y_var, fill = col_var, size = size_var))+
          geom_point(shape=21,stroke=0.5)+
         scale_fill_viridis(alpha=0.8)+
@@ -559,38 +563,24 @@ plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NUL
     p <- p +
       geom_point(data = extra_dat, aes_string(x = x_var, y = y_var, fill=col_var, size = size_var), 
                  shape = 21, stroke = 0.5, alpha=0.9, fill= "#00FFFF",show.legend = F)
-      
   }
   
-  # Highlight specific points if provided
+  # highlight specific points if provided
   if (!is.null(high_point)) {
     p <- p + 
       geom_point(data = high_point, aes_string(x = x_var, y = y_var), 
                  size = 4.5, shape = 15, color = "darkred")
   }
   
+  # highlight table selection
+  if (!is.null(sel_tab)) {
+    p <- p + 
+      geom_point(data = sel_tab, aes_string(x = x_var, y = y_var), 
+                 size = 4.5, shape = 21, stroke = 3, color ="black")
+  }
+  
   return(p)
 }
-
-# plt_sc_optima = function(dat,x_var,y_var,col_var,size_var,high_point=NULL){
-#   p= ggplot(dat, aes_string(x=x_var, y=y_var, fill = col_var, size = size_var))+
-#      geom_point(shape=21,stroke=0.5)+
-#     scale_fill_viridis(alpha=0.8)+
-#      scale_size(range = c(1, 10)) +
-#        theme_bw() + theme(
-#         panel.background = element_blank(),
-#         panel.grid.major = element_line(color = "lightgray", size = 0.3),
-#         panel.grid.minor = element_blank(),
-#         panel.border = element_blank(),
-#         axis.text = element_text(size = 12),
-#         axis.title = element_text(size = 16)
-#     )
-#   if(!is.null(high_point)){
-#   p = p + geom_point(data = high_point, aes_string(x = x_var, y = y_var), size = 4.5, shape = 15, color="darkred")
-#     }
-#   
-#   return(p)
-# }
 
 #### AHP Functions ####
 
