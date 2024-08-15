@@ -24,7 +24,7 @@ It then performs both and provides the relevant statistics, plots and analyses.
 * units.RDS
 
 ## Input through the user 
-(app copies these into the data folder)
+(app pulls these into the data folder)
 * pareto_genomes.txt
 * pareto_fitness.txt
 * hru.con
@@ -46,15 +46,13 @@ It then performs both and provides the relevant statistics, plots and analyses.
 * min_components & max_components
 
 # Missing/Nice to have
-* Data prep tab: request basin.shp etc file input (needed for quick rendering of plots in Analysis tab)
-* Analysis tab: drop down for plotting structure
 * AHP tab: 
   * structured presentation of decisions
   * explanations
   * map with measure implementation of selected optimum
   * legend in pareto plot
   * Schmerzgrenzen
-  * selection if the whole pareto front or the clustering results shall be plotted
+  * rounding of table?
 * Plot last tab: status message so user knows the plot is being rendered!!
 * Front page needs some more explanation
 * Klaipeda:
@@ -66,4 +64,5 @@ It then performs both and provides the relevant statistics, plots and analyses.
   * explain the effects of high correlation
   * currently the lowering of min when max is lowered does not work
   * fix max pcas to feasible number
+
 
