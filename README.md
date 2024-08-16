@@ -53,16 +53,20 @@ It then performs both and provides the relevant statistics, plots and analyses.
   * legend in pareto plot
   * Schmerzgrenzen
   * rounding of table?
+  * the initial state of the pairwise comparison as "Equal" amplifies the mathematical definition of inconsistency
+  * normalise for different units?
 * Plot last tab: status message so user knows the plot is being rendered!!
 * Front page needs some more explanation
+
 * Klaipeda:
   * full list of nswrm implemented across all catchments to properly assign priorities incl. info on weather management or structural
   * other variables to consider in the PCA
+
 * Correlation Analysis:
   * output largest accepted correlation, maybe in bold in table
   * deviations_step is currently the default value 
   * explain the effects of high correlation
   * currently the lowering of min when max is lowered does not work
-  * fix max pcas to feasible number
+
 
 
