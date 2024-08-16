@@ -592,14 +592,6 @@ consistency_index <- function(m) {
   return((lambda_max - n) / (n - 1))
 }
 
-## consistency ratio for AHP
-consistency_ratio <- function(ci, n) {
-  ri_values <- c(0.00, 0.00, 0.52, 0.89, 1.11, 1.25, 1.35, 1.40, 1.45, 
-                 1.49, 1.51, 1.54, 1.56, 1.57, 1.59) #predefined values found online
-  ri <- ri_values[n]
-  return(ci / ri)
-}
-
 
 #### Other Functions ####
 

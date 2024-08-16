@@ -1142,6 +1142,7 @@ server <- function(input, output, session) {
     for (i in 1:(n_criteria - 1)) {
       for (j in (i + 1):n_criteria) {
         slider_id <- paste0("c", i, "_c", j)
+        
         value = input[[slider_id]]
         if(is.null(value) || value=="Equal"){
           comparison_value =1
@@ -1151,9 +1152,8 @@ server <- function(input, output, session) {
         parts <- strsplit(value, " - ")[[1]]
         
         if (length(parts) == 2) {
-          # first part is numeric
+            # first part is numeric
           if (grepl("^\\d+$", parts[1])) {
-            # First part is weight, second part is criteria
             comparison_value <- as.numeric(parts[1])
             comparison_matrix[i, j] <- comparison_value
             comparison_matrix[j, i] <- 1 / comparison_value
@@ -1227,46 +1227,25 @@ server <- function(input, output, session) {
     ## consistency checks
     ci = consistency_index(coma())
 
-    cr = consistency_ratio(ci, length(objectives()))
+    cr = ci/0.89 #value found online, determined through random matrices
     
 
    
   output$consistency_check = renderText({
 
-    matrix = coma()
-
-    approx_matrix = outer(calculate_weights(), calculate_weights(), "/")
-
-    error_matrix <- matrix/approx_matrix
-
-    inconsistent_threshold = 0.1
-
-    inconsistencies = vector("character")
-
-    for (i in 1:nrow(error_matrix)) {
-      for (j in 1:ncol(error_matrix)) {
-        if (i != j &&
-            abs(error_matrix[i, j] - 1) > inconsistent_threshold) {
-
-          inconsistencies = 
-
-            paste("Inconsistent relationship between criteria",
-              i, "and",j,
-             # ": original =", matrix[i, j],
-             # "approx =", round(approx_matrix[i, j], 2),
-              "error =", round(error_matrix[i, j], 2),
-             sep= "\n"
-            )
-          
-        }
-
-        }
-      }
-    if (length(inconsistencies) == 0) {
-      inconsistencies <- paste("No major inconsistencies, the inconsistency ratio is:",
-                               round(cr, 3))
-    }
+    slider_ids =c(input[["c1_c2"]],input[["c1_c3"]],input[["c1_c4"]],input[["c2_c3"]],
+                  input[["c2_c4"]],input[["c3_c4"]])
     
+    se = sum(slider_ids == "Equal") #if majority on equal, large preferences amplify mathematical inconsistency
+    
+    
+    if(se > 3){inconsistencies = paste("No major inconsistencies.")}else if(cr <= 0.15){
+      inconsistencies = paste("No major inconsistencies, the inconsistency ratio is:",
+                              round(cr, 3))
+    }else{inconsistencies = paste("Potential inconsistencies, the inconsistency ratio is:"
+                                  , round(cr, 3))}
+    
+  
     inconsistencies
   })
   

@@ -144,7 +144,7 @@ ui <-
         tabItem(tabName = "play_around",
                 titlePanel("Visualising the Optimisation Output"),
                 
-                wellPanel(  style = "background-color:  #a2a4b6; border: 1px solid #444;",
+                wellPanel(  style = "background-color:  #a2a4b6; border: none;",
                             p("This tab allows to determine...")),
                 
                 sidebarLayout(
@@ -226,7 +226,7 @@ ui <-
         tabItem(tabName = "data_prep",
                 titlePanel("OPTAIN Data Preparation"),
                 
-                wellPanel(  style = "background-color:  #a2a4b6; border: 1px solid #444;",
+                wellPanel(  style = "background-color:  #a2a4b6; border:none;",
                             p("This tab allows to determine...")),
                 
                 mainPanel(
@@ -284,7 +284,7 @@ ui <-
     tabItem(tabName = "correlation_analysis",
            titlePanel("Correlation Analysis"),
            
-           wellPanel(  style = "background-color:  #a2a4b6; border: 1px solid #444;",
+           wellPanel(  style = "background-color:  #a2a4b6; border: none;",
                        p("This tab allows to determine...")),
            
            sidebarLayout(
@@ -334,7 +334,7 @@ ui <-
           
           titlePanel("Clustering"),
           
-          wellPanel(  style = "background-color:  #a2a4b6; border: 1px solid #444;",
+          wellPanel(  style = "background-color:  #a2a4b6; border: none;",
                       p("This tab allows to determine...")),
           
           sidebarLayout(sidebarPanel(div("Variables included in the PCA",style = "text-align: left; font-size:150%"),
@@ -425,7 +425,7 @@ ui <-
      tabItem(
             tabName = "analysis",
             
-            wellPanel(  style = "background-color:  #a2a4b6; border: 1px solid #444;",
+            wellPanel(  style = "background-color:  #a2a4b6; border:none;",
                         p("This tab allows to determine...")),
             
             titlePanel("Analysing the remaining optima"),
@@ -446,7 +446,7 @@ ui <-
         tabName = "ahp",
         titlePanel("Analytical Hierarchy Process"),
         
-       wellPanel(  style = "background-color:  #a2a4b6; border: 1px solid #444;",
+       wellPanel(  style = "background-color:  #a2a4b6; border: none;",
               p("This tab allows to determine...")),
        
         sidebarLayout(
