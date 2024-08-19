@@ -57,6 +57,29 @@ ui <-
                                 background-color: #f4b943;
                                 }
                                 
+                                
+                                /* AHP tab */
+                                .sidebar-menu li a[data-value="ahp"] {
+                                 background-color: #4F518C !important;
+                                 
+                                }
+      
+                               /* Analysis tab */
+                                .sidebar-menu li a[data-value="analysis"] {
+                                 background-color: #907AD6 !important;
+                                  
+                                }
+                                 /* Correlation Analysis and Clustering the same color */
+                                  .sidebar-menu li a[data-value="correlation_analysis"] {
+                                 background-color: #DABFFF !important;
+                                  
+                                  }
+                                 
+                                  .sidebar-menu li a[data-value="pca"] {
+                                 background-color: #DABFFF !important;
+                                  
+                                 }
+                                
                                 /* active selected tab in the sidebarmenu */
                                 .skin-blue .main-sidebar .sidebar .sidebar-menu .active a{
                                 background-color: #9eb1cf;
@@ -125,19 +148,23 @@ ui <-
                 titlePanel("Introduction and Background"),
                 mainPanel( div(
                   style = "width: 100%; text-align: justify; font-size:135%;",
-                  p("This application analyses OPTAIN Optimisation outputs and shall support decision making.  
-                              While all solutions provided by the SWAT+ / COMOLA workflow are pareto-optimal (none of the objectives can be improved without losses 
-                            in other objectives), choosing among a large number of solutions can be daunting."),
+                  p("This application analyses OPTAIN optimisation outputs and shall support decision making.  
+                     While all solutions provided by the SWAT+ / COMOLA workflow are pareto-optimal (none of the objectives can be improved without losses 
+                    in other objectives), choosing among a large number of solutions can be daunting."),
                               br(), p("To reduce complexity while minimising information loss, this application provides a clustering algorithm based on a Principal Component Analysis (PCA).
                               The user can modify the clustering process, alter the number of tested clusters and the way outliers are handled or how much correlation is accepted across the considered variables.
-                              Finally, those optima representative for different clusters can be plotted.
-                                "),br(),br(),
+                              Finally, those optima representative for different clusters can be plotted and the measure implementation they recommend can be compared.
+                                "),br(),
+                          p("Furthermore, this application provides the possibility to perform an Analytical Hierarchy Process both as standalone as well as as additional feature on top of the clustered pareto front. "),
+                          br(),br(),
                           p(" The application is structured the following way:"),
-                          p(HTML("The second tab <strong>Visualising the Pareto Front</strong> plots the optimisation results. The user can select preferred objective ranges and assess how a reduced objective space affects the pareto front.")),
-                          p(HTML("The third tab <b>Data Preparation</b> is needed to produce the data required for the subsequent analyses. Several files need to be provided so the clustering can be performed.")),
+                          p(HTML("The second tab <strong>Visualising the Pareto Front</strong> provides an overview over the optimisation results. The user can gain insights into the relationships between the objectives and the pareto front by selecting and plotting preferred objective ranges.")),
+                          p(HTML("The third tab <b>Data Preparation</b> is needed to produce the data required for the subsequent analyses. Several files need to be provided so the variables considered in the clustering can be calculated.")),
                           p(HTML("The fourth tab <strong>Correlation Analysis</strong> allows to assess and alter variables considered in the subsequent clustering.")),
-                          p(HTML("The fifth tab <strong>Clustering</strong> provides the possibility to adapt and modify the clustering process.")),
-                          p(HTML("The last tab <strong>Analysis</strong> lets the user plot the optima remaining after the clustering. Each of these optima is representative for one cluster."))
+                          p(HTML("The fifth tab <strong>Clustering</strong> provides the possibility to adapt, modify and finally perform the clustering process.")),
+                          p(HTML("The <strong>Analysis</strong> tab lets the user plot the optima remaining after the clustering. Each of these optima is representative for one cluster.")),
+                          p(HTML("The tab <strong>AHP - Analytical Hierarchy Process</strong> allows to determine priorities across the pareto front in a different way using weights across the optima. It is possible to combine the clustering results with the AHP."))
+                  
                 )
                           )),
         ### PLAY AROUND TAB ####
@@ -145,7 +172,8 @@ ui <-
                 titlePanel("Visualising the Optimisation Output"),
                 
                 wellPanel(  style = "background-color:  #a2a4b6; border: none;",
-                            p("This tab allows to determine...")),
+                            p("After providing the pareto_fitness.txt and the objective names (given in the first four columns of pareto_fitness.txt) either here or in the next tab, this tab lets you plot the pareto front in two different ways
+                              and explore the effects of reduced objective ranges."),p("You can also select specific points on the pareto front by clicking on the line plot.")),
                 
                 sidebarLayout(
                  
@@ -197,7 +225,7 @@ ui <-
                   tags$style(HTML(".js-irs-2 .irs-single, .js-irs-2 .irs-bar-edge, .js-irs-2 .irs-bar {background: #af58ba ;border-top: 1px solid #af58ba ;border-bottom: 1px solid #af58ba;}.js-irs-2 .irs-from, .js-irs-2 .irs-to, .js-irs-2 .irs-single { font-size: 13px;background: #af58ba !important }")),
                   tags$style(HTML(".js-irs-3 .irs-single, .js-irs-3 .irs-bar-edge, .js-irs-3 .irs-bar {background: #f28522 ;border-top: 1px solid #f28522 ;border-bottom: 1px solid #f28522;}.js-irs-3 .irs-from, .js-irs-3 .irs-to, .js-irs-3 .irs-single { font-size: 13px; background: #f28522 !important }")),
                   
-                fluidRow(
+                div(id = "tab_play1",fluidRow(
                     column(12,
                            fluidRow(column(6, div("Selected Objective Ranges (scaled)", style = "text-align: left; font-size:150%"),
                                     tableOutput("sliders")),
@@ -205,9 +233,9 @@ ui <-
                                     tableOutput("sliders_abs"))),
                            fluidRow(column(12,
                                     div("Selected Optimum (select in line plot)", style = "text-align: left; font-size:150%"),
-                                    tableOutput("click_info"))))),
+                                    tableOutput("click_info")))))),
                   
-                div("Parallel Axis plot", style = "text-align: left; font-size:150%"),
+                div(id = "tab_play2",div("Parallel Axis plot", style = "text-align: left; font-size:150%"),
                            plotOutput("linePlot",click="clickline"),
                            verbatimTextOutput("lineDetails"),
                 
@@ -216,7 +244,7 @@ ui <-
                           
                            div("Difference between selection and the whole Pareto Front", style = "text-align: left; font-size:150%"),
                           checkboxGroupInput("sel_neg", "Are any of the objectives provided on the negative scale?", choices = NULL, inline = FALSE),
-                           plotOutput("sliders_plot")
+                           plotOutput("sliders_plot"))
                 
                           )## PLAY AROUND MAIN PANEL END
                 )),
@@ -227,7 +255,7 @@ ui <-
                 titlePanel("OPTAIN Data Preparation"),
                 
                 wellPanel(  style = "background-color:  #a2a4b6; border:none;",
-                            p("This tab allows to determine...")),
+                            p("This tab requires you to provide the required optimisation outputs, please click Check Files after doing so.")),
                 
                 mainPanel(
                   p("To prepare the data for the subsequent correlation and cluster analysis, please provide the following files:",style =  "text-align: left; font-size:150%"),
@@ -292,14 +320,16 @@ ui <-
       # Display message about file status
       div("1. Choose variables to be included in the Correlation Analysis:", style = "text-align: left; font-size:150%"),
       checkboxGroupInput("selements", "", 
-                         choiceNames = c("Measure share in total catchment area (sit)", 
-                                     "Measure share in used catchment area (siim)",
-                                     "Moran's I", "Ratio of structural to management options (linE)"),choiceValues=c("sit","siim","moran","linE"),selected = c("sit","siim","moran","linE")),
+                         choiceNames = c("Catchment area covered by implemented measures (share_tot)", 
+                                     "Ratio between area actually covered by implemented measures and area considered for measure implementation (share_con)",
+                                     "Moran's I", "Ratio of structural to management options (linE)"),choiceValues=c("share_tot","share_con","moran","linE"),selected = c("sit","siim","moran","linE")),
       textOutput("numbercorr"),
       div("2. Perform the Correlation Analysis", style = "text-align: left; font-size:150%"),
       actionButton("run", "Run Correlation Analysis"),
+      
       div("3. Choose threshold for correlation",style = "text-align: left; font-size:150%"),
       div(style = "margin-top: -15px;",shinyWidgets::sliderTextInput(inputId = "thresh", label= "",choices = seq(0.65,0.95,0.05), selected=0.75)),
+      
       div("4. Choose variables that shall be excluded from the PCA",style = "text-align: left; font-size:150%"),
       selectInput(inputId = "excl",label = "variables to exclude", choices = NULL, multiple = TRUE),
       
@@ -431,12 +461,20 @@ ui <-
             titlePanel("Analysing the remaining optima"),
                           htmlOutput("tabtext"),
 
-            mainPanel(fluidRow(column(
-              6, div(style = "overflow-x: auto;", DTOutput("antab"))
-            ), column(6, plotOutput("par_plot_optima"))), 
+            mainPanel(fluidRow(
+              column(6, div(style = "overflow-x: auto;", DTOutput("antab"))),
+              column(6, plotOutput("par_plot_optima"),
+                     div(id="analysis_random",fluidRow(
+                       column(3, selectInput(inputId = "x_var2",label = "X-Axis", choices = NULL, multiple = F, selected=NULL)),
+                       column(3,selectInput(inputId = "y_var2",label = "Y-Axis", choices = NULL, multiple = F,selected=NULL)),
+                       column(3,selectInput(inputId = "col_var2",label = "Colour", choices = NULL, multiple = F,selected=NULL)),
+                       column(3,selectInput(inputId = "size_var2",label = "Size", choices = NULL, multiple = F,selected=NULL))),
+                     textInput("par_plot_savename", "File name (without extension):", value = "my_plot"), #required for online version
+                     downloadButton("download_par_plot", "Download Plot")))),
               
               
             actionButton("plt_opti", "Plot Optimum"), textOutput("no_row") %>% hidden(), 
+            div(id="meas_low",textOutput("meas_low"))%>%hidden(),
             uiOutput("comp_map")
         
               
@@ -484,18 +522,20 @@ ui <-
         style = "text-align: center; font-size: 150%;", 
         div( tableOutput("best_option_output"),
         style = "margin: 0 auto; width: fit-content;")),
-      div(
+      div(id="random_ahp",
         checkboxInput("best_cluster", label = "Best option among cluster solutions", value = FALSE),
         style= "margin: 0 auto; width: fit-content;font-size: 100%;"),
           
       plotOutput({"weights_plot"}),
-      fluidRow(
+      div(id="random_ahp2", fluidRow(
         column(3, selectInput(inputId = "x_var",label = "X-Axis", choices = NULL, multiple = F, selected=NULL)),
                column(3,selectInput(inputId = "y_var",label = "Y-Axis", choices = NULL, multiple = F,selected=NULL)),
                       column(3,selectInput(inputId = "col_var",label = "Colour", choices = NULL, multiple = F,selected=NULL)),
                              column(3,selectInput(inputId = "size_var",label = "Size", choices = NULL, multiple = F,selected=NULL))),
       
-       checkboxInput("show_extra_dat", label = "Show cluster solutions", value = FALSE))
+       checkboxInput("show_extra_dat", label = "Show cluster solutions", value = FALSE),
+      textInput("weights_plot_savename", "File name (without extension):", value = "my_plot"),
+      downloadButton("download_weights_plot", "Download Plot")))
       
        )
         )
