@@ -22,6 +22,7 @@ library(reticulate)
 library(scales)
 library(sf)#
 library(shiny)#
+options(shiny.maxRequestSize = 1000*1024^2)
 library(shinydashboard)#
 library(shinyFiles) #drag and drop
 library(shinyjs) # for hiding parts of the app

@@ -242,13 +242,13 @@ for(op in paste0("V", 1:nopt)){ #instable looping, Cordi...
   
   ## share in total catchment area
   totar = sum(con$area)
-  sit = arre %>% mutate(across(meas,~ (.x/totar)*100))%>%
-    rename_at(vars(meas),~paste0(., "_sit"))%>%mutate(id = row_number())
+  share_tot = arre %>% mutate(across(meas,~ (.x/totar)*100))%>%
+    rename_at(vars(meas),~paste0(., "_share_tot"))%>%mutate(id = row_number())
  
   ## share in implemented catchment area
-  siim = arre %>% mutate(allarea = rowSums(across(everything()), na.rm =T))%>%
+  share_con = arre %>% mutate(allarea = rowSums(across(everything()), na.rm =T))%>%
     mutate(across(.cols = 1:length(meas),~ (.x/allarea)*100)) %>%select(-allarea)%>%
-    rename_at(vars(meas),~paste0(., "_siim"))%>%mutate(id = row_number())
+    rename_at(vars(meas),~paste0(., "_share_con"))%>%mutate(id = row_number())
 
   
   ## merge with pareto fitness, # I assume the first row is the first pareto V1??
