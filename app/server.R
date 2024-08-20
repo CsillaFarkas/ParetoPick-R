@@ -579,7 +579,6 @@ server <- function(input, output, session) {
       
   ### Correlation Analysis ####
       
-      ## hide tab if user has not supplied all data files
       observeEvent(input$tabs == "correlation_analysis", {
         required_files <- c(
           "../data/pareto_genomes.txt",
@@ -596,7 +595,6 @@ server <- function(input, output, session) {
         
         checkFiles <- sapply(required_files, function(file) file.exists(file))
         
-        ## only show correlation tab when all files are available
         if (all(checkFiles) == F) {
           shinyjs::hide(id = "corr_content")
           shinyjs::show(id = "corr_notthere")
@@ -654,20 +652,18 @@ server <- function(input, output, session) {
           shinyjs::show("show_conf")
           
           corr <<- read.csv("../output/correlation_matrix.csv", row.names = 1) #global because of re-rendering of plot
-          
-          # correlation Plot (does not change for different thresholds)
+
+          ## correlation Plot (does not change for different thresholds)
           output$corrplot <- renderPlot({plt_corr(corr)})
         }else{ shinyjs::hide("show_conf")}
         
-        
         } )
-
-    
+      
       observeEvent(input$run,{
           all_var <<- readRDS("../input/all_var.RDS")
           
           write_corr(vars = input$selements,cor_analysis = T, pca = F)
-          
+
           # define the command to run the Python script
           py_script <- "../python_files/correlation_matrix.py"
           cmd <- paste("python", py_script)
@@ -679,9 +675,11 @@ server <- function(input, output, session) {
   observeEvent(input$thresh,{
     
     # reprint highest correlation table marking removed 
-    output$corrtable <- renderDT({find_high_corr(corr,threshold=input$thresh, tab=T, strike=NULL)}) #tab = T means this returns the full table, =F is for pulling variables
+    output$corrtable <- renderDT({
+      req(corr)
+      find_high_corr(corr,threshold=input$thresh, tab=T, strike=NULL)}) #tab = T means this returns the full table, =F is for pulling variables
    
-    # Top Table with selected elements
+    # top table with selected elements
     output$selements <- renderTable({input$selements},rownames = T,colnames = F)
     })
   
@@ -967,35 +965,38 @@ server <- function(input, output, session) {
       
       observe({
         matches <- grepl("clusters_representativesolutions.*\\.csv", list.files(output_dir, full.names = TRUE))
-        
-        if(length(matches) != 0) {
+        if(!is.logical(matches)){ #if empty match this is logical(0)
           matching_files <- list.files(output_dir, full.names = TRUE)[matches]
           check_files(matching_files)
           }
+      
+      }) 
+    observeEvent(check_files(),{
+        if(!is.null(check_files())) {
+          
+          all_py_out <- file.info(check_files())
+          
+          current_py_out <- rownames(all_py_out)[which.max(all_py_out$mtime)]
+          
+          sols_data = read.csv(current_py_out)
+          
+          sols(sols_data %>% rownames_to_column("optimum") %>%
+                 dplyr::filter(!is.na(Representative_Solution)& Representative_Solution != "") %>% select(1:5)) #PCA content is hard to read/limited additional value for user
+          
+        }else{
+          sols(data.frame(Message = "something went wrong - has the PCA run properly?"))
+          shinyjs::hide(id="plt_opti")
+        }
+        
+        output$antab <- renderDT({
+          req(sols())
+          datatable(sols()%>%mutate(across(where(is.numeric), round, digits = 5)),
+                    selection = list(mode = "multiple", target = 'row', max = 12), rownames= FALSE,
+                    options = list(pageLength = 20, autoWidth = TRUE))
         })
-  
-      if(!is.null(check_files())) {
+      })
       
-      all_py_out <- file.info(check_files())
-      
-      current_py_out <- rownames(all_py_out)[which.max(all_py_out$mtime)]
-      
-      sols_data = read.csv(current_py_out)
-
-      sols(sols_data %>% rownames_to_column("optimum") %>%
-          dplyr::filter(!is.na(Representative_Solution)& Representative_Solution != "") %>% select(1:5)) #PCA content is hard to read/limited additional value for user
-  
-    }else{
-      sols(data.frame(Message = "something went wrong - has the PCA run properly?"))
-      shinyjs::hide(id="plt_opti")
-    }
-      
-    output$antab <- renderDT({
-      req(sols())
-      datatable(sols()%>%mutate(across(where(is.numeric), round, digits = 5)),
-                selection = list(mode = "multiple", target = 'row', max = 12), rownames= FALSE,
-                options = list(pageLength = 20, autoWidth = TRUE))
-    })
+     
     
     if(!is.null(check_files())) { #sol is only useful if python has run
       
