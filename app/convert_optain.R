@@ -1,5 +1,6 @@
 ####################  Convert OPTAIN ###############################################
 # creates a .csv to be used in the Correlation and PCA
+# comment: new variables for the pca require adapted functions.R and ui.R
 # each row one Pareto-optimal solution
 # 1.- 4. = objectives to be maximised
 # 5 - end = variables to be considered in the clustering (=all_var provided separately)
@@ -122,7 +123,6 @@ for(op in paste0("V", 1:nopt)){ #instable looping, Cordi...
   saveRDS(hru,file= "../input/hru_in_optima.RDS")
   print(paste0("check: made hru land use available for future plotting..."),quote=F)
   
-  
   ## Moran's, share in total and activated area and linE
   con = read.table("../data/hru.con",header=T,skip=1)
   
@@ -177,20 +177,6 @@ for(op in paste0("V", 1:nopt)){ #instable looping, Cordi...
   colnames(mesur) = paste(colnames(mesur),"moran",sep="_")
   mesur = mesur %>%mutate(id = row_number())
 
-  ## Moran's across all land uses/measures
-  # for(op in paste0("V", 1:nopt)){
-  #   mesur[op,"moran"]=mean(localmoran(hru_copy[[op]],weights_listw)[,"Ii"])# mean is debatable
-  # }
-  
-  # replace empty/no measure with 0
-  # hru_copy[is.na(hru_copy)] <- 0
-  # hru_copy = as.data.frame(sapply(hru_copy, as.numeric)) #
-  # 
-  # for (op in paste0("V", 1:nopt)) {
-  #   mesur[op, "moran"] = mean(localmoran(hru_copy[[op]], weights_listw)[, "Ii"])# mean is debatable
-  # }
-  
-  
   ## linE - number of management versus number of structural measures in each optimum
   mngmt_obj= prios%>%filter(mngmt ==1)%>%select(nswrm)%>%pull() #management measures
   strct_obj = prios%>%filter(mngmt ==0)%>%select(nswrm)%>%pull()#structural measures
@@ -211,7 +197,6 @@ for(op in paste0("V", 1:nopt)){ #instable looping, Cordi...
     }
   
   lin = lin %>%mutate(id = row_number())
-  
   
   ## Area per measure, required for calculating share below
   # empty dataframe
@@ -238,7 +223,6 @@ for(op in paste0("V", 1:nopt)){ #instable looping, Cordi...
     print(paste0("caculated area share of measures across Optimum ",op,"..."),quote=F)
     
   }
-
   
   ## share in total catchment area
   totar = sum(con$area)
@@ -250,15 +234,14 @@ for(op in paste0("V", 1:nopt)){ #instable looping, Cordi...
     mutate(across(.cols = 1:length(meas),~ (.x/allarea)*100)) %>%select(-allarea)%>%
     rename_at(vars(meas),~paste0(., "_share_con"))%>%mutate(id = row_number())
 
-  
-  ## merge with pareto fitness, # I assume the first row is the first pareto V1??
+  ## merge with pareto fitness, # the first row is optimum V1
   fit = read.table("../data/pareto_fitness.txt", header=F,stringsAsFactors=FALSE,sep = ',')
   yolo = readRDS("../input/object_names.RDS")
-  names(fit) = yolo# c('HC', 'HQ', 'P', 'AP')
+  names(fit) = yolo
   fit$id = 1:nrow(fit)
   print("check: read pareto_fitness.txt, assigned names...",quote=F)
   
-  test_clu = fit %>%left_join(lin,by="id")%>%left_join(siim, by = "id") %>%left_join(sit, by ="id") %>% left_join(mesur, by="id")%>% select(-id)%>%replace(is.na(.), 0)
+  test_clu = fit %>%left_join(lin,by="id")%>%left_join(share_con, by = "id") %>%left_join(share_tot, by ="id") %>% left_join(mesur, by="id")%>% select(-id)%>%replace(is.na(.), 0)
    
   write.csv(test_clu, "../input/var_corr_par.csv",  row.names = FALSE, fileEncoding = "UTF8")  
   print("check: printed output ---> /input/var_corr_par...",quote=F)
