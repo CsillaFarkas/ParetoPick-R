@@ -3,7 +3,7 @@
 # Project: Clustering Pareto Solutions/Multi-objective visualisation
 ####################################################################
 server <- function(input, output, session) {
-  
+
   ## reactive values
   rv <-reactiveValues(sizes= NULL,colls = NULL) #color for parallel axes
   er <- reactiveVal(NULL)
@@ -37,6 +37,7 @@ server <- function(input, output, session) {
   max_pca <- reactive({get_num_pca()})# required for max pc field
   
   #results table
+  check_files<- reactiveVal(NULL)
   sols <- reactiveVal()
   
   #catchment shapes
@@ -62,6 +63,8 @@ server <- function(input, output, session) {
     if(!file.exists("../input/object_names.RDS")) {
       
       shinyjs::show(id = "obj_first")
+      shinyjs::hide(id = "tab_play1")
+      shinyjs::hide(id = "tab_play2")
       
       #get new objective names
       observe({
@@ -104,8 +107,6 @@ server <- function(input, output, session) {
     updateCheckboxGroupInput(session, "sel_neg", choices = objectives(), selected = NULL)
   })
   
-  
-  
   if (file.exists(pareto_path)) {
     observe({
       req(objectives())
@@ -142,7 +143,6 @@ server <- function(input, output, session) {
     fit(data)
     
   })
-
   
     ## base dataframe for all further operations in play_around tab
   f_scaled <- reactive({
@@ -191,7 +191,7 @@ server <- function(input, output, session) {
                            abs_tab = fit(),scal_tab = f_scaled(),
                            allobs = objectives(),smll=F)
    
-    te = fml[yo$id,]   # te <- fit()[yo$id,] wouldn't work!!
+    te = fml[yo$id,]   # te <- fit()[yo$id,] would not work!!
    
     ete <- te
     for(i in 1:4){
@@ -448,6 +448,7 @@ server <- function(input, output, session) {
    ## observe event for confirm button
    if(!file.exists("../input/object_names.RDS")){
      shinyjs::show(id = "sel_obj")
+     
    observeEvent(input$obj_conf, {
      shinyjs::show(id="range_title")
      objs$data<- data.frame(Objective = c(input$col1, input$col2, input$col3, input$col4), stringsAsFactors = FALSE )
@@ -469,7 +470,9 @@ server <- function(input, output, session) {
        bng
        
      },rownames = T)})}else{assigned_objnames <<- readRDS("../input/object_names.RDS")
+     
      output$obj_conf <- renderTable({
+       req(assigned_objnames,fit()) #fit() is proxy for file connection
        rng = get_obj_range(colnames = assigned_objnames)
        bng = rng
        
@@ -481,8 +484,7 @@ server <- function(input, output, session) {
        bng
        
      },rownames = T)}
-   
-
+     
    ## run external script that calculates all variables considered in the clustering
     
      observeEvent(input$runprep,{
@@ -534,6 +536,7 @@ server <- function(input, output, session) {
         paste(script_output(), collapse = "\n")
       })
       
+      observe({ 
       if(length(list.files(save_dir, full.names = TRUE))==0){ #do not show reset option if there haven't been files uploaded
         shinyjs::hide(id="reset")
        
@@ -571,7 +574,8 @@ server <- function(input, output, session) {
         # Update the status text output
         output$reset_status <- renderText(status)
       })
-      }
+      
+      } })
       
   ### Correlation Analysis ####
       
@@ -893,7 +897,7 @@ server <- function(input, output, session) {
     }
   })
   
-  # align number of pca
+  ## align number of pca
   observe({
     minch = input$pca_min
     maxch = input$pca_max
@@ -924,7 +928,6 @@ server <- function(input, output, session) {
   ## conditionalPanel to work with reactive output
   outputOptions(output, "isElementVisible", suspendWhenHidden = FALSE)
   
-  
   ## pca min/max specs
   observeEvent(input$pcaminmax,{
     write_pcanum(pcamin=input$pca_min,pcamax=input$pca_max)
@@ -932,12 +935,49 @@ server <- function(input, output, session) {
   })
   output$pca_settings_summary <- renderUI({HTML(settings_text())})
   
-  
   ### Analysis ####
-  observeEvent(input$tabs == "analysis", {
-    if (file.exists(paste0(output_dir,(dir(output_dir, pattern = 'clusters_representativesolutions', full.names = T))))) {
+  observeEvent(input$tabs == "analysis", { #this could be combined with the ahp tab for analysis
+    
+      if(!file.exists("../input/object_names.RDS")) {
+        choices = "Please select objectives in Data Preparation Tab"
+        shinyjs::hide(id = "analysis_random")
+       
+      } else{
+        choices = readRDS("../input/object_names.RDS")
+      }
+    
+      ahp_choices(choices)
+      preselect = ahp_choices()
       
-      all_py_out <- file.info(list.files(output_dir,pattern = 'clusters_representativesolutions', full.names = T))
+      preselect1 = preselect[1]
+      preselect2 = preselect[2]
+      preselect3 = preselect[3]
+      preselect4 = preselect[4]
+      
+      updateSelectInput(session,inputId = "x_var2",choices = choices,selected = preselect1)
+      updateSelectInput(session,inputId = "y_var2",choices = choices, selected = preselect2)
+      updateSelectInput(session,inputId = "col_var2", choices = choices, selected = preselect3)
+      updateSelectInput(session,inputId = "size_var2", choices = choices, selected = preselect4)
+      
+      if(!file.exists("../data/measure_location.csv")){
+        shinyjs::show(id = "meas_low")
+        output$meas_low <- renderText({
+          "measure_location.csv not found, please provide it in the data preparation tab."
+        })}
+      
+      observe({
+        matches <- grepl("clusters_representativesolutions.*\\.csv", list.files(output_dir, full.names = TRUE))
+        
+        if(length(matches) != 0) {
+          matching_files <- list.files(output_dir, full.names = TRUE)[matches]
+          check_files(matching_files)
+          }
+        })
+  
+      if(!is.null(check_files())) {
+      
+      all_py_out <- file.info(check_files())
+      
       current_py_out <- rownames(all_py_out)[which.max(all_py_out$mtime)]
       
       sols_data = read.csv(current_py_out)
@@ -947,15 +987,20 @@ server <- function(input, output, session) {
   
     }else{
       sols(data.frame(Message = "something went wrong - has the PCA run properly?"))
+      shinyjs::hide(id="plt_opti")
     }
+      
     output$antab <- renderDT({
+      req(sols())
       datatable(sols()%>%mutate(across(where(is.numeric), round, digits = 5)),
                 selection = list(mode = "multiple", target = 'row', max = 12), rownames= FALSE,
                 options = list(pageLength = 20, autoWidth = TRUE))
     })
+    
+    if(!is.null(check_files())) { #sol is only useful if python has run
+      
     sol<<-sols()[,objectives()]
     
-
     output$par_plot_optima <- renderPlot({
       req(objectives())
       
@@ -968,22 +1013,30 @@ server <- function(input, output, session) {
         
       plt_sc_optima(
         dat = sol,
-        x_var = objectives()[1],
-        y_var = objectives()[2],
-        col_var = objectives()[3],
-        size_var = objectives()[4],
+        x_var = input$x_var2,
+        y_var = input$y_var2,
+        col_var = input$col_var2,
+        size_var = input$size_var2,
         sel_tab = selected_data
       )
-    })
+    }) }
     
-    
+    output$download_par_plot <- downloadHandler(
+      filename = function() {
+        paste(input$par_plot_savename, ".png", sep = "")
+      },
+      content = function(file) {
+        # Save the plot to a file
+        ggsave(file, plot = last_plot(), device = "png", width = 7, height = 5)
+      }
+    )
     
     output$tabtext = renderText({HTML("You can select up to 12 optima and compare the implementation of measures in the catchment.")})
     
     if(file.exists("../data/hru.shp")) {
-      #shp for location plot
+      ##shp for location plot
       cm_clean(pull_shp_pure(layername = "basin"))
-      #shps for maps
+      ##shps for maps
       if (file.exists("../input/hru_in_optima.RDS")) {
         cm(
           pull_shp(
@@ -1005,6 +1058,7 @@ server <- function(input, output, session) {
       
       shinyjs::show(id = "no_row")
       output$no_row = renderText({paste("No row selected")})
+    
     } else {
       shinyjs::hide(id = "no_row")
       
@@ -1035,6 +1089,11 @@ server <- function(input, output, session) {
   observeEvent(input$tabs == "ahp",{
     if(!file.exists("../input/object_names.RDS")) {
       choices = "Please select objectives in Data Preparation Tab"
+      shinyjs::hide(id = "plot_sc")
+      shinyjs::hide(id = "pareto_weighted")
+      shinyjs::hide(id = "random_ahp2")
+      shinyjs::hide(id = "random_ahp")
+      
     } else{
       choices = readRDS("../input/object_names.RDS")
     }
@@ -1218,6 +1277,15 @@ server <- function(input, output, session) {
                   col_var=input$col_var,size_var=input$size_var,high_point=bo,extra_dat = sol,plt_extra = input$show_extra_dat)
     
     })
+  
+  output$download_weights_plot <- downloadHandler(
+    filename = function() {
+      paste(input$weights_plot_savename, ".png", sep = "")
+    },
+    content = function(file) {
+        ggsave(file, plot = last_plot(), device = "png", width = 7, height = 5)
+    }
+  )
   })
   
   
