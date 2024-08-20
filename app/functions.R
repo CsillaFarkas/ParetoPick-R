@@ -58,7 +58,12 @@ write_corr = function(vars,
                       measures = mes,
                       cor_analysis = F,
                       pca_content = all_var,
-                      pca = T) {
+                      pca = T,inipath="../input/config.ini") {
+  
+  if (!file.exists(inipath)) {
+    return(NULL)  
+  } 
+  
   config <- read.ini("../input/config.ini")
   if (cor_analysis && pca) {
     stop("cannot write both PCA and Correlation ini at the same time, set pca = T OR cor_analysis = T, not both")
@@ -93,7 +98,10 @@ write_corr = function(vars,
 
 ##
 write_pca_ini <- function(var1 = "", var2 = "", var3 = "", var4 = "",
-                          var1_lab= "", var2_lab = "", var3_lab = "", var4_lab = "") {
+                          var1_lab= "", var2_lab = "", var3_lab = "", var4_lab = "",inipath="../input/config.ini") {
+  if (!file.exists(inipath)) {
+    return(NULL)  
+  } 
   config <- read.ini("../input/config.ini")
   
   config[[5]]$var_1 <- ifelse(var1 == "off", "", var1)
@@ -112,7 +120,10 @@ write_pca_ini <- function(var1 = "", var2 = "", var3 = "", var4 = "",
 }
 
 ##
-write_quali_ini = function(var1 = "", var2 = "", var3 = "", var4 = ""){
+write_quali_ini = function(var1 = "", var2 = "", var3 = "", var4 = "",inipath="../input/config.ini"){
+  if (!file.exists(inipath)) {
+    return(NULL)  
+  } 
    config <- read.ini("../input/config.ini")
   
     conf_clust = NULL
@@ -135,7 +146,12 @@ write_quali_ini = function(var1 = "", var2 = "", var3 = "", var4 = ""){
 }
 
 ##
-write_cluster<- function(min_cluster=0,max_cluster=0,fixed_cluster_boolean="true",fixed_clusters=7){
+write_cluster<- function(min_cluster=0,max_cluster=0,fixed_cluster_boolean="true",fixed_clusters=7,
+                         inipath="../input/config.ini"){
+  
+  if (!file.exists(inipath)) {
+    return(NULL)  
+  }
   config <- read.ini("../input/config.ini")
   
   config[[2]]$fixed_clusters_boolean = fixed_cluster_boolean
@@ -149,7 +165,12 @@ write_cluster<- function(min_cluster=0,max_cluster=0,fixed_cluster_boolean="true
 
 ##
 write_outl <- function(handle_outliers_boolean="false",deviations_min=3,deviations_max=3,
-                        count_min=3,count_max=3,outlier_to_cluster_ratio=0.5){
+                        count_min=3,count_max=3,outlier_to_cluster_ratio=0.5,inipath="../input/config.ini"){
+  
+  if (!file.exists(inipath)) {
+    return(NULL)  
+  }
+  
   config <- read.ini("../input/config.ini")
   
   config[[3]]$handle_outliers_boolean = handle_outliers_boolean
@@ -164,7 +185,10 @@ write_outl <- function(handle_outliers_boolean="false",deviations_min=3,deviatio
 }
 
 ## 
-write_pcanum = function(pcamin,pcamax){
+write_pcanum = function(pcamin,pcamax,inipath="../input/config.ini"){
+  if (!file.exists(inipath)) {
+    return(NULL)
+  }
   config <- read.ini("../input/config.ini")
   
   config[[4]]$min_components = pcamin
@@ -177,8 +201,11 @@ write_pcanum = function(pcamin,pcamax){
 #### Read Config Functions ####
 
 ## config for pca on startup
-read_pca = function(){
-  config <- read.ini("../input/config.ini")
+read_pca = function(inipath="../input/config.ini"){
+  if (!file.exists(inipath)) {
+    return(NULL)
+  }
+  config <- read.ini(inipath)
   
   if(!is.null(config[[1]]$columns)){pca_col_incl <- unlist(strsplit(config[[1]]$columns,", "))
   pca_col <- pca_col_incl[order(pca_col_incl)]}else{pca_col <- NULL}
@@ -187,7 +214,12 @@ read_pca = function(){
 }
 
 ## 
-read_config_plt = function(obj=T,axis=F){
+read_config_plt = function(obj=T,axis=F,inipath="../input/config.ini"){
+  
+  if (!file.exists(inipath)) {
+    return(NULL)
+  }
+  
   config <- read.ini("../input/config.ini")
   
   if(obj){
