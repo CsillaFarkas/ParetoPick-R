@@ -213,7 +213,9 @@ ui <-
                                          sliderInput(inputId = "obj1", label= "Objective 1:",min = 0, max = 1, value = c(0,1), step = 0.01,width = "110%"),
                                          sliderInput(inputId = "obj2", label = "Objective 2:", min = 0, max = 1,value= c(0,1),  step = 0.01,width = "110%"),
                                          sliderInput(inputId = "obj3", label = "Objective 3:", min = 0, max = 1, value = c(0,1), step = 0.01, width = "110%"),
-                                         sliderInput(inputId = "obj4", label = "Objective 4:", min = 0, max = 1, value = c(0,1),  step = 0.01,width = "110%")))
+                                         sliderInput(inputId = "obj4", label = "Objective 4:", min = 0, max = 1, value = c(0,1),  step = 0.01,width = "110%"))),  
+                                  checkboxGroupInput("sel_neg", "Are any of the objectives provided on the negative scale?", choices = NULL, inline = FALSE),
+
                                   
                                 
                     ),
@@ -243,7 +245,6 @@ ui <-
                       plotOutput("scatter_plot"),
                           
                            div("Difference between selection and the whole Pareto Front", style = "text-align: left; font-size:150%"),
-                          checkboxGroupInput("sel_neg", "Are any of the objectives provided on the negative scale?", choices = NULL, inline = FALSE),
                            plotOutput("sliders_plot"))
                 
                           )## PLAY AROUND MAIN PANEL END
@@ -322,7 +323,7 @@ ui <-
       checkboxGroupInput("selements", "", 
                          choiceNames = c("Catchment area covered by implemented measures (share_tot)", 
                                      "Ratio between area actually covered by implemented measures and area considered for measure implementation (share_con)",
-                                     "Moran's I", "Ratio of structural to management options (linE)"),choiceValues=c("share_tot","share_con","moran","linE"),selected = c("sit","siim","moran","linE")),
+                                     "Moran's I", "Ratio of structural to management options (linE)"),choiceValues=c("share_tot","share_con","moran","linE"),selected = c("share_tot","share_con","moran","linE")),
       textOutput("numbercorr"),
       div("2. Perform the Correlation Analysis", style = "text-align: left; font-size:150%"),
       actionButton("run", "Run Correlation Analysis"),
