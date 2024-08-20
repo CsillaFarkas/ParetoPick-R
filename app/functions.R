@@ -64,7 +64,8 @@ write_corr = function(vars,
     return(NULL)  
   } 
   
-  config <- read.ini("../input/config.ini")
+  config <- read.ini(inipath)
+ 
   if (cor_analysis && pca) {
     stop("cannot write both PCA and Correlation ini at the same time, set pca = T OR cor_analysis = T, not both")
   }
@@ -77,20 +78,20 @@ write_corr = function(vars,
     if ("linE" %in% vars) {
       varmes = append(varmes, "linE") #linE is the only variable that is not calculated for each measure
     }
-    if ("sit" %in% vars) {
-      varmes = append(varmes, paste(mes, "sit", sep = "_"))
+    if ("share_con" %in% vars) {
+      varmes = append(varmes, paste(mes, "share_con", sep = "_"))
     }
-    if ("siim" %in% vars) {
-      varmes = append(varmes, paste(mes, "siim", sep = "_"))
+    if ("share_tot" %in% vars) {
+      varmes = append(varmes, paste(mes, "share_tot", sep = "_"))
     }
     
     config[[1]]$col_correlation_matrix = paste(varmes, collapse = ", ")
     
-    write.ini(config, "../input/config.ini")
+    write.ini(config, inipath)
   } 
   if (pca) {
     config[[1]]$columns = paste(pca_content, collapse = ", ")
-    write.ini(config, "../input/config.ini")
+    write.ini(config, inipath)
     
   }
   
@@ -102,7 +103,7 @@ write_pca_ini <- function(var1 = "", var2 = "", var3 = "", var4 = "",
   if (!file.exists(inipath)) {
     return(NULL)  
   } 
-  config <- read.ini("../input/config.ini")
+  config <- read.ini(inipath)
   
   config[[5]]$var_1 <- ifelse(var1 == "off", "", var1)
   config[[5]]$var_2 <- ifelse(var2 == "off", "", var2)
@@ -115,7 +116,7 @@ write_pca_ini <- function(var1 = "", var2 = "", var3 = "", var4 = "",
   config[[5]]$var_2_label <- ifelse(var2_lab == "off", "", var2_lab)
   config[[5]]$var_3_label <- ifelse(var3_lab == "off", "", var3_lab)
   config[[5]]$var_4_label <- ifelse(var4_lab == "off", "", var4_lab)
-  write.ini(config, "../input/config.ini") 
+  write.ini(config, inipath) 
   
 }
 
@@ -124,7 +125,7 @@ write_quali_ini = function(var1 = "", var2 = "", var3 = "", var4 = "",inipath=".
   if (!file.exists(inipath)) {
     return(NULL)  
   } 
-   config <- read.ini("../input/config.ini")
+   config <- read.ini(inipath)
   
     conf_clust = NULL
     if (var1 != "off") {
@@ -141,7 +142,7 @@ write_quali_ini = function(var1 = "", var2 = "", var3 = "", var4 = "",inipath=".
     }
     
     config$Qualitative_Clustering$qualitative_clustering_columns = paste(conf_clust, collapse = ", ")
-    write.ini(config, "../input/config.ini")
+    write.ini(config, inipath)
 
 }
 
@@ -152,7 +153,7 @@ write_cluster<- function(min_cluster=0,max_cluster=0,fixed_cluster_boolean="true
   if (!file.exists(inipath)) {
     return(NULL)  
   }
-  config <- read.ini("../input/config.ini")
+  config <- read.ini(inipath)
   
   config[[2]]$fixed_clusters_boolean = fixed_cluster_boolean
   config[[2]]$fixed_clusters = fixed_clusters
@@ -160,7 +161,7 @@ write_cluster<- function(min_cluster=0,max_cluster=0,fixed_cluster_boolean="true
   config[[2]]$min_clusters = min_cluster
   config[[2]]$max_clusters = max_cluster
   
-  write.ini(config, "../input/config.ini")
+  write.ini(config, inipath)
 }
 
 ##
@@ -171,7 +172,7 @@ write_outl <- function(handle_outliers_boolean="false",deviations_min=3,deviatio
     return(NULL)  
   }
   
-  config <- read.ini("../input/config.ini")
+  config <- read.ini(inipath)
   
   config[[3]]$handle_outliers_boolean = handle_outliers_boolean
   config[[3]]$deviations_min = deviations_min
@@ -180,7 +181,7 @@ write_outl <- function(handle_outliers_boolean="false",deviations_min=3,deviatio
   config[[3]]$count_max = count_max
   config[[3]]$outlier_to_cluster_ratio = outlier_to_cluster_ratio
   
-  write.ini(config, "../input/config.ini")
+  write.ini(config, inipath)
   
 }
 
@@ -189,11 +190,11 @@ write_pcanum = function(pcamin,pcamax,inipath="../input/config.ini"){
   if (!file.exists(inipath)) {
     return(NULL)
   }
-  config <- read.ini("../input/config.ini")
+  config <- read.ini(inipath)
   
   config[[4]]$min_components = pcamin
   config[[4]]$max_components = pcamax
-  write.ini(config, "../input/config.ini")
+  write.ini(config, inipath)
   
   
 }
@@ -220,7 +221,7 @@ read_config_plt = function(obj=T,axis=F,inipath="../input/config.ini"){
     return(NULL)
   }
   
-  config <- read.ini("../input/config.ini")
+  config <- read.ini(inipath)
   
   if(obj){
   var1 = config[[5]]$var_1
