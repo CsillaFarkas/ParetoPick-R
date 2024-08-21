@@ -964,13 +964,19 @@ server <- function(input, output, session) {
         })}
       
       observe({
-        matches <- grepl("clusters_representativesolutions.*\\.csv", list.files(output_dir, full.names = TRUE))
-        if(!is.logical(matches)){ #if empty match this is logical(0)
-          matching_files <- list.files(output_dir, full.names = TRUE)[matches]
+
+        all_files <- list.files(output_dir, pattern = "clusters_representativesolutions.*\\.csv", full.names = TRUE)
+        
+        if(length(all_files)>1){
+           file_info <- file.info(all_files)
+           matching_files <-  all_files[which.max(file_info$mtime)]
+        }else if(length(all_files)== 1){
+          matching_files <- all_files
+        }else{matching_files = NULL}
+         
           check_files(matching_files)
-          }
-      
-      }) 
+        })
+
     observeEvent(check_files(),{
         if(!is.null(check_files())) {
           
@@ -987,7 +993,6 @@ server <- function(input, output, session) {
           sols(data.frame(Message = "something went wrong - has the PCA run properly?"))
           shinyjs::hide(id="plt_opti")
         }
-        
         output$antab <- renderDT({
           req(sols())
           datatable(sols()%>%mutate(across(where(is.numeric), round, digits = 5)),
@@ -1000,10 +1005,10 @@ server <- function(input, output, session) {
     
     if(!is.null(check_files())) { #sol is only useful if python has run
       
-    sol<<-sols()[,objectives()]
-    
+      sol<<-sols()[,objectives()]
+      
     output$par_plot_optima <- renderPlot({
-      req(objectives())
+      req(objectives(),sols(),input$x_var2)
       
       if(!is.null(input$antab_rows_selected)){
         
@@ -1072,16 +1077,26 @@ server <- function(input, output, session) {
       mes = read.csv("../data/measure_location.csv")
       
       col_sel = names(hru_sel)[grep("Optim",names(hru_sel))]  #variable length of columns selected
+      
       nplots = length(col_sel)+1
       
       m1 = plt_lf(data=hru_sel, col_sel = col_sel, mes = unique(mes$nswrm),la = lalo[1],lo =lalo[2], buff_els=buffs)
       
       cm2 = plt_cm_pure(data=cm_clean(), la = lalo[1],lo =lalo[2])
       m <- c(list(cm2), m1)
-      
+
       output$comp_map <- renderUI({sync(m,sync = list(2:nplots),sync.cursor = F)})
+     
+      observe({
+        all_ids <- names(input)
+        bounds_id <- grep("^htmlwidget-[0-9]+_bounds$", all_ids, value = TRUE)
+       
+        numb <- bounds_id[1] #this is  "htmlwidget-1168_bounds"
+       #UNSURE IF THIS CAN BE USED TO EXTRACT BOUNDS W/ NORTH AND WEST?
+      })
+     
       
-    }
+     }
  
   
   })
@@ -1148,7 +1163,6 @@ server <- function(input, output, session) {
     # Fit a linear model
     model <- lm(y ~ x)
   
-    
     output$scatterPlot <- renderPlot({
       
       plt_scat2(dat= fit(), x= input$criterion1, y=input$criterion2)
@@ -1298,8 +1312,6 @@ server <- function(input, output, session) {
 
     cr = ci/0.89 #value found online, determined through random matrices
     
-
-   
   output$consistency_check = renderText({
 
     slider_ids =c(input[["c1_c2"]],input[["c1_c3"]],input[["c1_c4"]],input[["c2_c3"]],
@@ -1314,7 +1326,6 @@ server <- function(input, output, session) {
     }else{inconsistencies = paste("Potential inconsistencies, the inconsistency ratio is:"
                                   , round(cr, 3))}
     
-  
     inconsistencies
   })
   
