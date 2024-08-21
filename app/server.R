@@ -285,7 +285,7 @@ server <- function(input, output, session) {
   
   ## barplot
   output$sliders_plot <- renderPlot({
-   req(fit(),f_scaled(),objectives())
+   req(fit(),f_scaled(),objectives(),input$obj1,input$obj2,input$obj3,input$obj4)
    
     matchi =  reactive({scaled_abs_match(
       minval_s = c(input$obj1[1], input$obj2[1], input$obj3[1], input$obj4[1]),
@@ -717,7 +717,8 @@ server <- function(input, output, session) {
    output$confirmed_selection <- renderText({conf_text})
   
   
-  ### PC Analysis ####
+   
+  #### PC Analysis ####
   # table with variables INCLUDED in PCA (renewed every time confirm selection is clicked in correlation tab)
     pca_table(pca_in$data)
 
@@ -732,6 +733,14 @@ server <- function(input, output, session) {
   )
  
   observeEvent(input$tabs == "pca",{ 
+    
+    if(!file.exists("../input/pca_content.RDS") || !any(file.exists(list.files(path = output_dir, pattern = "correlation.*\\.csv$", full.names = TRUE)))
+    ){shinyjs::hide("everything_cluster_sidebar")
+      shinyjs::hide("everything_cluster_mainpanel")
+     output$no_cluster <- renderText({HTML("Please run the correlation analysis first before proceeding with the clustering!")})
+    }else{shinyjs::hide("no_cluster")
+    }
+    
     if(!file.exists("../input/object_names.RDS")) {
       choices = "Please select objectives in Data Preparation Tab"
     } else{
@@ -933,12 +942,22 @@ server <- function(input, output, session) {
   })
   output$pca_settings_summary <- renderUI({HTML(settings_text())})
   
-  ### Analysis ####
+   #### ANALYSIS PANEL ####
+
   observeEvent(input$tabs == "analysis", { #this could be combined with the ahp tab for analysis
+   if(!any(file.exists(list.files(path = output_dir, pattern = "clusters_representativesolutions.*\\.csv$", full.names = TRUE)))){
+     shinyjs::hide("above_ahp_tab")
+     shinyjs::hide("plt_opti")
+     output$analysis_no_clustering <- renderText({
+       HTML("the correlation analysis and the clustering have to run first before their results can be analysed")
+     })
+   }else{shinyjs::hide("analysis_no_clustering")}
+    
     
       if(!file.exists("../input/object_names.RDS")) {
         choices = "Please select objectives in Data Preparation Tab"
         shinyjs::hide(id = "analysis_random")
+        shinyjs::hide(id= "meas_low")
        
       } else{
         choices = readRDS("../input/object_names.RDS")
@@ -958,10 +977,9 @@ server <- function(input, output, session) {
       updateSelectInput(session,inputId = "size_var2", choices = choices, selected = preselect4)
       
       if(!file.exists("../data/measure_location.csv")){
-        shinyjs::show(id = "meas_low")
         output$meas_low <- renderText({
           "measure_location.csv not found, please provide it in the data preparation tab."
-        })}
+        })}else{shinyjs::hide("meas_low")}
       
       observe({
 
@@ -1037,6 +1055,8 @@ server <- function(input, output, session) {
       }
     )
     
+    
+    
     output$tabtext = renderText({HTML("You can select up to 12 optima and compare the implementation of measures in the catchment.")})
     
     if(file.exists("../data/hru.shp")) {
@@ -1088,12 +1108,40 @@ server <- function(input, output, session) {
       output$comp_map <- renderUI({sync(m,sync = list(2:nplots),sync.cursor = F)})
      
       observe({
-        all_ids <- names(input)
-        bounds_id <- grep("^htmlwidget-[0-9]+_bounds$", all_ids, value = TRUE)
-       
-        numb <- bounds_id[1] #this is  "htmlwidget-1168_bounds"
-       #UNSURE IF THIS CAN BE USED TO EXTRACT BOUNDS W/ NORTH AND WEST?
+        print(names(input))
       })
+      # observe({
+      #   all_ids <- names(input)
+      #   bounds_id <- grep("^htmlwidget-[0-9]+_bounds$", all_ids, value = TRUE)
+      #  
+      #   numb <- bounds_id[1] #this is  "htmlwidget-1168_bounds"
+      #  #UNSURE IF THIS CAN BE USED TO EXTRACT BOUNDS W/ NORTH AND WEST?
+      #   output$mymap <- renderLeaflet({
+      #     isolate({
+      #       if ("mymap_center" %in% names(input)) {
+      #         mapparams <- list(center = input$mymap_center,
+      #                           zoom = input$mymap_zoom)
+      #       } else {
+      #         mapparams <- list(center = list(lng=0, lat=30),
+      #                           zoom = 4) #setting the view over ~ center of North America
+      #       }
+      #     })
+      #     leaflet() %>%
+      #       setView(lng = mapparams$center$lng, lat = mapparams$center$lat, zoom = mapparams$zoom)  %>% 
+      #       addTiles(options = providerTileOptions(noWrap = TRUE)) 
+      #   })
+      #   
+      #   if (!is.null(bounds)) {
+      #     leafletProxy("map2") %>%
+      #       clearShapes() %>%
+      #       addRectangles(
+      #         lng1 = bounds$west, lat1 = bounds$south,
+      #         lng2 = bounds$east, lat2 = bounds$north,
+      #         fillOpacity = 0.2, color = "red", weight = 2
+      #       )
+      #   }
+      #   
+      # })
      
       
      }
@@ -1103,13 +1151,19 @@ server <- function(input, output, session) {
   
   ### AHP ####
   observeEvent(input$tabs == "ahp",{
-    if(!file.exists("../input/object_names.RDS")) {
-      choices = "Please select objectives in Data Preparation Tab"
-      shinyjs::hide(id = "plot_sc")
-      shinyjs::hide(id = "pareto_weighted")
-      shinyjs::hide(id = "random_ahp2")
-      shinyjs::hide(id = "random_ahp")
+    if(!file.exists("../data/pareto_fitness.txt")){ #check if fit() has been created yet
+      output$nothing_ran_ahp <- renderText({HTML("please provide the pareto_fitness.txt in either the Data Preparation or the Visualising the Pareto Front tab.")})
+    }else{ shinyjs::hide("nothing_ran_ahp")
+}      
       
+      
+      if(!file.exists("../input/object_names.RDS")) {
+      choices = "Please select objectives in Data Preparation Tab"
+      
+      ids_to_hide <- c("plot_sc", "pareto_weighted", "random_ahp2", "random_ahp", "ahp_analysis", "ahp_weights","sel_wgt")
+      
+      lapply(ids_to_hide, shinyjs::hide)
+    
     } else{
       choices = readRDS("../input/object_names.RDS")
     }

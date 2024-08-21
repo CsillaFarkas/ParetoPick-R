@@ -118,7 +118,7 @@ ui <-
                                 /* content height covers full view */
                                  .content { min-height: 300vh;}
                                  
-                                /* slider aesthetics */
+                                  /* slider aesthetics */
                                  .irs-grid-text {font-size: 13px;} 
                                  .js-irs-0 .irs-single,
                                  .js-irs-0 .irs-bar-edge,
@@ -140,7 +140,6 @@ ui <-
                                  .js-irs-0 .irs-bar {
                                  background: darkslateblue
                                  }
-                                 
                                 ')),
       useShinyjs(),
       tabItems(
@@ -176,7 +175,9 @@ ui <-
                               and explore the effects of reduced objective ranges."),p("You can also select specific points on the pareto front by clicking on the line plot.")),
                 
                 sidebarLayout(
-                 
+                  #slider aesthetics
+                  
+                  
                     sidebarPanel( width = 3,
                                   div(
                                   id="parfit",
@@ -215,17 +216,17 @@ ui <-
                                          sliderInput(inputId = "obj3", label = "Objective 3:", min = 0, max = 1, value = c(0,1), step = 0.01, width = "110%"),
                                          sliderInput(inputId = "obj4", label = "Objective 4:", min = 0, max = 1, value = c(0,1),  step = 0.01,width = "110%"))),  
                                   checkboxGroupInput("sel_neg", "Are any of the objectives provided on the negative scale?", choices = NULL, inline = FALSE),
-
+                              
+                              
                                   
                                 
                     ),
                 mainPanel(
+                  tags$style(HTML(".js-irs-1 .irs-single, .js-irs-1 .irs-bar-edge, .js-irs-1 .irs-bar {background: #ffc61e ;border-top: 1px solid #ffc61e ;border-bottom: 1px solid #ffc61e;}.js-irs-1 .irs-from, .js-irs-1 .irs-to, .js-irs-1 .irs-single { font-size: 13px;background: #ffc61e !important }")),
+                  tags$style(HTML(".js-irs-2 .irs-single, .js-irs-2 .irs-bar-edge, .js-irs-2 .irs-bar {background: #009ade ;border-top: 1px solid #009ade ;border-bottom: 1px solid #009ade;}.js-irs-2 .irs-from, .js-irs-2 .irs-to, .js-irs-2 .irs-single { font-size: 13px;background: #009ade !important }")),
+                  tags$style(HTML(".js-irs-3 .irs-single, .js-irs-3 .irs-bar-edge, .js-irs-3 .irs-bar {background: #aF58ba ;border-top: 1px solid #aF58ba ;border-bottom: 1px solid #aF58ba;}.js-irs-3 .irs-from, .js-irs-3 .irs-to, .js-irs-3 .irs-single { font-size: 13px;background: #aF58ba !important }")),
+                  tags$style(HTML(".js-irs-4 .irs-single, .js-irs-4 .irs-bar-edge, .js-irs-4 .irs-bar {background: #f28522 ;border-top: 1px solid #f28522 ;border-bottom: 1px solid #f28522;}.js-irs-4 .irs-from, .js-irs-4 .irs-to, .js-irs-4 .irs-single { font-size: 13px;background: #f28522 !important }")),
                   
-                  #slider aesthetics
-                 
-                  tags$style(HTML(".js-irs-1 .irs-single, .js-irs-1 .irs-bar-edge, .js-irs-1 .irs-bar {background: #009ade ;border-top: 1px solid #009ade ;border-bottom: 1px solid #009ade;}.js-irs-1 .irs-from, .js-irs-1 .irs-to, .js-irs-1 .irs-single { font-size: 13px;background: #009ade !important }")),
-                  tags$style(HTML(".js-irs-2 .irs-single, .js-irs-2 .irs-bar-edge, .js-irs-2 .irs-bar {background: #af58ba ;border-top: 1px solid #af58ba ;border-bottom: 1px solid #af58ba;}.js-irs-2 .irs-from, .js-irs-2 .irs-to, .js-irs-2 .irs-single { font-size: 13px;background: #af58ba !important }")),
-                  tags$style(HTML(".js-irs-3 .irs-single, .js-irs-3 .irs-bar-edge, .js-irs-3 .irs-bar {background: #f28522 ;border-top: 1px solid #f28522 ;border-bottom: 1px solid #f28522;}.js-irs-3 .irs-from, .js-irs-3 .irs-to, .js-irs-3 .irs-single { font-size: 13px; background: #f28522 !important }")),
                   
                 div(id = "tab_play1",fluidRow(
                     column(12,
@@ -309,21 +310,31 @@ ui <-
         ), 
         
      
-      ## CORRELATION ANALYSIS PANEL
+        ## CORRELATION ANALYSIS PANEL ####
     tabItem(tabName = "correlation_analysis",
            titlePanel("Correlation Analysis"),
            
-           wellPanel(  style = "background-color:  #a2a4b6; border: none;",
-                       p("This tab allows to determine...")),
-           
+           wellPanel(style = "background-color:  #a2a4b6; border: none;", p("This tab allows to determine...")),
            sidebarLayout(
-              sidebarPanel(div(id="corr_sidebar",
-      # Display message about file status
-      div("1. Choose variables to be included in the Correlation Analysis:", style = "text-align: left; font-size:150%"),
-      checkboxGroupInput("selements", "", 
-                         choiceNames = c("Catchment area covered by implemented measures (share_tot)", 
+             
+             sidebarPanel(
+               ## display missing files in sidebar
+               uiOutput("corr_notthere"), 
+               
+               div(
+                 id = "corr_sidebar",
+                 div(
+                   "1. Choose variables to be included in the Correlation Analysis:",
+                   style = "text-align: left; font-size:150%"
+                 ),
+                 checkboxGroupInput("selements", "",  
+                                    choiceNames = c("Catchment area covered by implemented measures (share_tot)", 
                                      "Ratio between area actually covered by implemented measures and area considered for measure implementation (share_con)",
-                                     "Moran's I", "Ratio of structural to management options (linE)"),choiceValues=c("share_tot","share_con","moran","linE"),selected = c("share_tot","share_con","moran","linE")),
+                                     "Moran's I", 
+                                     "Ratio of structural to management options (linE)"),
+                                    choiceValues=c("share_tot","share_con","moran","linE"),
+                                    selected = c("share_tot","share_con","moran","linE")),
+                 
       textOutput("numbercorr"),
       div("2. Perform the Correlation Analysis", style = "text-align: left; font-size:150%"),
       actionButton("run", "Run Correlation Analysis"),
@@ -352,13 +363,12 @@ ui <-
       div("Most correlated variables", style = "text-align: left; font-size:150%"),
       DTOutput("corrtable")
      
-     ),
-     uiOutput("corr_notthere"))## CORRELATION ANALYSIS MAIN PANEL END
+     ))## CORRELATION ANALYSIS MAIN PANEL END
     
     )
   ),
   
-  ## Clustering/PCA PANEL
+  ## Clustering/PCA PANEL ####
   tabItem(tabName = "pca",
          
           #https://htmlcolorcodes.com/color-names/
@@ -368,21 +378,38 @@ ui <-
           wellPanel(  style = "background-color:  #a2a4b6; border: none;",
                       p("This tab allows to determine...")),
           
-          sidebarLayout(sidebarPanel(div("Variables included in the PCA",style = "text-align: left; font-size:150%"),
-                                     div("to change these variables please return to the previous tab and choose variables to remove",style = "text-align: left; font-size:100%"),
-                          tableOutput("pca_incl"),
-                          div("PCA Settings (please specify on the right)", style = "text-align: left; font-size:150%"),
-                          htmlOutput("pca_settings_summary"),
-                          div("5. Select a clustering method", style = "text-align: left; font-size:150%"),
-                          
-                          div(style = "margin-top: -15px;",radioButtons("pcamethod", "",
-                                       choices = c("k-means", "k-medoids"),
-                                       selected = "k-means")),
-                          actionButton("runPCA", "Run PCA and Cluster Analysis"),
-                          uiOutput("pca_mess")),
+          sidebarLayout(sidebarPanel(
+            
+            textOutput("no_cluster"),
+            
+            div(
+              id = "everything_cluster_sidebar",
+              div("Variables included in the PCA", style = "text-align: left; font-size:150%"),
+              div(
+                "to change these variables please return to the previous tab and choose variables to remove",
+                style = "text-align: left; font-size:100%"
+              ),
+              
+              tableOutput("pca_incl"),
+              div("PCA Settings (please specify on the right)", style = "text-align: left; font-size:150%"),
+              htmlOutput("pca_settings_summary"),
+              div("5. Select a clustering method", style = "text-align: left; font-size:150%"),
+              
+              div(
+                style = "margin-top: -15px;",
+                radioButtons(
+                  "pcamethod",
+                  "",
+                  choices = c("k-means", "k-medoids"),
+                  selected = "k-means"
+                )
+              ),
+              actionButton("runPCA", "Run PCA and Cluster Analysis"),
+              uiOutput("pca_mess")
+            )), 
                         
                         # PCA Main Panel
-                          mainPanel(
+                          mainPanel(div(id="everything_cluster_mainpanel",
                             div("Refine PCA Settings here and then click Run Principal Component Analysis on the left", style = "text-align: left; font-size:150%"),
                             
                             div("1. Please select how the objectives should be plotted", style = "margin-top: 10px; text-align: left; font-size:150%"),
@@ -446,23 +473,27 @@ ui <-
                             
                             # PCA printing Background Processes
                           conditionalPanel(condition = "output.isElementVisible == true",div("Python Background Processes",style = "text-align: left; font-size:150%"),        
-                          verbatimTextOutput("pca_status"))
+                          verbatimTextOutput("pca_status")))
                           
                           ) ## PCA MAIN PANEL END
                        
                         
           )), 
-  
+  ## Analysis panel ####
      tabItem(
             tabName = "analysis",
+            titlePanel("Analysing the remaining optima"), 
+            wellPanel(style = "background-color:  #a2a4b6; border:none;", 
+                      p("This tab allows to determine...")), 
+            div(id ="above_ahp_tab", 
+                htmlOutput("tabtext")),
+            sidebarLayout(
+              sidebarPanel(
+                textOutput("analysis_no_clustering")), 
             
-            wellPanel(  style = "background-color:  #a2a4b6; border:none;",
-                        p("This tab allows to determine...")),
-            
-            titlePanel("Analysing the remaining optima"),
-                          htmlOutput("tabtext"),
-
-            mainPanel(fluidRow(
+            mainPanel(
+              
+              fluidRow(
               column(6, div(style = "overflow-x: auto;", DTOutput("antab"))),
               column(6, plotOutput("par_plot_optima"),
                      div(id="analysis_random",fluidRow(
@@ -475,12 +506,14 @@ ui <-
               
               
             actionButton("plt_opti", "Plot Optimum"), textOutput("no_row") %>% hidden(), 
-            div(id="meas_low",textOutput("meas_low"))%>%hidden(),
+            div(id="meas_low",textOutput("meas_low")),
             uiOutput("comp_map")
         
               
              
-            )),
+            ))),
+  
+  ## AHP ####
   tabItem(
         tabName = "ahp",
         titlePanel("Analytical Hierarchy Process"),
@@ -490,6 +523,7 @@ ui <-
        
         sidebarLayout(
           sidebarPanel(
+            textOutput("nothing_ran_ahp"),
            div(id = "ahp_analysis",
              "1. Examining the relationship between the objectives.",
               style = "text-align: left; font-size:150%"
