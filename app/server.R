@@ -11,6 +11,7 @@ server <- function(input, output, session) {
   objectives <- reactiveVal(character())
   par_fiti <- reactiveVal(NULL)
   fit <- reactiveVal(NULL)
+  f_scaled <- reactiveVal(NULL)
   pca_remove <- reactiveVal(NULL)
   script_output <- reactiveVal("") # data prep R output
   dp_done = reactiveVal(FALSE) # checking if data prep R output is done
@@ -60,13 +61,14 @@ server <- function(input, output, session) {
   
   ##check if names of objectives have to be supplied or already present
   observeEvent(input$tabs == "play_around",{ 
+    ## make or pull objectives()
     if(!file.exists("../input/object_names.RDS")) {
       
       shinyjs::show(id = "obj_first")
       shinyjs::hide(id = "tab_play1")
       shinyjs::hide(id = "tab_play2")
       
-      #get new objective names
+      ##get new objective names
       observe({
         req(input$short1, input$short2, input$short3, input$short4)
         updated_objectives <<- c(input$short1, input$short2, input$short3, input$short4)
@@ -74,19 +76,88 @@ server <- function(input, output, session) {
       })
       
       observeEvent(input$save_par_fiti, {
+        req(objectives())
         saveRDS(updated_objectives, file = "../input/object_names.RDS")
       }) 
       
-    } else{
+    } else {
       shinyjs::hide(id="obj_first")
       short = readRDS("../input/object_names.RDS")
       objectives(short)
     }
     
+    ## update slider labels based on objectives
+    observe({
+      req(objectives())
+      obj <- objectives()
+      updateSliderInput(session, "obj1", label = obj[1])
+      updateSliderInput(session, "obj2", label = obj[2])
+      updateSliderInput(session, "obj3", label = obj[3])
+      updateSliderInput(session, "obj4", label = obj[4])
+      updateCheckboxGroupInput(session, "sel_neg", choices = objectives(), selected = NULL)
+    })
+    
+    
+    ## make or pull fit()
     if(file.exists("../data/pareto_fitness.txt")){shinyjs::hide(id="parfit")}
       
-    #get unit input 
-      if(file.exists("../input/units.RDS")){shinyjs::hide(id="units")
+    observe({
+      if (file.exists(pareto_path)) {
+        
+        req(objectives())
+        
+        data <- read.table( pareto_path, header = FALSE, stringsAsFactors = FALSE,sep = ',')
+        new_col_data <- objectives()
+        colnames(data) = new_col_data
+        fit(data)
+        yo = fit() %>% mutate(across(everything(), ~ scales::rescale(.)))%>%mutate(id = row_number())
+        f_scaled(yo)
+        shinyjs::hide(id = "parfit")
+        output$uploaded_pareto <- renderText({"All Files found. You can now examine the Pareto front. 
+        How does it change when the objective ranges are modified?"})
+        
+      } else {
+        shinyjs::show(id = "parfit")
+      }
+    })
+    
+    ## make fit() based on user input
+    observeEvent(input$par_fit, {     
+      req(input$par_fit)
+      file <- input$par_fit
+      if (is.null(file)) {return(NULL)}
+      par_fiti(list(path = file$datapath, name = file$name))
+    })
+    
+    
+    observeEvent(input$save_paretofit,{
+      req(par_fiti(),objectives())
+      save_par_fiti <- par_fiti()$name
+      save_path_par_fiti <- file.path(save_dir, save_par_fiti)
+      file.copy(par_fiti()$path, save_path_par_fiti, overwrite = TRUE) #copy pareto_fitness.txt
+      
+      data = read.table(pareto_path, header=F,stringsAsFactors=FALSE,sep = ',')
+      names(data) = objectives()
+      fit(data)
+      
+      yo = fit() %>% mutate(across(everything(), ~ scales::rescale(.)))%>%mutate(id = row_number())
+      f_scaled(yo)
+    })
+    
+    ## ggplot melt and change plotting order
+    pp <- reactive({
+      req(f_scaled(),objectives())
+      f_scaled()%>% pivot_longer(.,cols=-id)%>%mutate(name=factor(name,levels=objectives()),id=as.factor(id))
+    })
+    
+    observe({
+      req(pp())
+      rv$sizes= rep(0.5, length(unique(pp()$id)))
+      rv$colls = rep("grey50", length(unique(pp()$id)))
+    })
+    
+    ## get unit input 
+   if(file.exists("../input/units.RDS")){shinyjs::hide(id="units")
         uns <<-  readRDS("../input/units.RDS")
       }else{
         uns <<- c(input$unit1,input$unit2,input$unit3,input$unit4)
@@ -94,74 +165,22 @@ server <- function(input, output, session) {
         observeEvent(input$save_unit,{saveRDS(uns, file="../input/units.RDS")})
       }
     })
-    
-    
-  ## update slider labels based on objectives
-  observe({
-    req(objectives())
-    obj <- objectives()
-    updateSliderInput(session, "obj1", label = obj[1])
-    updateSliderInput(session, "obj2", label = obj[2])
-    updateSliderInput(session, "obj3", label = obj[3])
-    updateSliderInput(session, "obj4", label = obj[4])
-    updateCheckboxGroupInput(session, "sel_neg", choices = objectives(), selected = NULL)
-  })
   
-  if (file.exists(pareto_path)) {
+    ## show rest of tab if all required data available
     observe({
-      req(objectives())
       
-      data <- read.table( pareto_path, header = FALSE, stringsAsFactors = FALSE,sep = ',')
-      new_col_data <- objectives()
-      colnames(data) = new_col_data
-      fit(data)
-      shinyjs::hide(id = "parfit")
-      output$uploaded_pareto <- renderText({"All Files found. You can now examine the Pareto front. 
-        How does it change when the objective ranges are modified?"})
+      test_fit = fit
+      test_objectives = objectives()
+      
+    if (!is.null(test_fit) && !is.null(test_objectives)) {
+      shinyjs::show("tab_play1")
+      shinyjs::show("tab_play2")
+      shinyjs::show("scatter")
+     }
     })
-  } else {
-    shinyjs::show(id = "parfit")
-  }
-   
-  ## user supplies pareto_fitness.txt
-  observeEvent(input$par_fit, { 
-    req(input$par_fit)
-    file <- input$par_fit
-    if (is.null(file)) {return(NULL)}
-    par_fiti(list(path = file$datapath, name = file$name))
-    })
-  
-  
-  observeEvent(input$save_paretofit,{
-    req(par_fiti(),objectives())
-    save_par_fiti <- par_fiti()$name
-    save_path_par_fiti <- file.path(save_dir, save_par_fiti)
-    file.copy(par_fiti()$path, save_path_par_fiti, overwrite = TRUE)
     
-    data = read.table(pareto_path, header=F,stringsAsFactors=FALSE,sep = ',')
-    names(data) = objectives()
-    fit(data)
-    
-  })
+ 
   
-    ## base dataframe for all further operations in play_around tab
-  f_scaled <- reactive({
-    req(fit())  
-    fit() %>% mutate(across(everything(), ~ scales::rescale(.)))%>%mutate(id = row_number())
-   
-  })
-  
-  ## ggplot melt and change plotting order
-  pp <- reactive({
-    req(f_scaled(),objectives())
-    f_scaled()%>% pivot_longer(.,cols=-id)%>%mutate(name=factor(name,levels=objectives()),id=as.factor(id))
-     })
-
-  observe({
-    req(pp())
-    rv$sizes= rep(0.5, length(unique(pp()$id)))
-    rv$colls = rep("grey50", length(unique(pp()$id)))
-  })
  
   ## pull values from parallel axis line when clicked
   observeEvent(input$clickline,{
@@ -223,7 +242,7 @@ server <- function(input, output, session) {
   
   ## line plot
   output$linePlot <- renderPlot({
-    req(f_scaled,objectives())
+    req(f_scaled(),objectives())
     sk= match_scaled(minval_s=c(input$obj1[1],input$obj2[1],input$obj3[1],input$obj4[1]),
                      maxval_s=c(input$obj1[2],input$obj2[2],input$obj3[2],input$obj4[2]),scal_tab = f_scaled(),allobs = objectives())
 
@@ -648,6 +667,8 @@ server <- function(input, output, session) {
 
           nm <<- length(mes)
         }
+        
+        ## pull corr from file
         if(file.exists("../output/correlation_matrix.csv")){
           shinyjs::show("show_conf")
           
@@ -658,19 +679,23 @@ server <- function(input, output, session) {
         }else{ shinyjs::hide("show_conf")}
         
         } )
-      
+        ## make new corr
       observeEvent(input$run,{
           all_var <<- readRDS("../input/all_var.RDS")
           
           write_corr(vars = input$selements,cor_analysis = T, pca = F)
 
-          # define the command to run the Python script
+          ## run the Python script
           py_script <- "../python_files/correlation_matrix.py"
           cmd <- paste("python", py_script)
           
-          # run the command and capture the output
+          ## capture python output
           result <- system(cmd, intern = TRUE)
     
+          corr <<- read.csv("../output/correlation_matrix.csv", row.names = 1) #global because of re-rendering of plot
+          output$corrplot <- renderPlot({plt_corr(corr)})
+          
+          
   ## events tied to a change in threshold, however also tied to change in selected variables, therefore also observe run
   observeEvent(input$thresh,{
     
@@ -739,6 +764,8 @@ server <- function(input, output, session) {
       shinyjs::hide("everything_cluster_mainpanel")
      output$no_cluster <- renderText({HTML("Please run the correlation analysis first before proceeding with the clustering!")})
     }else{shinyjs::hide("no_cluster")
+      shinyjs::show("everything_cluster_sidebar") #this is needed as previously turned off and somehow that sticks
+      shinyjs::show("everything_cluster_mainpanel")
     }
     
     if(!file.exists("../input/object_names.RDS")) {
@@ -946,12 +973,16 @@ server <- function(input, output, session) {
 
   observeEvent(input$tabs == "analysis", { #this could be combined with the ahp tab for analysis
    if(!any(file.exists(list.files(path = output_dir, pattern = "clusters_representativesolutions.*\\.csv$", full.names = TRUE)))){
-     shinyjs::hide("above_ahp_tab")
+     shinyjs::hide("main_analysis")
      shinyjs::hide("plt_opti")
+     shinyjs::runjs("toggleSidebar(true);")  # Hide sidebar
+     
      output$analysis_no_clustering <- renderText({
        HTML("the correlation analysis and the clustering have to run first before their results can be analysed")
      })
-   }else{shinyjs::hide("analysis_no_clustering")}
+   }else{shinyjs::hide("analysis_no_clustering")
+     shinyjs::runjs("toggleSidebar(false);")  # Hide sidebar
+   }
     
     
       if(!file.exists("../input/object_names.RDS")) {
@@ -1154,6 +1185,7 @@ server <- function(input, output, session) {
     if(!file.exists("../data/pareto_fitness.txt")){ #check if fit() has been created yet
       output$nothing_ran_ahp <- renderText({HTML("please provide the pareto_fitness.txt in either the Data Preparation or the Visualising the Pareto Front tab.")})
     }else{ shinyjs::hide("nothing_ran_ahp")
+      shinyjs::runjs("toggleSidebar(false);")  # Hide sidebar
 }      
       
       

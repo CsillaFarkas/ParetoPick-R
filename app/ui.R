@@ -140,6 +140,15 @@ ui <-
                                  .js-irs-0 .irs-bar {
                                  background: darkslateblue
                                  }
+                                 
+                                 .main-panel-full-width {
+                                  margin-left: 0 !important;
+                                  width: 100% !important;
+                                   }
+                                 .main-panel {
+                                  margin-left: 250px; /* Adjust to your sidebar width */
+                                  width: calc(100% - 250px); /* Adjust to your sidebar width */
+                                   }
                                 ')),
       useShinyjs(),
       tabItems(
@@ -175,8 +184,7 @@ ui <-
                               and explore the effects of reduced objective ranges."),p("You can also select specific points on the pareto front by clicking on the line plot.")),
                 
                 sidebarLayout(
-                  #slider aesthetics
-                  
+                
                   
                     sidebarPanel( width = 3,
                                   div(
@@ -257,7 +265,8 @@ ui <-
                 titlePanel("OPTAIN Data Preparation"),
                 
                 wellPanel(  style = "background-color:  #a2a4b6; border:none;",
-                            p("This tab requires you to provide the required optimisation outputs, please click Check Files after doing so.")),
+                            p("This tab requires you to provide the required optimisation outputs, please retain their names as given here and as produced in the optimisation workflow."),
+                            p("Please click Check Files after doing so.")),
                 
                 mainPanel(
                   p("To prepare the data for the subsequent correlation and cluster analysis, please provide the following files:",style =  "text-align: left; font-size:150%"),
@@ -485,14 +494,14 @@ ui <-
             titlePanel("Analysing the remaining optima"), 
             wellPanel(style = "background-color:  #a2a4b6; border:none;", 
                       p("This tab allows to determine...")), 
-            div(id ="above_ahp_tab", 
-                htmlOutput("tabtext")),
+            
             sidebarLayout(
-              sidebarPanel(
+              sidebarPanel(id ="analysis_sidebar",
                 textOutput("analysis_no_clustering")), 
             
             mainPanel(
-              
+              id ="main_analysis", 
+                  htmlOutput("tabtext"),
               fluidRow(
               column(6, div(style = "overflow-x: auto;", DTOutput("antab"))),
               column(6, plotOutput("par_plot_optima"),
@@ -508,10 +517,20 @@ ui <-
             actionButton("plt_opti", "Plot Optimum"), textOutput("no_row") %>% hidden(), 
             div(id="meas_low",textOutput("meas_low")),
             uiOutput("comp_map")
-        
-              
-             
-            ))),
+            )),
+            tags$script(HTML("
+    function toggleSidebar(show) {
+      if (show) {
+        document.getElementById('analysis_sidebar').style.display = 'block';
+        document.getElementById('main_analysis').classList.remove('main-panel-full-width');
+        document.getElementById('main_analysis').classList.add('main-panel');
+      } else {
+        document.getElementById('analysis_sidebar').style.display = 'none';
+        document.getElementById('main_analysis').classList.remove('main-panel');
+        document.getElementById('main_analysis').classList.add('main-panel-full-width');
+      }
+    }
+  "))),
   
   ## AHP ####
   tabItem(
@@ -575,6 +594,6 @@ ui <-
        )
         )
          )
-          ) 
+          )
            )
 
