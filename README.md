@@ -46,15 +46,16 @@ It then performs both and provides the relevant statistics, plots and analyses.
 * min_components & max_components
 
 # Missing/Nice to have
+* sliders with actual values instead of scaled values?
+
 * AHP tab: 
-  * structured presentation of decisions
-  * explanations
+  * structured presentation of decisions and more intuitive explanations
   * map with measure implementation of selected optimum
   * legend in pareto plot
   * Schmerzgrenzen
-  * rounding of table?
   * the initial state of the pairwise comparison as "Equal" amplifies the mathematical definition of inconsistency
   * normalise for different units?
+
 * Plot last tab: status message so user knows the plot is being rendered!!
 * Front page needs some more explanation
 
