@@ -346,7 +346,7 @@ ui <-
                  
       textOutput("numbercorr"),
       div("2. Perform the Correlation Analysis", style = "text-align: left; font-size:150%"),
-      actionButton("run", "Run Correlation Analysis"),
+      actionButton("run_corr", "Run Correlation Analysis"),
       
       div("3. Choose threshold for correlation",style = "text-align: left; font-size:150%"),
       div(style = "margin-top: -15px;",shinyWidgets::sliderTextInput(inputId = "thresh", label= "",choices = seq(0.65,0.95,0.05), selected=0.75)),
@@ -414,6 +414,7 @@ ui <-
                 )
               ),
               actionButton("runPCA", "Run PCA and Cluster Analysis"),
+              textOutput("pca_available")  ,
               uiOutput("pca_mess")
             )), 
                         
@@ -544,41 +545,51 @@ ui <-
           sidebarPanel(
             textOutput("nothing_ran_ahp"),
            div(id = "ahp_analysis",
-             "1. Examining the relationship between the objectives.",
-              style = "text-align: left; font-size:150%"
-                ),
+             "1. Examining the relationship between the objectives.",style = "text-align: left; font-size:150%",
+              
             fluidRow(
              column(6, uiOutput("criterion1_ui")),
              column(6, uiOutput("criterion2_ui")),
           
-             column(6, actionButton("plot_sc", label = "analyse objectives"))
-            ),
-           
-           div(
-             id = "ahp_weights",
-             "2. Deciding on priorities and weighting the objectives.",
-             style = "text-align: left; font-size:150%",
-             uiOutput("sliders_ui")),
-           div(id="sel_wgt","Selected Weights",style = "text-align: center; font-size: 150%;",
-           div(tableOutput("weights_output") , style = "margin: 0 auto; width: fit-content;")),
-           uiOutput("consistency_check")
-          ),
+             column(6, actionButton("plot_sc", label = "analyse objectives"))),
+            
+            fluidRow(
       
-      mainPanel(
-        
+             column(10,
+                   div("2. Limiting the objective space (optional)"),
+                   sliderInput(inputId = "obj1_ahp", label = "Objective 1:", min = 0, max = 100, value = c(0, 100), width = "110%"),
+                   sliderInput(inputId = "obj2_ahp", label = "Objective 2:", min = 0, max = 100, value = c(0, 100), width = "110%"),
+                   sliderInput(inputId = "obj3_ahp", label = "Objective 3:", min = 0, max = 100, value = c(0, 100), width = "110%"),
+                   sliderInput(inputId = "obj4_ahp", label = "Objective 4:", min = 0, max = 100, value = c(0, 100), width = "110%"))
+                   )),
+           
+           div(id = "ahp_weights",
+             "3. Deciding on priorities and weighting the objectives.",
+               style = "text-align: left; font-size:150%",
+                 uiOutput("sliders_ui")),
+          
+            div(id="sel_wgt","Selected Weights", style = "text-align: center; font-size: 150%;",
+              div(tableOutput("weights_output"), style = "margin: 0 auto; width: fit-content;")),
+               uiOutput("consistency_check")
+                       ),
+      
+     mainPanel(
+    
+       
       fluidRow(
         column(9, plotOutput("scatterPlot")), # 9/12 of the width for the plot
         column(3, tableOutput("relation")) # 3/12 of the width for the table
         ),
-      div(
-        id = "pareto_weighted", 
-        "Best Option under selected weighting",
-        style = "text-align: center; font-size: 150%;", 
-        div( tableOutput("best_option_output"),
-        style = "margin: 0 auto; width: fit-content;")),
-      div(id="random_ahp",
-        checkboxInput("best_cluster", label = "Best option among cluster solutions", value = FALSE),
-        style= "margin: 0 auto; width: fit-content;font-size: 100%;"),
+      
+      div(id = "pareto_weighted",
+         "Best Option under selected weighting",
+          style = "text-align: center; font-size: 150%;",
+        
+          div(tableOutput("best_option_output"), style = "margin: 0 auto; width: fit-content;")
+            ), div(id = "random_ahp",
+                 checkboxInput("best_cluster", label = "Best option among cluster solutions", value = FALSE),
+                   style = "margin: 0 auto; width: fit-content;font-size: 100%;"
+               ),
           
       plotOutput({"weights_plot"}),
       div(id="random_ahp2", fluidRow(
@@ -588,8 +599,8 @@ ui <-
                              column(3,selectInput(inputId = "size_var",label = "Size", choices = NULL, multiple = F,selected=NULL))),
       
        checkboxInput("show_extra_dat", label = "Show cluster solutions", value = FALSE),
-      textInput("weights_plot_savename", "File name (without extension):", value = "my_plot"),
-      downloadButton("download_weights_plot", "Download Plot")))
+       textInput("weights_plot_savename", "File name (without extension):", value = "my_plot"),
+       downloadButton("download_weights_plot", "Download Plot")))
       
        )
         )

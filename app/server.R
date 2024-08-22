@@ -36,7 +36,7 @@ server <- function(input, output, session) {
   
   axiselected = reactiveVal(read_config_plt(obj=F,axis=T))
   max_pca <- reactive({get_num_pca()})# required for max pc field
-  
+  pca_available <- reactiveValues(button1_clicked = FALSE, button2_clicked = FALSE) #controls proper writing previous to clustering
   #results table
   check_files<- reactiveVal(NULL)
   sols <- reactiveVal()
@@ -54,7 +54,7 @@ server <- function(input, output, session) {
     size_var = NULL
   )
   coma = reactiveVal()
-  
+  range_controlled = reactiveVal(NULL)
   ### Introduction ####
  
   ### Play Around Tab ####
@@ -90,10 +90,13 @@ server <- function(input, output, session) {
     observe({
       req(objectives())
       obj <- objectives()
-      updateSliderInput(session, "obj1", label = obj[1])
-      updateSliderInput(session, "obj2", label = obj[2])
-      updateSliderInput(session, "obj3", label = obj[3])
-      updateSliderInput(session, "obj4", label = obj[4])
+      
+      for(i in 1:4){
+        updateSliderInput(session, paste0("obj",i), label = obj[i])
+        updateSliderInput(session, paste0("obj",i,"_ahp"), label = obj[i])
+        
+      }
+  
       updateCheckboxGroupInput(session, "sel_neg", choices = objectives(), selected = NULL)
     })
     
@@ -110,11 +113,35 @@ server <- function(input, output, session) {
         new_col_data <- objectives()
         colnames(data) = new_col_data
         fit(data)
+        
         yo = fit() %>% mutate(across(everything(), ~ scales::rescale(.)))%>%mutate(id = row_number())
         f_scaled(yo)
+        
         shinyjs::hide(id = "parfit")
         output$uploaded_pareto <- renderText({"All Files found. You can now examine the Pareto front. 
         How does it change when the objective ranges are modified?"})
+        
+        
+       ## adapt sliders in ahp tab
+          min_max <-data.frame(t(sapply(data, function(x) range(x, na.rm = TRUE))))
+          names(min_max) =c("min","max")
+
+          for (i in 1:4) {
+            var_name <- paste0("steps", i)
+            
+            if (abs(min_max$max[i]) <= 0.05) {
+              min_max$max[i] = min_max$max[i] * 1000
+              min_max$min[i] = min_max$min[i] * 1000
+              
+              range_controlled(rownames(min_max[i, ])) #required to assure subsequent reversal of values
+            }
+          
+          assign(var_name, (min_max$max[i]-min_max$min[i])/20)
+          
+          updateSliderInput(session, paste0("obj",i,"_ahp"), value = c(min_max$min[i],min_max$max[i]),min =min_max$min[i],max = min_max$max[i],step=var_name)
+       
+          }
+        
         
       } else {
         shinyjs::show(id = "parfit")
@@ -179,8 +206,6 @@ server <- function(input, output, session) {
      }
     })
     
- 
-  
  
   ## pull values from parallel axis line when clicked
   observeEvent(input$clickline,{
@@ -680,7 +705,8 @@ server <- function(input, output, session) {
         
         } )
         ## make new corr
-      observeEvent(input$run,{
+      observeEvent(input$run_corr,{
+          req(input$selements)
           all_var <<- readRDS("../input/all_var.RDS")
           
           write_corr(vars = input$selements,cor_analysis = T, pca = F)
@@ -779,7 +805,7 @@ server <- function(input, output, session) {
     choices = c("off", choices)
     all_choices(choices)
     preselected = read_config_plt(obj = T, axis = F)
-    axiselected(read_config_plt(obj = F, axis = T))
+    isolate({axiselected(read_config_plt(obj = F, axis = T))})
     
     updateTextInput(session, "axisx",  value  = axiselected()[1])
     updateTextInput(session, "axisy", value = axiselected()[2])
@@ -813,24 +839,49 @@ server <- function(input, output, session) {
     updateSelectInput(session, "element2", choices = choices2, selected = selected2)
     updateSelectInput(session, "element3", choices = choices3, selected = selected3)
     updateSelectInput(session, "element4", choices = choices4, selected = selected4)
-    
-    selected1_2 <- input$axisx
-    selected2_2 <- input$axisy
-    selected3_2 <- input$colour
-    selected4_2 <- input$size
-    
-    choices1_2 <- setdiff(all_choices(), c(selected2_2, selected3_2, selected4_2))
-    choices2_2 <- setdiff(all_choices(), c(selected1_2, selected3_2, selected4_2))
-    choices3_2 <- setdiff(all_choices(), c(selected1_2, selected2_2, selected4_2))
-    choices4_2 <- setdiff(all_choices(), c(selected1_2, selected2_2, selected3_2))
-    
-    updateTextInput(session, "axisx", value = selected1_2)
-    updateTextInput(session, "axisy", value = selected2_2)
-    updateTextInput(session, "colour",  value = selected3_2)
-    updateTextInput(session, "size",  value = selected4_2)
   })
-  
+    
+    observeEvent(input$confirm_axis,{ 
+      pca_available$button1_clicked = TRUE
+    # selected1_2 <- input$axisx
+    # selected2_2 <- input$axisy
+    # selected3_2 <- input$colour
+    # selected4_2 <- input$size
+    isolate({axiselected(c(input$axisx,input$axisy,input$colour, input$size))})
+    # 
+    # choices1_2 <- setdiff(all_choices(), c(selected2_2, selected3_2, selected4_2))
+    # choices2_2 <- setdiff(all_choices(), c(selected1_2, selected3_2, selected4_2))
+    # choices3_2 <- setdiff(all_choices(), c(selected1_2, selected2_2, selected4_2))
+    # choices4_2 <- setdiff(all_choices(), c(selected1_2, selected2_2, selected3_2))
+    
+    updateTextInput(session, "axisx",  value  = axiselected()[1])
+    updateTextInput(session, "axisy", value = axiselected()[2])
+    updateTextInput(session, "colour", value = axiselected()[3])
+    updateTextInput(session, "size", value = axiselected()[4])
+    
+    empty_count2 <- sum(input$axisx == "", input$axisy == "", input$colour == "", input$size == "")
+    if (empty_count2 < 2){
+      write_pca_ini(var1=input$element1,var2=input$element2,var3=input$element3,var4=input$element4,
+                    var1_lab=input$axisx,var2_lab=input$axisy,var3_lab=input$colour,var4_lab=input$size)
+    }
+    
+    output$axis_text <- renderText({
+      
+      if (empty_count2 >= 2) {
+        "Please make selections for at least three elements."
+      } else {
+        HTML(paste("X Axis: ", ifelse(input$element1 == "", "No selection", input$axisx),
+                   "<br/>Y Axis: ", ifelse(input$element2 == "", "No selection", input$axisy),
+                   "<br/>Colour: ", ifelse(input$element3 == "", "No selection", input$colour),
+                   "<br/>Size: ", ifelse(input$element4 == "", "No selection", input$size)))
+      }
+    })
+    update_settings()
+ 
+  })
   observeEvent(input$set_choices,{
+    pca_available$button2_clicked = TRUE
+    
     empty_count <- sum(input$element1 == "off", input$element2 == "off", input$element3 == "off", input$element4 == "off")
     if (empty_count < 2){
       write_pca_ini(var1=input$element1,var2=input$element2,var3=input$element3,var4=input$element4,
@@ -852,27 +903,21 @@ server <- function(input, output, session) {
   update_settings()
   })
   
-  observeEvent(input$confirm_axis,{
-    empty_count2 <- sum(input$axisx == "", input$axisy == "", input$colour == "", input$size == "")
-    if (empty_count2 < 2){
-      write_pca_ini(var1=input$element1,var2=input$element2,var3=input$element3,var4=input$element4,
-                    var1_lab=input$axisx,var2_lab=input$axisy,var3_lab=input$colour,var4_lab=input$size)
+  ## confirm that axis is picked and label is written
+  observe({
+    if (pca_available$button1_clicked && pca_available$button2_clicked) {
+      shinyjs::enable("runPCA")
+      output$pca_available <- renderText("")  # Clear the notification
+    } else {
+      shinyjs::disable("runPCA")
+      output$pca_available <- renderText({
+        missing_buttons <- c()
+        if (!pca_available$button1_clicked) missing_buttons <- c(missing_buttons, "Confirm Choice")
+        if (!pca_available$button2_clicked) missing_buttons <- c(missing_buttons, "Confirm Axis Labels")
+        paste("Please, ", paste(missing_buttons, collapse = " and ")," first!")
+      })
     }
-    
-    output$axis_text <- renderText({
-      
-      if (empty_count2 >= 2) {
-        "Please make selections for at least three elements."
-      } else {
-        HTML(paste("X Axis: ", ifelse(input$element1 == "", "No selection", input$axisx),
-                   "<br/>Y Axis: ", ifelse(input$element2 == "", "No selection", input$axisy),
-                   "<br/>Colour: ", ifelse(input$element3 == "", "No selection", input$colour),
-                   "<br/>Size: ", ifelse(input$element4 == "", "No selection", input$size)))
-      }
-    })
-    update_settings()
   })
-
   
   observeEvent(input$runPCA,{
     # python status
@@ -1138,9 +1183,9 @@ server <- function(input, output, session) {
 
       output$comp_map <- renderUI({sync(m,sync = list(2:nplots),sync.cursor = F)})
      
-      observe({
-        print(names(input))
-      })
+      # observe({
+      #   print(names(input))
+      # })
       # observe({
       #   all_ids <- names(input)
       #   bounds_id <- grep("^htmlwidget-[0-9]+_bounds$", all_ids, value = TRUE)
