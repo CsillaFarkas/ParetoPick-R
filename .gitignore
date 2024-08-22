@@ -2,7 +2,7 @@
 .Rhistory
 .RData
 .Ruserdata
-.input/config.ini
+input/config.ini
 data
 output
 data for container
