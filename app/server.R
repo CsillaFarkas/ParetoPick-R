@@ -78,6 +78,11 @@ server <- function(input, output, session) {
       observeEvent(input$save_par_fiti, {
         req(objectives())
         saveRDS(updated_objectives, file = "../input/object_names.RDS")
+        
+        updateTextInput(session,"col1", value = objectives()[1] )
+        updateTextInput(session,"col2", value = objectives()[2] )
+        updateTextInput(session,"col3", value = objectives()[3] )
+        updateTextInput(session,"col4", value = objectives()[4] )
       }) 
       
     } else {
@@ -581,13 +586,13 @@ server <- function(input, output, session) {
       })
       
       observe({ 
-      if(length(list.files(save_dir, full.names = TRUE))==0){ #do not show reset option if there haven't been files uploaded
+      if(length(list.files(c(save_dir,output_dir), full.names = TRUE))==0){ #do not show reset option if there haven't been files uploaded
         shinyjs::hide(id="reset")
        
       }else{
       output$reset_prompt <- renderText({
         HTML(paste("<p style='color: red;'> If you would like to restart the app if it crashes or behaves inconsistently, you can hard reset it here. Clicking this button
-                   deletes all files you provided. Please proceed with caution!</p>"))
+                   deletes all files you provided. The contents of the Output folder are also deleted, please move or copy those files you would like to keep. Please proceed with caution!</p>"))
       })
       
 
@@ -595,9 +600,11 @@ server <- function(input, output, session) {
         if (dir.exists(save_dir) & dir.exists(input_dir)) {
           files1 <- list.files(save_dir, full.names = TRUE)
           files2 <- list.files(input_dir, full.names = TRUE)
+          files3 <- list.files(output_dir, full.names = TRUE)
           
           sapply(files1, file.remove)
           sapply(files2, file.remove)
+          sapply(files3, file.remove)
           
           remaining_files <- list.files(save_dir, full.names = TRUE)
           if (length(remaining_files) == 0) {
@@ -752,6 +759,7 @@ server <- function(input, output, session) {
     }
    
     saveRDS(pca_content,file = "../input/pca_content.RDS") #required for PCA
+    updateNumericInput(session, "pca_max", value = max_pca(), max=max_pca()) #requires pca_content to exist
     
     pca_in$data = pca_content
     
@@ -767,7 +775,7 @@ server <- function(input, output, session) {
    }else{conf_text =HTML(paste0("Removed variables: ","<b>", nonoval,"</b>")) }
    output$confirmed_selection <- renderText({conf_text})
   
-  
+   
    
   #### PC Analysis ####
   # table with variables INCLUDED in PCA (renewed every time confirm selection is clicked in correlation tab)
@@ -800,7 +808,6 @@ server <- function(input, output, session) {
       choices = readRDS("../input/object_names.RDS")
     }
     
-    if(file.exists("../input/pca_content.RDS")){updateNumericInput(session, "pca_max", value = max_pca(), max=max_pca())}
       
     choices = c("off", choices)
     all_choices(choices)
@@ -1404,10 +1411,17 @@ server <- function(input, output, session) {
     }
     
     weights <- calculate_weights()
-    df$Score <- rowSums(df[ , names(weights)] * weights)
+    pca <- prcomp(df[, names(weights)], center = TRUE, scale. = TRUE)
+    
+    # Extract the principal components (scores)
+    pca_scores <- pca$x
+    
+    # Calculate the final score based on the principal components
+    df$Score <- rowSums(pca_scores * weights)
+    
     
     best_option_index <<- which.max(df$Score)
-    df$Score <- NULL
+    df$Score <- NULL #drop Score column
     best_option(df[best_option_index, ])
     
     bo = best_option()
