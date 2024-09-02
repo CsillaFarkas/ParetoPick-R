@@ -491,7 +491,7 @@ plot_diff_bar= function(pct,obj_choices=NULL){
     theme_bw() +
     theme_minimal() +
     scale_fill_manual(values = c( "#FFC61E", "#009ADE","#AF58BA", "#F28522", "#FF1F5B")) +
-    geom_text(aes(label = objective),size=10,
+    geom_text(aes(label = objective),size=6,
               colour = "black",
               position = position_dodge(width = 1), vjust = -0.5) +
     theme(
@@ -648,7 +648,7 @@ get_mima = function(df){
 ## default max number of pc
 get_num_pca <- function() {
   pcc <- readRDS("../input/pca_content.RDS")
-  return(length(pcc))
+  return(length(pcc)-1)
 }
 
 
@@ -840,4 +840,6 @@ find_row = function(dat, colname, val, absdat){
  
   return(absdat[closest_index, ]) #this works as fit and f_scaled have the same origin
 }
+
+
 
