@@ -148,7 +148,16 @@ ui <-
                                  .main-panel {
                                   margin-left: 250px; /* Adjust to your sidebar width */
                                   width: calc(100% - 250px); /* Adjust to your sidebar width */
-                                   }
+                                 }
+                                   
+                                  /* make AHP criterion label not bold */ 
+                                  #criterion1_ui label {
+                                  font-weight: 400;
+                                  }
+                                  #criterion2_ui label {
+                                  font-weight: 400;
+                                  }
+
                                 ')),
       useShinyjs(),
       tabItems(
@@ -266,7 +275,7 @@ ui <-
                 
                 wellPanel(  style = "background-color:  #a2a4b6; border:none;",
                             p("This tab requires you to provide the required optimisation outputs, please retain their names as given here and as produced in the optimisation workflow."),
-                            p("Please click Check Files after doing so.")),
+                            p(HTML("Please click <strong>Check Files</strong> after doing so."))),
                 
                 mainPanel(
                   p("To prepare the data for the subsequent correlation and cluster analysis, please provide the following files:",style =  "text-align: left; font-size:150%"),
@@ -323,7 +332,9 @@ ui <-
     tabItem(tabName = "correlation_analysis",
            titlePanel("Correlation Analysis"),
            
-           wellPanel(style = "background-color:  #a2a4b6; border: none;", p("This tab allows to determine...")),
+           wellPanel(style = "background-color:  #a2a4b6; border: none;", p(HTML("The clustering requires you to first run a correlation analysis.
+                                                                            For this purpose, please click <strong>Run Correlation Analysis</strong>, based on the levels of correlation select those variables you would like to exclude from further analysis and then click <strong>Confirm Selection</strong>.")),
+                                                                                 p(HTML("It is also possible to run the clustering across all variables and select no variables to exclude in this tab, however please always click <strong>Confirm Selection</strong>."))),
            sidebarLayout(
              
              sidebarPanel(
@@ -385,7 +396,9 @@ ui <-
           titlePanel("Clustering"),
           
           wellPanel(  style = "background-color:  #a2a4b6; border: none;",
-                      p("This tab allows to determine...")),
+                      p("This tab requires you to decide on the cluster settings. After selecting which objectives shall be plotted on the x-axis, y-axis and as color and size and after deciding on the axis titles, the clustering can be run with default settings."),
+                      p(HTML("Selecting <strong>Yes</strong> under either 2. or 3. allows to change those default settings and test a variable number of clusters and outlier considerations.")),
+                      p(HTML("The cluster outputs open in separate tabs and can be saved as images."))),
           
           sidebarLayout(sidebarPanel(
             
@@ -494,7 +507,9 @@ ui <-
             tabName = "analysis",
             titlePanel("Analysing the remaining optima"), 
             wellPanel(style = "background-color:  #a2a4b6; border:none;", 
-                      p("This tab allows to determine...")), 
+                      p("This tab allows you to analyse the cluster outputs and plot and compare the measure implementation across the pareto solutions selected in the clustering. The table shows the subset of pareto_fitness selected as representative for the different clusters."),
+                      p("The plot on the right aligns with the one produced during the clustering. It shows where the representative solutions selected in the table lie."),
+                      p("Please be aware that the plotting of the measure allocation takes about 20 seconds.")), 
             
             sidebarLayout(
               sidebarPanel(id ="analysis_sidebar",
@@ -539,7 +554,14 @@ ui <-
         titlePanel("Analytical Hierarchy Process"),
         
        wellPanel(  style = "background-color:  #a2a4b6; border: none;",
-              p("This tab allows to determine...")),
+              p("This tab allows you to run a different approach (AHP) to selecting those pareto optima best matching your preferences. AHP is a decision making tool that helps you prioritise different objectives by comparing them in pairs.
+                "),
+              p(HTML("Clicking <strong>analyse objectives</strong> allows you to receive a broad overview of the different objectives' relationships.")),
+              p("If you want you can limit the objective ranges under 2."),
+              p("Under 3. you can compare objectives two at a time and and decide which objective is more important and by how much. 
+                ParetoPick-R will assign weights to each objective based on your inputs and check how consistent your choices are. 
+                The respective best choice is plotted on the right and you can decide whether 
+                it should be selected from the whole pareto front or from the subset of cluster results.")),
        
         sidebarLayout(
           sidebarPanel(
