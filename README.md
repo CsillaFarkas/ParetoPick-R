@@ -1,4 +1,4 @@
-This code is part of the final analyses of the [OPTAIN Project](https://www.optain.eu/). It shall facilitate the analysis of the Pareto front across objectives and support decision making for measure implementation.
+ParetoPick-R is part of the final analyses of the [OPTAIN Project](https://www.optain.eu/). It shall facilitate the analysis of the Pareto front across objectives and support decision making for measure implementation.
 It provides a dashboard for the user to supply their own data, visualise it and alter a range of parameters. The code allows the user to select variables to be analysed in a correlation analysis and a PCA. 
 It then performs both and provides the relevant statistics, plots and analyses.
 
@@ -51,8 +51,7 @@ It then performs both and provides the relevant statistics, plots and analyses.
 * AHP tab: 
   * structured presentation of decisions and more intuitive explanations
   * map with measure implementation of selected optimum
-  * legend in pareto plot
-  * Schmerzgrenzen
+  * Schmerzgrenzen properly displayed and considered
   * the initial state of the pairwise comparison as "Equal" amplifies the mathematical definition of inconsistency
   * normalise for different units?
 
@@ -67,7 +66,7 @@ It then performs both and provides the relevant statistics, plots and analyses.
   * output largest accepted correlation, maybe in bold in table
   * deviations_step is currently the default value 
   * explain the effects of high correlation
-  * currently the lowering of min when max is lowered does not work
+  * the max PCA aligning with the max variables does not always work, unsure why
 
 
 
