@@ -275,7 +275,8 @@ ui <-
                 
                 wellPanel(  style = "background-color:  #a2a4b6; border:none;",
                             p("This tab requires you to provide the required optimisation outputs, please retain their names as given here and as produced in the optimisation workflow."),
-                            p(HTML("Please click <strong>Check Files</strong> after doing so."))),
+                            p(HTML("Please click <strong>Check Files</strong> after doing so.")),
+                            p(HTML("If all files have been found, you can click <strong>Run Prep</strong> to prepare the variables for the subsequent correlation and cluster analysis. This takes between 2 and 4 minutes."))),
                 
                 mainPanel(
                   p("To prepare the data for the subsequent correlation and cluster analysis, please provide the following files:",style =  "text-align: left; font-size:150%"),
@@ -299,7 +300,7 @@ ui <-
                   div(style = "margin-top: -15px;",fileInput("basfile", "", multiple = TRUE, 
                                                              accept = c(".shp", ".shx", ".dbf", ".prj"))),
                   
-                  div(id="fitness_avail",div("6. pareto_fitness.txt",style = "text-align: left; font-size:115%"),
+                  div(id="fitness_avail",div("6. pareto_fitness.txt (if not provided previously)",style = "text-align: left; font-size:115%"),
                   div(style = "margin-top: -15px;",fileInput("file4", "", accept = ".txt")))%>%hidden(), 
                   
                   
@@ -320,6 +321,10 @@ ui <-
                   div(id="runprep_show",p("Run Preparation Script when ready (this should take no more than five minutes)",style =  "text-align: left; font-size:150%"),
                   actionButton("runprep", "Run Prep"))%>%hidden,
                   uiOutput("script_output"),
+                  
+                  
+                  br(),br(),br(),
+                  
                   div(id="reset", htmlOutput("reset_prompt"),
                       actionButton("reset_btn", "Hard Reset",style = "color: white; background-color: red; font-size: 15px; padding: 8px 8px; border-radius: 5px;"),
                       textOutput("reset_status"))
@@ -328,7 +333,7 @@ ui <-
         ), 
         
      
-        ## CORRELATION ANALYSIS PANEL ####
+  ## CORRELATION ANALYSIS PANEL ####
     tabItem(tabName = "correlation_analysis",
            titlePanel("Correlation Analysis"),
            
