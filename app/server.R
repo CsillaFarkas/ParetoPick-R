@@ -1226,6 +1226,7 @@ server <- function(input, output, session) {
   })
   
   ### AHP ####
+  #might miss normalisation
   observeEvent(input$tabs == "ahp",{
     if(!file.exists("../data/pareto_fitness.txt")){ #check if fit() has been created yet
       output$nothing_ran_ahp <- renderText({HTML("please provide the pareto_fitness.txt in either the Data Preparation or the Visualising the Pareto Front tab.")})
