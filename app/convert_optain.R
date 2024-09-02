@@ -192,7 +192,7 @@ for(op in paste0("V", 1:nopt)){ #instable looping, Cordi...
     
     strc = opti %>% filter(.data[[op]] %in% strct_obj)%>%distinct()%>%ungroup()%>%select(count)%>%sum()
 
-    lin[op,]= (strc/mngmt)*100 #just a nicer value
+    lin[op,]= ifelse(mngmt != 0 && strc !=0,(strc/mngmt)*100,0) #just a nicer value
     print(paste0("caculated linE for Optimum ",op,"..."),quote=F)
     }
   
