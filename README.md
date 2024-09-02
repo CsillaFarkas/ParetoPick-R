@@ -49,11 +49,10 @@ It then performs both and provides the relevant statistics, plots and analyses.
 * sliders with actual values instead of scaled values?
 
 * AHP tab: 
-  * structured presentation of decisions and more intuitive explanations
   * map with measure implementation of selected optimum
   * Schmerzgrenzen properly displayed and considered
   * the initial state of the pairwise comparison as "Equal" amplifies the mathematical definition of inconsistency
-  * normalise for different units?
+  * unclear how to best normalise data, difficult particularly for when objectives are scaled very differently
 
 * Plot last tab: status message so user knows the plot is being rendered!!
 * Front page needs some more explanation
@@ -63,10 +62,8 @@ It then performs both and provides the relevant statistics, plots and analyses.
   * other variables to consider in the PCA
 
 * Correlation Analysis:
-  * output largest accepted correlation, maybe in bold in table
+  * output largest accepted correlation, maybe in bold over the table
   * deviations_step is currently the default value 
   * explain the effects of high correlation
-  * the max PCA aligning with the max variables does not always work, unsure why
-
 
 
