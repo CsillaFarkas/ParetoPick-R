@@ -47,20 +47,19 @@ It then performs both and provides the relevant statistics, plots and analyses.
 
 # Missing/Nice to have
 * sliders with actual values instead of scaled values?
+* implement other variables to consider in the PCA! using SWAT+ inputs
+* Klaipeda:
+  * full list of nswrm implemented across all catchments to properly assign priorities incl. info on weather management or structural
 
 * AHP tab: 
   * structured presentation of decisions and more intuitive explanations
   * map with measure implementation of selected optimum
   * Schmerzgrenzen properly displayed and considered
-  * the initial state of the pairwise comparison as "Equal" amplifies the mathematical definition of inconsistency
+  * the initial state of the pairwise comparison as "Equal" amplifies the mathematical definition of inconsistency, therefore only when at least three sliders are NOT set to "Equal" is inconsistency considered at all
   * normalise for different units?
 
-* Plot last tab: status message so user knows the plot is being rendered!!
-* Front page needs some more explanation
-
-* Klaipeda:
-  * full list of nswrm implemented across all catchments to properly assign priorities incl. info on weather management or structural
-  * other variables to consider in the PCA
+* Analysis tab: 
+  * status message so user knows the plot is being rendered!!
 
 * Correlation Analysis:
   * output largest accepted correlation, maybe in bold in table
