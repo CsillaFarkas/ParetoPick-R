@@ -833,13 +833,25 @@ match_scaled = function(minval_s=c(0,0,0,0),
   
 }
 
-## find row of data containing specific value in specific column
-find_row = function(dat, colname, val, absdat){
+## subset dataframe based on (slider) selection
+match_abs <- function(minval, maxval, abs_tab, ranger = NULL) {
+  n_cols <- ncol(abs_tab)
   
-  closest_index <- which.min(abs(dat[[colname]] - val))
- 
-  return(absdat[closest_index, ]) #this works as fit and f_scaled have the same origin
+  if(!is.null(ranger)){#undo the scaling which was done for the slider visibility
+    
+    indices <- which(names(abs_tab) %in% ranger)
+
+    maxval[indices] = maxval[indices] / 1000
+    minval[indices] = minval[indices] / 1000
+  }
+  
+  filter_conditions <- lapply(seq_len(n_cols), function(i) {
+    abs_tab[[i]] >= minval[i] & abs_tab[[i]] <= maxval[i]
+  })
+  
+  combined_filter <- Reduce(`&`, filter_conditions)
+  
+  abs_filter <- abs_tab %>% filter(combined_filter)
+  
+  return(abs_filter)
 }
-
-
-

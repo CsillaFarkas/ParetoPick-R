@@ -55,6 +55,7 @@ server <- function(input, output, session) {
   )
   coma = reactiveVal()
   range_controlled = reactiveVal(NULL)
+  initial_update_done = reactiveVal(FALSE)
   ### Introduction ####
  
   ### Play Around Tab ####
@@ -95,13 +96,11 @@ server <- function(input, output, session) {
     observe({
       req(objectives())
       obj <- objectives()
-      
       for(i in 1:4){
         updateSliderInput(session, paste0("obj",i), label = obj[i])
         updateSliderInput(session, paste0("obj",i,"_ahp"), label = obj[i])
         
-      }
-  
+        }
       updateCheckboxGroupInput(session, "sel_neg", choices = objectives(), selected = NULL)
     })
     
@@ -130,7 +129,7 @@ server <- function(input, output, session) {
        ## adapt sliders in ahp tab
           min_max <-data.frame(t(sapply(data, function(x) range(x, na.rm = TRUE))))
           names(min_max) =c("min","max")
-
+          range_value = NULL
           for (i in 1:4) {
             var_name <- paste0("steps", i)
             
@@ -138,15 +137,16 @@ server <- function(input, output, session) {
               min_max$max[i] = min_max$max[i] * 1000
               min_max$min[i] = min_max$min[i] * 1000
               
-              range_controlled(rownames(min_max[i, ])) #required to assure subsequent reversal of values
+              range_value = append(range_value,(rownames(min_max[i, ])))
             }
+          range_controlled(range_value)
           
           assign(var_name, (min_max$max[i]-min_max$min[i])/20)
           
           updateSliderInput(session, paste0("obj",i,"_ahp"), value = c(min_max$min[i],min_max$max[i]),min =min_max$min[i],max = min_max$max[i],step=var_name)
-       
+          initial_update_done(TRUE)
+          
           }
-        
         
       } else {
         shinyjs::show(id = "parfit")
@@ -576,7 +576,7 @@ server <- function(input, output, session) {
      
      
       output$script_output  <- renderUI({
-        if(dp_done()){
+        if(dp_done() & file.exists("../input/var_corr_par.csv")){
           tags$strong("The data preparation was successful. You can now continue with the Correlation and Principal Component Analysis. You will not need this tab again.")
         }else{verbatimTextOutput("rscriptcmd")}
         
@@ -702,7 +702,6 @@ server <- function(input, output, session) {
         
         ## pull corr from file
         if(file.exists("../output/correlation_matrix.csv")){
-          shinyjs::show("show_conf")
           
           corr <<- read.csv("../output/correlation_matrix.csv", row.names = 1) #global because of re-rendering of plot
 
@@ -713,6 +712,8 @@ server <- function(input, output, session) {
         } )
         ## make new corr
       observeEvent(input$run_corr,{
+          shinyjs::show("show_conf") #show confirm seletion button once correlation has run
+        
           req(input$selements)
           all_var <<- readRDS("../input/all_var.RDS")
           
@@ -1027,13 +1028,13 @@ server <- function(input, output, session) {
    if(!any(file.exists(list.files(path = output_dir, pattern = "clusters_representativesolutions.*\\.csv$", full.names = TRUE)))){
      shinyjs::hide("main_analysis")
      shinyjs::hide("plt_opti")
-     shinyjs::runjs("toggleSidebar(true);")  # Hide sidebar
+     shinyjs::runjs("toggleSidebar(true);")  #hide sidebar
      
      output$analysis_no_clustering <- renderText({
        HTML("the correlation analysis and the clustering have to run first before their results can be analysed")
      })
    }else{shinyjs::hide("analysis_no_clustering")
-     shinyjs::runjs("toggleSidebar(false);")  # Hide sidebar
+     shinyjs::runjs("toggleSidebar(true);")  #show sidebar
    }
     
     
@@ -1233,13 +1234,12 @@ server <- function(input, output, session) {
   })
   
   ### AHP ####
-  #might miss normalisation
   observeEvent(input$tabs == "ahp",{
     if(!file.exists("../data/pareto_fitness.txt")){ #check if fit() has been created yet
       output$nothing_ran_ahp <- renderText({HTML("please provide the pareto_fitness.txt in either the Data Preparation or the Visualising the Pareto Front tab.")})
     }else{ shinyjs::hide("nothing_ran_ahp")
       shinyjs::runjs("toggleSidebar(false);")  # Hide sidebar
-}      
+    }      
       
       
       if(!file.exists("../input/object_names.RDS")) {
@@ -1267,7 +1267,7 @@ server <- function(input, output, session) {
     updateSelectInput(session,inputId = "size_var", choices = choices, selected = preselect4)
     
     })
-
+  
   
   criteria_choices <- reactive({
     req(fit())
@@ -1280,14 +1280,13 @@ server <- function(input, output, session) {
     selectInput("criterion1", "Select the first objective (x-axis)", choices = choices)
   })
 
-  # Generate the UI for selecting the second criterion dynamically based on the uploaded data
+  ## select the second criterion dynamically based on the uploaded data
   output$criterion2_ui <- renderUI({
     req(input$criterion1)
     choices <- setdiff(criteria_choices(), input$criterion1)
     selectInput("criterion2", "Select the second objective (y-axis)", choices = choices)
   })
 
-  # Update the choices for the second criterion whenever the first criterion changes
   observeEvent(input$criterion1, {
     updateSelectInput(session, "criterion2", choices = setdiff(criteria_choices(), input$criterion1))
   })
@@ -1299,7 +1298,7 @@ server <- function(input, output, session) {
     x <- fit()[,input$criterion1]
     y <- fit()[,input$criterion2]
     
-    # Fit a linear model
+    ## linear model
     model <- lm(y ~ x)
   
     output$scatterPlot <- renderPlot({
@@ -1392,39 +1391,54 @@ server <- function(input, output, session) {
       weights
   })
 
+ 
   output$weights_output <- renderTable({
                                        req(calculate_weights())
                                        wgt=(t(calculate_weights()))
                                        wgt
                                        }, colnames = T)
   
-  output$best_option_output <- renderTable({
-    req(sols())
+    output$best_option_output <- renderTable({
+      
+    req(sols(),fit(),initial_update_done())
+      
     if (input$best_cluster) {
       df = subset(sols(),select= -optimum) #best option out of optima
+      
+      df = match_abs(minval=c(input$obj1_ahp[1],input$obj2_ahp[1], input$obj3_ahp[1], input$obj4_ahp[1]),
+                     maxval=c(input$obj1_ahp[2],input$obj2_ahp[2], input$obj3_ahp[2], input$obj4_ahp[2]),
+                     abs_tab = df, ranger = range_controlled())
+
     } else{
-      df = fit()   #best option out of whole pareto front (=default)
+        #best option out of whole pareto front (=default)
+      df = match_abs(minval=c(input$obj1_ahp[1],input$obj2_ahp[1], input$obj3_ahp[1], input$obj4_ahp[1]),
+                     maxval=c(input$obj1_ahp[2],input$obj2_ahp[2], input$obj3_ahp[2], input$obj4_ahp[2]),
+                     abs_tab = fit(), ranger = range_controlled())
     }
     
     if (!all(names(calculate_weights()) %in% colnames(df))) {
       return("Dataframe columns do not match criteria names.")
     }
-    
+
+      
+    if(nrow(df)==0 || ncol(df) == 0){
+      bo = "Please select different data ranges!"
+    }else{  
     weights <- calculate_weights()
     pca <- prcomp(df[, names(weights)], center = TRUE, scale. = TRUE)
     
-    # Extract the principal components (scores)
     pca_scores <- pca$x
     
     # Calculate the final score based on the principal components
     df$Score <- rowSums(pca_scores * weights)
-    
     
     best_option_index <<- which.max(df$Score)
     df$Score <- NULL #drop Score column
     best_option(df[best_option_index, ])
     
     bo = best_option()
+    
+    }
     bo
   })
   
@@ -1467,10 +1481,8 @@ server <- function(input, output, session) {
     
     
     if(se > 3){inconsistencies = paste("No major inconsistencies.")}else if(cr <= 0.15){
-      inconsistencies = paste("No major inconsistencies, the inconsistency ratio is:",
-                              round(cr, 3))
-    }else{inconsistencies = paste("Potential inconsistencies, the inconsistency ratio is:"
-                                  , round(cr, 3))}
+      inconsistencies = paste("No major inconsistencies, the inconsistency ratio is:", round(cr, 3))
+    }else{inconsistencies = paste("Potential inconsistencies, the inconsistency ratio is:", round(cr, 3))}
     
     inconsistencies
   })
