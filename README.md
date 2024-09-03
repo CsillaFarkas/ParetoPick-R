@@ -45,22 +45,21 @@ It then performs both and provides the relevant statistics, plots and analyses.
 * outlier_to_cluster_ratio
 * min_components & max_components
 
+# Unclear
+* AHP
+  * the initial state of the pairwise comparison as "Equal" amplifies the mathematical definition of inconsistency, therefore only when at least three sliders are NOT set to "Equal" is inconsistency considered at all
+  * unclear how to best normalise data, difficult particularly for when objectives are scaled very differently (log, z scores etc do not yield satisfying variability across the set)
+
 # Missing/Nice to have
 * sliders with actual values instead of scaled values?
 * implement other variables to consider in the PCA! using SWAT+ inputs
+
 * Klaipeda:
   * full list of nswrm implemented across all catchments to properly assign priorities incl. info on weather management or structural
 
 * AHP tab: 
   * map with measure implementation of selected optimum
-  * Schmerzgrenzen properly displayed and considered
-<<<<<<< HEAD
-  * the initial state of the pairwise comparison as "Equal" amplifies the mathematical definition of inconsistency
-  * unclear how to best normalise data, difficult particularly for when objectives are scaled very differently
-=======
-  * the initial state of the pairwise comparison as "Equal" amplifies the mathematical definition of inconsistency, therefore only when at least three sliders are NOT set to "Equal" is inconsistency considered at all
-  * normalise for different units?
->>>>>>> a688c99b7d819c75f6887470b6b89d9229de967c
+  * more reasonable rendering of variable and different scales (currently just multiplied by 1000 if <0.005)
 
 * Analysis tab: 
   * status message so user knows the plot is being rendered!!
