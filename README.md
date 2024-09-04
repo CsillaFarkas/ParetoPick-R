@@ -51,12 +51,15 @@ It then performs both and provides the relevant statistics, plots and analyses.
   * unclear how to best normalise data, difficult particularly for when objectives are scaled very differently (log, z scores etc do not yield satisfying variability across the set)
 
 # Missing/Nice to have
+* fix status quo stuff
 * sliders with actual values instead of scaled values?
 * implement other variables to consider in the PCA! using SWAT+ inputs
+* saving the WHOLE scatter plot, not only the last_plot() device
 
 * Klaipeda:
   * full list of nswrm implemented across all catchments to properly assign priorities incl. info on weather management or structural
-
+  * suggestions for pca variables
+ 
 * AHP tab: 
   * map with measure implementation of selected optimum
   * more reasonable rendering of variable and different scales (currently just multiplied by 1000 if <0.005)
