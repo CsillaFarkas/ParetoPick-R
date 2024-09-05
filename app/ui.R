@@ -24,23 +24,24 @@ ui <-
                                   font-size: 18px;
                                   font-weight: bold;
                                  }
+                                 
                                  #relation th, #relation td {
                                    border: none;
                                    padding: 8px;
                                     }
                                     
-                                /* title on maps in analysis tab */
-                                .map-title {font-weight: bold; 
-                                  font-size: 16px; 
-                                  margin-bottom: 5px;
-                                  text-align: center;
-                                  }  
+                                 /* title on maps in analysis tab */
+                                 .map-title {font-weight: bold; 
+                                   font-size: 16px; 
+                                   margin-bottom: 5px;
+                                   text-align: center;
+                                    }  
                                   
                                     
-                                /* logo */
-                                .skin-blue .main-header .logo {
-                                background-color: #9eb1cf;
-                                }
+                                 /* logo */
+                                 .skin-blue .main-header .logo {
+                                  background-color: #9eb1cf;
+                                 }
                                 
                                 /* logo when hovered */
                                 .skin-blue .main-header .logo:hover {
@@ -75,7 +76,7 @@ ui <-
                                   
                                   }
                                  
-                                  .sidebar-menu li a[data-value="pca"] {
+                                 .sidebar-menu li a[data-value="pca"] {
                                  background-color: #DABFFF !important;
                                   
                                  }
@@ -107,7 +108,10 @@ ui <-
                                 }
                                 
                                 .well {
-                                background-color: #c4d0e2; 
+                                background-color:#b9cae5; 
+                                padding: 6px 7px;
+                                font-size:120%;
+                                border: none;
                                 }
                                 
                                 /* Style the sidebar input labels */
@@ -188,8 +192,7 @@ ui <-
         tabItem(tabName = "play_around",
                 titlePanel("Visualising the Optimisation Output"),
                 
-                wellPanel(  style = "background-color:  #a2a4b6; border: none;",
-                            p("After providing the pareto_fitness.txt and the objective names (given in the first four columns of pareto_fitness.txt) either here or in the next tab, this tab lets you plot the pareto front in two different ways
+                wellPanel(    p("After providing the pareto_fitness.txt and the objective names (given in the first four columns of pareto_fitness.txt) either here or in the next tab, this tab lets you plot the pareto front in two different ways
                               and explore the effects of reduced objective ranges."),p("You can also select specific points on the pareto front by clicking on the line plot.")),
                 
                 sidebarLayout(
@@ -201,7 +204,7 @@ ui <-
                                   "Please provide the pareto_fitness.txt file here and click Save:",style = "text-align: left; font-size:115%",
                                   fileInput("par_fit", "", accept = ".txt"),
                                   actionButton("save_paretofit","Save")), 
-                                  # Text input for short and long names of objectives
+
                                   div(
                                     id = "obj_first",
                                     "Please provide the objective names as given in the first four columns of the pareto_fitness.txt file:",
@@ -259,10 +262,12 @@ ui <-
                            plotOutput("linePlot",click="clickline"),
                            verbatimTextOutput("lineDetails"),
                 
-                           div(id="scatter","Scatter Plot",style = "text-align: left; font-size:150%"),
-                      plotOutput("scatter_plot"),
+                div(id="scatter","Scatter Plot",style = "text-align: left; font-size:150%"),
+                           plotOutput("scatter_plot"),
+                           textInput("scat_plot_savename", "File name (without extension):", value = "my_plot"),
+                           downloadButton("download_scat_plot", "Download Plot"),
                           
-                           div("Difference between selection and the whole Pareto Front", style = "text-align: left; font-size:150%"),
+                div("Difference between selection and the whole Pareto Front", style = "text-align: left; font-size:150%"),
                            plotOutput("sliders_plot"))
                 
                           )## PLAY AROUND MAIN PANEL END
@@ -273,8 +278,7 @@ ui <-
         tabItem(tabName = "data_prep",
                 titlePanel("OPTAIN Data Preparation"),
                 
-                wellPanel(  style = "background-color:  #a2a4b6; border:none;",
-                            p("This tab requires you to provide the required optimisation outputs, please retain their names as given here and as produced in the optimisation workflow."),
+                wellPanel(  p("This tab requires you to provide the required optimisation outputs, please retain their names as given here and as produced in the optimisation workflow."),
                             p(HTML("Please click <strong>Check Files</strong> after doing so.")),
                             p(HTML("If all files have been found, you can click <strong>Run Prep</strong> to prepare the variables for the subsequent correlation and cluster analysis. This takes between 2 and 4 minutes."))),
                 
@@ -300,8 +304,13 @@ ui <-
                   div(style = "margin-top: -15px;",fileInput("basfile", "", multiple = TRUE, 
                                                              accept = c(".shp", ".shx", ".dbf", ".prj"))),
                   
-                  div(id="fitness_avail",div("6. pareto_fitness.txt (if not provided previously)",style = "text-align: left; font-size:115%"),
+                  div("6. sq_fitness.txt (not obligatory but required if you want to plot the status quo)",style = "text-align: left; font-size:115%"),
+                  div(style = "margin-top: -15px;",fileInput("file5", "", accept = ".txt")),
+                  
+                  
+                  div(id="fitness_avail",div("7. pareto_fitness.txt (if not provided in the previous tab)",style = "text-align: left; font-size:115%"),
                   div(style = "margin-top: -15px;",fileInput("file4", "", accept = ".txt")))%>%hidden(), 
+                  
                   
                   
                   actionButton("files_avail", "Check Files"),
@@ -337,9 +346,10 @@ ui <-
     tabItem(tabName = "correlation_analysis",
            titlePanel("Correlation Analysis"),
            
-           wellPanel(style = "background-color:  #a2a4b6; border: none;", p(HTML("The clustering requires you to first run a correlation analysis.
-                                                                            For this purpose, please click <strong>Run Correlation Analysis</strong>, based on the levels of correlation select those variables you would like to exclude from further analysis and then click <strong>Confirm Selection</strong>.")),
-                                                                                 p(HTML("It is also possible to run the clustering across all variables and select no variables to exclude in this tab, however please always click <strong>Confirm Selection</strong>."))),
+           wellPanel( p(HTML("The clustering requires you to first run a correlation analysis.
+                             For this purpose, please click <strong>Run Correlation Analysis</strong>, 
+                             based on the levels of correlation select those variables you would like to exclude from further analysis and then click <strong>Confirm Selection</strong>.")),
+                      p(HTML("It is also possible to run the clustering across all variables and select no variables to exclude in this tab, however please always click <strong>Confirm Selection</strong>."))),
            sidebarLayout(
              
              sidebarPanel(
@@ -400,8 +410,7 @@ ui <-
           
           titlePanel("Clustering"),
           
-          wellPanel(  style = "background-color:  #a2a4b6; border: none;",
-                      p("This tab requires you to decide on the cluster settings. After selecting which objectives shall be plotted on the x-axis, y-axis and as color and size and after deciding on the axis titles, the clustering can be run with default settings."),
+          wellPanel(  p("This tab requires you to decide on the cluster settings. After selecting which objectives shall be plotted on the x-axis, y-axis and as color and size and after deciding on the axis titles, the clustering can be run with default settings."),
                       p(HTML("Selecting <strong>Yes</strong> under either 2. or 3. allows to change those default settings and test a variable number of clusters and outlier considerations.")),
                       p(HTML("The cluster outputs open in separate tabs and can be saved as images."))),
           
@@ -511,8 +520,7 @@ ui <-
      tabItem(
             tabName = "analysis",
             titlePanel("Analysing the remaining optima"), 
-            wellPanel(style = "background-color:  #a2a4b6; border:none;", 
-                      p("This tab allows you to analyse the cluster outputs and plot and compare the measure implementation across the pareto solutions selected in the clustering. The table shows the subset of pareto_fitness selected as representative for the different clusters."),
+            wellPanel(p("This tab allows you to analyse the cluster outputs and plot and compare the measure implementation across the pareto solutions selected in the clustering. The table shows the subset of pareto_fitness selected as representative for the different clusters."),
                       p("The plot on the right aligns with the one produced during the clustering. It shows where the representative solutions selected in the table lie."),
                       p("Please be aware that the plotting of the measure allocation takes about 20 seconds.")), 
             
@@ -526,6 +534,8 @@ ui <-
               fluidRow(
               column(6, div(style = "overflow-x: auto;", DTOutput("antab"))),
               column(6, plotOutput("par_plot_optima"),
+                     checkboxInput("add_whole", label = "Show the whole Pareto front", value = FALSE),
+                     
                      div(id="analysis_random",fluidRow(
                        column(3, selectInput(inputId = "x_var2",label = "X-Axis", choices = NULL, multiple = F, selected=NULL)),
                        column(3,selectInput(inputId = "y_var2",label = "Y-Axis", choices = NULL, multiple = F,selected=NULL)),
@@ -558,15 +568,14 @@ ui <-
         tabName = "ahp",
         titlePanel("Analytical Hierarchy Process"),
         
-       wellPanel(  style = "background-color:  #a2a4b6; border: none;",
-              p("This tab allows you to run a different approach (AHP) to selecting those pareto optima best matching your preferences. AHP is a decision making tool that helps you prioritise different objectives by comparing them in pairs.
-                "),
-              p(HTML("Clicking <strong>analyse objectives</strong> allows you to receive a broad overview of the different objectives' relationships.")),
-              p("If you want you can limit the objective ranges under 2."),
-              p("Under 3. you can compare objectives two at a time and and decide which objective is more important and by how much. 
-                ParetoPick-R will assign weights to each objective based on your inputs and check how consistent your choices are. 
-                The respective best choice is plotted on the right and you can decide whether 
-                it should be selected from the whole pareto front or from the subset of cluster results.")),
+       wellPanel( p("This tab allows you to run a different approach (AHP) to selecting those pareto optima best matching your preferences.
+                     AHP is a decision making tool that helps you prioritise different objectives by comparing them in pairs."),
+                  p(HTML("Clicking <strong>analyse objectives</strong> allows you to receive a broad overview of the different objectives' relationships.")),
+                  p("If you want you can limit the objective ranges under 2."),
+                  p("Under 3. you can compare objectives two at a time and and decide which objective is more important and by how much. 
+                     ParetoPick-R will assign weights to each objective based on your inputs and check how consistent your choices are. 
+                     The respective best choice is plotted on the right and you can decide whether 
+                     it should be selected from the whole pareto front or from the subset of cluster results.")),
        
         sidebarLayout(
           sidebarPanel(
@@ -626,6 +635,7 @@ ui <-
                              column(3,selectInput(inputId = "size_var",label = "Size", choices = NULL, multiple = F,selected=NULL))),
       
        checkboxInput("show_extra_dat", label = "Show cluster solutions", value = FALSE),
+       checkboxInput("show_status_quo", label = "Show Status Quo", value = FALSE),
        textInput("weights_plot_savename", "File name (without extension):", value = "my_plot"),
        downloadButton("download_weights_plot", "Download Plot")))
       
