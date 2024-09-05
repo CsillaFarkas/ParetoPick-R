@@ -35,7 +35,7 @@ server <- function(input, output, session) {
   pca_status <- reactiveVal("")
   
   axiselected = reactiveVal(read_config_plt(obj=F,axis=T))
-  max_pca <- reactive({get_num_pca()})# required for max pc field
+  max_pca <- reactiveVal()# required for max pc field
   pca_available <- reactiveValues(button1_clicked = FALSE, button2_clicked = FALSE) #controls proper writing previous to clustering
   #results table
   check_files<- reactiveVal(NULL)
@@ -77,13 +77,16 @@ server <- function(input, output, session) {
       })
       
       observeEvent(input$save_par_fiti, {
-        req(objectives())
+        req(objectives(),input$short1, input$short2, input$short3, input$short4)
         saveRDS(updated_objectives, file = "../input/object_names.RDS")
         
         updateTextInput(session,"col1", value = objectives()[1] )
         updateTextInput(session,"col2", value = objectives()[2] )
         updateTextInput(session,"col3", value = objectives()[3] )
         updateTextInput(session,"col4", value = objectives()[4] )
+        
+        write_pca_ini(var1=input$short1,var2=input$short2,var3=input$short3,var4=input$short4,
+                      var1_lab="",var2_lab="",var3_lab="",var4_lab="")#save label for future use (pulled w/ read_config_plt in Data prep, pca and cluster)
       }) 
       
     } else {
@@ -106,7 +109,7 @@ server <- function(input, output, session) {
     
     
     ## make or pull fit()
-    if(file.exists("../data/pareto_fitness.txt")){shinyjs::hide(id="parfit")}
+    if(file.exists(pareto_path)){shinyjs::hide(id="parfit")}
       
     observe({
       if (file.exists(pareto_path)) {
@@ -194,7 +197,16 @@ server <- function(input, output, session) {
       }else{
         uns <<- c(input$unit1,input$unit2,input$unit3,input$unit4)
         
-        observeEvent(input$save_unit,{saveRDS(uns, file="../input/units.RDS")})
+        observeEvent(input$save_unit,{saveRDS(uns, file="../input/units.RDS")
+          isolate({axiselected(c(input$unit1,input$unit2,input$unit3, input$unit4))}) #for later use in clustering
+          
+          updateTextInput(session, "axisx",  value  = axiselected()[1])
+          updateTextInput(session, "axisy", value = axiselected()[2])
+          updateTextInput(session, "colour", value = axiselected()[3])
+          updateTextInput(session, "size", value = axiselected()[4])
+          
+          
+          })
       }
     })
   
@@ -373,6 +385,15 @@ server <- function(input, output, session) {
     grid.arrange(grobs = plot_scatter, nrow = 2, ncol = 3)
     })
   
+  output$download_scat_plot <- downloadHandler(
+    filename = function() {
+      paste(input$scat_plot_savename, ".png", sep = "")
+    },
+    content = function(file) {
+      ggsave(file, plot = last_plot(), device = "png", width = 7, height = 5)
+    }
+  )
+  
   
   ### Data Prep ####
   
@@ -382,6 +403,8 @@ server <- function(input, output, session) {
   file_data2 <- reactiveVal(NULL)
   file_data3 <- reactiveVal(NULL)
   file_data4 <- reactiveVal(NULL)
+  file_data5 <- reactiveVal(NULL)
+  
   shapefile <- reactiveVal(NULL)
 
   ## check if required files exist
@@ -401,6 +424,9 @@ server <- function(input, output, session) {
   if (is.null(file)) {return(NULL)}
   file_data4(list(path = file$datapath, name = file$name))})
   
+  observeEvent(input$file5, { file <- input$file5
+  if (is.null(file)) {return(NULL)}
+  file_data5(list(path = file$datapath, name = file$name))})
   
   observeEvent(input$shapefile, { file <- input$shapefile
   if (is.null(file)) {return(NULL)}
@@ -413,16 +439,20 @@ server <- function(input, output, session) {
      save_filename2 <- file_data2()$name
      save_filename3 <- file_data3()$name
      save_filename4 <- file_data4()$name
-
+     save_filename5 <- file_data5()$name
+     
      save_path1 <- file.path(save_dir, save_filename1)
      save_path2 <- file.path(save_dir, save_filename2)
      save_path3 <- file.path(save_dir, save_filename3)
      save_path4 <- file.path(save_dir, save_filename4)
+     save_path5 <- file.path(save_dir, save_filename5)
+     
 
      file.copy(file_data1()$path, save_path1, overwrite = TRUE)
      file.copy(file_data2()$path, save_path2, overwrite = TRUE)
      file.copy(file_data3()$path, save_path3, overwrite = TRUE)
      file.copy(file_data4()$path, save_path4, overwrite = TRUE)
+     file.copy(file_data5()$path, save_path5, overwrite = TRUE)
      
      #cm shapefile
      shp_req = c(".shp",".shx", ".dbf", ".prj")
@@ -749,7 +779,7 @@ server <- function(input, output, session) {
   ## on clicking confirm selection the config ini is updated
   observeEvent(input$confirm_selection,{
     pca_remove(input$excl)
-    
+    max_pca(get_num_pca()) #set max number of pca here
     output$corrtable <- renderDT({
       datatable(find_high_corr(corr,threshold = input$thresh,tab = T,strike = input$excl),escape = FALSE)}) #tab = T means this returns the full table, =F is for pulling variables
     
@@ -778,7 +808,7 @@ server <- function(input, output, session) {
   
    
    
-  #### PC Analysis ####
+  ### PC Analysis ####
   # table with variables INCLUDED in PCA (renewed every time confirm selection is clicked in correlation tab)
     pca_table(pca_in$data)
 
@@ -813,6 +843,7 @@ server <- function(input, output, session) {
     choices = c("off", choices)
     all_choices(choices)
     preselected = read_config_plt(obj = T, axis = F)
+ 
     isolate({axiselected(read_config_plt(obj = F, axis = T))})
     
     updateTextInput(session, "axisx",  value  = axiselected()[1])
@@ -1022,19 +1053,24 @@ server <- function(input, output, session) {
   })
   output$pca_settings_summary <- renderUI({HTML(settings_text())})
   
-   #### ANALYSIS PANEL ####
+  ### Analysis Panel ####
 
   observeEvent(input$tabs == "analysis", { #this could be combined with the ahp tab for analysis
-   if(!any(file.exists(list.files(path = output_dir, pattern = "clusters_representativesolutions.*\\.csv$", full.names = TRUE)))){
+
+    clus_out <- list.files(path = output_dir, pattern = "clusters_representativesolutions.*\\.csv$", full.names = TRUE)
+    
+    if(length(clus_out) == 0){
      shinyjs::hide("main_analysis")
      shinyjs::hide("plt_opti")
-     shinyjs::runjs("toggleSidebar(true);")  #hide sidebar
+     shinyjs::runjs("toggleSidebar(false);")  #hide sidebar
      
      output$analysis_no_clustering <- renderText({
        HTML("the correlation analysis and the clustering have to run first before their results can be analysed")
      })
    }else{shinyjs::hide("analysis_no_clustering")
      shinyjs::runjs("toggleSidebar(true);")  #show sidebar
+     shinyjs::show("main_analysis")
+     shinyjs::show("plt_opti")
    }
     
     
@@ -1093,7 +1129,7 @@ server <- function(input, output, session) {
           
         }else{
           sols(data.frame(Message = "something went wrong - has the PCA run properly?"))
-          shinyjs::hide(id="plt_opti")
+          # shinyjs::hide(id="plt_opti")
         }
         output$antab <- renderDT({
           req(sols())
@@ -1125,7 +1161,9 @@ server <- function(input, output, session) {
         y_var = input$y_var2,
         col_var = input$col_var2,
         size_var = input$size_var2,
-        sel_tab = selected_data
+        sel_tab = selected_data,
+        add_whole = input$add_whole,
+        an_tab = T
       )
     }) }
     
@@ -1159,7 +1197,7 @@ server <- function(input, output, session) {
       needs_buffer(pull_buffer())
     }
     if(file.exists("../data/hru.con")){lalo <<- plt_latlon(conpath = "../data/hru.con")}
-
+   
   })
   
   observeEvent(input$plt_opti,{
@@ -1422,7 +1460,7 @@ server <- function(input, output, session) {
 
       
     if(nrow(df)==0 || ncol(df) == 0){
-      bo = "Please select different data ranges!"
+      bo = "None of the points fulfill these criteria. Please select different data ranges!"
     }else{  
     weights <- calculate_weights()
     pca <- prcomp(df[, names(weights)], center = TRUE, scale. = TRUE)
@@ -1449,7 +1487,7 @@ server <- function(input, output, session) {
     req(objectives(),fit(),best_option(),input$x_var,sol)
     bo = best_option()
     plt_sc_optima(dat=fit(),x_var=input$x_var,y_var=input$y_var,
-                  col_var=input$col_var,size_var=input$size_var,high_point=bo,extra_dat = sol,plt_extra = input$show_extra_dat)
+                  col_var=input$col_var,size_var=input$size_var,high_point=bo,extra_dat = sol,plt_extra = input$show_extra_dat, status_q = input$show_status_quo)
     
     })
   
