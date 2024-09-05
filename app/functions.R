@@ -572,48 +572,117 @@ return(plots)
 }
 
 ## scatter plot in analysis tab and AHP tab
-library(ggplot2)
-library(viridis)
 
 plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NULL, 
                           extra_dat = NULL, #highlight optima in AHP tab
+                          an_tab = F,
                           plt_extra=F, #potentially redundant tbf
-                          sel_tab = NULL #highlight table selection Analysis tab
-                          ) {
-  p= ggplot(dat, aes_string(x=x_var, y=y_var, fill = col_var, size = size_var))+
-         geom_point(shape=21,stroke=0.5)+
-        scale_fill_viridis(alpha=0.8)+
-         scale_size(range = c(1, 10)) +
-           theme_bw() + theme(
-            panel.background = element_blank(),
-            panel.grid.major = element_line(color = "lightgray", size = 0.3),
-            panel.grid.minor = element_blank(),
-            panel.border = element_blank(),
-            axis.text = element_text(size = 12),
-            axis.title = element_text(size = 16))
+                          sel_tab = NULL, #highlight table selection Analysis tab
+                          add_whole = F, #add the whole pareto fron Analysis tab
+                          status_q = FALSE) {
+  
+  xma = yma = NULL
+
+  
+  #plot with main data
+  p = ggplot(dat, aes_string(x = x_var, y = y_var, fill = col_var, size = size_var)) +
+    geom_point(shape = 21, stroke = 0.5 ) +
+    viridis::scale_fill_viridis(alpha = 0.8, name = col_var) +  
+    scale_size(range = c(1, 10), name = size_var) +     
+    theme_bw() + 
+    theme(panel.background = element_blank(),
+          panel.grid.major = element_line(color = "lightgray", size = 0.3),
+          panel.grid.minor = element_blank(),
+          panel.border = element_blank(),
+          axis.text = element_text(size = 12),
+          axis.title = element_text(size = 16),
+          legend.position = "right", 
+          legend.text = element_text(size=13.5),
+          legend.title = element_text(size=15))
+  
+  all_extra_data = NULL
+  
+  
+ 
+  
+ 
+  if (add_whole) {
+    whole <- read.table(pareto_path, header = FALSE, stringsAsFactors = FALSE, sep = ',')
+    colnames(whole) <- colnames(dat)
+    whole$set <- "Whole front" #pulled above, only applied in analysis tab
+    all_extra_data <- rbind(all_extra_data,whole)
+    
+  }
+  
   
   if (!is.null(extra_dat) && plt_extra) {
-    p <- p +
-      geom_point(data = extra_dat, aes_string(x = x_var, y = y_var, fill=col_var, size = size_var), 
-                 shape = 21, stroke = 0.5, alpha=0.9, fill= "#00FFFF",show.legend = F)
+    extra_dat$set <- "cluster solutions"
+    all_extra_data <- rbind(all_extra_data,extra_dat)
+    
   }
   
-  # highlight specific points if provided
   if (!is.null(high_point)) {
-    p <- p + 
-      geom_point(data = high_point, aes_string(x = x_var, y = y_var), 
-                 size = 4.5, shape = 15, color = "darkred")
+    high_point$set <- "AHP - best option"
+    all_extra_data <- rbind(all_extra_data,high_point)
+    
+  }
+
+  if (!is.null(sel_tab)) {
+    sel_tab$set <- "Selection"
+    all_extra_data <- rbind(all_extra_data,sel_tab)
+    
   }
   
-  # highlight table selection
-  if (!is.null(sel_tab)) {
-    p <- p + 
-      geom_point(data = sel_tab, aes_string(x = x_var, y = y_var), 
-                 size = 4.5, shape = 21, stroke = 3, color ="black")
+  if (status_q) {
+    st_q <- read.table("../data/sq_fitness.txt", header = FALSE, stringsAsFactors = FALSE, sep = ' ')
+    names(st_q) <- names(dat)
+    st_q$set <- "Status Quo"
+    all_extra_data <- rbind(all_extra_data,st_q)
+  }
+  
+  
+ 
+
+  if (!is.null(all_extra_data)) {
+    
+    p <- p +
+      geom_point(data = all_extra_data, aes_string(x = x_var, y = y_var, shape = "set", color = "set"), 
+                 size = 6.5, stroke = 2, alpha = 0.9, show.legend = TRUE) +
+      scale_shape_manual(values = c("Whole front" = 21,"cluster solutions" = 21, "AHP - best option" = 22, "Selection" =21, "Status Quo" = 17),name="") + 
+      scale_color_manual(values = c( "Whole front" = "lightgrey","cluster solutions" = "cyan", "AHP - best option" = "#FF4D4D", "Selection" = "black", "Status Quo" = "#FF00FF"),name="") +   
+      guides(color = guide_legend(override.aes = list(size = 5)), 
+             shape = guide_legend(override.aes = list(size = 5)))
+  }
+ 
+  #correct for negative scale aesthetics
+  if (any(dat[[x_var]] < 0)) {
+    p <- p + scale_x_continuous(labels = function(x) {
+      rem_min(x)
+    })
+    yma = " (negative)"
+  }
+  
+  if (any(dat[[y_var]] < 0)) {
+    p <- p + scale_y_continuous(labels = function(y) {
+      rem_min(y)
+    })
+    xma = " (negative)"
+    
+  }
+  
+  p = p +labs(x=paste0(x_var,xma), y = paste0(y_var,yma))
+  
+  if(an_tab){
+    whole <- read.table(pareto_path, header = FALSE, stringsAsFactors = FALSE, sep = ',')
+    colnames(whole) <- colnames(dat)
+    p =  p + scale_x_continuous(limits= c(range(whole[[x_var]])[1],range(whole[[x_var]])[2]))+
+      scale_y_continuous(limits= c(range(whole[[y_var]])[1],range(whole[[y_var]])[2]))
   }
   
   return(p)
 }
+
+
 
 #### AHP Functions ####
 
@@ -632,7 +701,6 @@ get_mima = function(df){
   min_values <- sapply(df, min, na.rm = TRUE)
   max_values <- sapply(df, max, na.rm = TRUE)
   
-  # Create a dataframe with the results
   min_max_df <- data.frame(
     Variable = names(min_values),
     Min = min_values,
@@ -643,7 +711,15 @@ get_mima = function(df){
   return(min_max_df)
 }
 
+## remove minus (required for nicer plotting)
+rem_min <- function(x) {
+  gsub("-", "", scales::number(x))
+}
 
+## used with rem_min in plots
+all_neg <- function(column) {
+  all(column < 0)
+}
 
 ## default max number of pc
 get_num_pca <- function() {
