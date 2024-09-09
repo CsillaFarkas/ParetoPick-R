@@ -415,7 +415,8 @@ plt_lf <- function(data, mes, lo, la, buff_els, col_sel) {
           weight = 2,
           bringToFront = TRUE
         )
-      )
+      ) %>% 
+      addLegend("bottomright", pal = dispal, values = data[[col]])
   }
   return(m)
 }
@@ -686,7 +687,7 @@ plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NUL
   if (!is.null(all_extra_data)) {
     
     p <- p +
-      geom_point(data = all_extra_data, aes(x = .data[[x_var]], y = .data[[y_var]], shape = .data[[set]], color = .data[[set]]), 
+      geom_point(data = all_extra_data, aes(x = .data[[x_var]], y = .data[[y_var]], shape = set, color = set), 
                  size = 6.5, stroke = 2, alpha = 0.9, show.legend = TRUE) +
       scale_shape_manual(values = c("Whole front" = 21,"cluster solutions" = 21, "AHP - best option" = 22, "Selection" =21, "Status Quo" = 17),name="") + 
       scale_color_manual(values = c( "Whole front" = "lightgrey","cluster solutions" = "cyan", "AHP - best option" = "#FF4D4D", "Selection" = "black", "Status Quo" = "#FF00FF"),name="") +   
