@@ -120,6 +120,21 @@ write_pca_ini <- function(var1 = "", var2 = "", var3 = "", var4 = "",
   
 }
 
+## write only units
+write_uns <- function(var1_lab= "", var2_lab = "", var3_lab = "", var4_lab = "",inipath="../input/config.ini") {
+  if (!file.exists(inipath)) {
+    return(NULL)  
+  } 
+  config <- read.ini(inipath)
+  
+  config[[5]]$var_1_label <- ifelse(var1_lab == "off", "", var1_lab)
+  config[[5]]$var_2_label <- ifelse(var2_lab == "off", "", var2_lab)
+  config[[5]]$var_3_label <- ifelse(var3_lab == "off", "", var3_lab)
+  config[[5]]$var_4_label <- ifelse(var4_lab == "off", "", var4_lab)
+  write.ini(config, inipath) 
+  
+}
+
 ##
 write_quali_ini = function(var1 = "", var2 = "", var3 = "", var4 = "",inipath="../input/config.ini"){
   if (!file.exists(inipath)) {
@@ -263,7 +278,7 @@ get_obj_range = function(filepath = "../data/pareto_fitness.txt",colnames=paste0
   
   range_df <- data.frame(column = character(), min = numeric(), max = numeric(), stringsAsFactors = FALSE)
   
-  for (col_name in colnames(pf)) {
+  for (col_name in colnames) {
     min_val <- min(pf[[col_name]], na.rm = TRUE)
     max_val <- max(pf[[col_name]], na.rm = TRUE)
     range_df <- rbind(range_df, data.frame(column = col_name, min = min_val, max = max_val, stringsAsFactors = FALSE))
@@ -466,10 +481,8 @@ prep_diff_bar = function(abs_tab,red_tab,allobs, neg_var=NULL){
   #dumbest way possible for doing this
   pct = as.data.frame(array(NA,dim = c(4,length(allobs))),row.names = rownames(redk))
   colnames(pct) = allobs
-  colnames(pct) == colnames(redk)
-  
   pct = 100*(redk-absk)/absk
-  
+
   # correcting for values on a negative scale 
   if(!is.null(neg_var)){
   pct[neg_var,] = (pct[neg_var,])*-1}
@@ -544,27 +557,54 @@ plt_sc = function(dat, ranges,col=rep("grey",nrow(dat)),size=rep(1.1, nrow(dat))
   for (i in 1:(num_vars - 1)) {
     for (j in (i + 1):num_vars) {
       
-      x_min = ranges[vars[i],2]
-      x_max = ranges[vars[i],3]
-        y_min = ranges[vars[j],2]
-        y_max = ranges[vars[j],3]
-     
+      xcol = vars[i]
+      ycol = vars[j]
       
-      p <- ggplot(dat, aes_string(x = vars[i], y = vars[j])) +
+      
+      x_min = ranges[xcol,2]
+      x_max = ranges[xcol,3]
+        y_min = ranges[ycol,2]
+        y_max = ranges[ycol,3]
+     
+       
+      # p <- ggplot(dat, aes_string(x = vars[i], y = vars[j])) +
+     p = ggplot(dat, aes(x = .data[[xcol]], y = .data[[ycol]]))+
        geom_point(size=size,color= col)+ 
         theme_bw() + theme(
           panel.background = element_blank(),
           panel.grid.major = element_line(color = "lightgray", size = 0.3),
           panel.grid.minor = element_blank(),
           panel.border = element_blank(),
-          axis.text = element_text(size = 12),
+          axis.text = element_text(size = 10),
           axis.title = element_text(size = 16)
-        ) +
-        labs(x = vars[i], y = vars[j])+
-        scale_x_continuous(limits = c(x_min, x_max)) +
-        scale_y_continuous(limits = c(y_min, y_max))
-      plots[[plot_index]] <- p
-      plot_index <- plot_index + 1
+        ) 
+     
+      
+      
+      #correct for negative scale aesthetics
+      if(x_min < 0 && y_min <0){
+        # both negative
+        p <- p + scale_x_continuous(labels = function(x) {rem_min(x)},limits = c(x_min, x_max)) + 
+          scale_y_continuous(labels = function(y) {rem_min(y)},limits = c(y_min, y_max))
+        xma = " (negative)"
+        yma = " (negative)"
+        
+      } else if (x_min < 0) {
+        p <- p + scale_x_continuous(labels = function(x) {rem_min(x)},limits = c(x_min, x_max))
+        xma = " (negative)"
+      } else if (y_min < 0) {
+        p <- p + scale_y_continuous(labels = function(y) {rem_min(y)},limits = c(y_min, y_max))
+        yma = " (negative)"
+        
+      }else{
+        #no neg values
+        p = p +
+          scale_x_continuous(limits = c(x_min, x_max)) +
+          scale_y_continuous(limits = c(y_min, y_max))
+      }
+      
+     plots[[plot_index]] <- p
+     plot_index <- plot_index + 1
     }
   }
 
@@ -585,7 +625,7 @@ plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NUL
 
   
   #plot with main data
-  p = ggplot(dat, aes_string(x = x_var, y = y_var, fill = col_var, size = size_var)) +
+  p = ggplot(dat, aes(x = .data[[x_var]], y = .data[[y_var]], fill = .data[[col_var]], size = .data[[size_var]])) +
     geom_point(shape = 21, stroke = 0.5 ) +
     viridis::scale_fill_viridis(alpha = 0.8, name = col_var) +  
     scale_size(range = c(1, 10), name = size_var) +     
@@ -646,7 +686,7 @@ plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NUL
   if (!is.null(all_extra_data)) {
     
     p <- p +
-      geom_point(data = all_extra_data, aes_string(x = x_var, y = y_var, shape = "set", color = "set"), 
+      geom_point(data = all_extra_data, aes(x = .data[[x_var]], y = .data[[y_var]], shape = .data[[set]], color = .data[[set]]), 
                  size = 6.5, stroke = 2, alpha = 0.9, show.legend = TRUE) +
       scale_shape_manual(values = c("Whole front" = 21,"cluster solutions" = 21, "AHP - best option" = 22, "Selection" =21, "Status Quo" = 17),name="") + 
       scale_color_manual(values = c( "Whole front" = "lightgrey","cluster solutions" = "cyan", "AHP - best option" = "#FF4D4D", "Selection" = "black", "Status Quo" = "#FF00FF"),name="") +   
@@ -659,14 +699,14 @@ plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NUL
     p <- p + scale_x_continuous(labels = function(x) {
       rem_min(x)
     })
-    yma = " (negative)"
+    xma = " (negative)"
   }
   
   if (any(dat[[y_var]] < 0)) {
     p <- p + scale_y_continuous(labels = function(y) {
       rem_min(y)
     })
-    xma = " (negative)"
+    yma = " (negative)"
     
   }
   
@@ -832,7 +872,7 @@ scaled_abs_match = function(minval_s=c(0,0,0,0),
   colnames(df) = allobs
   
   # locate values in scaled dataframe 
-  for(i in 1:length(allobs)){ #this does not have to run for those where we only want abs_tab/output(ch)
+  for(i in seq_along(allobs)){ #this does not have to run for those where we only want abs_tab/output(ch)
     
     sca_max <- scal_tab[which.min(abs(scal_tab[[allobs[i]]]-maxval_s[i])),]
     df["max",allobs[i]] = abs_tab[rownames(sca_max),allobs[i]]  
@@ -845,7 +885,7 @@ scaled_abs_match = function(minval_s=c(0,0,0,0),
   # reduced dataframe of absolute values within all objective ranges
   ch = abs_tab
   
-  for(k in 1:length(allobs)){
+  for(k in seq_along(allobs)){
     valma = df["max",k]
     valmi = df["min",k]
     ch =  ch %>% filter(.data[[allobs[k]]]<=valma & .data[[allobs[k]]]>=valmi)
@@ -858,7 +898,7 @@ scaled_abs_match = function(minval_s=c(0,0,0,0),
   colnames(cw) = allobs
   
   
-  for (l in 1:length(allobs)) {
+  for (l in seq_along(allobs)) {
     if(length(ch %>% slice_max(.data[[allobs[l]]]) %>% select(allobs[[l]]) %>% slice(1)) > 1 ||
        length(ch %>% slice_min(.data[[allobs[l]]]) %>% select(allobs[[l]]) %>% slice(1)) > 1) {
       cw["max", allobs[l]] = NA
@@ -887,7 +927,7 @@ match_scaled = function(minval_s=c(0,0,0,0),
   colnames(df) = allobs
   
   # locate values in scaled data frame 
-  for(i in 1:length(allobs)){
+  for(i in seq_along(allobs)){
     
     sca_max <- scal_tab[which.min(abs(scal_tab[[allobs[i]]]-maxval_s[i])),]
     df["max",allobs[i]] = scal_tab[rownames(sca_max),allobs[i]]  
@@ -899,7 +939,7 @@ match_scaled = function(minval_s=c(0,0,0,0),
   # surely this should be easier 
   ch = scal_tab
   
-  for(k in 1:length(allobs)){
+  for(k in seq_along(allobs)){
     valma = df["max",k]
     valmi = df["min",k]
     ch =  ch %>% filter(.data[[allobs[k]]]<=valma & .data[[allobs[k]]]>=valmi)

@@ -74,6 +74,7 @@ server <- function(input, output, session) {
         req(input$short1, input$short2, input$short3, input$short4)
         updated_objectives <<- c(input$short1, input$short2, input$short3, input$short4)
         objectives(updated_objectives)
+        
       })
       
       observeEvent(input$save_par_fiti, {
@@ -93,6 +94,7 @@ server <- function(input, output, session) {
       shinyjs::hide(id="obj_first")
       short = readRDS("../input/object_names.RDS")
       objectives(short)
+      
     }
     
     ## update slider labels based on objectives
@@ -205,7 +207,7 @@ server <- function(input, output, session) {
           updateTextInput(session, "colour", value = axiselected()[3])
           updateTextInput(session, "size", value = axiselected()[4])
           
-          
+          write_uns(var1_lab= input$unit1, var2_lab = input$unit2, var3_lab = input$unit3, var4_lab = input$unit4,inipath="../input/config.ini")
           })
       }
     })
@@ -213,9 +215,9 @@ server <- function(input, output, session) {
     ## show rest of tab if all required data available
     observe({
       
-      test_fit = fit
+      test_fit = fit()
       test_objectives = objectives()
-      
+
     if (!is.null(test_fit) && !is.null(test_objectives)) {
       shinyjs::show("tab_play1")
       shinyjs::show("tab_play2")
@@ -251,7 +253,7 @@ server <- function(input, output, session) {
                            maxval_s=c(input$obj1[2],input$obj2[2],input$obj3[2],input$obj4[2]),
                            abs_tab = fit(),scal_tab = f_scaled(),
                            allobs = objectives(),smll=F)
-   
+
     te = fml[yo$id,]   # te <- fit()[yo$id,] would not work!!
    
     ete <- te
@@ -779,7 +781,7 @@ server <- function(input, output, session) {
   ## on clicking confirm selection the config ini is updated
   observeEvent(input$confirm_selection,{
     pca_remove(input$excl)
-    max_pca(get_num_pca()) #set max number of pca here
+   
     output$corrtable <- renderDT({
       datatable(find_high_corr(corr,threshold = input$thresh,tab = T,strike = input$excl),escape = FALSE)}) #tab = T means this returns the full table, =F is for pulling variables
     
@@ -788,8 +790,10 @@ server <- function(input, output, session) {
     } else{
       pca_content = all_var[-which(all_var %in% pca_remove())]
     }
-   
+    
     saveRDS(pca_content,file = "../input/pca_content.RDS") #required for PCA
+    
+    max_pca(get_num_pca()) #set max number of pca here (requires pca_content to exist)
     updateNumericInput(session, "pca_max", value = max_pca(), max=max_pca()) #requires pca_content to exist
     
     pca_in$data = pca_content
@@ -1117,22 +1121,26 @@ server <- function(input, output, session) {
 
     observeEvent(check_files(),{
         if(!is.null(check_files())) {
-          
+          req(objectives())
           all_py_out <- file.info(check_files())
-          
+
           current_py_out <- rownames(all_py_out)[which.max(all_py_out$mtime)]
           
           sols_data = read.csv(current_py_out)
           
-          sols(sols_data %>% rownames_to_column("optimum") %>%
-                 dplyr::filter(!is.na(Representative_Solution)& Representative_Solution != "") %>% select(1:5)) #PCA content is hard to read/limited additional value for user
+          new_col_sol = c("optimum", objectives())
           
+          sols(sols_data %>% rownames_to_column("optimum") %>%
+                 dplyr::filter(!is.na(Representative_Solution)& Representative_Solution != "") %>% 
+                 select(1:5) %>% #PCA content is hard to read/limited additional value for user
+                 rename_with(~new_col_sol,everything()))
         }else{
           sols(data.frame(Message = "something went wrong - has the PCA run properly?"))
           # shinyjs::hide(id="plt_opti")
         }
         output$antab <- renderDT({
           req(sols())
+
           datatable(sols()%>%mutate(across(where(is.numeric), round, digits = 5)),
                     selection = list(mode = "multiple", target = 'row', max = 12), rownames= FALSE,
                     options = list(pageLength = 20, autoWidth = TRUE))
@@ -1142,9 +1150,9 @@ server <- function(input, output, session) {
      
     
     if(!is.null(check_files())) { #sol is only useful if python has run
-      
+      req(objectives())
       sol<<-sols()[,objectives()]
-      
+
     output$par_plot_optima <- renderPlot({
       req(objectives(),sols(),input$x_var2)
       
@@ -1165,7 +1173,7 @@ server <- function(input, output, session) {
         add_whole = input$add_whole,
         an_tab = T
       )
-    }) }
+    }) } 
     
     output$download_par_plot <- downloadHandler(
       filename = function() {

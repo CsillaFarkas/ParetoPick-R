@@ -37,6 +37,6 @@ options(warn = -1)
 save_dir <- "../data/"
 input_dir <- "../input/"
 output_dir <- "../output/"
-pareto_path <- "../data/pareto_fitness.txt" #used to frequently..
+pareto_path <- "../data/pareto_fitness.txt" #used too frequently..
 if(!dir.exists(save_dir)){  dir.create(save_dir)}
 if(!dir.exists(output_dir)){  dir.create(output_dir)}
