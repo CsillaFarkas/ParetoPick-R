@@ -10,7 +10,7 @@ It then performs both and provides the relevant statistics, plots and analyses.
 4. input folder (containing nswrm_priorities.csv and config.ini): folder the datafiles are written/read to/from 
 5. data for container (containing config.ini and nswrm_priorities.csv for hard reset)
 
-## Files provided in the package
+### Files provided in the package
 * config.ini 
 * nswrm_priorities.csv 
 
@@ -23,7 +23,7 @@ It then performs both and provides the relevant statistics, plots and analyses.
 * all_var.RDS
 * units.RDS
 
-## Input through the user 
+### Input through the user 
 (app pulls these into the data folder)
 * pareto_genomes.txt
 * pareto_fitness.txt
@@ -66,6 +66,8 @@ It then performs both and provides the relevant statistics, plots and analyses.
 
 * Analysis tab: 
   * status message so user knows the plot is being rendered!!
+  * location of zoom in basin
+  * fix the legend
 
 * Correlation Analysis:
   * output largest accepted correlation, maybe in bold over the table
