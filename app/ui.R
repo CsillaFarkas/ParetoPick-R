@@ -4,7 +4,7 @@
 ####################################################################
 ui <- 
   dashboardPage(
-    dashboardHeader(title="OPTAIN"),
+    dashboardHeader(title="ParetoPick-R"),
     dashboardSidebar(
       sidebarMenu(id = "tabs",
       menuItem("Introduction",tabName = "intro", icon = icon("home"),selected=TRUE),
