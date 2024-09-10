@@ -26,6 +26,9 @@ server <- function(input, output, session) {
     settings <- pca_settings(input)
     settings_text(settings)
   }
+  
+  run_prep_possible = reactiveValues(files_avail = FALSE) #allow prep script when all files available
+  
   pca_ini <- read_pca()
   pca_table <- reactiveVal(pca_ini)
   
@@ -497,13 +500,14 @@ server <- function(input, output, session) {
      
      checkFiles <- sapply(required_files, function(file) file.exists(file))
      
+     if(all(checkFiles)& file.exists("../input/object_names.RDS")){run_prep_possible$files_avail = T}
+     
      output$fileStatusMessage <- renderText({
        if (all(checkFiles) & file.exists("../input/object_names.RDS")) {
-         HTML(
-           "All Files found.")
+         HTML("All Files found.")
          
        } else if(all(checkFiles) & !file.exists("../input/object_names.RDS")){
-         HTML("All files found. <br>Please provide the names of the objectives represented in the Pareto front.
+        HTML("All files found. <br>Please provide the names of the objectives represented in the Pareto front.
              The names and the order in which they are given have
              to align with what is provided in the first four columns of pareto_fitness.txt")
          }else {
@@ -511,15 +515,20 @@ server <- function(input, output, session) {
          HTML(paste("The following file(s) are missing:<br/>", paste(sub('../data/', '', missing_files), collapse = "<br/> ")))
        }
      })
-     
+    
      
   })
-  
-  
-  
-  if(!file.exists("../input/var_corr_par.csv") | !file.exists("../input/hru_in_optima.RDS") | !file.exists("../input/all_var.RDS")){
-    shinyjs::show(id="runprep_show")
+  #cannot run if already exists, has to be deleted manually
+  if (!file.exists("../input/var_corr_par.csv") | !file.exists("../input/hru_in_optima.RDS") | !file.exists("../input/all_var.RDS")) {
+                 shinyjs::show(id = "runprep_show")
+    observe({     if (run_prep_possible$files_avail) {  shinyjs::enable("runprep")} else{  shinyjs::disable("runprep")
+     } })
+    
+    
   }
+  
+  
+ 
   
    ## initialise PCA table when app starts
    pca_in <- reactiveValues(data = read_pca()) #this only reads config$columns, NULL if opening for the first time
