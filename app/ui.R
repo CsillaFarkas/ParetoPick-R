@@ -9,12 +9,12 @@ ui <-
       sidebarMenu(id = "tabs",
       menuItem("Introduction",tabName = "intro", icon = icon("home"),selected=TRUE),
       menuItem("Visualising the Pareto Front",tabName = "play_around",icon = icon("dashboard")),
-      menuItem("Data Preparation", icon = icon("th"),tabName = "data_prep"),
-      menuItem("Correlation Analysis", tabName = "correlation_analysis"),
-      menuItem("Clustering", tabName = "pca"),
-      menuItem("Analysis",tabName = "analysis"),
-      menuItem("AHP",tabName = "ahp")
-      
+      menuItem("Data Preparation", icon=icon("file",lib = "font-awesome"),tabName = "data_prep"),
+      menuItem("Correlation Analysis",icon=icon("random", lib="font-awesome"), tabName = "correlation_analysis"),
+      menuItem("Clustering",icon=icon("project-diagram", lib="font-awesome"), tabName = "pca"),
+      menuItem("Analysis", icon = icon("th"),tabName = "analysis"),
+      menuItem("AHP",icon=icon("sliders-h", lib="font-awesome"),tabName = "ahp")
+     
     )),
     dashboardBody( tags$style(HTML('
                                 #fileStatusMessage{font-size:150%;}

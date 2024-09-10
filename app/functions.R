@@ -654,9 +654,6 @@ plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NUL
   
   all_extra_data = NULL
   
-  
- 
-  
  
   if (add_whole) {
     whole <- read.table(pareto_path, header = FALSE, stringsAsFactors = FALSE, sep = ',')
@@ -691,19 +688,17 @@ plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NUL
     st_q$set <- "Status Quo"
     all_extra_data <- rbind(all_extra_data,st_q)
   }
-  
-  
- 
 
   if (!is.null(all_extra_data)) {
     
     p <- p +
-      geom_point(data = all_extra_data, aes(x = .data[[x_var]], y = .data[[y_var]], shape = set, color = set), 
-                 size = 6.5, stroke = 2, alpha = 0.9, show.legend = TRUE) +
+      geom_point(data = all_extra_data, aes(x = .data[[x_var]], y = .data[[y_var]], shape = set, color = set, size = .data[[size_var]]), 
+                  stroke = 2, alpha = 0.9, show.legend = TRUE) +
       scale_shape_manual(values = c("Whole front" = 21,"cluster solutions" = 21, "AHP - best option" = 22, "Selection" =21, "Status Quo" = 17),name="") + 
       scale_color_manual(values = c( "Whole front" = "lightgrey","cluster solutions" = "cyan", "AHP - best option" = "#FF4D4D", "Selection" = "black", "Status Quo" = "#FF00FF"),name="") +   
-      guides(color = guide_legend(override.aes = list(size = 5)), 
-             shape = guide_legend(override.aes = list(size = 5)))
+      guides(color = guide_legend(override.aes = list(size = 5))
+             ,shape = guide_legend(override.aes = list(size = 5))
+              )
   }
  
   #correct for negative scale aesthetics
