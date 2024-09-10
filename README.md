@@ -49,12 +49,13 @@ It then performs both and provides the relevant statistics, plots and analyses.
 # Unclear
 * AHP
   * the initial state of the pairwise comparison as "Equal" amplifies the mathematical definition of inconsistency, therefore only when at least three sliders are NOT set to "Equal" is inconsistency considered at all
-  * unclear how to best normalise data, difficult particularly for when objectives are scaled very differently (log, z scores etc do not yield satisfying variability across the set)
+  * unclear how to best normalise data, currently scaled to between 0 and 1 using the old dataset as anchor
 
 # Missing/Nice to have
 * sliders with actual values instead of scaled values?
 * implement other variables to consider in the PCA! using SWAT+ inputs
 * saving the WHOLE scatter plot, not only the last_plot() device
+* preset axis with objectives in plt_sc_optima (no one wants to plot the same agains each other anyways)
 
 * Play around tab
   * status quo plotted in the right color when sliders are moved
@@ -70,9 +71,9 @@ It then performs both and provides the relevant statistics, plots and analyses.
 * Analysis tab: 
   * status message so user knows the plot is being rendered!!
   * location of zoom in basin
-  * fix the legend
-
+ 
 * Correlation Analysis:
+  * make axis title fix and selectable instead of input solely
   * output largest accepted correlation, maybe in bold over the table
   * deviations_step is currently the default value 
   * explain the effects of high correlation
