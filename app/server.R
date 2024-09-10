@@ -1534,13 +1534,20 @@ server <- function(input, output, session) {
     if(nrow(df)==0 || ncol(df) == 0){
       bo = "None of the points fulfill these criteria. Please select different data ranges!"
     }else{  
-    weights <- calculate_weights()
-    pca <- prcomp(df[, names(weights)], center = TRUE, scale. = TRUE)
     
-    pca_scores <- pca$x
+    
+    weights <- calculate_weights()
+    
+    #calculate max score based on scaled values
+    min_fit <- apply(fit(), 2, min)
+    max_fit <- apply(fit(), 2, max)
+    
+    df_sc <- as.data.frame(mapply(function(col_name, column) {
+      rescale_column(column, min_fit[col_name], max_fit[col_name])
+    }, colnames(fit()), df, SIMPLIFY = FALSE))
     
     # Calculate the final score based on the principal components
-    df$Score <- rowSums(pca_scores * weights)
+    df$Score <- rowSums(df_sc * weights)
     
     best_option_index <<- which.max(df$Score)
     df$Score <- NULL #drop Score column

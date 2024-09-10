@@ -742,6 +742,127 @@ consistency_index <- function(m) {
 }
 
 
+
+
+#### Rescaling and matching Functions ####
+## return the original value and the position of scaled value in the original dataset
+scaled_abs_match = function(minval_s=c(0,0,0,0),
+                            maxval_s=c(1,1,1,1),
+                            scal_tab=NULL,abs_tab=NULL,
+                            allobs=NULL,smll = TRUE){ 
+  
+  df <- as.data.frame(array(NA,dim=c(2,length(allobs))),row.names = c("max","min"))
+  colnames(df) = allobs
+  
+  # locate values in scaled dataframe 
+  for(i in seq_along(allobs)){ #this does not have to run for those where we only want abs_tab/output(ch)
+    
+    sca_max <- scal_tab[which.min(abs(scal_tab[[allobs[i]]]-maxval_s[i])),]
+    df["max",allobs[i]] = abs_tab[rownames(sca_max),allobs[i]]  
+    
+    sca_min <- scal_tab[which.min(abs(minval_s[i]-scal_tab[[allobs[i]]])),]
+    df["min",allobs[i]] = abs_tab[rownames(sca_min),allobs[i]]
+  }
+  
+  # consider interactions between objectives (some are not attainable anymore)
+  # reduced dataframe of absolute values within all objective ranges
+  ch = abs_tab
+  
+  for(k in seq_along(allobs)){
+    valma = df["max",k]
+    valmi = df["min",k]
+    ch =  ch %>% filter(.data[[allobs[k]]]<=valma & .data[[allobs[k]]]>=valmi)
+
+  }
+
+  
+  # retain only min and max
+  cw = as.data.frame(array(NA,dim=c(2,length(allobs))),row.names = c("max","min"))
+  colnames(cw) = allobs
+  
+  
+  for (l in seq_along(allobs)) {
+    if(length(ch %>% slice_max(.data[[allobs[l]]]) %>% select(allobs[[l]]) %>% slice(1)) > 1 ||
+       length(ch %>% slice_min(.data[[allobs[l]]]) %>% select(allobs[[l]]) %>% slice(1)) > 1) {
+      cw["max", allobs[l]] = NA
+      cw["min", allobs[l]] = NA
+    }else{
+      
+      cw["max", allobs[l]] = ch %>% slice_max(.data[[allobs[l]]]) %>% select(allobs[[l]]) %>% slice(1)
+      cw["min", allobs[l]] = ch %>% slice_min(.data[[allobs[l]]]) %>% select(allobs[[l]]) %>% slice(1)
+    }
+    
+    
+  }
+  #when smll is set to false the table with all absolute values is returned
+  if(smll){return(cw)}else{return(ch)} 
+  
+}
+
+
+## similar to ch in scaled_abs_match, matching input scaled data with a scaled dataframe
+match_scaled = function(minval_s=c(0,0,0,0),
+                        maxval_s=c(1,1,1,1),
+                        scal_tab = NULL,
+                        allobs){
+  
+  df <- as.data.frame(array(NA,dim=c(2,length(allobs))),row.names = c("max","min"))
+  colnames(df) = allobs
+  
+  # locate values in scaled data frame 
+  for(i in seq_along(allobs)){
+    
+    sca_max <- scal_tab[which.min(abs(scal_tab[[allobs[i]]]-maxval_s[i])),]
+    df["max",allobs[i]] = scal_tab[rownames(sca_max),allobs[i]]  
+    
+    sca_min <- scal_tab[which.min(abs(minval_s[i]-scal_tab[[allobs[i]]])),]
+    df["min",allobs[i]] = scal_tab[rownames(sca_min),allobs[i]]
+  }
+  
+  # surely this should be easier 
+  ch = scal_tab
+  
+  for(k in seq_along(allobs)){
+    valma = df["max",k]
+    valmi = df["min",k]
+    ch =  ch %>% filter(.data[[allobs[k]]]<=valma & .data[[allobs[k]]]>=valmi)
+  }
+
+  if(dim(ch)[1]==0){stop("no optima fulfill these conditions")}else{return(ch)}
+  
+}
+
+## subset dataframe based on (slider) selection
+match_abs <- function(minval, maxval, abs_tab, ranger = NULL) {
+  n_cols <- ncol(abs_tab)
+  
+  if(!is.null(ranger)){#undo the scaling which was done for the slider visibility
+    
+    indices <- which(names(abs_tab) %in% ranger)
+
+    maxval[indices] = maxval[indices] / 1000
+    minval[indices] = minval[indices] / 1000
+  }
+  
+  filter_conditions <- lapply(seq_len(n_cols), function(i) {
+    abs_tab[[i]] >= minval[i] & abs_tab[[i]] <= maxval[i]
+  })
+  
+  combined_filter <- Reduce(`&`, filter_conditions)
+  
+  abs_filter <- abs_tab %>% filter(combined_filter)
+  
+  return(abs_filter)
+}
+
+## rescale
+rescale_column <- function(column, min_val, max_val) {
+  if (min_val == max_val) {
+    return(rep(NA, length(column)))  # or some other appropriate value/handling
+  }
+  rescale(column, to = c(0, 1), from = c(min_val, max_val))
+}
+
 #### Other Functions ####
 
 get_mima = function(df){
@@ -865,124 +986,6 @@ pca_settings = function(input){
       "</ul>"
     )
     settings <- paste(settings, outly,collapse = "<br>")}
-    
+  
   return(settings)
-}
-
-## return the original value and the position of scaled value in the original dataset
-scaled_abs_match = function(minval_s=c(0,0,0,0),
-                            maxval_s=c(1,1,1,1),
-                            scal_tab=NULL,abs_tab=NULL,
-                            allobs=NULL,smll = TRUE){ 
-  
-  df <- as.data.frame(array(NA,dim=c(2,length(allobs))),row.names = c("max","min"))
-  colnames(df) = allobs
-  
-  # locate values in scaled dataframe 
-  for(i in seq_along(allobs)){ #this does not have to run for those where we only want abs_tab/output(ch)
-    
-    sca_max <- scal_tab[which.min(abs(scal_tab[[allobs[i]]]-maxval_s[i])),]
-    df["max",allobs[i]] = abs_tab[rownames(sca_max),allobs[i]]  
-    
-    sca_min <- scal_tab[which.min(abs(minval_s[i]-scal_tab[[allobs[i]]])),]
-    df["min",allobs[i]] = abs_tab[rownames(sca_min),allobs[i]]
-  }
-  
-  # consider interactions between objectives (some are not attainable anymore)
-  # reduced dataframe of absolute values within all objective ranges
-  ch = abs_tab
-  
-  for(k in seq_along(allobs)){
-    valma = df["max",k]
-    valmi = df["min",k]
-    ch =  ch %>% filter(.data[[allobs[k]]]<=valma & .data[[allobs[k]]]>=valmi)
-
-  }
-
-  
-  # retain only min and max
-  cw = as.data.frame(array(NA,dim=c(2,length(allobs))),row.names = c("max","min"))
-  colnames(cw) = allobs
-  
-  
-  for (l in seq_along(allobs)) {
-    if(length(ch %>% slice_max(.data[[allobs[l]]]) %>% select(allobs[[l]]) %>% slice(1)) > 1 ||
-       length(ch %>% slice_min(.data[[allobs[l]]]) %>% select(allobs[[l]]) %>% slice(1)) > 1) {
-      cw["max", allobs[l]] = NA
-      cw["min", allobs[l]] = NA
-    }else{
-      
-      cw["max", allobs[l]] = ch %>% slice_max(.data[[allobs[l]]]) %>% select(allobs[[l]]) %>% slice(1)
-      cw["min", allobs[l]] = ch %>% slice_min(.data[[allobs[l]]]) %>% select(allobs[[l]]) %>% slice(1)
-    }
-    
-    
-  }
-  #when smll is set to false the table with all absolute values is returned
-  if(smll){return(cw)}else{return(ch)} 
-  
-}
-
-
-## similar to ch in scaled_abs_match, matching input scaled data with a scaled dataframe
-match_scaled = function(minval_s=c(0,0,0,0),
-                        maxval_s=c(1,1,1,1),
-                        scal_tab = NULL,
-                        allobs){
-  
-  df <- as.data.frame(array(NA,dim=c(2,length(allobs))),row.names = c("max","min"))
-  colnames(df) = allobs
-  
-  # locate values in scaled data frame 
-  for(i in seq_along(allobs)){
-    
-    sca_max <- scal_tab[which.min(abs(scal_tab[[allobs[i]]]-maxval_s[i])),]
-    df["max",allobs[i]] = scal_tab[rownames(sca_max),allobs[i]]  
-    
-    sca_min <- scal_tab[which.min(abs(minval_s[i]-scal_tab[[allobs[i]]])),]
-    df["min",allobs[i]] = scal_tab[rownames(sca_min),allobs[i]]
-  }
-  
-  # surely this should be easier 
-  ch = scal_tab
-  
-  for(k in seq_along(allobs)){
-    valma = df["max",k]
-    valmi = df["min",k]
-    ch =  ch %>% filter(.data[[allobs[k]]]<=valma & .data[[allobs[k]]]>=valmi)
-  }
-
-  if(dim(ch)[1]==0){stop("no optima fulfill these conditions")}else{return(ch)}
-  
-}
-
-## subset dataframe based on (slider) selection
-match_abs <- function(minval, maxval, abs_tab, ranger = NULL) {
-  n_cols <- ncol(abs_tab)
-  
-  if(!is.null(ranger)){#undo the scaling which was done for the slider visibility
-    
-    indices <- which(names(abs_tab) %in% ranger)
-
-    maxval[indices] = maxval[indices] / 1000
-    minval[indices] = minval[indices] / 1000
-  }
-  
-  filter_conditions <- lapply(seq_len(n_cols), function(i) {
-    abs_tab[[i]] >= minval[i] & abs_tab[[i]] <= maxval[i]
-  })
-  
-  combined_filter <- Reduce(`&`, filter_conditions)
-  
-  abs_filter <- abs_tab %>% filter(combined_filter)
-  
-  return(abs_filter)
-}
-
-## rescale
-rescale_column <- function(column, min_val, max_val) {
-  if (min_val == max_val) {
-    return(rep(NA, length(column)))  # or some other appropriate value/handling
-  }
-  rescale(column, to = c(0, 1), from = c(min_val, max_val))
 }
