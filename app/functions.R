@@ -523,8 +523,17 @@ plot_diff_bar= function(pct,obj_choices=NULL){
 
 
 ## parallel axis plot
-plot_parline = function(datt,sizz=rep(.5, length(unique(datt$id))),colols=rep("grey50", length(unique(datt$id)))){
-  
+plot_parline = function(datt,sizz=rep(.5, length(unique(datt$id))),colols=rep("grey50", length(unique(datt$id))),sq=NULL){
+  if(!is.null(sq)){
+  sq$id <- as.factor(rep("10000",nrow(sq)))
+    
+  datt = rbind(datt, sq)
+  print(tail(datt))
+  colols <- c(colols, "cyan")
+  sizz <- c(sizz,  .5)
+ 
+  }
+    
   pl1 <- ggplot(datt, aes(x = name, y = value,group=id,size=id, color=id)) +   # group = id is important!
     geom_line(
       aes(group = id),
@@ -540,9 +549,11 @@ plot_parline = function(datt,sizz=rep(.5, length(unique(datt$id))),colols=rep("g
           axis.title.y = element_text(size = 15),
           axis.title.x = element_blank()
     )+scale_y_continuous(limits = c(0,1))+
-    scale_x_discrete(expand = c(0.04, 0.05)) + labs(x = "Factors", y = "Scaled Values")+
+    scale_x_discrete(expand = c(0.04, 0.05)) + labs(x = "Factors", y = "Scaled Values") +
     scale_size_manual(values = sizz) +
     scale_color_manual(values = colols)
+ 
+    
   
   return(pl1)
   
@@ -971,4 +982,12 @@ match_abs <- function(minval, maxval, abs_tab, ranger = NULL) {
   abs_filter <- abs_tab %>% filter(combined_filter)
   
   return(abs_filter)
+}
+
+## rescale
+rescale_column <- function(column, min_val, max_val) {
+  if (min_val == max_val) {
+    return(rep(NA, length(column)))  # or some other appropriate value/handling
+  }
+  rescale(column, to = c(0, 1), from = c(min_val, max_val))
 }

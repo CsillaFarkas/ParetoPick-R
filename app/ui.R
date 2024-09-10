@@ -203,7 +203,12 @@ ui <-
                                   id="parfit",
                                   "Please provide the pareto_fitness.txt file here and click Save:",style = "text-align: left; font-size:115%",
                                   fileInput("par_fit", "", accept = ".txt"),
-                                  actionButton("save_paretofit","Save")), 
+                                  actionButton("save_paretofit","Save")),
+                                  div(
+                                    id="sq",
+                                    "If you want you can supply the sq_fitness.txt file here to plot the status quo.",style = "text-align: left; font-size:115%",
+                                    fileInput("sq_in","",accept = ".txt"),
+                                    actionButton("save_sq_in","Save")),
 
                                   div(
                                     id = "obj_first",
@@ -257,7 +262,8 @@ ui <-
                            fluidRow(column(12,
                                     div("Selected Optimum (select in line plot)", style = "text-align: left; font-size:150%"),
                                     tableOutput("click_info")))))),
-                  
+                checkboxInput("plt_sq", label = "Show status quo", value = FALSE),
+                
                 div(id = "tab_play2",div("Parallel Axis plot", style = "text-align: left; font-size:150%"),
                            plotOutput("linePlot",click="clickline"),
                            verbatimTextOutput("lineDetails"),
@@ -304,8 +310,8 @@ ui <-
                   div(style = "margin-top: -15px;",fileInput("basfile", "", multiple = TRUE, 
                                                              accept = c(".shp", ".shx", ".dbf", ".prj"))),
                   
-                  div("6. sq_fitness.txt (not obligatory but required if you want to plot the status quo)",style = "text-align: left; font-size:115%"),
-                  div(style = "margin-top: -15px;",fileInput("file5", "", accept = ".txt")),
+                  div(id="sq_avail",div("6. sq_fitness.txt (not obligatory but required if you want to plot the status quo)",style = "text-align: left; font-size:115%"),
+                  div(style = "margin-top: -15px;",fileInput("file5", "", accept = ".txt")))%>%hidden(),
                   
                   
                   div(id="fitness_avail",div("7. pareto_fitness.txt (if not provided in the previous tab)",style = "text-align: left; font-size:115%"),
@@ -325,12 +331,12 @@ ui <-
                     actionButton("obj_conf", "Confirm Objective Names")
                   )%>% hidden(), 
                   hr(),
-                  div(id="range_title","Range of objective values as given in pareto_fitness.txt",style = "text-align: left; font-size:120%"),
-                  tableOutput("obj_conf"),
+                 
                   div(id="runprep_show",p("Run Preparation Script when ready (this should take no more than five minutes)",style =  "text-align: left; font-size:150%"),
                   actionButton("runprep", "Run Prep"))%>%hidden,
                   uiOutput("script_output"),
-                  
+                   div(id="range_title","Range of objective values as given in pareto_fitness.txt",style = "text-align: left; font-size:120%"),
+                  tableOutput("obj_conf"),
                   
                   br(),br(),br(),
                   

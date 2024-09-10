@@ -5,19 +5,28 @@
 server <- function(input, output, session) {
 
   ## reactive values
-  rv <-reactiveValues(sizes= NULL,colls = NULL) #color for parallel axes
-  er <- reactiveVal(NULL)
+ 
   
-  objectives <- reactiveVal(character())
-  par_fiti <- reactiveVal(NULL)
-  fit <- reactiveVal(NULL)
-  f_scaled <- reactiveVal(NULL)
-  pca_remove <- reactiveVal(NULL)
+  objectives <- reactiveVal(character()) #objective names
+  
+  par_fiti <- reactiveVal(NULL)#handling pareto_fitness
+  sq_file <- reactiveVal(NULL)#handling sq_fitness
+  fit <- reactiveVal(NULL) #absolute value dataframe
+  f_scaled <- reactiveVal(NULL) #scaled value dataframe
+  pca_remove <- reactiveVal(NULL) #variables removed from pca
+  stq <- reactiveVal(NULL) #status quo
+  #data prep
+  run_prep_possible = reactiveValues(files_avail = FALSE) #allow prep script to run when all required files available
   script_output <- reactiveVal("") # data prep R output
   dp_done = reactiveVal(FALSE) # checking if data prep R output is done
+  
   all_choices = reactiveVal()
   ahp_choices = reactiveVal()
   isElementVisible = reactiveVal(FALSE)
+  
+  #play around
+  rv <-reactiveValues(sizes= NULL,colls = NULL) #color for parallel axes
+  er <- reactiveVal(NULL) #position
   
   best_option = reactiveVal(NULL)
   
@@ -26,9 +35,6 @@ server <- function(input, output, session) {
     settings <- pca_settings(input)
     settings_text(settings)
   }
-  
-  run_prep_possible = reactiveValues(files_avail = FALSE) #allow prep script when all files available
-  
   pca_ini <- read_pca()
   pca_table <- reactiveVal(pca_ini)
   
@@ -59,8 +65,10 @@ server <- function(input, output, session) {
   coma = reactiveVal()
   range_controlled = reactiveVal(NULL)
   initial_update_done = reactiveVal(FALSE)
+  
+  
   ### Introduction ####
- 
+  
   ### Play Around Tab ####
   
   ##check if names of objectives have to be supplied or already present
@@ -114,13 +122,12 @@ server <- function(input, output, session) {
     
     
     ## make or pull fit()
-    if(file.exists(pareto_path)){shinyjs::hide(id="parfit")}
-      
     observe({
       if (file.exists(pareto_path)) {
         
         req(objectives())
-        
+        shinyjs::hide(id = "parfit")
+
         data <- read.table( pareto_path, header = FALSE, stringsAsFactors = FALSE,sep = ',')
         new_col_data <- objectives()
         colnames(data) = new_col_data
@@ -129,7 +136,6 @@ server <- function(input, output, session) {
         yo = fit() %>% mutate(across(everything(), ~ scales::rescale(.)))%>%mutate(id = row_number())
         f_scaled(yo)
         
-        shinyjs::hide(id = "parfit")
         output$uploaded_pareto <- renderText({"All Files found. You can now examine the Pareto front. 
         How does it change when the objective ranges are modified?"})
         
@@ -169,7 +175,7 @@ server <- function(input, output, session) {
       par_fiti(list(path = file$datapath, name = file$name))
     })
     
-    
+    #get pareto_fitness.txt and make fit()
     observeEvent(input$save_paretofit,{
       req(par_fiti(),objectives())
       save_par_fiti <- par_fiti()$name
@@ -183,6 +189,39 @@ server <- function(input, output, session) {
       yo = fit() %>% mutate(across(everything(), ~ scales::rescale(.)))%>%mutate(id = row_number())
       f_scaled(yo)
     })
+    
+   #pull status quo
+    observe({
+      if (file.exists("../data/sq_fitness.txt")) {
+        req(objectives())
+        
+        shinyjs::hide("sq")
+        st_q = read.table("../data/sq_fitness.txt", header = FALSE, stringsAsFactors = FALSE, sep = ' ')
+        names(st_q) = objectives()
+        stq(st_q)
+        
+        }else{shinyjs::show("sq")} })
+    
+    #make status quo based on user input
+    observeEvent(input$sq_in, {
+      req(input$sq_in)
+      file <- input$sq_in
+      if(is.null(file)){return(NULL)}
+      sq_file(list(path=file$datapath, name = file$name))
+      
+    })
+    
+    observeEvent(input$save_sq_in, {
+      req(sq_file, req(objectives))
+      save_sq <- sq_file()$name
+      save_path_sq <- file.path(save_dir, save_sq)
+      file.copy(sq_file()$path,save_path_sq,overwrite = TRUE) #copy sq_fitness.txt
+      
+      st_q = read.table("../data/sq_fitness.txt", header = FALSE, stringsAsFactors = FALSE, sep = ' ')
+      names(st_q) = objectives()
+      stq(st_q)
+    })
+    
     
     ## ggplot melt and change plotting order
     pp <- reactive({
@@ -296,7 +335,25 @@ server <- function(input, output, session) {
     ko= sk%>% mutate(id = factor(row_number()))%>%pivot_longer(.,cols=-id)%>%
       mutate(name=factor(name))%>%mutate(name=forcats::fct_relevel(name,objectives()))
 
-    plot_parline(datt=ko,colols=rv$colls,sizz=rv$sizes)
+    if(input$plt_sq) {
+      req(fit(),stq())
+     
+      #rescale single (extra) point
+      min_fit <- apply(fit(), 2, min)
+      max_fit <- apply(fit(), 2, max)
+      
+      stq_sk <- as.data.frame(mapply(function(col_name, column) {
+        rescale_column(column, min_fit[col_name], max_fit[col_name])
+      }, objectives(), stq(), SIMPLIFY = FALSE))
+      
+      colnames(stq_sk) = objectives()#otherwise spaces do not work because mapply adds dots
+      
+      stq_ko <- pivot_longer(stq_sk,cols = everything(),names_to = "name",values_to = "value")
+      stq_ko <- stq_ko %>% mutate(name=forcats::fct_relevel(name,objectives()))
+      
+      plot_parline(datt = ko,colols = rv$colls,   sizz = rv$sizes, sq = stq_ko)
+      
+      }else{plot_parline(datt = ko,colols = rv$colls, sizz = rv$sizes, sq= NULL)}
 
   })
   
@@ -403,7 +460,7 @@ server <- function(input, output, session) {
   ### Data Prep ####
   
   if(!file.exists("../data/pareto_fitness.txt")){shinyjs::show(id="fitness_avail")}
-  
+  if(!file.exists("../data/sq_fitness.txt")){shinyjs::show(id="sq_avail")}
   file_data1 <- reactiveVal(NULL)
   file_data2 <- reactiveVal(NULL)
   file_data3 <- reactiveVal(NULL)
@@ -527,8 +584,6 @@ server <- function(input, output, session) {
     
   }
   
-  
- 
   
    ## initialise PCA table when app starts
    pca_in <- reactiveValues(data = read_pca()) #this only reads config$columns, NULL if opening for the first time
