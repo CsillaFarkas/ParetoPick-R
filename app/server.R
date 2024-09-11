@@ -1196,6 +1196,7 @@ server <- function(input, output, session) {
                  dplyr::filter(!is.na(Representative_Solution)& Representative_Solution != "") %>% 
                  select(1:5) %>% #PCA content is hard to read/limited additional value for user
                  rename_with(~new_col_sol,everything()))
+          
         }else{
           sols(data.frame(Message = "something went wrong - has the PCA run properly?"))
           # shinyjs::hide(id="plt_opti")
@@ -1565,7 +1566,8 @@ server <- function(input, output, session) {
   observe({
     
   output$weights_plot <- renderPlot({
-    req(objectives(),fit(),best_option(),input$x_var,sol)
+    req(objectives(),fit(),best_option(),input$x_var,sols())
+    sol<<-sols()[,objectives()]
     bo = best_option()
     plt_sc_optima(dat=fit(),x_var=input$x_var,y_var=input$y_var,
                   col_var=input$col_var,size_var=input$size_var,high_point=bo,extra_dat = sol,
