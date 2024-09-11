@@ -541,6 +541,7 @@ ui <-
               column(6, div(style = "overflow-x: auto;", DTOutput("antab"))),
               column(6, plotOutput("par_plot_optima"),
                      checkboxInput("add_whole", label = "Show the whole Pareto front", value = FALSE),
+                     checkboxInput("add_sq",label = "Show status quo",value = FALSE),
                      
                      div(id="analysis_random",fluidRow(
                        column(3, selectInput(inputId = "x_var2",label = "X-Axis", choices = NULL, multiple = F, selected=NULL)),
