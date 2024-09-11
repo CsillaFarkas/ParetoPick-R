@@ -907,13 +907,14 @@ server <- function(input, output, session) {
       choices = readRDS("../input/object_names.RDS")
     }
     
-      
+    preselected = read_config_plt(obj = T, axis = F)
+   
     choices = c("off", choices)
     all_choices(choices)
-    preselected = read_config_plt(obj = T, axis = F)
- 
+
     isolate({axiselected(read_config_plt(obj = F, axis = T))})
     
+    #update other plots including "off"
     updateTextInput(session, "axisx",  value  = axiselected()[1])
     updateTextInput(session, "axisy", value = axiselected()[2])
     updateTextInput(session, "colour", value = axiselected()[3])
@@ -929,19 +930,19 @@ server <- function(input, output, session) {
   observe({
     req(all_choices())
     
-    # current selections
+    #current selections
     selected1 <- input$element1
     selected2 <- input$element2
     selected3 <- input$element3
     selected4 <- input$element4
     
-    # available choices for each dropdown
+    #available choices for each dropdown
     choices1 <- setdiff(all_choices(), c(selected2, selected3, selected4))
     choices2 <- setdiff(all_choices(), c(selected1, selected3, selected4))
     choices3 <- setdiff(all_choices(), c(selected1, selected2, selected4))
     choices4 <- setdiff(all_choices(), c(selected1, selected2, selected3))
     
-    # update the choices for each dropdown
+    #update the choices for each dropdown
     updateSelectInput(session, "element1", choices = choices1, selected = selected1)
     updateSelectInput(session, "element2", choices = choices2, selected = selected2)
     updateSelectInput(session, "element3", choices = choices3, selected = selected3)
@@ -1124,7 +1125,22 @@ server <- function(input, output, session) {
   ### Analysis Panel ####
 
   observeEvent(input$tabs == "analysis", { #this could be combined with the ahp tab for analysis
-
+    
+    if(!file.exists("../input/object_names.RDS")) {
+      choices = "Please select objectives in Data Preparation Tab"
+    } else{
+      choices = readRDS("../input/object_names.RDS")
+    }
+    
+    preselected = read_config_plt(obj = T, axis = F)
+    
+    #update Analysis tab plot without "off"
+    updateSelectInput(session, "x_var2",   choices = choices, selected = preselected[1])
+    updateSelectInput(session, "y_var2",   choices = choices, selected = preselected[2])
+    updateSelectInput(session, "col_var2", choices = choices, selected = preselected[3])
+    updateSelectInput(session, "size_var2",choices = choices, selected = preselected[4])
+    
+    
     clus_out <- list.files(path = output_dir, pattern = "clusters_representativesolutions.*\\.csv$", full.names = TRUE)
     
     if(length(clus_out) == 0){
@@ -1132,37 +1148,19 @@ server <- function(input, output, session) {
      shinyjs::hide("plt_opti")
      shinyjs::runjs("toggleSidebar(false);")  #hide sidebar
      
-     output$analysis_no_clustering <- renderText({
-       HTML("the correlation analysis and the clustering have to run first before their results can be analysed")
-     })
-   }else{shinyjs::hide("analysis_no_clustering")
+     output$analysis_no_clustering <- renderText({HTML("the correlation analysis and the clustering have to run first before their results can be analysed")})
+  
+     }else{shinyjs::hide("analysis_no_clustering")
      shinyjs::runjs("toggleSidebar(true);")  #show sidebar
      shinyjs::show("main_analysis")
      shinyjs::show("plt_opti")
    }
     
-    
       if(!file.exists("../input/object_names.RDS")) {
-        choices = "Please select objectives in Data Preparation Tab"
         shinyjs::hide(id = "analysis_random")
         shinyjs::hide(id= "meas_low")
-       
-      } else{
-        choices = readRDS("../input/object_names.RDS")
-      }
-    
-      ahp_choices(choices)
-      preselect = ahp_choices()
-      
-      preselect1 = preselect[1]
-      preselect2 = preselect[2]
-      preselect3 = preselect[3]
-      preselect4 = preselect[4]
-      
-      updateSelectInput(session,inputId = "x_var2",choices = choices,selected = preselect1)
-      updateSelectInput(session,inputId = "y_var2",choices = choices, selected = preselect2)
-      updateSelectInput(session,inputId = "col_var2", choices = choices, selected = preselect3)
-      updateSelectInput(session,inputId = "size_var2", choices = choices, selected = preselect4)
+        } 
+ 
       
       if(!file.exists("../data/measure_location.csv")){
         output$meas_low <- renderText({
@@ -1210,16 +1208,18 @@ server <- function(input, output, session) {
                     options = list(pageLength = 20, autoWidth = TRUE))
         })
       })
-      
      
-    
-    if(!is.null(check_files())) { #sol is only useful if python has run
-      req(objectives())
-      sol<<-sols()[,objectives()]
 
     output$par_plot_optima <- renderPlot({
-      req(objectives(),sols(),input$x_var2)
+      req(objectives(),sols(), input$x_var2)
       
+      if(is.null(check_files())) { #sol is only useful if python has run
+        sols(data.frame(Message = 'something went wrong - has the PCA run properly? You can check the output folder for files with names containing "cluster" or "representative solutions" or both '))
+      }else{
+         req(objectives(),sols())
+        sol<<-sols()[,objectives()]
+        
+     
       if(!is.null(input$antab_rows_selected)){
         
         selected_row <- input$antab_rows_selected
@@ -1235,9 +1235,11 @@ server <- function(input, output, session) {
         size_var = input$size_var2,
         sel_tab = selected_data,
         add_whole = input$add_whole,
-        an_tab = T
+        an_tab = T,
+        status_q = input$add_sq
       )
-    }) } 
+    }
+    }) 
     
     output$download_par_plot <- downloadHandler(
       filename = function() {
@@ -1566,7 +1568,8 @@ server <- function(input, output, session) {
     req(objectives(),fit(),best_option(),input$x_var,sol)
     bo = best_option()
     plt_sc_optima(dat=fit(),x_var=input$x_var,y_var=input$y_var,
-                  col_var=input$col_var,size_var=input$size_var,high_point=bo,extra_dat = sol,plt_extra = input$show_extra_dat, status_q = input$show_status_quo)
+                  col_var=input$col_var,size_var=input$size_var,high_point=bo,extra_dat = sol,
+                  plt_extra = input$show_extra_dat, status_q = input$show_status_quo)
     
     })
   
