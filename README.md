@@ -73,8 +73,8 @@ It then performs both and provides the relevant statistics, plots and analyses.
   * location of zoom in basin
  
 * Correlation Analysis:
-  * make axis title fix and selectable instead of input solely
   * output largest accepted correlation, maybe in bold over the table
+  * add a description of the variables in the "selected variables" table...
   * deviations_step is currently the default value 
   * explain the effects of high correlation
 
