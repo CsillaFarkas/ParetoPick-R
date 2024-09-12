@@ -270,9 +270,16 @@ ui <-
                 
                 div(id="scatter","Scatter Plot",style = "text-align: left; font-size:150%"),
                            plotOutput("scatter_plot"),
-                           textInput("scat_plot_savename", label = NULL, value = "pairwise_scatter"),
-                           downloadButton("download_scat_plot", "Download Plot"),
-                          
+                
+                div(
+                  style = "display: inline-block; vertical-align: top; margin-right: 0px;",
+                  textInput("scat_plot_savename", label = NULL, value = "pairwise_scatter")
+                ),
+                div(
+                  style = "display: inline-block; vertical-align: top; margin-left: 0px;",
+                  downloadButton("download_scat_plot", "Download Plot")
+                ),
+                                                
                 div("Difference between selection and the whole Pareto Front", style = "text-align: left; font-size:150%"),
                            plotOutput("sliders_plot"))
                 
