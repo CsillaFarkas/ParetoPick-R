@@ -40,3 +40,14 @@ output_dir <- "../output/"
 pareto_path <- "../data/pareto_fitness.txt" #used too frequently..
 if(!dir.exists(save_dir)){  dir.create(save_dir)}
 if(!dir.exists(output_dir)){  dir.create(output_dir)}
+
+##descriptions of variables included in PCA and created in convert_optain.R
+
+optain_pca_content <- c(
+  
+  "share_tot" = "blabbb",
+  "share_con"= "blabbb2",
+  "moran"= "blabbb3",
+  "channel_frac"= "blabbb6",
+  "linE"= "blabbb4"
+)
