@@ -31,6 +31,7 @@ It then performs both and provides the relevant statistics, plots and analyses.
 * measure_location.csv
 * hru shapefile consisting of: hru.shp, hru.dbf, hru.prj, hru.shx
 * sq_fitness.txt
+* rout_unit.con
 
 ## Elements touched in config.ini (adapt when final version of Python project available)
 * col_correlation_matrix
@@ -53,16 +54,15 @@ It then performs both and provides the relevant statistics, plots and analyses.
 
 # Missing/Nice to have
 * sliders with actual values instead of scaled values?
-* implement other variables to consider in the PCA! using SWAT+ inputs
 * saving the WHOLE scatter plot, not only the last_plot() device
-* preset axis with objectives in plt_sc_optima (no one wants to plot the same agains each other anyways)
+* cluster tab sometimes requires a lot of clicking around but users will figure it out
 
 * Play around tab
   * status quo plotted in the right color when sliders are moved
 
 * Klaipeda:
   * full list of nswrm implemented across all catchments to properly assign priorities incl. info on weather management or structural
-  * suggestions for pca variables
+  * suggestions for pca variables using SWAT+ outputs/inputs
  
 * AHP tab: 
   * map with measure implementation of selected optimum
@@ -71,7 +71,7 @@ It then performs both and provides the relevant statistics, plots and analyses.
 * Analysis tab: 
   * status message so user knows the plot is being rendered!!
   * location of zoom in basin
- 
+  
 * Correlation Analysis:
   * output largest accepted correlation, maybe in bold over the table
   * add a description of the variables in the "selected variables" table...
