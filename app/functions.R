@@ -318,6 +318,7 @@ get_obj_range = function(filepath = "../data/pareto_fitness.txt",colnames=paste0
 #### Python Caller ####
 
 run_python_script <- function(path_script="",pca_status) {
+  pca_status("")
   p <- processx::process$new(
     "python",
     c(path_script),
