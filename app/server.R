@@ -466,6 +466,7 @@ server <- function(input, output, session) {
   file_data3 <- reactiveVal(NULL)
   file_data4 <- reactiveVal(NULL)
   file_data5 <- reactiveVal(NULL)
+  file_data6 <- reactiveVal(NULL)
   
   shapefile <- reactiveVal(NULL)
 
@@ -490,6 +491,10 @@ server <- function(input, output, session) {
   if (is.null(file)) {return(NULL)}
   file_data5(list(path = file$datapath, name = file$name))})
   
+  observeEvent(input$file6, { file <- input$file6
+  if (is.null(file)) {return(NULL)}
+  file_data6(list(path = file$datapath, name = file$name))})
+  
   observeEvent(input$shapefile, { file <- input$shapefile
   if (is.null(file)) {return(NULL)}
   shapefile(list(path = file$datapath, name = file$name))})
@@ -502,12 +507,14 @@ server <- function(input, output, session) {
      save_filename3 <- file_data3()$name
      save_filename4 <- file_data4()$name
      save_filename5 <- file_data5()$name
+     save_filename6 <- file_data6()$name
      
      save_path1 <- file.path(save_dir, save_filename1)
      save_path2 <- file.path(save_dir, save_filename2)
      save_path3 <- file.path(save_dir, save_filename3)
      save_path4 <- file.path(save_dir, save_filename4)
      save_path5 <- file.path(save_dir, save_filename5)
+     save_path6 <- file.path(save_dir, save_filename6)
      
 
      file.copy(file_data1()$path, save_path1, overwrite = TRUE)
@@ -515,6 +522,7 @@ server <- function(input, output, session) {
      file.copy(file_data3()$path, save_path3, overwrite = TRUE)
      file.copy(file_data4()$path, save_path4, overwrite = TRUE)
      file.copy(file_data5()$path, save_path5, overwrite = TRUE)
+     file.copy(file_data6()$path, save_path6, overwrite = TRUE)
      
      #cm shapefile
      shp_req = c(".shp",".shx", ".dbf", ".prj")
@@ -553,6 +561,7 @@ server <- function(input, output, session) {
      required_files <- c("../data/pareto_genomes.txt","../data/hru.con",   "../data/measure_location.csv",
                          "../data/hru.shp","../data/hru.shx", "../data/hru.dbf", "../data/hru.prj",
                          "../data/basin.shp","../data/basin.shx", "../data/basin.dbf", "../data/basin.prj",
+                         "../data/rout_unit.con",
                          "../data/pareto_fitness.txt")
      
      checkFiles <- sapply(required_files, function(file) file.exists(file))
@@ -769,7 +778,7 @@ server <- function(input, output, session) {
             }else if ("../input/all_var.RDS" %in% missing_files && length(missing_files) == 1){
               missing_files <- missing_files[missing_files != "../input/all_var.RDS"]
               
-              neednames = "Please rerun the Data Preparation in the previous tab."
+              neednames = "Please (re)run the Data Preparation in the previous tab."
               
             }else{
               whatsmissing = "The following file(s) are missing and have to be provided in the Data Prep tab:<br/>"
@@ -808,13 +817,15 @@ server <- function(input, output, session) {
         } )
         ## make new corr
       observeEvent(input$run_corr,{
-          shinyjs::show("show_conf") #show confirm seletion button once correlation has run
+          shinyjs::show("show_conf") #show confirm selection button once correlation has run
         
           req(input$selements)
           all_var <<- readRDS("../input/all_var.RDS")
           
           write_corr(vars = input$selements,cor_analysis = T, pca = F)
-
+          
+          check_align()#run a short check if all var_corr_par are in ini (sometimes they don't pass convert_optain) 
+          
           ## run the Python script
           py_script <- "../python_files/correlation_matrix.py"
           cmd <- paste("python", py_script)
@@ -832,6 +843,7 @@ server <- function(input, output, session) {
     # reprint highest correlation table marking removed 
     output$corrtable <- renderDT({
       req(corr)
+      
       find_high_corr(corr,threshold=input$thresh, tab=T, strike=NULL)}) #tab = T means this returns the full table, =F is for pulling variables
    
     # top table with selected elements
@@ -951,17 +963,9 @@ server <- function(input, output, session) {
     
     observeEvent(input$confirm_axis,{ 
       pca_available$button1_clicked = TRUE
-    # selected1_2 <- input$axisx
-    # selected2_2 <- input$axisy
-    # selected3_2 <- input$colour
-    # selected4_2 <- input$size
-    isolate({axiselected(c(input$axisx,input$axisy,input$colour, input$size))})
-    # 
-    # choices1_2 <- setdiff(all_choices(), c(selected2_2, selected3_2, selected4_2))
-    # choices2_2 <- setdiff(all_choices(), c(selected1_2, selected3_2, selected4_2))
-    # choices3_2 <- setdiff(all_choices(), c(selected1_2, selected2_2, selected4_2))
-    # choices4_2 <- setdiff(all_choices(), c(selected1_2, selected2_2, selected3_2))
     
+    isolate({axiselected(c(input$axisx,input$axisy,input$colour, input$size))})
+
     updateTextInput(session, "axisx",  value  = axiselected()[1])
     updateTextInput(session, "axisy", value = axiselected()[2])
     updateTextInput(session, "colour", value = axiselected()[3])
@@ -1046,7 +1050,7 @@ server <- function(input, output, session) {
     
     run_python_script(path_script=pca_script,pca_status)
     
-    }, once = FALSE)
+    })
   
   ## cluster specs
   observeEvent(input$write_clust, {
