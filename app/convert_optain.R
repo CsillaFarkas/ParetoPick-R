@@ -197,6 +197,65 @@ for(op in paste0("V", 1:nopt)){ #instable looping, Cordi...
     }
   
   lin = lin %>%mutate(id = row_number())
+
+  ### fraction of water from individual measures that goes directly into channel (channel_frac)
+  # read rout_unit.con
+  ru = read.table("../data/rout_unit.con",header = T, fill = TRUE, stringsAsFactors = FALSE, skip = 1)
+  ru = ru %>% select(c(obj_id,obj_typ_1,area,frac_1))
+  
+  channel_frac = as.data.frame(array(NA, dim =c(nopt,length(meas)))) # Pareto front in rows
+  colnames(channel_frac) = meas  
+  rownames(channel_frac) = paste0("V", 1:nopt)
+  
+  for (op in paste0("V", 1:nopt)) {
+    opti = hru_donde %>% select(c(obj_id, all_of(op), area))
+    
+    for (m in meas) {
+      if (m %in% opti[[op]]) {
+        #check if land use is part of optimum (pond sometimes is not in Schwarzer Schoeps)
+        hru_ac = opti %>% filter(.data[[op]] == m) %>% select(obj_id)
+        
+        if (nrow(hru_ac) != 0){
+          #ru$name contains hrus called "rtuxxx", or use obj_id --> match with activated hrus in optimum
+          ru_ac = ru[which(ru$obj_id %in% hru_ac$obj_id), ] 
+          
+          if (nrow(ru_ac) == 0 | !any(ru_ac$obj_typ_1 == "sdc")) {#check if none routs to channel
+            channel_frac[op, m] = 0
+          } else{
+            #total activated area
+            tot_ac = opti %>% filter(.data[[op]] == m) %>%
+              mutate(tot = sum(area)) %>% distinct(tot) %>% pull()
+            
+            #individual share in activated area (considering all including those that are not along channel)
+            cf = opti %>% filter(.data[[op]] == m) %>% mutate(cf = area/tot_ac)
+            
+            #ru$obj_typ contains the type of receiving object --> subset to those where sdc (=channel)
+            ru_ch = ru_ac[which(ru_ac$obj_typ_1 == "sdc"), ]
+            
+            #subset to channel adjacent
+            cf = cf[which(cf$obj_id %in% ru_ch$obj_id), ]
+            
+            #merge, multiply area share and fraction and pull value
+            channel_frac[op, m] = ru_ch %>% left_join(cf, by = "obj_id") %>%
+              mutate(cf_a = cf * area.y) %>% summarise(median(cf_a, na.rm = T)) %>% pull()
+          } 
+        } else{
+          channel_frac[op, m] = 0
+        }
+        
+      }
+      else{
+        channel_frac[op, m] = 0
+      }
+    }
+    print(paste0("caculated fraction of water routing into channel ", op, "..."),
+          quote = F)
+    
+  }
+  channel_frac = channel_frac *100
+  colnames(channel_frac) = paste(colnames(channel_frac),"channel_frac",sep="_")
+  channel_frac = channel_frac %>%mutate(id = row_number())
+  
   
   ## Area per measure, required for calculating share below
   # empty dataframe
@@ -241,7 +300,10 @@ for(op in paste0("V", 1:nopt)){ #instable looping, Cordi...
   fit$id = 1:nrow(fit)
   print("check: read pareto_fitness.txt, assigned names...",quote=F)
   
-  test_clu = fit %>%left_join(lin,by="id")%>%left_join(share_con, by = "id") %>%left_join(share_tot, by ="id") %>% left_join(mesur, by="id")%>% select(-id)%>%replace(is.na(.), 0)
+  test_clu = fit %>%left_join(lin,by="id")%>%left_join(share_con, by = "id") %>%
+                 left_join(share_tot, by ="id") %>% left_join(mesur, by="id")%>%
+                           left_join(channel_frac, by = "id")%>% select(-id)%>%
+                                                replace(is.na(.), 0)%>%select_if(~ !all(. == 0))
    
   write.csv(test_clu, "../input/var_corr_par.csv",  row.names = FALSE, fileEncoding = "UTF8")  
   print("check: printed output ---> /input/var_corr_par...",quote=F)
