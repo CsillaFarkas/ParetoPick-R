@@ -5,8 +5,6 @@
 server <- function(input, output, session) {
 
   ## reactive values
- 
-  
   objectives <- reactiveVal(character()) #objective names
   
   par_fiti <- reactiveVal(NULL)#handling pareto_fitness
@@ -45,7 +43,7 @@ server <- function(input, output, session) {
   
   axiselected = reactiveVal(read_config_plt(obj=F,axis=T))
   max_pca <- reactiveVal()# required for max pc field
-  pca_available <- reactiveValues(button1_clicked = FALSE, button2_clicked = FALSE) #controls proper writing previous to clustering
+  pca_available <- reactiveValues(button1_clicked = FALSE, button2_clicked = FALSE) #controls config.ini writing previous to clustering
   #results table
   check_files<- reactiveVal(NULL)
   sols <- reactiveVal()
@@ -847,10 +845,16 @@ server <- function(input, output, session) {
       find_high_corr(corr,threshold=input$thresh, tab=T, strike=NULL)}) #tab = T means this returns the full table, =F is for pulling variables
    
     # top table with selected elements
-    output$selements <- renderTable({input$selements},rownames = T,colnames = F)
-    })
-  
-    # Drop Down Menu with subset of those with selected threshold
+    output$selements <- renderTable({
+      
+      sel_vars = input$selements
+      opt_pca <- optain_pca_content[sel_vars]
+      
+      data.frame(Variable = sel_vars,Description = opt_pca)
+      
+      },colnames = F)
+  })
+   # Drop Down Menu with subset of those with selected threshold
     observe({updateSelectInput(session, "excl",choices = find_high_corr(corr,threshold=input$thresh, tab=F))})
   })
   
@@ -918,6 +922,10 @@ server <- function(input, output, session) {
     } else{
       choices = readRDS("../input/object_names.RDS")
     }
+   
+    max_pca(get_num_pca())
+    updateNumericInput(session, "pca_max", value = max_pca(), max=max_pca()) #requires pca_content to exist
+      
     
     preselected = read_config_plt(obj = T, axis = F)
    
@@ -1026,6 +1034,7 @@ server <- function(input, output, session) {
         missing_buttons <- c()
         if (!pca_available$button1_clicked) missing_buttons <- c(missing_buttons, "Confirm Choice")
         if (!pca_available$button2_clicked) missing_buttons <- c(missing_buttons, "Confirm Axis Labels")
+
         paste("Please, ", paste(missing_buttons, collapse = " and ")," first!")
       })
     }
@@ -1121,6 +1130,7 @@ server <- function(input, output, session) {
   
   ## pca min/max specs
   observeEvent(input$pcaminmax,{
+    
     write_pcanum(pcamin=input$pca_min,pcamax=input$pca_max)
     update_settings()
   })
