@@ -747,8 +747,6 @@ plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NUL
     
   }
   
-  p = p +labs(x=paste0(x_var,xma), y = paste0(y_var,yma))
-  
   #Analysis tab requires control of limits to show selection as part of whole front
   if(an_tab){
     
@@ -764,20 +762,31 @@ plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NUL
                                   limits= c(range(whole[[x_var]])[1],range(whole[[x_var]])[2]))+
                scale_y_continuous(labels = function(y) {rem_min(y)},
                                   limits= c(range(whole[[y_var]])[1],range(whole[[y_var]])[2]))
+      
+      yma = " (negative)"
+      xma = " (negative)"
+      
       #only y_scale
      }else if(any(dat[[y_var]] < 0)){
        
        p <- p + scale_y_continuous(labels = function(y) {rem_min(y)},
                                    limits= c(range(whole[[y_var]])[1],range(whole[[y_var]])[2]))
+       
+       yma = " (negative)"
+       
       #only x_scale
      }else if(any(dat[[x_var]] < 0)){ 
        p <- p + scale_x_continuous(labels = function(x) {rem_min(x)},
                                    limits= c(range(whole[[x_var]])[1],range(whole[[x_var]])[2]))
+       xma = " (negative)"
        
        #neither
      }else{p <- p + scale_x_continuous(limits= c(range(whole[[x_var]])[1],range(whole[[x_var]])[2]))+
       scale_y_continuous(limits= c(range(whole[[y_var]])[1],range(whole[[y_var]])[2])) }
   }
+  
+  p = p +labs(x=paste0(x_var,xma), y = paste0(y_var,yma))
+  
   
   return(p)
 }

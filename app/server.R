@@ -1177,13 +1177,11 @@ server <- function(input, output, session) {
      shinyjs::show("main_analysis")
      shinyjs::show("plt_opti")
    }
-    
       if(!file.exists("../input/object_names.RDS")) {
         shinyjs::hide(id = "analysis_random")
         shinyjs::hide(id= "meas_low")
         } 
  
-      
       if(!file.exists("../data/measure_location.csv")){
         output$meas_low <- renderText({
           "measure_location.csv not found, please provide it in the data preparation tab."
@@ -1232,7 +1230,6 @@ server <- function(input, output, session) {
         })
       })
      
-
     output$par_plot_optima <- renderPlot({
       req(objectives(),sols(), input$x_var2)
       
@@ -1273,8 +1270,6 @@ server <- function(input, output, session) {
         ggsave(file, plot = last_plot(), device = "png", width = 7, height = 5)
       }
     )
-    
-    
     
     output$tabtext = renderText({HTML("You can select up to 12 optima and compare the implementation of measures in the catchment.")})
     
@@ -1362,10 +1357,8 @@ server <- function(input, output, session) {
       #   
       # })
      
-      
      }
  
-  
   })
   
   ### AHP ####
@@ -1395,7 +1388,6 @@ server <- function(input, output, session) {
     preselect3 = preselect[3]
     preselect4 = preselect[4]
     
-   
     updateSelectInput(session,inputId = "x_var",choices = choices,selected = preselect1)
     updateSelectInput(session,inputId = "y_var",choices = choices, selected = preselect2)
     updateSelectInput(session,inputId = "col_var", choices = choices, selected = preselect3)
