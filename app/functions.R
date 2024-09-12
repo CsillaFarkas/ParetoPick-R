@@ -84,6 +84,9 @@ write_corr = function(vars,
     if ("share_tot" %in% vars) {
       varmes = append(varmes, paste(mes, "share_tot", sep = "_"))
     }
+    if ("channel_frac" %in% vars) {
+      varmes = append(varmes, paste(mes, "channel_frac", sep = "_"))
+    }
     
     config[[1]]$col_correlation_matrix = paste(varmes, collapse = ", ")
     
@@ -96,6 +99,32 @@ write_corr = function(vars,
   }
   
 }
+## check if some variables have been removed by convert_optain
+check_align = function(inipath="../input/config.ini"){
+  
+  if (!file.exists(inipath)) {
+    return(NULL)  
+  } 
+  config <- read.ini(inipath)
+  
+  written <- config[[1]]$col_correlation_matrix
+  written <- strsplit(written, ", ")[[1]]
+  
+  var_corr = read.csv("../input/var_corr_par.csv")
+  var_corr = colnames(var_corr)[5:ncol(var_corr)]
+  
+  che = setdiff(written,var_corr)
+  if(length(che)==0){return(NULL)}else{
+    written = setdiff(written, che)
+    config[[1]]$col_correlation_matrix = paste(written, collapse = ", ")
+    write.ini(config, inipath)
+  }
+}
+
+  
+  
+  
+ 
 
 ##
 write_pca_ini <- function(var1 = "", var2 = "", var3 = "", var4 = "",
@@ -528,7 +557,7 @@ plot_parline = function(datt,sizz=rep(.5, length(unique(datt$id))),colols=rep("g
   sq$id <- as.factor(rep("10000",nrow(sq)))
     
   datt = rbind(datt, sq)
-  print(tail(datt))
+  
   colols <- c(colols, "cyan")
   sizz <- c(sizz,  .5)
  
