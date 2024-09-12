@@ -523,7 +523,7 @@ ui <-
                             div("4. Please specify the number of principal components that shall be tested", style = "text-align: left; font-size:150%"),
                             numericInput("pca_min", "Minimum number of PCs", value = 7),
                             numericInput("pca_max", "Maximum number of PCs", value = 7),
-                            actionButton("pcaminmax", "Confirm PC Testing"),
+                            actionButton("pcaminmax", "Confirm Number of PCs tested"),
                             
                             # PCA printing Background Processes
                           conditionalPanel(condition = "output.isElementVisible == true",div("Python Background Processes",style = "text-align: left; font-size:150%"),        
@@ -559,7 +559,7 @@ ui <-
                        column(3,selectInput(inputId = "y_var2",label = "Y-Axis", choices = NULL, multiple = F,selected=NULL)),
                        column(3,selectInput(inputId = "col_var2",label = "Colour", choices = NULL, multiple = F,selected=NULL)),
                        column(3,selectInput(inputId = "size_var2",label = "Size", choices = NULL, multiple = F,selected=NULL))),
-                     textInput("par_plot_savename", "File name (without extension):", value = "my_plot"), #required for online version
+                     textInput("par_plot_savename", "File name (without extension):", value = "cluster_plot"), #required for online version
                      downloadButton("download_par_plot", "Download Plot")))),
               
               
