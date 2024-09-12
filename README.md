@@ -1,6 +1,15 @@
-ParetoPick-R is part of the final analyses of the [OPTAIN Project](https://www.optain.eu/). It shall facilitate the analysis of the Pareto front across objectives and support decision making for measure implementation.
-It provides a dashboard for the user to supply their own data, visualise it and alter a range of parameters. The code allows the user to select variables to be analysed in a correlation analysis and a PCA. 
-It then performs both and provides the relevant statistics, plots and analyses.
+ParetoPick-R is part of the post processing of the [OPTAIN Project](https://www.optain.eu/). It shall facilitate the analysis of the Pareto front across objectives and support decision making for measure implementation.
+It provides a dashboard for the user to supply their own data, visualise it and alter a range of parameters. The objective ranges delineating the Pareto front can be altered allowing to distinguish the objectives' relationships.
+The code allows the user to select variables to be analysed in a correlation analysis and a cluster algorithm. The cluster algorithm relies on Principal Component Analysis (PCA) and kmeans/kmedoid. While the variables that can be considered in 
+the algorithm are fixed, several settings such as outlier treatment and the number of tested principal components, can be set by the user. 
+ParetoPick-R also integrates an Analytical Hierarchy Process (AHP) allowing the user to determine weights for the objectives based on pair-wise comparisons. The results of the clustering and the AHP can be combined and the app provides a range of methods for visualising the results.
+
+* Variables considered by the cluster algorithm (produced in a call to convert_optain)
+  * catchment area covered by measure (distinguished by measure type) **share_tot**
+  * ratio between area covered by measure and area available for measure implementation (distinguished by measure type) **share_con**
+  * fraction of water from measure hru draining straight into the channel (distinguished by measure type) **channel_frac**
+  * Moran's I **moran**
+  * ratio of structural to management options **linE**
 
 # File Structure
 * the project consists of four folders:
@@ -13,7 +22,6 @@ It then performs both and provides the relevant statistics, plots and analyses.
 ### Files provided in the package
 * config.ini 
 * nswrm_priorities.csv 
-
 
 ### Files created and used in the process
 * var_corr_par.csv (created in convert_optain.R, contains all variables considered in the clustering)
