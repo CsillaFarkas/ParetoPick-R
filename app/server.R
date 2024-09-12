@@ -1046,7 +1046,10 @@ server <- function(input, output, session) {
     pca_content <<- readRDS("../input/pca_content.RDS")
     
     output$pca_mess <- renderUI({
-      tags$p("If all data was provided in the right format, the PCA outputs will open in separate windows - you can discard or save them as necessary.")
+      HTML("
+        <p>If all data was provided in the right format, the PCA outputs will open in separate windows - you can discard or save them as necessary.<br>
+        The Silhouette Score is also provided -  you can use it to compare the cluster quality of multiple runs and you should generally aim for values of > 0.5</p>
+      ")
       })
     
     isElementVisible(TRUE)
