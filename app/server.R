@@ -193,12 +193,15 @@ server <- function(input, output, session) {
       if (file.exists("../data/sq_fitness.txt")) {
         req(objectives())
         
+        shinyjs::enable("plt_sq")
+        
         shinyjs::hide("sq")
         st_q = read.table("../data/sq_fitness.txt", header = FALSE, stringsAsFactors = FALSE, sep = ' ')
         names(st_q) = objectives()
         stq(st_q)
         
-        }else{shinyjs::show("sq")} })
+        }else{shinyjs::show("sq")
+          shinyjs::disable("plt_sq")} })
     
     #make status quo based on user input
     observeEvent(input$sq_in, {
@@ -457,8 +460,10 @@ server <- function(input, output, session) {
   
   ### Data Prep ####
   
-  if(!file.exists("../data/pareto_fitness.txt")){shinyjs::show(id="fitness_avail")}
-  if(!file.exists("../data/sq_fitness.txt")){shinyjs::show(id="sq_avail")}
+  if (!file.exists("../data/pareto_fitness.txt")) {shinyjs::show}
+  if (!file.exists("../data/sq_fitness.txt")){shinyjs::show(id = "sq_avail")
+                                              shinyjs::disable("plt_sq")}else{shinyjs::enable("plt_sq")}
+  
   file_data1 <- reactiveVal(NULL)
   file_data2 <- reactiveVal(NULL)
   file_data3 <- reactiveVal(NULL)
@@ -1370,7 +1375,7 @@ server <- function(input, output, session) {
     }else{ shinyjs::hide("nothing_ran_ahp")
       shinyjs::runjs("toggleSidebar(false);")  # Hide sidebar
     }      
-      
+    if (!file.exists("../data/sq_fitness.txt")){shinyjs::disable("show_status_quo")}else{shinyjs::enable("show_status_quo")} 
       
       if(!file.exists("../input/object_names.RDS")) {
       choices = "Please select objectives in Data Preparation Tab"
