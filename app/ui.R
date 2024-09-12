@@ -172,7 +172,7 @@ ui <-
                   p("This application analyses OPTAIN optimisation outputs and shall support decision making.  
                      While all solutions provided by the SWAT+ / COMOLA workflow are pareto-optimal (none of the objectives can be improved without losses 
                     in other objectives), choosing among a large number of solutions can be daunting."),
-                              br(), p("To reduce complexity while minimising information loss, this application provides a clustering algorithm based on a Principal Component Analysis (PCA).
+                              br(), p("To reduce complexity while minimising information loss, this application provides a clustering algorithm based on a Principal Component Analysis (PCA) and kmeans/kmedoid.
                               The user can modify the clustering process, alter the number of tested clusters and the way outliers are handled or how much correlation is accepted across the considered variables.
                               Finally, those optima representative for different clusters can be plotted and the measure implementation they recommend can be compared.
                                 "),br(),
