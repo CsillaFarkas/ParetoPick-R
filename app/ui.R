@@ -261,8 +261,8 @@ ui <-
                                     tableOutput("sliders_abs"))),
                            fluidRow(column(12,
                                     div("Selected Optimum (select in line plot)", style = "text-align: left; font-size:150%"),
-                                    tableOutput("click_info")))))),
-                checkboxInput("plt_sq", label = "Show status quo", value = FALSE),
+                                    tableOutput("click_info"))))),
+                checkboxInput("plt_sq", label = "Show status quo", value = FALSE)),
                 
                 div(id = "tab_play2",div("Parallel Axis plot", style = "text-align: left; font-size:150%"),
                            plotOutput("linePlot",click="clickline"),
@@ -270,7 +270,7 @@ ui <-
                 
                 div(id="scatter","Scatter Plot",style = "text-align: left; font-size:150%"),
                            plotOutput("scatter_plot"),
-                           textInput("scat_plot_savename", "File name (without extension):", value = "my_plot"),
+                           textInput("scat_plot_savename", "File name (without extension):", value = "pairwise_scatter"),
                            downloadButton("download_scat_plot", "Download Plot"),
                           
                 div("Difference between selection and the whole Pareto Front", style = "text-align: left; font-size:150%"),
@@ -286,11 +286,12 @@ ui <-
                 
                 wellPanel(  p("This tab requires you to provide the required optimisation outputs, please retain their names as given here and as produced in the optimisation workflow."),
                             p(HTML("Please click <strong>Check Files</strong> after doing so.")),
-                            p(HTML("If all files have been found, you can click <strong>Run Prep</strong> to prepare the variables for the subsequent correlation and cluster analysis. This takes between 2 and 4 minutes."))),
+                            p(HTML("If all files have been found, you can click <strong>Run Prep</strong> to prepare the variables for the subsequent correlation and cluster analysis. This takes can take up to 5 minutes."))),
                 
                 mainPanel(
                   p("To prepare the data for the subsequent correlation and cluster analysis, please provide the following files:",style =  "text-align: left; font-size:150%"),
-                         
+                    
+                  #file numbers are jumbled but just here     
                   div("1. pareto_genomes.txt",style = "text-align: left; font-size:115%"),
                   div(style = "margin-top: -15px;",fileInput("file1", "", accept = ".txt")), 
                   
@@ -302,19 +303,27 @@ ui <-
                   div(style = "margin-top: -15px;",fileInput("file3", "", accept = ".csv")), 
                   
                   
-                  div("4. shapefile called \"hru\" with four components (.shp .dbf .prj and .shx)",style = "text-align: left; font-size:115%"),
+                  div("4. rout_unit.con", style="text-align: left; font-size:115%"),
+                  div(style = "margin-top: -15px;",fileInput("file6", "", accept = ".con")),
+                  
+                  
+                  div("5. shapefile called \"hru\" with four components (.shp .dbf .prj and .shx)",style = "text-align: left; font-size:115%"),
                   div(style = "margin-top: -15px;",fileInput("shapefile", "", multiple = TRUE, 
                                                              accept = c(".shp", ".shx", ".dbf", ".prj"))),
                   
-                  div("5. shapefile called \"basin\" with four components (.shp .dbf .prj and .shx)",style = "text-align: left; font-size:115%"),
+                  div("6. shapefile called \"basin\" with four components (.shp .dbf .prj and .shx)",style = "text-align: left; font-size:115%"),
                   div(style = "margin-top: -15px;",fileInput("basfile", "", multiple = TRUE, 
                                                              accept = c(".shp", ".shx", ".dbf", ".prj"))),
                   
-                  div(id="sq_avail",div("6. sq_fitness.txt (not obligatory but required if you want to plot the status quo)",style = "text-align: left; font-size:115%"),
+                  div(id="sq_avail",
+                      
+                  div("7. sq_fitness.txt (not obligatory but required if you want to plot the status quo)",style = "text-align: left; font-size:115%"),
                   div(style = "margin-top: -15px;",fileInput("file5", "", accept = ".txt")))%>%hidden(),
                   
                   
-                  div(id="fitness_avail",div("7. pareto_fitness.txt (if not provided in the previous tab)",style = "text-align: left; font-size:115%"),
+                  div(id="fitness_avail",
+                      
+                  div("8. pareto_fitness.txt (if not provided in the previous tab)",style = "text-align: left; font-size:115%"),
                   div(style = "margin-top: -15px;",fileInput("file4", "", accept = ".txt")))%>%hidden(), 
                   
                   
@@ -335,6 +344,7 @@ ui <-
                   div(id="runprep_show",p("Run Preparation Script when ready (this should take no more than five minutes)",style =  "text-align: left; font-size:150%"),
                   actionButton("runprep", "Run Prep"))%>%hidden,
                   uiOutput("script_output"),
+                  br(),br(),
                    div(id="range_title","Range of objective values as given in pareto_fitness.txt",style = "text-align: left; font-size:120%"),
                   tableOutput("obj_conf"),
                   
@@ -371,10 +381,11 @@ ui <-
                  checkboxGroupInput("selements", "",  
                                     choiceNames = c("Catchment area covered by implemented measures (share_tot)", 
                                      "Ratio between area actually covered by implemented measures and area considered for measure implementation (share_con)",
-                                     "Moran's I", 
+                                     "Moran's I",
+                                     "Fraction of water draining into the channel (channel_frac)",
                                      "Ratio of structural to management options (linE)"),
-                                    choiceValues=c("share_tot","share_con","moran","linE"),
-                                    selected = c("share_tot","share_con","moran","linE")),
+                                    choiceValues=c("share_tot","share_con","moran","channel_frac","linE"),
+                                    selected = c("share_tot","share_con","moran","channel_frac","linE")),
                  
       textOutput("numbercorr"),
       div("2. Perform the Correlation Analysis", style = "text-align: left; font-size:150%"),
