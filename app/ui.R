@@ -270,7 +270,7 @@ ui <-
                 
                 div(id="scatter","Scatter Plot",style = "text-align: left; font-size:150%"),
                            plotOutput("scatter_plot"),
-                           textInput("scat_plot_savename", "File name (without extension):", value = "pairwise_scatter"),
+                           textInput("scat_plot_savename", label = NULL, value = "pairwise_scatter"),
                            downloadButton("download_scat_plot", "Download Plot"),
                           
                 div("Difference between selection and the whole Pareto Front", style = "text-align: left; font-size:150%"),
@@ -554,14 +554,16 @@ ui <-
                      checkboxInput("add_whole", label = "Show the whole Pareto front", value = FALSE),
                      checkboxInput("add_sq",label = "Show status quo",value = FALSE),
                      
-                     div(id="analysis_random",fluidRow(
-                       column(3, selectInput(inputId = "x_var2",label = "X-Axis", choices = NULL, multiple = F, selected=NULL)),
+                     div(id="analysis_random",
+                         fluidRow(
+                       column(3,selectInput(inputId = "x_var2",label = "X-Axis", choices = NULL, multiple = F, selected=NULL)),
                        column(3,selectInput(inputId = "y_var2",label = "Y-Axis", choices = NULL, multiple = F,selected=NULL)),
                        column(3,selectInput(inputId = "col_var2",label = "Colour", choices = NULL, multiple = F,selected=NULL)),
-                       column(3,selectInput(inputId = "size_var2",label = "Size", choices = NULL, multiple = F,selected=NULL))),
-                     textInput("par_plot_savename", "File name (without extension):", value = "cluster_plot"), #required for online version
-                     downloadButton("download_par_plot", "Download Plot")))),
-              
+                       column(3,selectInput(inputId = "size_var2",label = "Size", choices = NULL, multiple = F,selected=NULL))
+                                 ),
+                       textInput("par_plot_savename", label=NULL, value = "file name without extension"), #required for online version
+                       downloadButton("download_par_plot", "Download Plot")))),
+             
               
             actionButton("plt_opti", "Plot Optimum"), textOutput("no_row") %>% hidden(), 
             div(id="meas_low",textOutput("meas_low")),
@@ -654,7 +656,7 @@ ui <-
       
        checkboxInput("show_extra_dat", label = "Show cluster solutions", value = FALSE),
        checkboxInput("show_status_quo", label = "Show Status Quo", value = FALSE),
-       textInput("weights_plot_savename", "File name (without extension):", value = "my_plot"),
+       textInput("weights_plot_savename", label = NULL, value = "file name without extension"),
        downloadButton("download_weights_plot", "Download Plot")))
       
        )
