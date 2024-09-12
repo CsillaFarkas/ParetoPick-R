@@ -1,23 +1,28 @@
 ParetoPick-R is part of the post processing of the [OPTAIN Project](https://www.optain.eu/). It shall facilitate the analysis of the Pareto front across objectives and support decision making for measure implementation.
-It provides a dashboard for the user to supply their own data, visualise it and alter a range of parameters. The objective ranges delineating the Pareto front can be altered allowing to distinguish the objectives' relationships.
-The code allows the user to select variables to be analysed in a correlation analysis and a cluster algorithm. The cluster algorithm relies on Principal Component Analysis (PCA) and kmeans/kmedoid. While the variables that can be considered in 
+It provides a dashboard for the user to supply their own data, visualise it and alter a range of parameters. 
+The code allows the user to select variables to be analysed in a correlation analysis and a cluster algorithm. 
+
+* Variables considered by the cluster algorithm (produced in a call to convert_optain)
+  1. catchment area covered by measure (distinguished by measure type) **share_tot**
+  2. ratio between area covered by measure and area available for measure implementation (distinguished by measure type) **share_con**
+  3. fraction of water from measure hru draining straight into the channel (distinguished by measure type) **channel_frac**
+  4. Moran's I **moran**
+  5. ratio of structural to management options **linE**
+
+
+The cluster algorithm relies on Principal Component Analysis (PCA) and kmeans/kmedoid. While the variables that can be considered in 
 the algorithm are fixed, several settings such as outlier treatment and the number of tested principal components, can be set by the user. 
 ParetoPick-R also integrates an Analytical Hierarchy Process (AHP) allowing the user to determine weights for the objectives based on pair-wise comparisons. The results of the clustering and the AHP can be combined and the app provides a range of methods for visualising the results.
 
-* Variables considered by the cluster algorithm (produced in a call to convert_optain)
-  * catchment area covered by measure (distinguished by measure type) **share_tot**
-  * ratio between area covered by measure and area available for measure implementation (distinguished by measure type) **share_con**
-  * fraction of water from measure hru draining straight into the channel (distinguished by measure type) **channel_frac**
-  * Moran's I **moran**
-  * ratio of structural to management options **linE**
 
-# File Structure
-* the project consists of four folders:
+# Folder Structure
+* the project consists of six folders:
 1. app folder: contains all required scripts (ui.R, global.R, functions.R, server.R, convert_optain.R)
 2. output folder (empty in beginning)
 3. data folder (empty in beginning): folder the user input is written to
 4. input folder (containing nswrm_priorities.csv and config.ini): folder the datafiles are written/read to/from 
 5. data for container (containing config.ini and nswrm_priorities.csv for hard reset)
+6. python_files: contains python executables 
 
 ### Files provided in the package
 * config.ini 
