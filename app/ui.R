@@ -266,6 +266,13 @@ ui <-
                 
                 div(id = "tab_play2",div("Parallel Axis plot", style = "text-align: left; font-size:150%"),
                            plotOutput("linePlot",click="clickline"),
+                    div(
+                      style = "display: inline-block; vertical-align: top; margin-right: 0px;",
+                      textInput("line_plot_savename", label = NULL, value = "parallel line")
+                    ),
+                    div(
+                      style = "display: inline-block; vertical-align: top; margin-left: 0px;",
+                      downloadButton("download_line_plot", "Download Plot")),
                            verbatimTextOutput("lineDetails"),
                 
                 div(id="scatter","Scatter Plot",style = "text-align: left; font-size:150%"),
@@ -273,7 +280,7 @@ ui <-
                 
                 div(
                   style = "display: inline-block; vertical-align: top; margin-right: 0px;",
-                  textInput("scat_plot_savename", label = NULL, value = "pairwise_scatter")
+                  textInput("scat_plot_savename", label = NULL, value = "pairwise scatter")
                 ),
                 div(
                   style = "display: inline-block; vertical-align: top; margin-left: 0px;",
@@ -281,7 +288,15 @@ ui <-
                 ),
                                                 
                 div("Difference between selection and the whole Pareto Front", style = "text-align: left; font-size:150%"),
-                           plotOutput("sliders_plot"))
+                           plotOutput("sliders_plot"),
+                div(
+                  style = "display: inline-block; vertical-align: top; margin-right: 0px;",
+                  textInput("diff_plot_savename", label = NULL, value = "difference barplot")
+                ),
+                div(
+                  style = "display: inline-block; vertical-align: top; margin-left: 0px;",
+                  downloadButton("download_diff_plot", "Download Plot")
+                ))
                 
                           )## PLAY AROUND MAIN PANEL END
                 )),
@@ -418,6 +433,15 @@ ui <-
       
       div("Correlation Analysis", style = "text-align: left; font-size:150%"),
       plotOutput("corrplot"),
+      
+      div(
+        style = "display: inline-block; vertical-align: top; margin-right: 0px;",
+        textInput("corr_plot_savename", label = NULL, value = "correlation")
+      ),
+      div(
+        style = "display: inline-block; vertical-align: top; margin-left: 0px;",
+        downloadButton("download_corr_plot", "Download Plot")),
+      
       
       div("Most correlated variables", style = "text-align: left; font-size:150%"),
       DTOutput("corrtable")
@@ -568,13 +592,33 @@ ui <-
                        column(3,selectInput(inputId = "col_var2",label = "Colour", choices = NULL, multiple = F,selected=NULL)),
                        column(3,selectInput(inputId = "size_var2",label = "Size", choices = NULL, multiple = F,selected=NULL))
                                  ),
-                       textInput("par_plot_savename", label=NULL, value = "file name without extension"), #required for online version
-                       downloadButton("download_par_plot", "Download Plot")))),
-             
+                       
+                       div(
+                         style = "display: inline-block; vertical-align: top; margin-right: 0px;",
+                         textInput("par_plot_savename", label = NULL, value = "parallel axis")
+                       ),
+                       div(
+                         style = "display: inline-block; vertical-align: top; margin-left: 0px;",
+                         downloadButton("download_par_plot", "Download Plot")
+                       )))),
               
             actionButton("plt_opti", "Plot Optimum"), textOutput("no_row") %>% hidden(), 
             div(id="meas_low",textOutput("meas_low")),
-            uiOutput("comp_map")
+            uiOutput("comp_map"),
+            br(),br(),br(),
+            br(),br(),br(),
+            br(),br(),br()
+            # ,
+            # div(
+            #   style = "display: inline-block; vertical-align: top; margin-right: 0px;",
+            #   textInput("meas_plot_savename", label = NULL, value = "Measure implementation")
+            # ),
+            # div(
+            #   style = "display: inline-block; vertical-align: top; margin-left: 0px;",
+            #   downloadButton("download_meas_plot", "Download Plot")
+            # )
+            
+            
             )),
             tags$script(HTML("
     function toggleSidebar(show) {
@@ -663,8 +707,20 @@ ui <-
       
        checkboxInput("show_extra_dat", label = "Show cluster solutions", value = FALSE),
        checkboxInput("show_status_quo", label = "Show Status Quo", value = FALSE),
-       textInput("weights_plot_savename", label = NULL, value = "file name without extension"),
-       downloadButton("download_weights_plot", "Download Plot")))
+       
+       div(
+         style = "display: inline-block; vertical-align: top; margin-right: 0px;",
+         textInput("weights_plot_savename", label = NULL, value = "AHP results")
+       ),
+       div(
+         style = "display: inline-block; vertical-align: top; margin-left: 0px;",
+         downloadButton("download_weights_plot", "Download Plot")
+       )
+       
+       
+       )
+      
+      )
       
        )
         )
