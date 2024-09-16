@@ -64,6 +64,9 @@ server <- function(input, output, session) {
   range_controlled = reactiveVal(NULL)
   initial_update_done = reactiveVal(FALSE)
   
+  #figures
+  parline_plrv <-sct_plrv <- bar_plrv <- corr_plrv <- an_plrv <- ahp_plrv <- reactiveVal(NULL)
+
   
   ### Introduction ####
   
@@ -328,7 +331,7 @@ server <- function(input, output, session) {
   
   
   ## line plot
-  output$linePlot <- renderPlot({
+  parplot_fun = function(){
     req(f_scaled(),objectives())
     sk= match_scaled(minval_s=c(input$obj1[1],input$obj2[1],input$obj3[1],input$obj4[1]),
                      maxval_s=c(input$obj1[2],input$obj2[2],input$obj3[2],input$obj4[2]),scal_tab = f_scaled(),allobs = objectives())
@@ -352,11 +355,25 @@ server <- function(input, output, session) {
       stq_ko <- pivot_longer(stq_sk,cols = everything(),names_to = "name",values_to = "value")
       stq_ko <- stq_ko %>% mutate(name=forcats::fct_relevel(name,objectives()))
       
-      plot_parline(datt = ko,colols = rv$colls,   sizz = rv$sizes, sq = stq_ko)
+      return(plot_parline(datt = ko,colols = rv$colls,   sizz = rv$sizes, sq = stq_ko))
       
-      }else{plot_parline(datt = ko,colols = rv$colls, sizz = rv$sizes, sq= NULL)}
+    }else{
+        
+     return(plot_parline(datt = ko,colols = rv$colls, sizz = rv$sizes, sq= NULL))
+    }
 
-  })
+  }
+  
+  output$linePlot <- renderPlot({ parplot_fun() })
+  
+  output$download_line_plot <- downloadHandler(
+    filename = function() {
+      paste(input$line_plot_savename, ".png", sep = "")
+    },
+    content = function(file) {
+      ggsave(file, plot = parplot_fun(), device = "png", width = 7, height = 5)
+    }
+  )
   
   ## scaled table 
     output$sliders <- renderTable({
@@ -424,7 +441,7 @@ server <- function(input, output, session) {
   })
   
   ## scatter plot
-  output$scatter_plot <- renderPlot({
+  scat_fun = function(){
     req(fit(), objectives())
     scat_abs = scaled_abs_match(minval_s=c(input$obj1[1],input$obj2[1],input$obj3[1],input$obj4[1]),
                                 maxval_s=c(input$obj1[2],input$obj2[2],input$obj3[2],input$obj4[2]),
@@ -445,15 +462,27 @@ server <- function(input, output, session) {
 
     plot_scatter = plt_sc(dat = scat_abs, ranges=mima, col = col, size= sizz)
     
-    grid.arrange(grobs = plot_scatter, nrow = 2, ncol = 3)
-    })
+    grid.arrange(grobs = plot_scatter, nrow = 2, ncol = 3)}
+  
+    output$scatter_plot <- renderPlot({ scat_fun()})
   
   output$download_scat_plot <- downloadHandler(
     filename = function() {
       paste(input$scat_plot_savename, ".png", sep = "")
     },
     content = function(file) {
-      ggsave(file, plot = last_plot(), device = "png", width = 7, height = 5)
+      png(file, width = 1500, height=1000)
+      scat_fun()
+      dev.off()
+    }
+  )
+  
+  output$download_diff_plot <- downloadHandler(
+    filename = function() {
+      paste(input$diff_plot_savename, ".png", sep = "")
+    },
+    content = function(file) {
+      ggsave(file, plot = last_plot(), device = "png", width = 7, height = 5) #different approach, hard to turn into function
     }
   )
   
@@ -818,6 +847,19 @@ server <- function(input, output, session) {
         }else{ shinyjs::hide("show_conf")}
         
         } )
+      
+      output$download_corr_plot <- downloadHandler(
+        filename = function() {
+          paste(input$corr_plot_savename, ".png", sep = "")
+        },
+        content = function(file) {
+          png(file, width = 1500, height=1000)
+          plt_corr(corr)
+          dev.off()
+        }
+      )
+      
+      
         ## make new corr
       observeEvent(input$run_corr,{
           shinyjs::show("show_conf") #show confirm selection button once correlation has run
@@ -1292,8 +1334,32 @@ server <- function(input, output, session) {
    
   })
   
+  comp_fun = function(){
+    selected_row <- input$antab_rows_selected
+    
+    selected_data <- sols()[selected_row,]
+    
+    buffs = needs_buffer()
+    
+    hru_sel = plt_sel(shp=cm(),opti_sel = selected_data$optimum)
+    
+    mes = read.csv("../data/measure_location.csv")
+    
+    col_sel = names(hru_sel)[grep("Optim",names(hru_sel))]  #variable length of columns selected
+    
+    nplots = length(col_sel)+1
+    
+    m1 = plt_lf(data=hru_sel, col_sel = col_sel, mes = unique(mes$nswrm),la = lalo[1],lo =lalo[2], buff_els=buffs)
+    
+    cm2 = plt_cm_pure(data=cm_clean(), la = lalo[1],lo =lalo[2])
+    m <- c(list(cm2), m1)
+    
+    sync(m,sync = list(2:nplots),sync.cursor = F)
+  }
+  
   observeEvent(input$plt_opti,{
     selected_row <- input$antab_rows_selected
+    
     if (is.null(selected_row)) {
       
       shinyjs::show(id = "no_row")
@@ -1301,25 +1367,8 @@ server <- function(input, output, session) {
     
     } else {
       shinyjs::hide(id = "no_row")
-      
-      selected_data <- sols()[selected_row,]
-      
-      buffs = needs_buffer()
-      
-      hru_sel = plt_sel(shp=cm(),opti_sel = selected_data$optimum)
-      
-      mes = read.csv("../data/measure_location.csv")
-      
-      col_sel = names(hru_sel)[grep("Optim",names(hru_sel))]  #variable length of columns selected
-      
-      nplots = length(col_sel)+1
-      
-      m1 = plt_lf(data=hru_sel, col_sel = col_sel, mes = unique(mes$nswrm),la = lalo[1],lo =lalo[2], buff_els=buffs)
-      
-      cm2 = plt_cm_pure(data=cm_clean(), la = lalo[1],lo =lalo[2])
-      m <- c(list(cm2), m1)
-
-      output$comp_map <- renderUI({sync(m,sync = list(2:nplots),sync.cursor = F)})
+      output$comp_map <- renderUI({ comp_fun()})
+      }
      
       # observe({
       #   print(names(input))
@@ -1356,10 +1405,19 @@ server <- function(input, output, session) {
       #   }
       #   
       # })
-     
-     }
+   
  
   })
+  # output$download_meas_plot <- downloadHandler(
+  #   filename = function() {
+  #     paste(input$meas_plot_savename, ".html", sep = "")
+  #   },
+  #   content = function(file) {
+  #     htmlwidgets::saveWidget(comp_fun(), file)
+  #   }
+  # )
+
+  
   
   ### AHP ####
   observeEvent(input$tabs == "ahp",{

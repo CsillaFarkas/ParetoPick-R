@@ -11,6 +11,7 @@ library(fst)
 library(ggplot2)
 library(gridExtra) # or patchwork
 library(htmltools)
+# library(htmlwidgets) #save html files
 library(ini)#
 library(leaflet)#
 library(processx) # manage system processes from within shiny (e.g. for pulling R output into shiny)
