@@ -535,14 +535,14 @@ plot_diff_bar= function(pct,obj_choices=NULL){
     theme_bw() +
     theme_minimal() +
     scale_fill_manual(values = c( "#FFC61E", "#009ADE","#AF58BA", "#F28522", "#FF1F5B")) +
-    geom_text(aes(label = objective),size=6,
+    geom_text(aes(label = str_wrap(objective,width=8)),size=4,
               colour = "black",
               position = position_dodge(width = 1), vjust = -0.5) +
     theme(
-      plot.title = element_text(size = 19L),
-      axis.text.y = element_text(size = 17L),
-      axis.text.x = element_text(size = 20),
-      axis.title.y = element_text(size = 20),
+      plot.title =  element_blank(),
+      axis.text.y = element_text(size = 15),
+      axis.text.x = element_text(size = 15),
+      axis.title.y = element_text(size =18),
       axis.title.x = element_blank(),
       legend.position = "none"
     ) +
@@ -573,13 +573,14 @@ plot_parline = function(datt,sizz=rep(.5, length(unique(datt$id))),colols=rep("g
     ) +
     theme_minimal() +
     theme(legend.position = "none",
-          plot.title = element_text(size = 19L),
+          plot.title = element_blank(),
           axis.text.y = element_text(size = 15L),
           axis.text.x = element_text(size = 16L),
           axis.title.y = element_text(size = 15),
           axis.title.x = element_blank()
     )+scale_y_continuous(limits = c(0,1))+
-    scale_x_discrete(expand = c(0.04, 0.05)) + labs(x = "Factors", y = "Scaled Values") +
+    scale_x_discrete(expand = c(0.04, 0.05),labels = function(x) str_wrap(x, width = 10)) + 
+    labs(x = "Factors", y = "Scaled Values") +
     scale_size_manual(values = sizz) +
     scale_color_manual(values = colols)
  
