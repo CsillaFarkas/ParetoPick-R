@@ -604,7 +604,8 @@ ui <-
               
             actionButton("plt_opti", "Plot Optimum"), textOutput("no_row") %>% hidden(), 
             div(id="meas_low",textOutput("meas_low")),
-            uiOutput("comp_map"),
+            div(id="plot_spinner",
+              uiOutput("comp_map")%>% withSpinner(color = "#0fc5cf", hide.ui = TRUE)),
             br(),br(),br(),
             br(),br(),br(),
             br(),br(),br()

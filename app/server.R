@@ -64,9 +64,8 @@ server <- function(input, output, session) {
   range_controlled = reactiveVal(NULL)
   initial_update_done = reactiveVal(FALSE)
   
-  #figures
-  parline_plrv <-sct_plrv <- bar_plrv <- corr_plrv <- an_plrv <- ahp_plrv <- reactiveVal(NULL)
-
+  #figure in analysis rendering
+  is_rendering <- reactiveVal(FALSE)
   
   ### Introduction ####
   
@@ -368,10 +367,11 @@ server <- function(input, output, session) {
   
   output$download_line_plot <- downloadHandler(
     filename = function() {
-      paste(input$line_plot_savename, ".png", sep = "")
+      curt = format(Sys.time(), "_%Y%m%d")
+      paste(input$line_plot_savename,curt, ".png", sep = "")
     },
     content = function(file) {
-      ggsave(file, plot = parplot_fun(), device = "png", width = 7, height = 5)
+      ggsave(file, plot = parplot_fun(), device = "png", width = 1900, height = 1000,units = "px")
     }
   )
   
@@ -468,7 +468,9 @@ server <- function(input, output, session) {
   
   output$download_scat_plot <- downloadHandler(
     filename = function() {
-      paste(input$scat_plot_savename, ".png", sep = "")
+      curt = format(Sys.time(), "_%Y%m%d")
+      
+      paste(input$scat_plot_savename,curt, ".png", sep = "")
     },
     content = function(file) {
       png(file, width = 1500, height=1000)
@@ -850,7 +852,9 @@ server <- function(input, output, session) {
       
       output$download_corr_plot <- downloadHandler(
         filename = function() {
-          paste(input$corr_plot_savename, ".png", sep = "")
+          curt = format(Sys.time(), "_%Y%m%d")
+          
+          paste(input$corr_plot_savename,curt, ".png", sep = "")
         },
         content = function(file) {
           png(file, width = 1500, height=1000)
@@ -1305,10 +1309,11 @@ server <- function(input, output, session) {
     
     output$download_par_plot <- downloadHandler(
       filename = function() {
-        paste(input$par_plot_savename, ".png", sep = "")
+        curt = format(Sys.time(), "_%Y%m%d")
+        
+        paste(input$par_plot_savename,curt, ".png", sep = "")
       },
       content = function(file) {
-        # Save the plot to a file
         ggsave(file, plot = last_plot(), device = "png", width = 7, height = 5)
       }
     )
@@ -1367,8 +1372,16 @@ server <- function(input, output, session) {
     
     } else {
       shinyjs::hide(id = "no_row")
-      output$comp_map <- renderUI({ comp_fun()})
-      }
+      is_rendering(TRUE) 
+      output$comp_map <- renderUI({comp_fun()})
+      
+      output$plot_ready <- renderText({
+        is_rendering(FALSE)  # Set rendering to FALSE after the plot is rendered
+      })
+    }
+    
+    
+  })
      
       # observe({
       #   print(names(input))
@@ -1405,9 +1418,13 @@ server <- function(input, output, session) {
       #   }
       #   
       # })
-   
- 
+  
+  
+  observe({
+    shinyjs::toggle("plot_spinner", condition = is_rendering())
   })
+  
+  
   # output$download_meas_plot <- downloadHandler(
   #   filename = function() {
   #     paste(input$meas_plot_savename, ".html", sep = "")
@@ -1649,7 +1666,9 @@ server <- function(input, output, session) {
   
   output$download_weights_plot <- downloadHandler(
     filename = function() {
-      paste(input$weights_plot_savename, ".png", sep = "")
+      curt = format(Sys.time(), "_%Y%m%d")
+      
+      paste(input$weights_plot_savename,curt, ".png", sep = "")
     },
     content = function(file) {
         ggsave(file, plot = last_plot(), device = "png", width = 7, height = 5)

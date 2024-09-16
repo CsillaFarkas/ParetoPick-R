@@ -24,6 +24,7 @@ library(scales)
 library(sf)#
 library(shiny)#
 options(shiny.maxRequestSize = 1000*1024^2)
+library(shinycssloaders) # for withSpinner()
 library(shinydashboard)#
 library(shinyFiles) #drag and drop
 library(shinyjs) # for hiding parts of the app
@@ -46,9 +47,9 @@ if(!dir.exists(output_dir)){  dir.create(output_dir)}
 
 optain_pca_content <- c(
   
-  "share_tot" = "blabbb",
-  "share_con"= "blabbb2",
-  "moran"= "blabbb3",
-  "channel_frac"= "blabbb6",
-  "linE"= "blabbb4"
+  "share_tot" = "Each measure's share in total catchment area.",
+  "share_con"= "Each measure's share in area considered for implementation.",
+  "moran"= "The median spatial autocorrelation between HRUs allocated to each implemented measure.",
+  "channel_frac"= "The median fraction of water under each implemented measure that is routed directly into the channel.",
+  "linE"= "The ratio between structural and management measures."
 )
