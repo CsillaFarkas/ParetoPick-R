@@ -3,11 +3,11 @@ It provides a dashboard for the user to supply their own data, visualise it and 
 The code allows the user to select variables to be analysed in a correlation analysis and a cluster algorithm. 
 
 * Variables considered by the cluster algorithm (produced in a call to convert_optain)
-  1. catchment area covered by measure (distinguished by measure type) **share_tot**
-  2. ratio between area covered by measure and area available for measure implementation (distinguished by measure type) **share_con**
-  3. fraction of water from measure hru draining straight into the channel (distinguished by measure type) **channel_frac**
-  4. Moran's I **moran**
-  5. ratio of structural to management options **linE**
+  1. **share_tot** - catchment area covered by measure (per measure type) 
+  2. **share_con** - ratio between area covered by measure and area available for measure implementation (per measure type) 
+  3. **channel_frac** - fraction of water from measure hru draining straight into the channel (per measure type) 
+  4. **moran** - Moran's I 
+  5. **linE** - ratio of structural to management options 
 
 
 The cluster algorithm relies on Principal Component Analysis (PCA) and kmeans/kmedoid. While the variables that can be considered in 
@@ -67,8 +67,8 @@ ParetoPick-R also integrates an Analytical Hierarchy Process (AHP) allowing the 
 
 # Missing/Nice to have
 * sliders with actual values instead of scaled values?
-* saving the WHOLE scatter plot, not only the last_plot() device
 * cluster tab sometimes requires a lot of clicking around but users will figure it out
+
 
 * Play around tab
   * status quo plotted in the right color when sliders are moved
@@ -82,8 +82,8 @@ ParetoPick-R also integrates an Analytical Hierarchy Process (AHP) allowing the 
   * more reasonable rendering of variable and different scales (currently just multiplied by 1000 if <0.005)
 
 * Analysis tab: 
-  * status message so user knows the plot is being rendered!!
   * location of zoom in basin
+  * HTML download for measure implementation maps
   
 * Correlation Analysis:
   * output largest accepted correlation, maybe in bold over the table
