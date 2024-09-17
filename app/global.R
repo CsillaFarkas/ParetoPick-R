@@ -2,6 +2,18 @@
 # comments: we assume four variables delineating pareto front
 # Project: Clustering Pareto Solutions/Multi-objective visualisation
 ####################################################################
+source("functions.R")
+
+## check if any packages are missing (not only here but also for external convert_optain)
+foo1(c("corrplot", "dplyr","DT", "fs","fst", "geosphere", "ggplot2",  "ggtext", "gridExtra", 
+       "here",  "htmltools",   "ini",    "leaflet",  "leafsync",
+       "mapview",  "plotly",  "processx",   "purrr",
+        "quanteda",   "RColorBrewer",  "readr",  "reticulate",
+       "scales",  "sf",  "shiny", "shinycssloaders","shinydashboard", 
+       "shinyFiles", "shinyjs","shinythemes",  "shinyWidgets",  "sp", 
+       "spdep",  "tibble",  "tidyr",  "tidyverse",  "tmap",  "viridis"))
+
+## libraries required for app (not convert_optain)
 library(configr)#
 library(corrplot)#
 library(dplyr)#
@@ -34,7 +46,6 @@ library(tidyr)
 library(tidyverse)
 library(viridis)
 
-source("functions.R")
 options(warn = -1)
 save_dir <- "../data/"
 input_dir <- "../input/"
