@@ -7,7 +7,6 @@
 # used files: pareto_genomes.txt, hru.con, measure_location.csv
 # Project: Clustering of pareto front to reduce objective space
 ####################################################################################
-
 print(paste0("loading required packages..."),quote=F)
 suppressPackageStartupMessages({
   library(shiny)
@@ -18,10 +17,10 @@ suppressPackageStartupMessages({
   library(readr)
   library(ggtext)
   library(viridis)
-  library(patchwork)
+  # library(patchwork)
   library(here)
   library(purrr)
-  library(rnaturalearthdata)
+  # library(rnaturalearthdata)
   library(mapview)
   library(leafsync)
   library(leaflet)
@@ -33,6 +32,37 @@ suppressPackageStartupMessages({
   library(spdep)
   library(geosphere)
   library(geohashTools)
+  library(configr)#
+  library(corrplot)#
+  library(dplyr)#
+  library(DT)#
+  library(fs)
+  library(fst)
+  library(ggplot2)
+  library(gridExtra) # or patchwork
+  library(htmltools)
+  # library(htmlwidgets) #save html files
+  library(ini)#
+  library(leaflet)#
+  library(processx) # manage system processes from within shiny (e.g. for pulling R output into shiny)
+  library(purrr)
+  library(leafsync)
+  library(quanteda)
+  library(RColorBrewer)
+  library(reticulate)
+  library(scales)
+  library(sf)#
+  library(shiny)#
+  options(shiny.maxRequestSize = 1000*1024^2)
+  library(shinycssloaders) # for withSpinner()
+  library(shinydashboard)#
+  library(shinyFiles) #drag and drop
+  library(shinyjs) # for hiding parts of the app
+  library(shinyWidgets)#
+  library(tibble)
+  library(tidyr)
+  library(tidyverse)
+  library(viridis)
 })
 
 
