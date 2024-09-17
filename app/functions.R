@@ -447,7 +447,7 @@ plt_lf <- function(data, mes, lo, la, buff_els, col_sel) {
           bringToFront = TRUE
         )
       ) %>% 
-      addLegend("bottomright", pal = dispal, values = data[[col]])
+      addLegend("bottomright", pal = dispal, values = data[[col]], na.label = "no change")
   }
   return(m)
 }
@@ -571,16 +571,16 @@ plot_parline = function(datt,sizz=rep(.5, length(unique(datt$id))),colols=rep("g
       alpha = 0.5,
       lineend = 'round',
       linejoin = 'round'
-    ) +
+    ) + theme_bw()+
     theme_minimal() +
     theme(legend.position = "none",
           plot.title = element_blank(),
           axis.text.y = element_text(size = 15L),
-          axis.text.x = element_text(size = 16L),
+          axis.text.x = element_text(size = 14L),
           axis.title.y = element_text(size = 15),
           axis.title.x = element_blank()
     )+scale_y_continuous(limits = c(0,1))+
-    scale_x_discrete(expand = c(0.04, 0.05),labels = function(x) str_wrap(x, width = 10)) + 
+    scale_x_discrete(expand = c(0.02, 0.02),labels = function(x) str_wrap(x, width = 10)) + 
     labs(x = "Factors", y = "Scaled Values") +
     scale_size_manual(values = sizz) +
     scale_color_manual(values = colols)
@@ -592,7 +592,7 @@ plot_parline = function(datt,sizz=rep(.5, length(unique(datt$id))),colols=rep("g
 }
 
 ## scatter plot in play around
-plt_sc = function(dat, ranges,col=rep("grey",nrow(dat)),size=rep(1.1, nrow(dat))){
+plt_sc = function(dat, ranges,col=rep("grey",nrow(dat)),size=rep(1.8, nrow(dat))){
   plots <- list()
   vars <- colnames(dat)
   num_vars <- length(vars)
@@ -1056,3 +1056,17 @@ pca_settings = function(input){
   
   return(settings)
 }
+
+## loading new packages
+foo1 <- function(x){
+  for( i in x ){
+    #  require returns TRUE invisibly if it was able to load package
+    if( ! require( i , character.only = TRUE ) ){
+      #  If package was not able to be loaded then re-install
+      install.packages( i , dependencies = TRUE , quiet = T)
+      #  Load package after installing
+      require( i , character.only = TRUE )
+    }
+  }
+}
+
