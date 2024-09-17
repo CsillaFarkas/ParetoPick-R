@@ -100,17 +100,18 @@ write_corr = function(vars,
   
 }
 ## check if some variables have been removed by convert_optain
-check_align = function(inipath="../input/config.ini"){
+check_align = function(inipath="../input/config.ini",var_path="../input/var_corr_par.csv"){
   
-  if (!file.exists(inipath)) {
+  if (!file.exists(inipath) | !file.exists(var_path)) {
     return(NULL)  
   } 
+  
   config <- read.ini(inipath)
   
   written <- config[[1]]$col_correlation_matrix
   written <- strsplit(written, ", ")[[1]]
   
-  var_corr = read.csv("../input/var_corr_par.csv")
+  var_corr = read.csv(var_path)
   var_corr = colnames(var_corr)[5:ncol(var_corr)]
   
   che = setdiff(written,var_corr)
@@ -300,7 +301,7 @@ strike_through <- function(x) {
 
 ## extract objective ranges
 get_obj_range = function(filepath = "../data/pareto_fitness.txt",colnames=paste0("objective", seq(1, 4))){
-  stopifnot(is.character(filepath))
+  stopifnot(file.exists(filepath))
   
   pf = read.table(filepath,sep=",")
   colnames(pf) = colnames
@@ -412,7 +413,7 @@ plt_lf <- function(data, mes, lo, la, buff_els, col_sel) {
     relevant_data <- data[data[[col]] %in% buff_els, ]
     buffered_data <- st_buffer(relevant_data, dist = 80)
     
-    m[[i]] =    leaflet(data = data) %>%
+    m[[i]] =  leaflet(data = data) %>%
       setView(lng = lo, lat = la, zoom = 10) %>%
       addProviderTiles(providers$CartoDB.Positron) %>%
       addPolygons(
@@ -656,13 +657,15 @@ return(plots)
 
 ## scatter plot in analysis tab and AHP tab
 
-plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NULL, 
+plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NULL, pareto_path = "../data/pareto_fitness.txt",sq_path ="../data/sq_fitness.txt",
                           extra_dat = NULL, #highlight optima in AHP tab
                           an_tab = F,
                           plt_extra=F, #potentially redundant tbf
                           sel_tab = NULL, #highlight table selection Analysis tab
                           add_whole = F, #add the whole pareto front Analysis tab
                           status_q = FALSE) {
+  
+  if(!file.exists(pareto_path)){return(NULL)}
   
   xma = yma = NULL
 
@@ -714,7 +717,7 @@ plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NUL
   }
   
   if (status_q) {
-    st_q <- read.table("../data/sq_fitness.txt", header = FALSE, stringsAsFactors = FALSE, sep = ' ')
+    st_q <- read.table(sq_path, header = FALSE, stringsAsFactors = FALSE, sep = ' ')
     names(st_q) <- names(dat)
     st_q$set <- "Status Quo"
     all_extra_data <- rbind(all_extra_data,st_q)
@@ -953,8 +956,9 @@ all_neg <- function(column) {
 }
 
 ## default max number of pc
-get_num_pca <- function() {
-  pcc <- readRDS("../input/pca_content.RDS")
+get_num_pca <- function(pc_path = "../input/pca_content.RDS") {
+  if(!file.exists(pc_path)){return(NULL)}
+  pcc <- readRDS(pc_path)
   return(length(pcc))
 }
 
