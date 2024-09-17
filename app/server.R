@@ -215,7 +215,7 @@ server <- function(input, output, session) {
     })
     
     observeEvent(input$save_sq_in, {
-      req(sq_file, req(objectives))
+      req(sq_file(), req(objectives))
       save_sq <- sq_file()$name
       save_path_sq <- file.path(save_dir, save_sq)
       file.copy(sq_file()$path,save_path_sq,overwrite = TRUE) #copy sq_fitness.txt
@@ -442,7 +442,7 @@ server <- function(input, output, session) {
   
   ## scatter plot
   scat_fun = function(){
-    req(fit(), objectives())
+    req(fit(), objectives(),er(),f_scaled())
     scat_abs = scaled_abs_match(minval_s=c(input$obj1[1],input$obj2[1],input$obj3[1],input$obj4[1]),
                                 maxval_s=c(input$obj1[2],input$obj2[2],input$obj3[2],input$obj4[2]),
                                 abs_tab = fit(),scal_tab = f_scaled(),
@@ -464,8 +464,10 @@ server <- function(input, output, session) {
     
     grid.arrange(grobs = plot_scatter, nrow = 2, ncol = 3)}
   
+  
     output$scatter_plot <- renderPlot({ scat_fun()})
   
+    
   output$download_scat_plot <- downloadHandler(
     filename = function() {
       curt = format(Sys.time(), "_%Y%m%d")
@@ -1340,6 +1342,9 @@ server <- function(input, output, session) {
   })
   
   comp_fun = function(){
+    # if(!file.exists("../data/measure_location.csv")){return(NULL)}else{
+    
+    req(sols(),cm(),cm_clean()) #req is also used in functions
     selected_row <- input$antab_rows_selected
     
     selected_data <- sols()[selected_row,]
@@ -1360,7 +1365,7 @@ server <- function(input, output, session) {
     m <- c(list(cm2), m1)
     
     sync(m,sync = list(2:nplots),sync.cursor = F)
-  }
+  }#}
   
   observeEvent(input$plt_opti,{
     selected_row <- input$antab_rows_selected
@@ -1378,10 +1383,7 @@ server <- function(input, output, session) {
       output$plot_ready <- renderText({
         is_rendering(FALSE)  # Set rendering to FALSE after the plot is rendered
       })
-    }
-    
-    
-  })
+      }
      
       # observe({
       #   print(names(input))
@@ -1418,7 +1420,9 @@ server <- function(input, output, session) {
       #   }
       #   
       # })
-  
+   
+ 
+  })
   
   observe({
     shinyjs::toggle("plot_spinner", condition = is_rendering())
