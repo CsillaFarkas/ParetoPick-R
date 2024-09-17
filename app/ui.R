@@ -17,152 +17,172 @@ ui <-
      
     )),
     dashboardBody( tags$style(HTML('
-                                #fileStatusMessage{font-size:150%;}
-                               
-                                 /* R2 and Pearson table AHP tab */
-                                 #relation {
+                                  /* File status message font size adjustment */
+                                  #fileStatusMessage {font-size: 150%;}
+                             
+
+                                  /* Logo background color */
+                                  .skin-blue .main-header .logo {
+                                   background-color: #95C11F;
+                                  }
+
+                                  /* Logo background color when hovered */
+                                  .skin-blue .main-header .logo:hover {
+                                   background-color: #83D0F5;
+                                  }
+
+                                  /* Main sidebar background color */
+                                  .skin-blue .main-sidebar {
+                                    background-color: #03597F;
+                                  }
+
+                                  /* AHP tab background color */
+                                  .sidebar-menu li a[data-value="ahp"] {
+                                    background-color: #4F518C !important;
+                                  }
+                                  
+                                  .sidebar-menu li a[data-value="ahp"]:hover {
+                                    background-color: #83D0F5 !important;
+                                  }
+
+                                  /* Analysis tab background color */
+                                  .sidebar-menu li a[data-value="analysis"] {
+                                    background-color: #935D33 !important;
+                                  }
+                                  
+                                  .sidebar-menu li a[data-value="analysis"]:hover {
+                                    background-color: #83D0F5 !important;
+                                  }
+
+                                  /* Correlation Analysis and PCA tabs with same background color */
+                                  .sidebar-menu li a[data-value="correlation_analysis"] {
+                                    background-color: #F7A600 !important;
+                                  }
+                                  
+                                  .sidebar-menu li a[data-value="correlation_analysis"]:hover {
+                                    background-color: #83D0F5 !important;
+                                  }
+
+                                  .sidebar-menu li a[data-value="pca"] {
+                                    background-color: #F7A600 !important;
+                                  }
+                                  .sidebar-menu li a[data-value="pca"]:hover {
+                                    background-color: #83D0F5 !important;
+                                  }
+                                   .sidebar-menu li a[data-value="intro"]:hover {
+                                    background-color: #83D0F5 !important;
+                                  }
+                                  
+                                  
+
+                                  /* AHP sidebar specific background color */
+                                  .sidebar-menu li a[data-value="ahp"] {
+                                    background-color: #FFEF2C !important;
+                                  }
+
+                                  /* Active selected tab in the sidebar menu */
+                                  .skin-blue .main-sidebar .sidebar .sidebar-menu .active a {
+                                    background-color: #9eb1cf !important;
+                                  }
+
+                                  /* Default background and text color for other links in the sidebar menu */
+                                  .skin-blue .main-sidebar .sidebar .sidebar-menu a {
+                                    background-color: #5C5B65;
+                                    color: #000000;
+                                  }
+
+                                  /* Hover effect for other links in the sidebar menu */
+                                  .skin-blue .main-sidebar .sidebar .sidebar-menu a:hover {
+                                    background-color: #83D0F5;
+                                  }
+
+                                  /* Hover effect for the toggle button */
+                                  .skin-blue .main-header .navbar .sidebar-toggle:hover {
+                                    background-color: #83D0F5;
+                                  }
+
+                                  /* General body background color and font family (Montserrat) */
+                                  .content-wrapper, .right-side {
+                                    background-color: #9eb1cf;
+                                    font-family: "Montserrat", sans-serif;
+                                  }
+
+                                  /* Styling for .well elements */
+                                  .well {
+                                    background-color: #b9cae5;
+                                    padding: 6px 7px;
+                                    font-size: 120%;
+                                    border: none;
+                                  }
+
+                                  /* Styling for input labels inside .well */
+                                  .well label {
+                                    color: #2f353e;
+                                  }
+
+                                  /* Ensuring content height covers the full view */
+                                  .content {min-height: 300vh;}
+
+                                  /* Slider element styling */
+                                  .irs-grid-text {
+                                    font-size: 13px;
+                                  }
+
+                                  .js-irs-0 .irs-single,
+                                  .js-irs-0 .irs-bar-edge,
+                                  .js-irs-0 .irs-bar {
+                                    background: #ffc61e;
+                                    border-top: 1px solid #ffc61e;
+                                    border-bottom: 1px solid #ffc61e;
+                                  }
+
+                                  .js-irs-0 .irs-from,
+                                  .js-irs-0 .irs-to,
+                                  .js-irs-0 .irs-single {
+                                    font-size: 13px;
+                                    background: #ffc61e !important;
+                                  }
+
+                                  .js-irs-0 .irs-single,
+                                  .js-irs-0 .irs-bar-edge,
+                                  .js-irs-0 .irs-bar {
+                                    background: darkslateblue;
+                                  }
+
+                              /* Main panel full-width adjustment */
+                                .main-panel-full-width {
+                                 margin-left: 0 !important;
+                                 width: 100% !important;
+                                }
+
+                                /* Main panel size relative to sidebar width */
+                                .main-panel {
+                                 margin-left: 250px; /* adjust sidebar width */
+                                 width: calc(100% - 250px); /* adjust sidebar width */
+                                }
+
+                               /* AHP criterion labels made non-bold */
+                                #criterion1_ui label,
+                                #criterion2_ui label {font-weight: 400;}
+   
+                               /* Title on maps in analysis tab */
+                                 .map-title {
+                                  font-weight: bold; font-size:
+                                  16px; margin-bottom: 
+                                  5px; text-align: center;
+                                  }
+
+                               /* R2 and Pearson table in AHP tab */
+                                  #relation {
                                   font-size: 18px;
                                   font-weight: bold;
-                                 }
-                                 
-                                 #relation th, #relation td {
-                                   border: none;
-                                   padding: 8px;
-                                    }
-                                    
-                                 /* title on maps in analysis tab */
-                                 .map-title {font-weight: bold; 
-                                   font-size: 16px; 
-                                   margin-bottom: 5px;
-                                   text-align: center;
-                                    }  
-                                  
-                                    
-                                 /* logo */
-                                 .skin-blue .main-header .logo {
-                                  background-color: #9eb1cf;
-                                 }
-                                
-                                /* logo when hovered */
-                                .skin-blue .main-header .logo:hover {
-                                background-color: #f4b943;
-                                }
-                                
-                                /* navbar (rest of the header) */
-                                .skin-blue .main-header .navbar {
-                                background-color: #f4b943;
-                                }
-                                
-                                /* main sidebar */
-                                .skin-blue .main-sidebar {
-                                background-color: #f4b943;
-                                }
-                                
-                                
-                                /* AHP tab */
-                                .sidebar-menu li a[data-value="ahp"] {
-                                 background-color: #4F518C !important;
-                                 
-                                }
-      
-                               /* Analysis tab */
-                                .sidebar-menu li a[data-value="analysis"] {
-                                 background-color: #907AD6 !important;
-                                  
-                                }
-                                 /* Correlation Analysis and Clustering the same color */
-                                  .sidebar-menu li a[data-value="correlation_analysis"] {
-                                 background-color: #DABFFF !important;
-                                  
-                                  }
-                                 
-                                 .sidebar-menu li a[data-value="pca"] {
-                                 background-color: #DABFFF !important;
-                                  
-                                 }
-                                
-                                /* active selected tab in the sidebarmenu */
-                                .skin-blue .main-sidebar .sidebar .sidebar-menu .active a{
-                                background-color: #9eb1cf;
-                                }
-                                
-                                /* other links in the sidebarmenu */
-                                .skin-blue .main-sidebar .sidebar .sidebar-menu a{
-                                background-color: #a2a4b6;
-                                color: #000000;
-                                }
-                                
-                                /* other links in the sidebarmenu when hovered */
-                                .skin-blue .main-sidebar .sidebar .sidebar-menu a:hover{
-                                background-color: #9ec9cf;
-                                }
-                                
-                                /* toggle button when hovered  */
-                                .skin-blue .main-header .navbar .sidebar-toggle:hover{
-                                background-color: #ff69b4;
-                                }
-
-                                /* body */
-                                .content-wrapper, .right-side {
-                                background-color: #9eb1cf;
-                                }
-                                
-                                .well {
-                                background-color:#b9cae5; 
-                                padding: 6px 7px;
-                                font-size:120%;
-                                border: none;
-                                }
-                                
-                                /* Style the sidebar input labels */
-                                .well label {
-                                 color: #2f353e;
-                                }
-                                   
-                                /* content height covers full view */
-                                 .content { min-height: 300vh;}
-                                 
-                                  /* slider aesthetics */
-                                 .irs-grid-text {font-size: 13px;} 
-                                 .js-irs-0 .irs-single,
-                                 .js-irs-0 .irs-bar-edge,
-                                 .js-irs-0 .irs-bar {
-                                 background: #ffc61e ;
-                                 border-top: 1px solid #ffc61e ;
-                                 border-bottom: 1px solid #ffc61e;}
-                                 
-                                 .js-irs-0 .irs-from, 
-                                 .js-irs-0 .irs-to, 
-                                 .js-irs-0 .irs-single {
-                                 font-size: 13px;
-                                 background: #ffc61e 
-                                 !important
-                                 }
-                                 
-                                 .js-irs-0 .irs-single,
-                                 .js-irs-0 .irs-bar-edge,
-                                 .js-irs-0 .irs-bar {
-                                 background: darkslateblue
-                                 }
-                                 
-                                 .main-panel-full-width {
-                                  margin-left: 0 !important;
-                                  width: 100% !important;
-                                   }
-                                 .main-panel {
-                                  margin-left: 250px; /* Adjust to your sidebar width */
-                                  width: calc(100% - 250px); /* Adjust to your sidebar width */
-                                 }
-                                   
-                                  /* make AHP criterion label not bold */ 
-                                  #criterion1_ui label {
-                                  font-weight: 400;
-                                  }
-                                  #criterion2_ui label {
-                                  font-weight: 400;
                                   }
 
-                                ')),
+                                  #relation th, #relation td {
+                                  border: none;
+                                  padding: 8px;
+                                  }
+ ')),
       useShinyjs(),
       tabItems(
         tabItem(tabName = "intro",
