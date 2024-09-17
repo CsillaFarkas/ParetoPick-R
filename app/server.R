@@ -270,6 +270,43 @@ server <- function(input, output, session) {
      }
     })
     
+    
+    ## line plot
+    parplot_fun = function(){
+      req(f_scaled(),objectives(),fit())
+      sk= match_scaled(minval_s=c(input$obj1[1],input$obj2[1],input$obj3[1],input$obj4[1]),
+                       maxval_s=c(input$obj1[2],input$obj2[2],input$obj3[2],input$obj4[2]),scal_tab = f_scaled(),allobs = objectives())
+      
+      ko= sk%>% mutate(id = factor(row_number()))%>%pivot_longer(.,cols=-id)%>%
+        mutate(name=factor(name))%>%mutate(name=forcats::fct_relevel(name,objectives()))
+      
+      if(input$plt_sq) {
+        req(stq())
+        
+        #rescale single (extra) point
+        min_fit <- apply(fit(), 2, min)
+        max_fit <- apply(fit(), 2, max)
+        
+        stq_sk <- as.data.frame(mapply(function(col_name, column) {
+          rescale_column(column, min_fit[col_name], max_fit[col_name])
+        }, objectives(), stq(), SIMPLIFY = FALSE))
+        
+        colnames(stq_sk) = objectives()#otherwise spaces do not work because mapply adds dots
+        
+        stq_ko <- pivot_longer(stq_sk,cols = everything(),names_to = "name",values_to = "value")
+        stq_ko <- stq_ko %>% mutate(name=forcats::fct_relevel(name,objectives()))
+        
+        return(plot_parline(datt = ko,colols = rv$colls,   sizz = rv$sizes, sq = stq_ko))
+        
+      }else{
+        
+        return(plot_parline(datt = ko,colols = rv$colls, sizz = rv$sizes, sq= NULL))
+      }
+      
+    }
+    
+    output$linePlot <- renderPlot({ parplot_fun() })
+    
  
   ## pull values from parallel axis line when clicked
   observeEvent(input$clickline,{
@@ -329,41 +366,6 @@ server <- function(input, output, session) {
     }, ignoreNULL = TRUE)
   
   
-  ## line plot
-  parplot_fun = function(){
-    req(f_scaled(),objectives())
-    sk= match_scaled(minval_s=c(input$obj1[1],input$obj2[1],input$obj3[1],input$obj4[1]),
-                     maxval_s=c(input$obj1[2],input$obj2[2],input$obj3[2],input$obj4[2]),scal_tab = f_scaled(),allobs = objectives())
-
-    ko= sk%>% mutate(id = factor(row_number()))%>%pivot_longer(.,cols=-id)%>%
-      mutate(name=factor(name))%>%mutate(name=forcats::fct_relevel(name,objectives()))
-
-    if(input$plt_sq) {
-      req(fit(),stq())
-     
-      #rescale single (extra) point
-      min_fit <- apply(fit(), 2, min)
-      max_fit <- apply(fit(), 2, max)
-      
-      stq_sk <- as.data.frame(mapply(function(col_name, column) {
-        rescale_column(column, min_fit[col_name], max_fit[col_name])
-      }, objectives(), stq(), SIMPLIFY = FALSE))
-      
-      colnames(stq_sk) = objectives()#otherwise spaces do not work because mapply adds dots
-      
-      stq_ko <- pivot_longer(stq_sk,cols = everything(),names_to = "name",values_to = "value")
-      stq_ko <- stq_ko %>% mutate(name=forcats::fct_relevel(name,objectives()))
-      
-      return(plot_parline(datt = ko,colols = rv$colls,   sizz = rv$sizes, sq = stq_ko))
-      
-    }else{
-        
-     return(plot_parline(datt = ko,colols = rv$colls, sizz = rv$sizes, sq= NULL))
-    }
-
-  }
-  
-  output$linePlot <- renderPlot({ parplot_fun() })
   
   output$download_line_plot <- downloadHandler(
     filename = function() {
@@ -371,7 +373,10 @@ server <- function(input, output, session) {
       paste(input$line_plot_savename,curt, ".png", sep = "")
     },
     content = function(file) {
-      ggsave(file, plot = parplot_fun(), device = "png", width = 1900, height = 1000,units = "px")
+      # png(file, width=1000, height = 800)
+      # parplot_fun()
+      # dev.off()
+      ggsave(file, plot = parplot_fun(), device = "png", width = 2000, height = 1000,units = "px")
     }
   )
   
@@ -388,8 +393,7 @@ server <- function(input, output, session) {
     )
      colnames(slid) = objectives()
      
-     slid},
-     include.rownames=TRUE)
+     slid}, include.rownames=TRUE)
 
   
   ## absolute table
@@ -442,7 +446,7 @@ server <- function(input, output, session) {
   
   ## scatter plot
   scat_fun = function(){
-    req(fit(), objectives(),er(),f_scaled())
+    req(fit(), objectives(),f_scaled())
     scat_abs = scaled_abs_match(minval_s=c(input$obj1[1],input$obj2[1],input$obj3[1],input$obj4[1]),
                                 maxval_s=c(input$obj1[2],input$obj2[2],input$obj3[2],input$obj4[2]),
                                 abs_tab = fit(),scal_tab = f_scaled(),
@@ -452,11 +456,11 @@ server <- function(input, output, session) {
       rom = which(apply(scat_abs, 1, function(row) all(row == er())))
       col = rep("grey",nrow(scat_abs))
       col[rom] = "red"
-      sizz = rep(1.1, nrow(scat_abs))
-      sizz[rom] = 1.5
+      sizz = rep(2.5, nrow(scat_abs))
+      sizz[rom] = 3
     }else{col = rep("grey",nrow(scat_abs))
-    sizz = rep(1.1, nrow(scat_abs))}
     
+    sizz = rep(2.5, nrow(scat_abs))}
     
     mima = get_mima(fit())
 
@@ -733,7 +737,7 @@ server <- function(input, output, session) {
       }else{
       output$reset_prompt <- renderText({
         HTML(paste("<p style='color: red;'> If you would like to restart the app if it crashes or behaves inconsistently, you can hard reset it here. Clicking this button
-                   deletes all files you provided. The contents of the Output folder are also deleted, please move or copy those files you would like to keep. Please proceed with caution!</p>"))
+                   deletes all files you provided. The contents of the Output folder are also deleted, please move or copy those files you would like to keep. For all changes to take effect please restart the app after each Hard Reset. Please proceed with caution!</p>"))
       })
       
 
@@ -1352,7 +1356,6 @@ server <- function(input, output, session) {
     buffs = needs_buffer()
     
     hru_sel = plt_sel(shp=cm(),opti_sel = selected_data$optimum)
-    
     mes = read.csv("../data/measure_location.csv")
     
     col_sel = names(hru_sel)[grep("Optim",names(hru_sel))]  #variable length of columns selected
