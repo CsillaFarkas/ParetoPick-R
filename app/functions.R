@@ -402,7 +402,9 @@ plt_sel = function(opti_sel, shp){
 
 ## plot leaflet w/ specific column
 plt_lf <- function(data, mes, lo, la, buff_els, col_sel) {
-  dispal = colorFactor("Spectral", domain = mes, na.color = "lightgrey")
+  man_col = c("#66C2A5" ,"#4db818","#965c1d", "#F7A600", "#03597F" ,"#83D0F5","#FFEF2C")
+  man_col = man_col[1:length(unique(mes))]
+  dispal = colorFactor(palette=man_col, domain = unique(mes), na.color = "lightgrey")
   
   m <- vector("list", length = length(col_sel))
   
@@ -418,7 +420,7 @@ plt_lf <- function(data, mes, lo, la, buff_els, col_sel) {
       addProviderTiles(providers$CartoDB.Positron) %>%
       addPolygons(
         fillColor = ~ dispal(data[[col]]),
-        fillOpacity = 0.7,
+        fillOpacity = 0.8,
         color = "lightgrey",
         weight = 1,
         popup = ~ paste0("Value: ", data[[col]]),
