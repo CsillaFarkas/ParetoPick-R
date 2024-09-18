@@ -298,7 +298,7 @@ server <- function(input, output, session) {
       return(plt_sc_optima(dat=dat,    x_var = input$x_var3,
                     y_var = input$y_var3,
                     col_var = input$col_var3,
-                    size_var = input$size_var3, status_q = input$add_sq_f))
+                    size_var = input$size_var3, status_q = input$add_sq_f,an_tab=T))
       
       
     }
@@ -462,6 +462,18 @@ server <- function(input, output, session) {
     
     dn},
     include.rownames = TRUE)
+  
+  mima_fun = function(){
+    req(fit)
+    df = t(get_mima(fit()))[-1,]
+    df = df[nrow(df):1,]
+    return(df)
+  }
+  
+
+  output$whole_range <- renderTable({
+   mima_fun()
+  }, rownames = T)
   
   ## barplot
   # output$sliders_plot <- renderPlot({
@@ -1490,7 +1502,7 @@ server <- function(input, output, session) {
       if(!file.exists("../input/object_names.RDS")) {
       choices = "Please select objectives in Data Preparation Tab"
       
-      ids_to_hide <- c("plot_sc", "pareto_weighted", "random_ahp2", "random_ahp", "ahp_analysis", "ahp_weights","sel_wgt")
+      ids_to_hide <- c( "pareto_weighted", "random_ahp2", "random_ahp", "ahp_analysis", "ahp_weights","sel_wgt")
       
       lapply(ids_to_hide, shinyjs::hide)
     
@@ -1536,7 +1548,7 @@ server <- function(input, output, session) {
   })
 
 
-  observeEvent(input$plot_sc,{
+  observeEvent(list(input$criterion2,input$criterion1),{# input$plot_sc,{
     req(fit(),input$criterion1, input$criterion2)
     
     x <- fit()[,input$criterion1]
