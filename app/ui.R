@@ -239,7 +239,8 @@ ui <-
                                   textInput("short3", "Objective 3\n (Column 3)"), 
                                   textInput("short4", "Objective 4\n (Column 4)"),
                                   actionButton("save_par_fiti", "Save"))
-                                  %>% hidden(), 
+                                  # %>% hidden(), 
+                                  ,
                                   div(id="units",
                                       "If you want you can supply the objectives' units and save them for future use:",
                                       style= "text-align: left; font-size:115%",
@@ -259,8 +260,9 @@ ui <-
                                          sliderInput(inputId = "obj1", label= "Objective 1:",min = 0, max = 1, value = c(0,1), step = 0.01,width = "110%"),
                                          sliderInput(inputId = "obj2", label = "Objective 2:", min = 0, max = 1,value= c(0,1),  step = 0.01,width = "110%"),
                                          sliderInput(inputId = "obj3", label = "Objective 3:", min = 0, max = 1, value = c(0,1), step = 0.01, width = "110%"),
-                                         sliderInput(inputId = "obj4", label = "Objective 4:", min = 0, max = 1, value = c(0,1),  step = 0.01,width = "110%"))),  
-                                  checkboxGroupInput("sel_neg", "Are any of the objectives provided on the negative scale?", choices = NULL, inline = FALSE),
+                                         sliderInput(inputId = "obj4", label = "Objective 4:", min = 0, max = 1, value = c(0,1),  step = 0.01,width = "110%")))
+                                  # ,  
+                                  # checkboxGroupInput("sel_neg", "Are any of the objectives provided on the negative scale?", choices = NULL, inline = FALSE),
                               
                               
                                   
@@ -272,8 +274,16 @@ ui <-
                   tags$style(HTML(".js-irs-3 .irs-single, .js-irs-3 .irs-bar-edge, .js-irs-3 .irs-bar {background: #aF58ba ;border-top: 1px solid #aF58ba ;border-bottom: 1px solid #aF58ba;}.js-irs-3 .irs-from, .js-irs-3 .irs-to, .js-irs-3 .irs-single { font-size: 13px;background: #aF58ba !important }")),
                   tags$style(HTML(".js-irs-4 .irs-single, .js-irs-4 .irs-bar-edge, .js-irs-4 .irs-bar {background: #f28522 ;border-top: 1px solid #f28522 ;border-bottom: 1px solid #f28522;}.js-irs-4 .irs-from, .js-irs-4 .irs-to, .js-irs-4 .irs-single { font-size: 13px;background: #f28522 !important }")),
                   
-                  
-                div(id = "tab_play1",fluidRow(
+                div(id = "tab_play1",div("Pareto Plot", style = "text-align: left; font-size:150%"),
+                      plotOutput("first_pareto"), 
+                     checkboxInput("add_sq_f",label = "Show status quo",value = FALSE),
+                    fluidRow(
+                          column(3,selectInput(inputId = "x_var3",label = "X-Axis", choices = NULL, multiple = F, selected=NULL)),
+                          column(3,selectInput(inputId = "y_var3",label = "Y-Axis", choices = NULL, multiple = F,selected=NULL)),
+                          column(3,selectInput(inputId = "col_var3",label = "Colour", choices = NULL, multiple = F,selected=NULL)),
+                          column(3,selectInput(inputId = "size_var3",label = "Size", choices = NULL, multiple = F,selected=NULL))
+                        ), 
+                fluidRow(
                     column(12,
                            fluidRow(column(6, div("Selected Objective Ranges (scaled)", style = "text-align: left; font-size:150%"),
                                     tableOutput("sliders")),
@@ -307,16 +317,17 @@ ui <-
                   downloadButton("download_scat_plot", "Download Plot")
                 ),
                                                 
-                div("Difference between selection and the whole Pareto Front", style = "text-align: left; font-size:150%"),
-                           plotOutput("sliders_plot"),
-                div(
-                  style = "display: inline-block; vertical-align: top; margin-right: 0px;",
-                  textInput("diff_plot_savename", label = NULL, value = "difference barplot")
-                ),
-                div(
-                  style = "display: inline-block; vertical-align: top; margin-left: 0px;",
-                  downloadButton("download_diff_plot", "Download Plot")
-                ))
+                # div("Difference between selection and the whole Pareto Front", style = "text-align: left; font-size:150%"),
+                           # plotOutput("sliders_plot"),
+                # div(
+                  # style = "display: inline-block; vertical-align: top; margin-right: 0px;",
+                  # textInput("diff_plot_savename", label = NULL, value = "difference barplot")
+                # ),
+                # div(
+                #   style = "display: inline-block; vertical-align: top; margin-left: 0px;",
+                #   downloadButton("download_diff_plot", "Download Plot")
+                # )
+                )
                 
                           )## PLAY AROUND MAIN PANEL END
                 )),
@@ -625,7 +636,7 @@ ui <-
             actionButton("plt_opti", "Plot Optimum"), textOutput("no_row") %>% hidden(), 
             div(id="meas_low",textOutput("meas_low")),
             div(id="plot_spinner",
-              uiOutput("comp_map")%>% withSpinner(color = "#0fc5cf", hide.ui = TRUE)),
+              uiOutput("comp_map")%>% withSpinner(color = "#F7A600", hide.ui = TRUE)),
             br(),br(),br(),
             br(),br(),br(),
             br(),br(),br()
