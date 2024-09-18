@@ -939,8 +939,8 @@ get_mima = function(df){
   
   min_max_df <- data.frame(
     Variable = names(min_values),
-    Min = min_values,
-    Max = max_values,
+    min = min_values,
+    max = max_values,
     stringsAsFactors = FALSE
   )
   
