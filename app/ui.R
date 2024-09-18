@@ -289,9 +289,16 @@ ui <-
                                     tableOutput("sliders")),
                              column(6, div("Selected Objective Ranges (absolute)", style = "text-align: left; font-size:150%"),
                                     tableOutput("sliders_abs"))),
-                           fluidRow(column(12,
+                           fluidRow(column(6,
                                     div("Selected Optimum (select in line plot)", style = "text-align: left; font-size:150%"),
-                                    tableOutput("click_info"))))),
+                                    tableOutput("click_info")),
+                                    column(6,div("Maximum Objective Ranges (absolute)",style = "text-align: left; font-size:150%"),
+                                           tableOutput("whole_range"))
+                                    
+                                    ))),
+                
+                
+                
                 checkboxInput("plt_sq", label = "Show status quo", value = FALSE)),
                 
                 div(id = "tab_play2",div("Parallel Axis plot", style = "text-align: left; font-size:150%"),
@@ -690,7 +697,8 @@ ui <-
              column(6, uiOutput("criterion1_ui")),
              column(6, uiOutput("criterion2_ui")),
           
-             column(6, actionButton("plot_sc", label = "analyse objectives"))),
+             # column(6, actionButton("plot_sc", label = "analyse objectives"))
+             ),
             
             fluidRow(
       
