@@ -71,6 +71,7 @@ ParetoPick-R also integrates an Analytical Hierarchy Process (AHP) allowing the 
 
 * Play around tab
   * status quo plotted in the right color when sliders are moved
+  * table with fixed whole range and potentially percentage change of slider movement 
 
 * Klaipeda:
   * full list of nswrm implemented across all catchments to properly assign priorities incl. info on weather management or structural
@@ -83,8 +84,14 @@ ParetoPick-R also integrates an Analytical Hierarchy Process (AHP) allowing the 
 * Analysis tab: 
   * location of zoom in basin
   * HTML download for measure implementation maps
+  * frequency maps - produce during python call or based on button with Micha's R script and put in output
+  * add a barplot of number of implemented measures per optimum (counting from measure_location.csv)
+  * each measure's share in total measure area (from measure_location and hru.con)
+  * when table is touched - retain old plot, do not replot that is annoying
   
 * Correlation Analysis:
+  * better explanation of why we're doing that 
+  * align what user can pick with what is given on the right add a little asterix to those calculated per measure
   * output largest accepted correlation, maybe in bold over the table
   * add a description of the variables in the "selected variables" table...
   * deviations_step is currently the default value 
