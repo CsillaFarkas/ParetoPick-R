@@ -69,7 +69,6 @@ ParetoPick-R also integrates an Analytical Hierarchy Process (AHP) allowing the 
 * sliders with actual values instead of scaled values?
 * cluster tab sometimes requires a lot of clicking around but users will figure it out
 
-
 * Play around tab
   * status quo plotted in the right color when sliders are moved
 
