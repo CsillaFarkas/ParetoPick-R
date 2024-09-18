@@ -71,6 +71,13 @@ server <- function(input, output, session) {
   
   ### Play Around Tab ####
   
+  # limit input size of objective names
+  shinyjs::runjs("$('#short1').attr('maxlength', 17)")
+  shinyjs::runjs("$('#short2').attr('maxlength', 17)")
+  shinyjs::runjs("$('#short3').attr('maxlength', 17)")
+  shinyjs::runjs("$('#short4').attr('maxlength', 17)")
+  
+  
   ##check if names of objectives have to be supplied or already present
   observeEvent(input$tabs == "play_around",{ 
     ## make or pull objectives()
@@ -83,14 +90,19 @@ server <- function(input, output, session) {
       ##get new objective names
       observe({
         req(input$short1, input$short2, input$short3, input$short4)
-        updated_objectives <<- c(input$short1, input$short2, input$short3, input$short4)
-        objectives(updated_objectives)
+        short <<- c(input$short1, input$short2, input$short3, input$short4)
+        objectives(short)
+        
+        updateSelectInput(session, "x_var3",   choices = short, selected = short[1])
+        updateSelectInput(session, "y_var3",   choices = short, selected = short[2])
+        updateSelectInput(session, "col_var3", choices = short, selected = short[3])
+        updateSelectInput(session, "size_var3",choices = short, selected = short[4])
         
       })
       
       observeEvent(input$save_par_fiti, {
         req(objectives(),input$short1, input$short2, input$short3, input$short4)
-        saveRDS(updated_objectives, file = "../input/object_names.RDS")
+        saveRDS(short, file = "../input/object_names.RDS")
         
         updateTextInput(session,"col1", value = objectives()[1] )
         updateTextInput(session,"col2", value = objectives()[2] )
@@ -106,6 +118,10 @@ server <- function(input, output, session) {
       short = readRDS("../input/object_names.RDS")
       objectives(short)
       
+      updateSelectInput(session, "x_var3",   choices = short, selected = short[1])
+      updateSelectInput(session, "y_var3",   choices = short, selected = short[2])
+      updateSelectInput(session, "col_var3", choices = short, selected = short[3])
+      updateSelectInput(session, "size_var3",choices = short, selected = short[4])
     }
     
     ## update slider labels based on objectives
@@ -269,6 +285,25 @@ server <- function(input, output, session) {
       shinyjs::show("scatter")
      }
     })
+    ## pareto plot on top
+    
+    first_pareto_fun = function(){
+      req(f_scaled(),objectives(),fit())
+      #match scaled input with unscaled fit() to create dat
+      dat = scaled_abs_match(minval_s=c(input$obj1[1],input$obj2[1],input$obj3[1],input$obj4[1]),
+                       maxval_s=c(input$obj1[2],input$obj2[2],input$obj3[2],input$obj4[2]),
+                       abs_tab = fit(),scal_tab = f_scaled(),
+                       allobs = objectives(),smll=F)
+      #run plt_sc_optima with sq but no other options
+      return(plt_sc_optima(dat=dat,    x_var = input$x_var3,
+                    y_var = input$y_var3,
+                    col_var = input$col_var3,
+                    size_var = input$size_var3, status_q = input$add_sq_f))
+      
+      
+    }
+    
+    output$first_pareto <- renderPlot({ first_pareto_fun() })
     
     
     ## line plot
@@ -429,20 +464,20 @@ server <- function(input, output, session) {
     include.rownames = TRUE)
   
   ## barplot
-  output$sliders_plot <- renderPlot({
-   req(fit(),f_scaled(),objectives(),input$obj1,input$obj2,input$obj3,input$obj4)
-   
-    matchi =  reactive({scaled_abs_match(
-      minval_s = c(input$obj1[1], input$obj2[1], input$obj3[1], input$obj4[1]),
-      maxval_s = c(input$obj1[2], input$obj2[2], input$obj3[2], input$obj4[2]),
-      abs_tab = fit(),allobs = objectives(),scal_tab = f_scaled(),
-      smll = F)})
-    
-    pldat<- prep_diff_bar(abs_tab=fit(),red_tab=matchi(),allobs= objectives(), neg_var=input$sel_neg)
-  
-    plot_diff_bar(pldat,obj_choices=objectives())
-  
-  })
+  # output$sliders_plot <- renderPlot({
+  #  req(fit(),f_scaled(),objectives(),input$obj1,input$obj2,input$obj3,input$obj4)
+  #  
+  #   matchi =  reactive({scaled_abs_match(
+  #     minval_s = c(input$obj1[1], input$obj2[1], input$obj3[1], input$obj4[1]),
+  #     maxval_s = c(input$obj1[2], input$obj2[2], input$obj3[2], input$obj4[2]),
+  #     abs_tab = fit(),allobs = objectives(),scal_tab = f_scaled(),
+  #     smll = F)})
+  #   
+  #   pldat<- prep_diff_bar(abs_tab=fit(),red_tab=matchi(),allobs= objectives(), neg_var=input$sel_neg)
+  # 
+  #   plot_diff_bar(pldat,obj_choices=objectives())
+  # 
+  # })
   
   ## scatter plot
   scat_fun = function(){
