@@ -29,6 +29,7 @@ ParetoPick-R also integrates an Analytical Hierarchy Process (AHP) allowing the 
 * nswrm_priorities.csv 
 
 ### Files created and used in the process
+(stored in input folder)
 * var_corr_par.csv (created in convert_optain.R, contains all variables considered in the clustering)
 * hru_in_optima.RDS (created in convert_optain.R based on measure_location.csv, connection between activated HRUs and optima)
 * object_names.RDS
@@ -36,15 +37,16 @@ ParetoPick-R also integrates an Analytical Hierarchy Process (AHP) allowing the 
 * all_var.RDS
 * units.RDS
 
-### Input through the user 
+### Required input files 
 (app pulls these into the data folder)
-* pareto_genomes.txt
-* pareto_fitness.txt
-* hru.con
-* measure_location.csv
-* hru shapefile consisting of: hru.shp, hru.dbf, hru.prj, hru.shx
-* sq_fitness.txt
-* rout_unit.con
+1. pareto_genomes.txt
+2. pareto_fitness.txt
+3. hru.con
+4. measure_location.csv
+5. hru shapefile consisting of: hru.shp, hru.dbf, hru.prj, hru.shx
+6. basin shapefile consisting of: basin.shp, basin.dbf, basin.prj, basin.shx
+7. sq_fitness.txt
+8. rout_unit.con
 
 ## Elements touched in config.ini (adapt when final version of Python project available)
 * col_correlation_matrix
@@ -63,10 +65,9 @@ ParetoPick-R also integrates an Analytical Hierarchy Process (AHP) allowing the 
 # Unclear
 * AHP
   * the initial state of the pairwise comparison as "Equal" amplifies the mathematical definition of inconsistency, therefore only when at least three sliders are NOT set to "Equal" is inconsistency considered at all
-  * unclear how to best normalise data, currently scaled to between 0 and 1 using the old dataset as anchor
+  * normalising for weighting the dataframe relies on scaling to between 0 and 1 using the old dataset as anchor
 
 # Missing/Nice to have
-* sliders with actual values instead of scaled values?
 * cluster tab sometimes requires a lot of clicking around but users will figure it out
 
 * Play around tab
@@ -78,8 +79,7 @@ ParetoPick-R also integrates an Analytical Hierarchy Process (AHP) allowing the 
   * suggestions for pca variables using SWAT+ outputs/inputs
  
 * AHP tab: 
-  * map with measure implementation of selected optimum
-  * more reasonable rendering of variable and different scales (currently just multiplied by 1000 if <0.005)
+  * more reasonable rendering of variable and different scales - we will need to test this with different datasets (currently just multiplied by 1000 if <0.005)
 
 * Analysis tab: 
   * location of zoom in basin
@@ -93,7 +93,6 @@ ParetoPick-R also integrates an Analytical Hierarchy Process (AHP) allowing the 
   * better explanation of why we're doing that 
   * align what user can pick with what is given on the right add a little asterix to those calculated per measure
   * output largest accepted correlation, maybe in bold over the table
-  * add a description of the variables in the "selected variables" table...
   * deviations_step is currently the default value 
   * explain the effects of high correlation
 
