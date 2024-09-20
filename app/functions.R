@@ -404,7 +404,7 @@ plt_sel = function(opti_sel, shp){
 plt_lf <- function(data, mes, lo, la, buff_els, col_sel) {
   man_col = c("#66C2A5" ,"#4db818","#965c1d", "#F7A600", "#03597F" ,"#83D0F5","#FFEF2C")
   man_col = man_col[1:length(unique(mes))]
-  dispal = colorFactor(palette=man_col, domain = unique(mes), na.color = "lightgrey")
+  dispal = colorFactor(palette = man_col, domain = unique(mes), na.color = "lightgrey")
   
   m <- vector("list", length = length(col_sel))
   
@@ -417,7 +417,7 @@ plt_lf <- function(data, mes, lo, la, buff_els, col_sel) {
     
     m[[i]] =  leaflet(data = data) %>%
       setView(lng = lo, lat = la, zoom = 10) %>%
-      addProviderTiles(providers$CartoDB.Positron) %>%
+      addProviderTiles(providers$CartoDB.Positron) %>%#poviders$Esri.NatGeoWorldMap, $Stadia.StamenToner, $OpenTopoMap
       addPolygons(
         fillColor = ~ dispal(data[[col]]),
         fillOpacity = 0.8,
@@ -454,12 +454,13 @@ plt_lf <- function(data, mes, lo, la, buff_els, col_sel) {
   return(m)
 }
 
+
 ## cm for location
 plt_cm_pure = function(data = cm,
                        la = lalo[1],
                        lo = lalo[2]) {
   p = leaflet(data) %>%
-    addProviderTiles(providers$CartoDB.Positron) %>%
+    addProviderTiles(providers$CartoDB.Positron) %>% #poviders$Esri.NatGeoWorldMap, $Stadia.StamenToner, $OpenTopoMap
     setView(lng = lo, lat = la, zoom = 10) %>%
     addPolygons(fillColor = "white",color = "black",weight=0.7)
   
@@ -468,12 +469,11 @@ plt_cm_pure = function(data = cm,
 
 
 ## legend plot
-plt_leg = function(mes){
-  dispal = colorFactor("Spectral", domain = mes, na.color = "lightgrey")
-  
-  leaflet() %>%
-    addLegend( pal = dispal, title = "measures", values = mes, opacity = 1)
-}
+# plt_leg = function(mes){
+#   dispal = colorFactor("Spectral", domain = mes, na.color = "lightgrey")
+#   
+#   leaflet() %>% addLegend( pal = dispal, title = "measures", values = mes, opacity = 1)
+# }
 
 
 ## scatterplot in AHP, comparing two objectives
