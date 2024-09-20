@@ -1656,7 +1656,7 @@ server <- function(input, output, session) {
   
     output$best_option_output <- renderTable({
       
-    req(sols(),fit(),initial_update_done())
+    req(sols(),fit(),initial_update_done(),range_controlled())
       
     if (input$best_cluster) {
       df = subset(sols(),select= -optimum) #best option out of optima
@@ -1709,12 +1709,17 @@ server <- function(input, output, session) {
   observe({
     
   output$weights_plot <- renderPlot({
-    req(objectives(),fit(),best_option(),input$x_var,sols())
+    req(objectives(),fit(),best_option(),input$x_var,sols(),range_controlled())
     sol<<-sols()[,objectives()]
     bo = best_option()
-    plt_sc_optima(dat=fit(),x_var=input$x_var,y_var=input$y_var,
+    
+    df = match_abs(minval=c(input$obj1_ahp[1],input$obj2_ahp[1], input$obj3_ahp[1], input$obj4_ahp[1]),
+                   maxval=c(input$obj1_ahp[2],input$obj2_ahp[2], input$obj3_ahp[2], input$obj4_ahp[2]),
+                   abs_tab = fit(), ranger = range_controlled())
+    
+    plt_sc_optima(dat=df,x_var=input$x_var,y_var=input$y_var,
                   col_var=input$col_var,size_var=input$size_var,high_point=bo,extra_dat = sol,
-                  plt_extra = input$show_extra_dat, status_q = input$show_status_quo)
+                  plt_extra = input$show_extra_dat, status_q = input$show_status_quo,an_tab = T)
     
     })
   
