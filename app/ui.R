@@ -192,11 +192,11 @@ ui <-
                   p("This application analyses OPTAIN optimisation outputs and shall support decision making.  
                      While all solutions provided by the SWAT+ / COMOLA workflow are pareto-optimal (none of the objectives can be improved without losses 
                     in other objectives), choosing among a large number of solutions can be daunting."),
-                              br(), p("To reduce complexity while minimising information loss, this application provides a clustering algorithm based on a Principal Component Analysis (PCA) and kmeans/kmedoid.
+                              br(), p("To reduce complexity while minimising information loss, this application provides two ways to filter/reduce the pareto front. The first is a clustering algorithm based on a Principal Component Analysis (PCA) and kmeans/kmedoid.
                               The user can modify the clustering process, alter the number of tested clusters and the way outliers are handled or how much correlation is accepted across the considered variables.
                               Finally, those optima representative for different clusters can be plotted and the measure implementation they recommend can be compared.
                                 "),br(),
-                          p("Furthermore, this application provides the possibility to perform an Analytical Hierarchy Process both as standalone as well as as additional feature on top of the clustered pareto front. "),
+                          p("The second is an Analytical Hierarchy Process that can be run as standalone as well as as additional feature on top of the clustered pareto front. "),
                           br(),br(),
                           p(" The application is structured the following way:"),
                           p(HTML("The second tab <strong>Visualising the Pareto Front</strong> provides an overview over the optimisation results. The user can gain insights into the relationships between the objectives and the pareto front by selecting and plotting preferred objective ranges.")),
@@ -422,9 +422,9 @@ ui <-
     tabItem(tabName = "correlation_analysis",
            titlePanel("Correlation Analysis"),
            
-           wellPanel( p(HTML("The clustering requires you to first run a correlation analysis.
+           wellPanel( p(HTML("Since correlation among variables can skew cluster results, a correlation analysis and potential removal of variables is required. 
                              For this purpose, please click <strong>Run Correlation Analysis</strong>, 
-                             based on the levels of correlation select those variables you would like to exclude from further analysis and then click <strong>Confirm Selection</strong>.")),
+                             based on the levels of correlation select those variables you would like to exclude from further analysis and then click <strong>Confirm Selection</strong>. You can come back to this tab to change the selection of variables later.")),
                       p(HTML("It is also possible to run the clustering across all variables and select no variables to exclude in this tab, however please always click <strong>Confirm Selection</strong>."))),
            sidebarLayout(
              
@@ -755,16 +755,20 @@ ui <-
        div(
          style = "display: inline-block; vertical-align: top; margin-left: 0px;",
          downloadButton("download_weights_plot", "Download Plot")
-       )
-       
-       
+       ),
+       br(),
+       br(),
+       br(),
+       div(style = "display: inline-block; vertical-align: top; margin-left: 0px;",
+         actionButton("plt_bo", "Plot Measure Implementation under best option"),
+         uiOutput("plt_bo_measure"))
+      
        )
       
       )
-      
        )
-        )
          )
           )
+           )
            )
 
