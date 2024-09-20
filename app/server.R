@@ -1312,7 +1312,7 @@ server <- function(input, output, session) {
           new_col_sol = c("optimum", objectives())
           
           sols(sols_data %>% rownames_to_column("optimum") %>%
-                 dplyr::filter(!is.na(Representative_Solution)& Representative_Solution != "") %>% 
+                 dplyr::filter(!is.na(Representative_Solution)& Representative_Solution != "" & Representative_Solution != "outlier") %>% 
                  select(1:5) %>% #PCA content is hard to read/limited additional value for user
                  rename_with(~new_col_sol,everything()))
           
@@ -1408,7 +1408,6 @@ server <- function(input, output, session) {
     col_sel = names(hru_sel)[grep("Optim",names(hru_sel))]  #variable length of columns selected
     
     nplots = length(col_sel)+1
-    
     m1 = plt_lf(data=hru_sel, col_sel = col_sel, mes = unique(mes$nswrm),la = lalo[1],lo =lalo[2], buff_els=buffs)
     
     cm2 = plt_cm_pure(data=cm_clean(), la = lalo[1],lo =lalo[2])
@@ -1712,7 +1711,6 @@ server <- function(input, output, session) {
     req(objectives(),fit(),best_option(),input$x_var,sols(),range_controlled())
     sol<<-sols()[,objectives()]
     bo = best_option()
-    
     df = match_abs(minval=c(input$obj1_ahp[1],input$obj2_ahp[1], input$obj3_ahp[1], input$obj4_ahp[1]),
                    maxval=c(input$obj1_ahp[2],input$obj2_ahp[2], input$obj3_ahp[2], input$obj4_ahp[2]),
                    abs_tab = fit(), ranger = range_controlled())
@@ -1759,5 +1757,44 @@ server <- function(input, output, session) {
     inconsistencies
   })
   
+  })
+  
+  observeEvent(input$plt_bo,{
+  req(best_option(),needs_buffer())
+    
+  bo = best_option() 
+  bo = bo %>% rownames_to_column("optimum")
+   
+    ##shps for maps
+    if (file.exists("../input/hru_in_optima.RDS")) {
+      cm(
+        pull_shp(
+          layername = "hru",
+          optims = bo,
+          hru_in_opt_path = "../input/hru_in_optima.RDS"
+        )
+      )
+    }
+
+    if(file.exists("../data/hru.con")){lalo <<- plt_latlon(conpath = "../data/hru.con")}
+     needs_buffer(pull_buffer())
+  
+  
+  single_meas_fun = function(){
+    req(best_option(),needs_buffer(),lalo,cm())
+    
+    hru_one = plt_sel(shp=cm(),opti_sel = bo$optimum)
+    mes = read.csv("../data/measure_location.csv")
+    
+    col_sel = names(hru_one)[grep("Optim",names(hru_one))] 
+
+    m1 = plt_lf(data=hru_one,  mes = unique(mes$nswrm),la = lalo[1],lo =lalo[2],
+                buff_els=needs_buffer(),col_sel=col_sel)
+
+    return(m1)
+
+    }
+
+    output$plt_bo_measure = renderUI({single_meas_fun()})
   })
 }
