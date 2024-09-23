@@ -11,7 +11,7 @@ ui <-
       menuItem("Visualising the Pareto Front",tabName = "play_around",icon = icon("dashboard")),
       menuItem("Data Preparation", icon=icon("file",lib = "font-awesome"),tabName = "data_prep"),
       menuItem("Correlation Analysis",icon=icon("random", lib="font-awesome"), tabName = "correlation_analysis"),
-      menuItem("Clustering",icon=icon("project-diagram", lib="font-awesome"), tabName = "pca"),
+      menuItem("PCA & kmeans/kmedoids",icon=icon("project-diagram", lib="font-awesome"), tabName = "pca"),
       menuItem("Analysis", icon = icon("th"),tabName = "analysis"),
       menuItem("AHP",icon=icon("sliders-h", lib="font-awesome"),tabName = "ahp")
      
@@ -79,7 +79,8 @@ ui <-
                                   .sidebar-menu li a[data-value="ahp"] {
                                     background-color: #FFEF2C !important;
                                   }
-
+                                  
+                                  
                                   /* Active selected tab in the sidebar menu */
                                   .skin-blue .main-sidebar .sidebar .sidebar-menu .active a {
                                     background-color: #9eb1cf !important;
@@ -87,7 +88,7 @@ ui <-
 
                                   /* Default background and text color for other links in the sidebar menu */
                                   .skin-blue .main-sidebar .sidebar .sidebar-menu a {
-                                    background-color: #5C5B65;
+                                    background-color: #7a7785;
                                     color: #000000;
                                   }
 
@@ -192,17 +193,18 @@ ui <-
                   p("This application analyses OPTAIN optimisation outputs and shall support decision making.  
                      While all solutions provided by the SWAT+ / COMOLA workflow are pareto-optimal (none of the objectives can be improved without losses 
                     in other objectives), choosing among a large number of solutions can be daunting."),
-                              br(), p("To reduce complexity while minimising information loss, this application provides two ways to filter/reduce the pareto front. The first is a clustering algorithm based on a Principal Component Analysis (PCA) and kmeans/kmedoid.
+                              br(), p("To reduce complexity while minimising information loss, this application provides two ways to filter/reduce the pareto front:"),
+                  tags$ol(tags$li("The first is a clustering algorithm based on a Principal Component Analysis (PCA) and kmeans/kmedoidss.
                               The user can modify the clustering process, alter the number of tested clusters and the way outliers are handled or how much correlation is accepted across the considered variables.
-                              Finally, those optima representative for different clusters can be plotted and the measure implementation they recommend can be compared.
+                              Finally, those optima  representative for different clusters can be plotted and the measure implementation they recommend can be compared.
                                 "),br(),
-                          p("The second is an Analytical Hierarchy Process that can be run as standalone as well as as additional feature on top of the clustered pareto front. "),
+                          tags$li("The second is an Analytical Hierarchy Process that can be run as standalone method as well as as additional feature on top of the clustered pareto front. ")),
                           br(),br(),
                           p(" The application is structured the following way:"),
                           p(HTML("The second tab <strong>Visualising the Pareto Front</strong> provides an overview over the optimisation results. The user can gain insights into the relationships between the objectives and the pareto front by selecting and plotting preferred objective ranges.")),
                           p(HTML("The third tab <b>Data Preparation</b> is needed to produce the data required for the subsequent analyses. Several files need to be provided so the variables considered in the clustering can be calculated.")),
-                          p(HTML("The fourth tab <strong>Correlation Analysis</strong> allows to assess and alter variables considered in the subsequent clustering.")),
-                          p(HTML("The fifth tab <strong>Clustering</strong> provides the possibility to adapt, modify and finally perform the clustering process.")),
+                          p(HTML("The fourth tab <strong>Clustering Part 1 - Correlation Analysis</strong> allows to assess and alter variables considered in the subsequent clustering.")),
+                          p(HTML("The fifth tab <strong>Clustering Part 2 - PCA & kmeans/kmedoids</strong> provides the possibility to adapt, modify and finally perform the clustering process.")),
                           p(HTML("The <strong>Analysis</strong> tab lets the user plot the optima remaining after the clustering. Each of these optima is representative for one cluster.")),
                           p(HTML("The tab <strong>AHP - Analytical Hierarchy Process</strong> allows to determine priorities across the pareto front in a different way using weights across the optima. It is possible to combine the clustering results with the AHP."))
                   
@@ -420,7 +422,7 @@ ui <-
      
   ## CORRELATION ANALYSIS PANEL ####
     tabItem(tabName = "correlation_analysis",
-           titlePanel("Correlation Analysis"),
+           titlePanel("Clustering Part 1 - Correlation Analysis"),
            
            wellPanel( p(HTML("Since correlation among variables can skew cluster results, a correlation analysis and potential removal of variables is required. 
                              For this purpose, please click <strong>Run Correlation Analysis</strong>, 
@@ -494,7 +496,7 @@ ui <-
          
           #https://htmlcolorcodes.com/color-names/
           
-          titlePanel("Clustering"),
+          titlePanel("Clustering Part 2 - PCA & kmeans/kmedoids"),
           
           wellPanel(  p("This tab requires you to decide on the cluster settings. After selecting which objectives shall be plotted on the x-axis, y-axis and as color and size and after deciding on the axis titles, the clustering can be run with default settings."),
                       p(HTML("Selecting <strong>Yes</strong> under either 2. or 3. allows to change those default settings and test a variable number of clusters and outlier considerations.")),
