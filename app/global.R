@@ -32,6 +32,7 @@ library(leafsync)
 library(quanteda)
 library(RColorBrewer)
 library(reticulate)
+# library(rnaturalearthdata)
 library(scales)
 library(sf)#
 library(shiny)#
