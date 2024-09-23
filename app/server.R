@@ -1781,7 +1781,7 @@ server <- function(input, output, session) {
   
   
   single_meas_fun = function(){
-    req(best_option(),needs_buffer(),lalo,cm())
+    req(bo,needs_buffer(),lalo,cm())
     
     hru_one = plt_sel(shp=cm(),opti_sel = bo$optimum)
     mes = read.csv("../data/measure_location.csv")
