@@ -1,6 +1,7 @@
 ######################## SERVER ####################################
 # comments: 
 # Project: Clustering Pareto Solutions/Multi-objective visualisation
+# author: cordula.wittekind@ufz.de
 ####################################################################
 server <- function(input, output, session) {
 
