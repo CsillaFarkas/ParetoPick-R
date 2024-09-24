@@ -1,6 +1,7 @@
 ######################## FUNCTIONS #################################
-# comments: 
+# comments: foo1 function loaded straight into global.R
 # Project: Clustering Pareto Solutions/Multi-objective visualisation
+# author: cordula.wittekind@ufz.de
 ####################################################################
 
 #### Correlation Analysis Functions ####
@@ -1058,17 +1059,3 @@ pca_settings = function(input){
   
   return(settings)
 }
-
-## loading new packages
-foo1 <- function(x){
-  for( i in x ){
-    #  require returns TRUE invisibly if it was able to load package
-    if( ! require( i , character.only = TRUE ) ){
-      #  If package was not able to be loaded then re-install
-      install.packages( i , dependencies = TRUE , quiet = T)
-      #  Load package after installing
-      require( i , character.only = TRUE )
-    }
-  }
-}
-
