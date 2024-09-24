@@ -90,10 +90,8 @@ ParetoPick-R also integrates an Analytical Hierarchy Process (AHP) allowing the 
   * when table is touched - retain old plot, do not replot that is annoying
   
 * Correlation Analysis:
-  * better explanation of why we're doing that 
-  * align what user can pick with what is given on the right add a little asterix to those calculated per measure
   * output largest accepted correlation, maybe in bold over the table
   * deviations_step is currently the default value 
-  * explain the effects of high correlation
+  * briefly explain the effects of high correlation
 
 
