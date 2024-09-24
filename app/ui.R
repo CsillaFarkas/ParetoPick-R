@@ -1,6 +1,7 @@
 ############################### UI #################################
 # comments: 
 # Project: Clustering Pareto Solutions/Multi-objective visualisation
+# author: cordula.wittekind@ufz.de
 ####################################################################
 ui <- 
   dashboardPage(
@@ -194,11 +195,11 @@ ui <-
                      While all solutions provided by the SWAT+ / COMOLA workflow are pareto-optimal (none of the objectives can be improved without losses 
                     in other objectives), choosing among a large number of solutions can be daunting."),
                               br(), p("To reduce complexity while minimising information loss, this application provides two ways to filter/reduce the pareto front:"),
-                  tags$ol(tags$li("The first is a clustering algorithm based on a Principal Component Analysis (PCA) and kmeans/kmedoidss.
+                  tags$ol(tags$li("A clustering algorithm based on a Principal Component Analysis (PCA) and kmeans/kmedoidss.
                               The user can modify the clustering process, alter the number of tested clusters and the way outliers are handled or how much correlation is accepted across the considered variables.
                               Finally, those optima  representative for different clusters can be plotted and the measure implementation they recommend can be compared.
                                 "),br(),
-                          tags$li("The second is an Analytical Hierarchy Process that can be run as standalone method as well as as additional feature on top of the clustered pareto front. ")),
+                          tags$li("An Analytical Hierarchy Process that can be run as standalone method as well as as additional feature on top of the clustered pareto front. ")),
                           br(),br(),
                           p(" The application is structured the following way:"),
                           p(HTML("The second tab <strong>Visualising the Pareto Front</strong> provides an overview over the optimisation results. The user can gain insights into the relationships between the objectives and the pareto front by selecting and plotting preferred objective ranges.")),
@@ -425,8 +426,8 @@ ui <-
            titlePanel("Clustering Part 1 - Correlation Analysis"),
            
            wellPanel( p(HTML("Since correlation among variables can skew cluster results, a correlation analysis and potential removal of variables is required. 
-                             For this purpose, please click <strong>Run Correlation Analysis</strong>, 
-                             based on the levels of correlation select those variables you would like to exclude from further analysis and then click <strong>Confirm Selection</strong>. You can come back to this tab to change the selection of variables later.")),
+                             For this purpose, please click <strong>Run Correlation Analysis</strong>. 
+                             Based on the levels of correlation you can select those variables you would like to exclude from the subsequent clustering. Select them and then click <strong>Confirm Selection</strong>. You can come back to this tab to change the selection of variables later.")),
                       p(HTML("It is also possible to run the clustering across all variables and select no variables to exclude in this tab, however please always click <strong>Confirm Selection</strong>."))),
            sidebarLayout(
              
@@ -439,13 +440,16 @@ ui <-
                  div(
                    "1. Choose variables to be included in the Correlation Analysis:",
                    style = "text-align: left; font-size:150%"
+                 ),div(
+                   "(those marked with * have been calculated for each measure separately, details under Selected Variables)",
+                   style = "text-align: left; font-size:80%"
                  ),
                  checkboxGroupInput("selements", "",  
-                                    choiceNames = c("Catchment area covered by implemented measures (share_tot)", 
-                                     "Ratio between area actually covered by implemented measures and area considered for measure implementation (share_con)",
+                                    choiceNames = c("share_tot (*)", 
+                                     "share_con (*)",
                                      "Moran's I",
-                                     "Fraction of water draining into the channel (channel_frac)",
-                                     "Ratio of structural to management options (linE)"),
+                                     "channel_frac (*)",
+                                     "linE"),
                                     choiceValues=c("share_tot","share_con","moran","channel_frac","linE"),
                                     selected = c("share_tot","share_con","moran","channel_frac","linE")),
                  
@@ -691,6 +695,7 @@ ui <-
        
         sidebarLayout(
           sidebarPanel(
+          
             textOutput("nothing_ran_ahp"),
            div(id = "ahp_analysis",
              "1. Examining the relationship between the objectives.",style = "text-align: left; font-size:150%",
@@ -711,6 +716,7 @@ ui <-
                    sliderInput(inputId = "obj3_ahp", label = "Objective 3:", min = 0, max = 100, value = c(0, 100), width = "110%"),
                    sliderInput(inputId = "obj4_ahp", label = "Objective 4:", min = 0, max = 100, value = c(0, 100), width = "110%"))
                    )),
+           br(),
            
            div(id = "ahp_weights",
              "3. Deciding on priorities and weighting the objectives.",
@@ -723,7 +729,7 @@ ui <-
                        ),
       
      mainPanel(
-    
+     
        
       fluidRow(
         column(9, plotOutput("scatterPlot")), # 9/12 of the width for the plot
