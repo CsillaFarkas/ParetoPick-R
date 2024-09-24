@@ -1,9 +1,20 @@
 ######################### GLOBAL ###################################
 # comments: we assume four variables delineating pareto front
 # Project: Clustering Pareto Solutions/Multi-objective visualisation
+# author: cordula.wittekind@ufz.de
 ####################################################################
-source("functions.R")
-
+## loading new packages
+foo1 <- function(x){
+  for( i in x ){
+    #  require returns TRUE invisibly if it was able to load package
+    if( ! require( i , character.only = TRUE ) ){
+      #  If package was not able to be loaded then re-install
+      install.packages( i , dependencies = TRUE , quiet = T)
+      #  Load package after installing
+      require( i , character.only = TRUE )
+    }
+  }
+}
 ## check if any packages are missing (not only here but also for external convert_optain)
 foo1(c("corrplot", "dplyr","DT", "fs","fst", "geosphere", "ggplot2",  "ggtext", "gridExtra", 
        "here",  "htmltools",   "ini",    "leaflet",  "leafsync",
@@ -48,6 +59,8 @@ library(tidyverse)
 library(viridis)
 
 options(warn = -1)
+source("functions.R")
+
 save_dir <- "../data/"
 input_dir <- "../input/"
 output_dir <- "../output/"
@@ -59,9 +72,9 @@ if(!dir.exists(output_dir)){  dir.create(output_dir)}
 
 optain_pca_content <- c(
   
-  "share_tot" = "Each measure's share in total catchment area.",
-  "share_con"= "Each measure's share in area considered for implementation.",
+  "share_tot" = "Each measure's share in total catchment area (*).",
+  "share_con"= "Each measure's share in area considered for implementation (*).",
   "moran"= "The median spatial autocorrelation between HRUs allocated to each implemented measure.",
-  "channel_frac"= "The median fraction of water under each implemented measure that is routed directly into the channel.",
+  "channel_frac"= "The median fraction of water under each implemented measure that is routed directly into the channel (*).",
   "linE"= "The ratio between structural and management measures."
 )
