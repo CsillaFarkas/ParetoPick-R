@@ -14,6 +14,7 @@ The cluster algorithm relies on Principal Component Analysis (PCA) and kmeans/km
 the algorithm are fixed, several settings such as outlier treatment and the number of tested principal components, can be set by the user. 
 ParetoPick-R also integrates an Analytical Hierarchy Process (AHP) allowing the user to determine weights for the objectives based on pair-wise comparisons. The results of the clustering and the AHP can be combined and the app provides a range of methods for visualising the results.
 
+Please note that the Python code used in this app is part of another project and was written by [S. White](https://github.com/SydneyEWhite).
 
 # Folder Structure
 the project consists of six folders:
