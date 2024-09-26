@@ -289,7 +289,7 @@ server <- function(input, output, session) {
     ## pareto plot on top
     
     first_pareto_fun = function(){
-      req(f_scaled(),objectives(),fit())
+      req(f_scaled(),objectives(),fit(),input$obj1,input$x_var3)
       #match scaled input with unscaled fit() to create dat
       dat = scaled_abs_match(minval_s=c(input$obj1[1],input$obj2[1],input$obj3[1],input$obj4[1]),
                        maxval_s=c(input$obj1[2],input$obj2[2],input$obj3[2],input$obj4[2]),
@@ -514,7 +514,7 @@ server <- function(input, output, session) {
 
     plot_scatter = plt_sc(dat = scat_abs, ranges=mima, col = col, size= sizz)
     
-    grid.arrange(grobs = plot_scatter, nrow = 2, ncol = 3)}
+    grid.arrange(grobs = plot_scatter, nrow = 3, ncol = 2)}
   
   
     output$scatter_plot <- renderPlot({ scat_fun()})
