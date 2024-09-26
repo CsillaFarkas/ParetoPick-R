@@ -343,7 +343,7 @@ run_python_script <- function(path_script="",pca_status) {
   }
 }
 
-#### Plotting the optima
+#### Plotting the optima ####
 ## get linear elements requiring a buffer
 pull_buffer = function(prios= "../input/nswrm_priorities.csv"){
   priodf = read.csv(prios)
@@ -743,14 +743,14 @@ plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NUL
     p <- p + scale_x_continuous(labels = function(x) {
       rem_min(x)
     })
-    xma = " (negative)"
+    xma = " (inverted scale!)"
   }
   
   if (any(dat[[y_var]] < 0)&& !(an_tab)) {
     p <- p + scale_y_continuous(labels = function(y) {
       rem_min(y)
     })
-    yma = " (negative)"
+    yma = " (inverted scale!)"
     
   }
   
@@ -770,8 +770,8 @@ plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NUL
                scale_y_continuous(labels = function(y) {rem_min(y)},
                                   limits= c(range(whole[[y_var]])[1],range(whole[[y_var]])[2]))
       
-      yma = " (negative)"
-      xma = " (negative)"
+      yma = " (inverted scale!)"
+      xma = " (inverted scale!)"
       
       #only y_scale
      }else if(any(dat[[y_var]] < 0)){
@@ -779,13 +779,13 @@ plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NUL
        p <- p + scale_y_continuous(labels = function(y) {rem_min(y)},
                                    limits= c(range(whole[[y_var]])[1],range(whole[[y_var]])[2]))
        
-       yma = " (negative)"
+       yma = " (inverted scale!)"
        
       #only x_scale
      }else if(any(dat[[x_var]] < 0)){ 
        p <- p + scale_x_continuous(labels = function(x) {rem_min(x)},
                                    limits= c(range(whole[[x_var]])[1],range(whole[[x_var]])[2]))
-       xma = " (negative)"
+       xma = " (inverted scale!)"
        
        #neither
      }else{p <- p + scale_x_continuous(limits= c(range(whole[[x_var]])[1],range(whole[[x_var]])[2]))+
