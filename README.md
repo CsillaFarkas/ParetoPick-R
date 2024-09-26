@@ -2,7 +2,7 @@ ParetoPick-R is part of the post processing in the [OPTAIN Project](https://www.
 It provides a dashboard for the user to supply their own data, visualise it and alter a range of parameters. 
 The code allows the user to select variables to be analysed in a correlation analysis and a cluster algorithm. 
 
-* Variables considered by the cluster algorithm (produced in a call to convert_optain)
+* Variables considered by the cluster algorithm, the first 3 are produced seperately for each measure (produced in a call to convert_optain)
   1. **share_tot** - catchment area covered by measure (per measure type) 
   2. **share_con** - ratio between area covered by measure and area available for measure implementation (per measure type) 
   3. **channel_frac** - fraction of water from measure hru draining straight into the channel (per measure type) 
@@ -16,7 +16,7 @@ ParetoPick-R also integrates an Analytical Hierarchy Process (AHP) allowing the 
 
 
 # Folder Structure
-* the project consists of six folders:
+the project consists of six folders:
 1. app folder: contains all required scripts (ui.R, global.R, functions.R, server.R, convert_optain.R)
 2. output folder (empty in beginning)
 3. data folder (empty in beginning): folder the user input is written to
@@ -69,25 +69,30 @@ ParetoPick-R also integrates an Analytical Hierarchy Process (AHP) allowing the 
 
 # Missing/Nice to have
 * cluster tab sometimes requires a lot of clicking around but users will figure it out
+* full list of measures and their priorities implemented across all catchments (nswrm.csv)
+* hover for details (what can be moved there? -- unit supplied)
+* option for reverse plotting - possible?
+* sliders for measures
 
 * Play around tab
   * status quo plotted in the right color when sliders are moved
   * table with fixed whole range and potentially percentage change of slider movement 
+  * the 0 to 1 range is not intuitive - add labels with good/medium to clarify tradeoffs
 
-* Klaipeda:
-  * full list of nswrm implemented across all catchments to properly assign priorities incl. info on weather management or structural
-  * suggestions for pca variables using SWAT+ outputs/inputs
  
 * AHP tab: 
   * more reasonable rendering of variable and different scales - we will need to test this with different datasets (currently just multiplied by 1000 if <0.005)
+  * which parameters are inconsistent, possible to pull that?
 
 * Analysis tab: 
+  * graphical representation of decision space statistics across solutions
+    * frequency maps - produce during python call or based on button with Micha's R script and put in output
+    * add a barplot of number of implemented measures per optimum (counting from measure_location.csv)
+    * along objectives the allocation of PCA variables
+  * when table is touched - retain old plot, do not replot that is annoying
   * location of zoom in basin
   * HTML download for measure implementation maps
-  * frequency maps - produce during python call or based on button with Micha's R script and put in output
-  * add a barplot of number of implemented measures per optimum (counting from measure_location.csv)
-  * each measure's share in total measure area (from measure_location and hru.con)
-  * when table is touched - retain old plot, do not replot that is annoying
+  * maybe: line plot only for solutions for better trade off representation
   
 * Correlation Analysis:
   * output largest accepted correlation, maybe in bold over the table
