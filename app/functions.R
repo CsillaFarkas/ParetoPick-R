@@ -569,6 +569,17 @@ plot_parline = function(datt,sizz=rep(.5, length(unique(datt$id))),colols=rep("g
   }
     
   pl1 <- ggplot(datt, aes(x = name, y = value,group=id,size=id, color=id)) +   # group = id is important!
+    
+      annotate("rect", xmin=1, xmax=4, ymin=0,    ymax=0.25, alpha=0.2, fill="#dc3545") +
+      annotate("rect", xmin=1, xmax=4, ymin=0.25, ymax=0.5,  alpha=0.25, fill="#fd7e14") +
+      annotate("rect", xmin=1, xmax=4, ymin=0.5,  ymax=0.75, alpha=0.3, fill="#ffc107") +
+      annotate("rect", xmin=1, xmax=4, ymin=0.75, ymax=1,    alpha=0.3, fill="#28a745") +
+    
+    annotate("text", x = 4.04, y = 0.125, label = "worst",  angle=90, size = 6) + # Adjust hjust for alignment
+    annotate("text", x = 4.04, y = 0.375, label = "medium",  angle=90, size = 6) +
+    annotate("text", x = 4.04, y = 0.625, label = "medium",  angle=90, size = 6) +
+    annotate("text", x = 4.04, y = 0.875, label = "best",  angle=90, size = 6) +
+    
     geom_line(
       aes(group = id),
       alpha = 0.5,
@@ -582,11 +593,13 @@ plot_parline = function(datt,sizz=rep(.5, length(unique(datt$id))),colols=rep("g
           axis.text.x = element_text(size = 14L),
           axis.title.y = element_text(size = 15),
           axis.title.x = element_blank()
-    )+scale_y_continuous(limits = c(0,1))+
+    )+
+    scale_y_continuous(limits = c(0,1)) +
     scale_x_discrete(expand = c(0.02, 0.02),labels = function(x) str_wrap(x, width = 10)) + 
     labs(x = "Factors", y = "Scaled Values") +
     scale_size_manual(values = sizz) +
-    scale_color_manual(values = colols)
+    scale_color_manual(values = colols)+
+    coord_cartesian(clip = "off") #prevent labels to be cut off
  
     
   
