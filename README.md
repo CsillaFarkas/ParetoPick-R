@@ -2,7 +2,7 @@ ParetoPick-R is part of the post processing in the [OPTAIN Project](https://www.
 It provides a dashboard for the user to supply their own data, visualise it and alter a range of parameters. 
 The code allows the user to select variables to be analysed in a correlation analysis and a cluster algorithm. 
 
-* Variables considered by the cluster algorithm, the first 3 are produced seperately for each measure (produced in a call to convert_optain)
+* Variables considered by the cluster algorithm, the first 3 are produced seperately for each measure (in a call to convert_optain)
   1. **share_tot** - catchment area covered by measure (per measure type) 
   2. **share_con** - ratio between area covered by measure and area available for measure implementation (per measure type) 
   3. **channel_frac** - fraction of water from measure hru draining straight into the channel (per measure type) 
@@ -49,7 +49,7 @@ the project consists of six folders:
 7. sq_fitness.txt
 8. rout_unit.con
 
-## Elements touched in config.ini (adapt when final version of Python project available)
+### Elements touched in config.ini (adapt when final version of Python project available)
 * col_correlation_matrix
 * var1 to var4
 * var_1_label to var_4_label
@@ -63,41 +63,62 @@ the project consists of six folders:
 * outlier_to_cluster_ratio
 * min_components & max_components
 
-# Unclear
+# Assumptions
+* General
+  * a restructure of the correlation/clustering approach (see below) would require consistent assumptions for default settings producing reasonable cluster outputs across all catchments
+
 * AHP
   * the initial state of the pairwise comparison as "Equal" amplifies the mathematical definition of inconsistency, therefore only when at least three sliders are NOT set to "Equal" is inconsistency considered at all
   * normalising for weighting the dataframe relies on scaling to between 0 and 1 using the old dataset as anchor
 
-# Missing/Nice to have
-* cluster tab sometimes requires a lot of clicking around but users will figure it out
-* full list of measures and their priorities implemented across all catchments (nswrm.csv)
-* hover for details (what can be moved there? -- unit supplied)
-* option for reverse plotting - possible?
-* sliders for measures
+# To do
+## Content
+* Visualising tab:
+  * the 0 to 1 is not intuitive - add ranges with good/medium to clarify direction of improvement/tradeoffs
+  * add percentage change from full range to table (in color)
 
-* Play around tab
-  * status quo plotted in the right color when sliders are moved
-  * table with fixed whole range and potentially percentage change of slider movement 
-  * the 0 to 1 range is not intuitive - add labels with good/medium to clarify tradeoffs
-
- 
-* AHP tab: 
-  * more reasonable rendering of variable and different scales - we will need to test this with different datasets (currently just multiplied by 1000 if <0.005)
-  * which parameters are inconsistent, possible to pull that?
-
-* Analysis tab: 
-  * graphical representation of decision space statistics across solutions
-    * frequency maps - produce during python call or based on button with Micha's R script and put in output
-    * add a barplot of number of implemented measures per optimum (counting from measure_location.csv)
-    * along objectives the allocation of PCA variables
-  * when table is touched - retain old plot, do not replot that is annoying
-  * location of zoom in basin
-  * HTML download for measure implementation maps
-  * maybe: line plot only for solutions for better trade off representation
-  
-* Correlation Analysis:
-  * output largest accepted correlation, maybe in bold over the table
+* Correlation tab
+  * output largest accepted correlation in bold over table/could also be part of default setting
   * deviations_step is currently the default value 
-  * briefly explain the effects of high correlation
+
+* Cluster tab
+  * add possibility to limit range before clustering
+
+* Analysis tab
+  * requires another name
+  * location of zoom in basin
+
+* AHP tab
+  * show parameter combination that is causing inconsistency
+
+* AHP and Analysis tabs
+  * sliders for measures (unclear how best represented though)
+  * option for reverse plotting to improve clarity in the presence of negative scales
+  * better graphical representation of decison space across solutions required:
+    * frequency maps - produce during python call or based on button with Micha's R script and put in output
+    * barplot of implemented measures per optimum
+    * plot PCA variables against objectives
+    * add line plot for solutions to improve tradeoff representation
+    * find a way to select measures and analyse their density/combinations/areas in field
 
 
+## Workflow
+* General
+  * full list of measures across all catchments --> nswrm_priorities.csv, this should be available through SWATmeasR.R
+  * restructure - two-way representation of one simple and one complex workflow of correlation/clustering
+    * hide both tabs and allow user to skip detailed steps - run automated removal of correlated variables (>0.7) and run cluster with default settings
+    * cluster tab requires a lot of clicking around but those users who want to try it will figure it out
+  * declutter app by removal of items that can instead be hovered (what could be moved there? --- unit)
+
+* Visualising tab:
+  * download button first plot
+  * status quo plotted in the right color
+  * tables are not super clear - add unit and show when hovered
+
+* Analysis tab
+  * HTML download for measure implementation maps
+  * no replotting when table is touched, that is so annoying
+
+* AHP
+  * add spinner to last tab plot
+  * more reasonable representation of variables across different scales - we will need to test that with different datasets (currently just multiplied by 1000 if <0.005)
