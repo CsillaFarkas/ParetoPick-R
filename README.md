@@ -65,27 +65,28 @@ the project consists of six folders:
 
 # Assumptions
 * General
-  * a restructure of the correlation/clustering approach (see below) would require consistent assumptions for default settings producing reasonable cluster outputs across all catchments
+  * a restructure of the correlation/clustering approach (see below) would require consistent assumptions for default settings that can produce reasonable cluster outputs across all catchments
 
 * AHP
   * the initial state of the pairwise comparison as "Equal" amplifies the mathematical definition of inconsistency, therefore only when at least three sliders are NOT set to "Equal" is inconsistency considered at all
-  * normalising for weighting the dataframe relies on scaling to between 0 and 1 using the old dataset as anchor
+  * normalising the dataframe prior to weighting it relies on scaling to between 0 and 1 using the old dataset as anchor
 
 # To do
 ## Content
 * Visualising tab:
   * the 0 to 1 is not intuitive - add ranges with good/medium to clarify direction of improvement/tradeoffs
   * add percentage change from full range to table (in color)
+  * find a way to visualise differences in objective spread
 
 * Correlation tab
   * output largest accepted correlation in bold over table/could also be part of default setting
   * deviations_step is currently the default value 
 
 * Cluster tab
-  * add possibility to limit range before clustering
+  * add possibility to limit range before clustering (where?), this is also useful for new default clustering
 
 * Analysis tab
-  * requires another name
+  * this tab requires another name
   * location of zoom in basin
 
 * AHP tab
