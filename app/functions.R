@@ -637,7 +637,8 @@ plt_sc = function(dat, ranges,col=rep("grey",nrow(dat)),size=rep(1.8, nrow(dat))
           panel.border = element_blank(),
           axis.text = element_text(size = 10),
           axis.title = element_text(size = 16)
-        ) 
+        ) +  coord_cartesian(clip = "off") #prevent labels to be cut off
+ 
      
       
       

@@ -285,7 +285,15 @@ ui <-
                           column(3,selectInput(inputId = "y_var3",label = "Y-Axis", choices = NULL, multiple = F,selected=NULL)),
                           column(3,selectInput(inputId = "col_var3",label = "Colour", choices = NULL, multiple = F,selected=NULL)),
                           column(3,selectInput(inputId = "size_var3",label = "Size", choices = NULL, multiple = F,selected=NULL))
-                        ), 
+                        ),
+                    div(
+                          style = "display: inline-block; vertical-align: top; margin-right: 0px;",
+                          textInput("fp_plot_savename", label = NULL, value = "pareto")
+                        ),
+                    div(
+                      style = "display: inline-block; vertical-align: top; margin-left: 0px;",
+                      downloadButton("download_fp_plot", "Download Plot")),
+
                 fluidRow(
                     column(12,
                            fluidRow(column(6, div("Selected Objective Ranges (scaled)", style = "text-align: left; font-size:150%"),
@@ -639,11 +647,11 @@ ui <-
                        
                        div(
                          style = "display: inline-block; vertical-align: top; margin-right: 0px;",
-                         textInput("par_plot_savename", label = NULL, value = "parallel axis")
+                         textInput("par_plot_savename", label = NULL, value = "cluster results")
                        ),
                        div(
                          style = "display: inline-block; vertical-align: top; margin-left: 0px;",
-                         downloadButton("download_par_plot", "Download Plot")
+                         downloadButton("download_clus_plot", "Download Plot")
                        )))),
               
             actionButton("plt_opti", "Plot Optimum"), textOutput("no_row") %>% hidden(), 
@@ -769,7 +777,10 @@ ui <-
        br(),
        div(style = "display: inline-block; vertical-align: top; margin-left: 0px;",
          actionButton("plt_bo", "Plot Measure Implementation under best option"),
-         uiOutput("plt_bo_measure"))
+        ),
+       div(id="ahp_spinner", 
+           uiOutput("plt_bo_measure")
+           %>% withSpinner(color = "#F7A600", hide.ui = TRUE))
       
        )
       

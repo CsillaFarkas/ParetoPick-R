@@ -306,6 +306,21 @@ server <- function(input, output, session) {
     
     output$first_pareto <- renderPlot({ first_pareto_fun() })
     
+    output$download_fp_plot <- downloadHandler(
+      filename = function() {
+        curt = format(Sys.time(), "_%Y%m%d")
+        
+        paste(input$fp_plot_savename,curt, ".png", sep = "")
+      },
+      content = function(file) {
+        png(file, width = 1500, height = 1000)
+        
+        plot <- first_pareto_fun()
+        print(plot)
+        
+        dev.off()
+      }
+    )
     
     ## line plot
     parplot_fun = function(){
@@ -409,10 +424,10 @@ server <- function(input, output, session) {
       paste(input$line_plot_savename,curt, ".png", sep = "")
     },
     content = function(file) {
-      # png(file, width=1000, height = 800)
-      # parplot_fun()
-      # dev.off()
-      ggsave(file, plot = parplot_fun(), device = "png", width = 2000, height = 1000,units = "px")
+      png(file, width = 1500, height = 1000)
+      plot <- parplot_fun()
+      print(plot)
+      dev.off()
     }
   )
   
@@ -527,20 +542,21 @@ server <- function(input, output, session) {
       paste(input$scat_plot_savename,curt, ".png", sep = "")
     },
     content = function(file) {
-      png(file, width = 1500, height=1000)
-      scat_fun()
-      dev.off()
+     png(file, width = 1500, height = 1000)
+        plot <- scat_fun()
+        print(plot)
+        dev.off()
     }
   )
   
-  output$download_diff_plot <- downloadHandler(
-    filename = function() {
-      paste(input$diff_plot_savename, ".png", sep = "")
-    },
-    content = function(file) {
-      ggsave(file, plot = last_plot(), device = "png", width = 7, height = 5) #different approach, hard to turn into function
-    }
-  )
+  # output$download_diff_plot <- downloadHandler(
+  #   filename = function() {
+  #     paste(input$diff_plot_savename, ".png", sep = "")
+  #   },
+  #   content = function(file) {
+  #     ggsave(file, plot = last_plot(), device = "png", width = 7, height = 5) #different approach, hard to turn into function
+  #   }
+  # )
   
   
   ### Data Prep ####
@@ -912,8 +928,10 @@ server <- function(input, output, session) {
         },
         content = function(file) {
           png(file, width = 1500, height=1000)
-          plt_corr(corr)
+          plot <- plt_corr(corr)
+          print(plot)
           dev.off()
+          
         }
       )
       
@@ -1330,45 +1348,55 @@ server <- function(input, output, session) {
         })
       })
      
-    output$par_plot_optima <- renderPlot({
+    
+    clus_res_plt = function(){
       req(objectives(),sols(), input$x_var2)
       
       if(is.null(check_files())) { #sol is only useful if python has run
-        sols(data.frame(Message = 'something went wrong - has the PCA run properly? You can check the output folder for files with names containing "cluster" or "representative solutions" or both '))
+        return(sols(data.frame(Message = 
+                                 'something went wrong - has the PCA run properly? 
+                                  You can check the output folder for files with names containing "cluster" or
+                                 "representative solutions" or both ')))
       }else{
-         req(objectives(),sols())
+        req(objectives(),sols())
         sol<<-sols()[,objectives()]
         
-     
-      if(!is.null(input$antab_rows_selected)){
         
-        selected_row <- input$antab_rows_selected
-        selected_data <- sols()[selected_row,]
+        if(!is.null(input$antab_rows_selected)){
+          
+          selected_row <- input$antab_rows_selected
+          selected_data <- sols()[selected_row,]
+          
+        }else{selected_data <- NULL}
         
-      }else{selected_data <- NULL}
-        
-      plt_sc_optima(
-        dat = sol,
-        x_var = input$x_var2,
-        y_var = input$y_var2,
-        col_var = input$col_var2,
-        size_var = input$size_var2,
-        sel_tab = selected_data,
-        add_whole = input$add_whole,
-        an_tab = T,
-        status_q = input$add_sq
-      )
+      return(plt_sc_optima(
+          dat = sol,
+          x_var = input$x_var2,
+          y_var = input$y_var2,
+          col_var = input$col_var2,
+          size_var = input$size_var2,
+          sel_tab = selected_data,
+          add_whole = input$add_whole,
+          an_tab = T,
+          status_q = input$add_sq
+        ))
+      }
     }
-    }) 
     
-    output$download_par_plot <- downloadHandler(
+    output$par_plot_optima <- renderPlot({ clus_res_plt()  }) 
+    
+    output$download_clus_plot <- downloadHandler(
       filename = function() {
         curt = format(Sys.time(), "_%Y%m%d")
         
         paste(input$par_plot_savename,curt, ".png", sep = "")
       },
       content = function(file) {
-        ggsave(file, plot = last_plot(), device = "png", width = 7, height = 5)
+        png(file, width = 1500, height = 1000)
+        plot <- clus_res_plt()
+        print(plot)
+        dev.off()
+     
       }
     )
     
@@ -1708,19 +1736,20 @@ server <- function(input, output, session) {
  
   observe({
     
-  output$weights_plot <- renderPlot({
-    req(objectives(),fit(),best_option(),input$x_var,sols(),range_controlled())
-    sol<<-sols()[,objectives()]
-    bo = best_option()
-    df = match_abs(minval=c(input$obj1_ahp[1],input$obj2_ahp[1], input$obj3_ahp[1], input$obj4_ahp[1]),
-                   maxval=c(input$obj1_ahp[2],input$obj2_ahp[2], input$obj3_ahp[2], input$obj4_ahp[2]),
-                   abs_tab = fit(), ranger = range_controlled())
+    weight_plt_fun = function(){
+      req(objectives(),fit(),best_option(),input$x_var,sols(),range_controlled())
+      sol<<-sols()[,objectives()]
+      bo = best_option()
+      df = match_abs(minval=c(input$obj1_ahp[1],input$obj2_ahp[1], input$obj3_ahp[1], input$obj4_ahp[1]),
+                     maxval=c(input$obj1_ahp[2],input$obj2_ahp[2], input$obj3_ahp[2], input$obj4_ahp[2]),
+                     abs_tab = fit(), ranger = range_controlled())
+      
+      return(plt_sc_optima(dat=df,x_var=input$x_var,y_var=input$y_var,
+                    col_var=input$col_var,size_var=input$size_var,high_point=bo,extra_dat = sol,
+                    plt_extra = input$show_extra_dat, status_q = input$show_status_quo,an_tab = T))
+    }
     
-    plt_sc_optima(dat=df,x_var=input$x_var,y_var=input$y_var,
-                  col_var=input$col_var,size_var=input$size_var,high_point=bo,extra_dat = sol,
-                  plt_extra = input$show_extra_dat, status_q = input$show_status_quo,an_tab = T)
-    
-    })
+  output$weights_plot <- renderPlot({  weight_plt_fun() })
   
   output$download_weights_plot <- downloadHandler(
     filename = function() {
@@ -1729,8 +1758,11 @@ server <- function(input, output, session) {
       paste(input$weights_plot_savename,curt, ".png", sep = "")
     },
     content = function(file) {
-        ggsave(file, plot = last_plot(), device = "png", width = 7, height = 5)
-    }
+      png(file, width = 1500, height = 1000)
+      plot <- weight_plt_fun()
+      print(plot)
+      dev.off()
+      }
   )
   })
   
@@ -1795,7 +1827,17 @@ server <- function(input, output, session) {
     return(m1)
 
     }
-
+   is_rendering(TRUE) 
+  
     output$plt_bo_measure = renderUI({single_meas_fun()})
+    
+
+    output$plot_ready <- renderText({
+      is_rendering(FALSE)  # Set rendering to FALSE after the plot is rendered
+    })
+  })
+  
+  observe({
+    shinyjs::toggle("ahp_spinner", condition = is_rendering())
   })
 }
