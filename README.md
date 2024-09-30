@@ -65,7 +65,7 @@ the project consists of six folders:
 
 # Assumptions
 * General
-  * a restructure of the correlation/clustering approach (see below) would require consistent assumptions for default settings that can produce reasonable cluster outputs across all catchments
+  * a restructure of the correlation/clustering approach (see below) would require default settings that can produce reasonable cluster outputs across all catchments
 
 * AHP
   * the initial state of the pairwise comparison as "Equal" amplifies the mathematical definition of inconsistency, therefore only when at least three sliders are NOT set to "Equal" is inconsistency considered at all
@@ -74,9 +74,9 @@ the project consists of six folders:
 # To do
 ## Content
 * Visualising tab:
-  * the 0 to 1 is not intuitive - add ranges with good/medium to clarify direction of improvement/tradeoffs
   * add percentage change from full range to table (in color)
   * find a way to visualise differences in objective spread
+  * better labels for parallel axis plot (replace "worst", "medium" etc.)
 
 * Correlation tab
   * output largest accepted correlation in bold over table/could also be part of default setting
@@ -95,12 +95,13 @@ the project consists of six folders:
 * AHP and Analysis tabs
   * sliders for measures (unclear how best represented though)
   * option for reverse plotting to improve clarity in the presence of negative scales
-  * better graphical representation of decison space across solutions required:
+  * better graphical representation of decison space across solutions:
     * frequency maps - produce during python call or based on button with Micha's R script and put in output
     * barplot of implemented measures per optimum
     * plot PCA variables against objectives
     * add line plot for solutions to improve tradeoff representation
     * find a way to select measures and analyse their density/combinations/areas in field
+    * is there a way to introduce sliders for measures like Dennis suggested?
 
 
 ## Workflow
@@ -112,7 +113,6 @@ the project consists of six folders:
   * declutter app by removal of items that can instead be hovered (what could be moved there? --- unit)
 
 * Visualising tab:
-  * download button first plot
   * status quo plotted in the right color
   * tables are not super clear - add unit and show when hovered
 
@@ -121,5 +121,5 @@ the project consists of six folders:
   * no replotting when table is touched, that is so annoying
 
 * AHP
-  * add spinner to last tab plot
   * more reasonable representation of variables across different scales - we will need to test that with different datasets (currently just multiplied by 1000 if <0.005)
+  * can some of the crowded labels only be shown when hovered?
