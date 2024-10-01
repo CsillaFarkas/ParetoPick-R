@@ -1774,21 +1774,42 @@ server <- function(input, output, session) {
     ci = consistency_index(coma())
 
     cr = ci/0.89 #value found online, determined through random matrices
+  
+    #table stays empty without inconsistencies
+    inconsistency_check = function(tab) {
+      req(coma(),objectives(),cr)
+      slider_ids = c(input[["c1_c2"]], input[["c1_c3"]], input[["c1_c4"]], input[["c2_c3"]], input[["c2_c4"]], input[["c3_c4"]])
+      
+      se = sum(slider_ids == "Equal") #if majority on equal, large preferences amplify mathematical inconsistency
+      
+      
+      if (se > 3) {
+        inconsistencies = paste("No major inconsistencies.")
+        if (tab == T) {
+          inconsistencies = data.frame()
+        }
+      } else if (cr <= 0.15) {
+        inconsistencies = paste("No major inconsistencies, the inconsistency ratio is:",
+                                round(cr, 3))
+        if (tab == T) {
+          inconsistencies = data.frame()
+        }
+      } else{
+        if (tab == T) {
+          inconsistencies = check_inconsistencies(coma(), weights = calculate_weights())
+        } else{
+          inconsistencies = paste("Potential inconsistencies, the inconsistency ratio is:",
+                                  round(cr, 3))
+        }
+      }
+      
+      return(inconsistencies)
+    }
     
-  output$consistency_check = renderText({
-
-    slider_ids =c(input[["c1_c2"]],input[["c1_c3"]],input[["c1_c4"]],input[["c2_c3"]],
-                  input[["c2_c4"]],input[["c3_c4"]])
+  output$consistency_check = renderText({inconsistency_check(tab=F) })
     
-    se = sum(slider_ids == "Equal") #if majority on equal, large preferences amplify mathematical inconsistency
-    
-    
-    if(se > 3){inconsistencies = paste("No major inconsistencies.")}else if(cr <= 0.15){
-      inconsistencies = paste("No major inconsistencies, the inconsistency ratio is:", round(cr, 3))
-    }else{inconsistencies = paste("Potential inconsistencies, the inconsistency ratio is:", round(cr, 3))}
-    
-    inconsistencies
-  })
+ 
+  output$which_inconsistency = renderTable({inconsistency_check(tab=T)},rownames =T)
   
   })
   
