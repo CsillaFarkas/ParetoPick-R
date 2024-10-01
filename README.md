@@ -89,9 +89,6 @@ the project consists of six folders:
   * this tab requires another name
   * location of zoom in basin
 
-* AHP tab
-  * show parameter combination that is causing inconsistency
-
 * AHP and Analysis tabs
   * sliders for measures (unclear how best represented though)
   * option for reverse plotting to improve clarity in the presence of negative scales
@@ -112,6 +109,7 @@ the project consists of six folders:
     * cluster tab requires a lot of clicking around but those users who want to try it will figure it out
   * declutter app by removal of items that can instead be hovered (what could be moved there? --- unit)
 
+
 * Visualising tab:
   * status quo plotted in the right color
   * tables are not super clear - add unit and show when hovered
@@ -123,3 +121,4 @@ the project consists of six folders:
 * AHP
   * more reasonable representation of variables across different scales - we will need to test that with different datasets (currently just multiplied by 1000 if <0.005)
   * can some of the crowded labels only be shown when hovered?
+  * add the option for rounding labels on sliders
