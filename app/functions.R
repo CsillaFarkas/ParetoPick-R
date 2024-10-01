@@ -317,6 +317,22 @@ get_obj_range = function(filepath = "../data/pareto_fitness.txt",colnames=paste0
   return(range_df)##
 }
 
+## split labels
+word_splitter <- function(words, segment_length = 6) {
+  sapply(words, function(word) {
+    segments <- strsplit(word, "")[[1]]  # Split the word into characters
+    n <- length(segments)                  # Get the number of characters
+    formatted_word <- character(0)         # Initialize an empty character vector
+    
+    for (i in seq(1, n, by = segment_length)) {
+      segment <- paste(segments[i:min(i + segment_length - 1, n)], collapse = "")
+      formatted_word <- c(formatted_word, segment)
+    }
+    
+    return(paste(formatted_word, collapse = "-\n"))
+  })
+}
+
 #### Python Caller ####
 
 run_python_script <- function(path_script="",pca_status) {
@@ -824,7 +840,38 @@ consistency_index <- function(m) {
   return((lambda_max - n) / (n - 1))
 }
 
+## find main inconsistencies
+check_inconsistencies <- function(comparison_matrix, weights) {
+  n <- nrow(comparison_matrix)
+  inconsistencies <- data.frame(
+    # LastChangedElement = character(),
+    Level = numeric(),
+    weight = numeric(),
+    stringsAsFactors = FALSE
+  )
+  
 
+  for (i in 1:n) {
+    for (j in 1:n) {
+      for (k in 1:n) {
+        if (i != j && j != k && i != k) {
+          if (comparison_matrix[i, j] > 1 && comparison_matrix[j, k] > 1 && comparison_matrix[i, k] <= 1) {
+            inconsistencies <- rbind(inconsistencies, data.frame(
+              # LastChangedElement = paste0("(", i, ", ", j, ") -> (", j, ", ", k, ")"),
+              Level = comparison_matrix[i, j] * comparison_matrix[j, k],  
+              weight = weights[i],
+              stringsAsFactors = FALSE
+            ))
+          }
+        }
+      }
+    }
+  }
+  
+ 
+  ordered_inconsistencies <- inconsistencies[order(-inconsistencies$Level), ]
+  return(ordered_inconsistencies)
+}
 
 
 #### Rescaling and matching Functions ####
