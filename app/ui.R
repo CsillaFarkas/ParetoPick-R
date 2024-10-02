@@ -678,18 +678,18 @@ ui <-
                            
                          )),
                        tags$script(HTML("
-    function toggleSidebar(show) {
-      if (show) {
-        document.getElementById('analysis_sidebar').style.display = 'block';
-        document.getElementById('main_analysis').classList.remove('main-panel-full-width');
-        document.getElementById('main_analysis').classList.add('main-panel');
-      } else {
-        document.getElementById('analysis_sidebar').style.display = 'none';
-        document.getElementById('main_analysis').classList.remove('main-panel');
-        document.getElementById('main_analysis').classList.add('main-panel-full-width');
-      }
-    }
-  "))),
+                        function toggleSidebar(show) {
+                          if (show) {
+                            document.getElementById('analysis_sidebar').style.display = 'block';
+                            document.getElementById('main_analysis').classList.remove('main-panel-full-width');
+                            document.getElementById('main_analysis').classList.add('main-panel');
+                          } else {
+                            document.getElementById('analysis_sidebar').style.display = 'none';
+                            document.getElementById('main_analysis').classList.remove('main-panel');
+                            document.getElementById('main_analysis').classList.add('main-panel-full-width');
+                          }
+                        }
+                         "))),
                      
                      ## AHP ####
                      tabItem(
@@ -741,6 +741,7 @@ ui <-
                          ),
                          
                          mainPanel(
+     
                            
                            
                            fluidRow(
@@ -750,14 +751,44 @@ ui <-
                            
                            div(id = "pareto_weighted",
                                "Best Option under selected weighting",
-                               style = "text-align: center; font-size: 150%;",
-                               
-                               div(tableOutput("best_option_output"), style = "margin: 0 auto; width: fit-content;")
-                           ), div(id = "random_ahp",
+                               style = "text-align: center; font-size: 150%;"
+                               ),
+                           useShinyjs(),
+                           
+                           tags$head(
+                             tags$style(HTML("
+  .tooltip { 
+    position: absolute; 
+    background: rgba(255, 255, 0, 0.9); /* Bright yellow */
+    border: 2px solid #000; /* Black border for contrast */
+    padding: 5px; 
+    z-index: 2000; /* Higher z-index */
+    font-weight: bold; 
+    color: black; /* Text color */
+    border-radius: 5px; /* Rounded corners */
+  }
+")),
+                             tags$script(HTML("
+      $(document).on('mouseenter', 'td[data-unit]', function(event) {
+        var unit = $(this).data('unit');
+        if (unit) {
+          $('#tooltip').html(unit).css({top: event.pageY + 10, left: event.pageX + 10}).show();
+        }
+      });
+      $(document).on('mouseleave', 'td[data-unit]', function() {
+        $('#tooltip').hide();
+      });
+    "))
+                           ),
+                               div(DTOutput("best_option_output"), style = "margin: 0 auto; width: fit-content;"),
+                                                                     
+                               div(id = "tooltip", class = "tooltip"),
+                           
+                               div(id = "random_ahp",
                                   checkboxInput("best_cluster", label = "Best option among cluster solutions", value = FALSE),
                                   style = "margin: 0 auto; width: fit-content;font-size: 100%;"
-                           ),
-                           
+                               ),
+                       
                            plotOutput({"weights_plot"}),
                            div(id="random_ahp2", fluidRow(
                              column(3, selectInput(inputId = "x_var",label = "X-Axis", choices = NULL, multiple = F, selected=NULL)),
