@@ -287,6 +287,12 @@ read_config_plt = function(obj=T,axis=F,inipath="../input/config.ini"){
 
 #### Table/Output Formatting Functions ####
 
+## Micha's smartly rounding functions :)
+round_signif <- function(x) {
+   ifelse(abs(x) >= 100, round(x, 0),  signif(x, 2)) #alternatively round(x,num.decimals(x))
+}
+
+
 ## count number of decimals
 num.decimals <- function(x) {
   stopifnot(class(x)=="numeric")
@@ -332,6 +338,32 @@ word_splitter <- function(words, segment_length = 6) {
     return(paste(formatted_word, collapse = "-\n"))
   })
 }
+
+add_perc <- function(df1, df2) {
+  
+  df1 = as.matrix(df1)
+  df2 = as.matrix(df2)
+  
+  df1_new <- df1
+ 
+  for (i in seq_len(nrow(df1))) {
+    for (j in seq_len(ncol(df1))) {
+     
+      pd = (df1[i,j] - df2[i,j])/df2[i,j]
+      
+      if(round(pd * 100, 2) !=0 & !is.na(pd) & !is.nan(pd) & !is.infinite(pd) ){
+        if(df2[i,j] < 0){pd = pd*(-1)}
+        
+        if(pd <= 0){dumb_bracket = " ("}else{dumb_bracket = " (+"}
+        
+        df1_new[i, j] <- paste0(df1[i, j], dumb_bracket, round(pd * 100, 2), "%)")
+      }
+    }
+  }
+  
+  return(df1_new)
+}
+
 
 #### Python Caller ####
 
@@ -509,67 +541,34 @@ plt_scat2 = function(dat, x, y){
 
 #### Plotting the exploration tab
 
-## barplot THIS NEEDS DYNAMIC TESTING FOR NEG VALUES!
-prep_diff_bar = function(abs_tab,red_tab,allobs, neg_var=NULL){
-  #full dataset/all optima
-  
-  absk = abs_tab%>%pivot_longer(everything())%>%group_by(name)%>%
-    summarise(min = min(value),
-              max = max(value),
-              median = median(value),
-              mean = mean(value))%>% 
-    column_to_rownames(var = "name")
-  
-  
-  #reduced (new) table of optima  
-  redk = red_tab%>% pivot_longer(everything())%>%group_by(name)%>%
-    summarise(min = min(value),
-              max = max(value),
-              median = median(value),
-              mean = mean(value))%>% 
-    column_to_rownames(var = "name")
-  
-  #dumbest way possible for doing this
-  pct = as.data.frame(array(NA,dim = c(4,length(allobs))),row.names = rownames(redk))
-  colnames(pct) = allobs
-  pct = 100*(redk-absk)/absk
-
-  # correcting for values on a negative scale 
-  if(!is.null(neg_var)){
-  pct[neg_var,] = (pct[neg_var,])*-1}
-  
-  return(pct)
-}
-
-
 ## plot (return of prep_diff_bar)
-plot_diff_bar= function(pct,obj_choices=NULL){
-  pl2 <- pct %>% rownames_to_column(var = "objective")  %>%mutate(objective=factor(objective)) %>%
-    mutate(objective=forcats::fct_relevel(objective,obj_choices))%>%
-    pivot_longer(-objective)%>%
-    
-    ggplot(aes(x = name, y = value, fill = objective)) +
-    geom_bar(position = "dodge",
-             stat = "identity",
-             alpha = 0.75) + labs(x = 'Objective', y = 'percentage change (%)') +
-    theme_bw() +
-    theme_minimal() +
-    scale_fill_manual(values = c( "#FFC61E", "#009ADE","#AF58BA", "#F28522", "#FF1F5B")) +
-    geom_text(aes(label = str_wrap(objective,width=8)),size=4,
-              colour = "black",
-              position = position_dodge(width = 1), vjust = -0.5) +
-    theme(
-      plot.title =  element_blank(),
-      axis.text.y = element_text(size = 15),
-      axis.text.x = element_text(size = 15),
-      axis.title.y = element_text(size =18),
-      axis.title.x = element_blank(),
-      legend.position = "none"
-    ) +
-    theme(plot.background = element_rect(fill = NA, color = NA))+scale_y_continuous(limits=c(-10,10))
-  
-  return(pl2)
-}
+# plot_diff_bar= function(pct,obj_choices=NULL){
+#   pl2 <- pct %>% rownames_to_column(var = "objective")  %>%mutate(objective=factor(objective)) %>%
+#     mutate(objective=forcats::fct_relevel(objective,obj_choices))%>%
+#     pivot_longer(-objective)%>%
+#     
+#     ggplot(aes(x = name, y = value, fill = objective)) +
+#     geom_bar(position = "dodge",
+#              stat = "identity",
+#              alpha = 0.75) + labs(x = 'Objective', y = 'percentage change (%)') +
+#     theme_bw() +
+#     theme_minimal() +
+#     scale_fill_manual(values = c( "#FFC61E", "#009ADE","#AF58BA", "#F28522", "#FF1F5B")) +
+#     geom_text(aes(label = str_wrap(objective,width=8)),size=4,
+#               colour = "black",
+#               position = position_dodge(width = 1), vjust = -0.5) +
+#     theme(
+#       plot.title =  element_blank(),
+#       axis.text.y = element_text(size = 15),
+#       axis.text.x = element_text(size = 15),
+#       axis.title.y = element_text(size =18),
+#       axis.title.x = element_blank(),
+#       legend.position = "none"
+#     ) +
+#     theme(plot.background = element_rect(fill = NA, color = NA))+scale_y_continuous(limits=c(-10,10))
+#   
+#   return(pl2)
+# }
 
 
 ## parallel axis plot
@@ -586,15 +585,13 @@ plot_parline = function(datt,sizz=rep(.5, length(unique(datt$id))),colols=rep("g
     
   pl1 <- ggplot(datt, aes(x = name, y = value,group=id,size=id, color=id)) +   # group = id is important!
     
-      annotate("rect", xmin=1, xmax=4, ymin=0,    ymax=0.25, alpha=0.1, fill="#dc3545") +
-      annotate("rect", xmin=1, xmax=4, ymin=0.25, ymax=0.5,  alpha=0.15, fill="#fd7e14") +
-      annotate("rect", xmin=1, xmax=4, ymin=0.5,  ymax=0.75, alpha=0.2, fill="#ffc107") +
-      annotate("rect", xmin=1, xmax=4, ymin=0.75, ymax=1,    alpha=0.2, fill="#28a745") +
+      annotate("rect", xmin=1, xmax=4, ymin=0,    ymax=0.3333333, alpha=0.1, fill="#dc3545") +
+      annotate("rect", xmin=1, xmax=4, ymin=0.3333333, ymax=0.6666667,  alpha=0.15, fill="#fd7e14") +
+      annotate("rect", xmin=1, xmax=4, ymin=0.6666667, ymax=1,    alpha=0.2, fill="#28a745") +
     
-    annotate("text", x = 4.04, y = 0.125, label = "worst",  angle=90, size = 6) + # Adjust hjust for alignment
-    annotate("text", x = 4.04, y = 0.375, label = "medium",  angle=90, size = 6) +
-    annotate("text", x = 4.04, y = 0.625, label = "medium",  angle=90, size = 6) +
-    annotate("text", x = 4.04, y = 0.875, label = "best",  angle=90, size = 6) +
+    annotate("text", x = 4.04, y = 0.1666666, label = "worst",  angle=90, size = 6) + # Adjust hjust for alignment
+    annotate("text", x = 4.04, y = 0.5, label = "medium",  angle=90, size = 6) +
+    annotate("text", x = 4.04, y = 0.8333333, label = "best",  angle=90, size = 6) +
     
     geom_line(
       aes(group = id),
@@ -878,8 +875,9 @@ check_inconsistencies <- function(comparison_matrix, weights) {
 scaled_abs_match = function(minval_s=c(0,0,0,0),
                             maxval_s=c(1,1,1,1),
                             scal_tab=NULL,abs_tab=NULL,
-                            allobs=NULL,smll = TRUE){ 
+                            allobs=NULL,smll = TRUE,at=F){ 
   
+ 
   df <- as.data.frame(array(NA,dim=c(2,length(allobs))),row.names = c("max","min"))
   colnames(df) = allobs
   
@@ -923,6 +921,9 @@ scaled_abs_match = function(minval_s=c(0,0,0,0),
     
     
   }
+  
+  if(at){rownames(cw) = c("best","worst")}
+  
   #when smll is set to false the table with all absolute values is returned
   if(smll){return(cw)}else{return(ch)} 
   
@@ -1000,8 +1001,8 @@ get_mima = function(df){
   
   min_max_df <- data.frame(
     Variable = names(min_values),
-    min = min_values,
-    max = max_values,
+    worst = min_values,
+    best = max_values,
     stringsAsFactors = FALSE
   )
   
