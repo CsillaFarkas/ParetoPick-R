@@ -259,9 +259,11 @@ server <- function(input, output, session) {
    if(file.exists("../input/units.RDS")){shinyjs::hide(id="units")
         uns <<-  readRDS("../input/units.RDS")
       }else{
-        uns <<- c(input$unit1,input$unit2,input$unit3,input$unit4)
         
-        observeEvent(input$save_unit,{saveRDS(uns, file="../input/units.RDS")
+        observeEvent(input$save_unit,{
+          uns <<- c(input$unit1,input$unit2,input$unit3,input$unit4)
+          
+          saveRDS(uns, file="../input/units.RDS")
           isolate({axiselected(c(input$unit1,input$unit2,input$unit3, input$unit4))}) #for later use in clustering
           
           updateTextInput(session, "axisx",  value  = axiselected()[1])
@@ -456,14 +458,24 @@ server <- function(input, output, session) {
                            maxval_s=c(input$obj1[2],input$obj2[2],input$obj3[2],input$obj4[2]),
                            scal_tab = f_scaled(),
                            abs_tab = fit(),
-                           allobs = objectives())
+                           allobs = objectives(),at=T)
+  
+    
+    #add percentage change
+    wr <- mima_fun()
     
     # varying number of decimals, but min and max the same number of dec
     dn = dt
+    dn[] <- lapply(dn, function(x) as.numeric(as.character(x)))
+    
     for(j in 1:2){
       for(i in 1:4){
-        dn[j,i] = formatC(dt[j,i],digits =num.decimals(as.numeric(dt[1,i])),drop0trailing = T,format = "f")
+        
+        dn[j,i] = round_signif(dn[j,i])
+        
       }}
+    
+    dn2 = add_perc(df1=dn, df2= wr)
     
     #get unit input 
     new_colnms <- mapply(function(col, unit) {
@@ -474,15 +486,26 @@ server <- function(input, output, session) {
       }
     }, col = colnms, unit = uns, SIMPLIFY = TRUE)
     
-    colnames(dn) = new_colnms  
+    colnames(dn2) = new_colnms  
     
-    dn},
+    dn2},
     include.rownames = TRUE)
+  
   
   mima_fun = function(){
     req(fit)
-    df = t(get_mima(fit()))[-1,]
+    df = as.data.frame(t(get_mima(fit()))[-1,])
     df = df[nrow(df):1,]
+    df[] = lapply(df, function(x) as.numeric(as.character(x)))
+    
+    for(j in 1:2){
+      for(i in 1:4){
+        
+        df[j,i] = round_signif(df[j,i])
+        # df[j,i] = formatC(df[j,i],digits =num.decimals(as.numeric(df[1,i])),drop0trailing = T,format = "f")
+      }}
+    
+    
     return(df)
   }
   
@@ -1613,14 +1636,15 @@ server <- function(input, output, session) {
         slider_id <- paste0("c", i, "_c", j)
         sliders[[slider_id]] <- sliderTextInput(
           inputId = slider_id,
-          label =paste0(objectives()[j]," vs. ",objectives()[i]),  # No label for the slider
+          label =paste0(objectives()[j]," vs. ",objectives()[i]), 
           choices = c(paste0(objectives()[j]," - ",9:2),"Equal",paste0(2:9," - ",objectives()[i])),
           
           selected = "Equal",
           grid = TRUE,
           hide_min_max = FALSE,
           animate = FALSE,
-          width = "100%"
+          width = "100%", 
+          force_edges = T
           
         )
       }
@@ -1682,9 +1706,9 @@ server <- function(input, output, session) {
                                        wgt
                                        }, colnames = T)
   
-    output$best_option_output <- renderTable({
+    output$best_option_output <- renderDT({
       
-    req(sols(),fit(),initial_update_done(),range_controlled())
+    req(sols(),initial_update_done(),range_controlled(),objectives())
       
     if (input$best_cluster) {
       df = subset(sols(),select= -optimum) #best option out of optima
@@ -1693,8 +1717,8 @@ server <- function(input, output, session) {
                      maxval=c(input$obj1_ahp[2],input$obj2_ahp[2], input$obj3_ahp[2], input$obj4_ahp[2]),
                      abs_tab = df, ranger = range_controlled())
 
-    } else{
-        #best option out of whole pareto front (=default)
+    } else{ #best option out of whole pareto front (=default)
+       
       df = match_abs(minval=c(input$obj1_ahp[1],input$obj2_ahp[1], input$obj3_ahp[1], input$obj4_ahp[1]),
                      maxval=c(input$obj1_ahp[2],input$obj2_ahp[2], input$obj3_ahp[2], input$obj4_ahp[2]),
                      abs_tab = fit(), ranger = range_controlled())
@@ -1704,7 +1728,6 @@ server <- function(input, output, session) {
       return("Dataframe columns do not match criteria names.")
     }
 
-      
     if(nrow(df)==0 || ncol(df) == 0){
       bo = "None of the points fulfill these criteria. Please select different data ranges!"
     }else{  
@@ -1712,15 +1735,15 @@ server <- function(input, output, session) {
     
     weights <- calculate_weights()
     
-    #calculate max score based on scaled values
-    min_fit <- apply(fit(), 2, min)
-    max_fit <- apply(fit(), 2, max)
+    min_fit <- apply(df, 2, min)
+    max_fit <- apply(df, 2, max)
     
+    #scale to 0 and 1 not anchoring with original
     df_sc <- as.data.frame(mapply(function(col_name, column) {
       rescale_column(column, min_fit[col_name], max_fit[col_name])
-    }, colnames(fit()), df, SIMPLIFY = FALSE))
+    }, colnames(df), df, SIMPLIFY = FALSE))
     
-    # Calculate the final score based on the principal components
+    #final score based on df within 0 and 1
     df$Score <- rowSums(df_sc * weights)
     
     best_option_index <<- which.max(df$Score)
@@ -1729,8 +1752,35 @@ server <- function(input, output, session) {
     
     bo = best_option()
     
+    #MUCH more bloated with hovering
+    if (file.exists("../input/units.RDS")) {
+      units = readRDS("../input/units.RDS")
+      } else{
+      units = as.character(rep("not provided", 4))
+      }
     }
-    bo
+      
+      table_data <-data.frame(
+        Variable = names(bo),  # Column names
+        value = unlist(bo),  # Values from the dataframe
+        stringsAsFactors = FALSE
+      )
+      
+      table_data$Unit <- units
+      table_data$value <- paste0('<span data-unit="', table_data$Unit, '">', table_data$value, '</span>')
+      
+      
+      
+      datatable(
+        t(table_data[, "value"]),
+        colnames = names(bo),
+        rownames = FALSE,  
+        escape = FALSE,  
+        options = list(dom = 't', paging = FALSE,bSort = FALSE)
+      )
+      
+ 
+    
   })
   
  
@@ -1808,7 +1858,6 @@ server <- function(input, output, session) {
     
   output$consistency_check = renderText({inconsistency_check(tab=F) })
     
- 
   output$which_inconsistency = renderTable({inconsistency_check(tab=T)},rownames =T)
   
   })
@@ -1852,13 +1901,8 @@ server <- function(input, output, session) {
   
     output$plt_bo_measure = renderUI({single_meas_fun()})
     
-
-    output$plot_ready <- renderText({
-      is_rendering(FALSE)  # Set rendering to FALSE after the plot is rendered
-    })
+    output$plot_ready <- renderText({is_rendering(FALSE)})#blind output required for spinner
   })
   
-  observe({
-    shinyjs::toggle("ahp_spinner", condition = is_rendering())
-  })
+  observe({ shinyjs::toggle("ahp_spinner", condition = is_rendering())})
 }
