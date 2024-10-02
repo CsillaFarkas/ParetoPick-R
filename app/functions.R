@@ -867,7 +867,6 @@ check_inconsistencies <- function(comparison_matrix, weights) {
       }
     }
   }
-  
  
   ordered_inconsistencies <- inconsistencies[order(-inconsistencies$Level), ]
   return(ordered_inconsistencies)

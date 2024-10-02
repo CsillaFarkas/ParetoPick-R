@@ -69,18 +69,17 @@ the project consists of six folders:
 
 * AHP
   * the initial state of the pairwise comparison as "Equal" amplifies the mathematical definition of inconsistency, therefore only when at least three sliders are NOT set to "Equal" is inconsistency considered at all
-  * normalising the dataframe prior to weighting it relies on scaling to between 0 and 1 using the old dataset as anchor
+  * normalising the dataframe prior to weighting relies on scaling to between 0 and 1. Should the individual solutions be spaced equally to get more effect through weighting?
 
 # To do
 ## Content
 * Visualising tab:
-  * add percentage change from full range to table (in color)
-  * find a way to visualise differences in objective spread
-  * better labels for parallel axis plot (replace "worst", "medium" etc.)
+  * parallel axis - get selected line to plot as top layer
+  * right color status quo
 
 * Correlation tab
   * output largest accepted correlation in bold over table/could also be part of default setting
-  * deviations_step is currently the default value 
+  * (python: deviations_step is currently the default value) 
 
 * Cluster tab
   * add possibility to limit range before clustering (where?), this is also useful for new default clustering
@@ -103,11 +102,11 @@ the project consists of six folders:
 
 ## Workflow
 * General
-  * full list of measures across all catchments --> nswrm_priorities.csv, this should be available through SWATmeasR.R
+  * full list of measures across all catchments --> nswrm_priorities.csv, I don't know if this is available centrally
   * restructure - two-way representation of one simple and one complex workflow of correlation/clustering
     * hide both tabs and allow user to skip detailed steps - run automated removal of correlated variables (>0.7) and run cluster with default settings
     * cluster tab requires a lot of clicking around but those users who want to try it will figure it out
-  * declutter app by removal of items that can instead be hovered (what could be moved there? --- unit)
+  * declutter app by removal of items that can instead be hovered (what could be moved there? --- unit, especially also in visualisation tab)
 
 
 * Visualising tab:
@@ -121,4 +120,4 @@ the project consists of six folders:
 * AHP
   * more reasonable representation of variables across different scales - we will need to test that with different datasets (currently just multiplied by 1000 if <0.005)
   * can some of the crowded labels only be shown when hovered?
-  * add the option for rounding labels on sliders
+  * add the option for rounding labels on sliders (potentially with decimals)
