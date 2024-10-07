@@ -453,15 +453,16 @@ ui <-
                             mainPanel(
                                       div(style = "text-align: left; font-size:150%; width: 100%;",
                                           "Would you like to alter the correlation and cluster settings or run with default settings?",
-                                          radioButtons("show_tabs",label="",
+                                      radioButtons("show_tabs",label="",
                                       choices = list("show Correlation Tabs" = "show", "run with default settings" = "default"), selected = "default")),
                                       
                                       uiOutput("next_step"),
                                       withSpinner(
-                                        uiOutput("default_running"), 
-                                        type = 4  
-                                      ),
-                             )),
+                                        uiOutput("spinner_output"),  # This will show the spinner and the process finished message
+                                        type = 4  , color = "#F7A600"# Choose a spinner style (1 to 8)
+                                      ))
+                                    
+                             ),
                      
                      ## CORRELATION ANALYSIS PANEL ####
                 tabItem(tabName = "correlation_analysis",
