@@ -449,11 +449,18 @@ ui <-
                      tabItem(tabName = "configure",
                              
                              titlePanel("Configure Cluster Settings"),
+                             
                             mainPanel(
-                                      div(style = "text-align: left; font-size:150%","Would you like to alter the correlation and cluster settings or run with default settings?",
-                                      radioButtons("show_tabs",label="",
-                                      choices = list("Show Correlation/Cluster Tabs" = "show", "Run with Defaults" = "default"), selected = "default")),
-                             uiOutput("next_step")
+                                      div(style = "text-align: left; font-size:150%; width: 100%;",
+                                          "Would you like to alter the correlation and cluster settings or run with default settings?",
+                                          radioButtons("show_tabs",label="",
+                                      choices = list("show Correlation Tabs" = "show", "run with default settings" = "default"), selected = "default")),
+                                      
+                                      uiOutput("next_step"),
+                                      withSpinner(
+                                        uiOutput("default_running"), 
+                                        type = 4  
+                                      ),
                              )),
                      
                      ## CORRELATION ANALYSIS PANEL ####
