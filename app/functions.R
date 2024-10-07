@@ -451,7 +451,7 @@ plt_sel = function(opti_sel, shp){
 
 ## plot leaflet w/ specific column
 plt_lf <- function(data, mes, lo, la, buff_els, col_sel) {
-  man_col = c("#66C2A5" ,"#4db818","#965c1d", "#F7A600", "#03597F" ,"#83D0F5","#FFEF2C")
+  man_col = c("#66C2A5" ,"#4db818","#965c1d", "#F7A600", "#03597F" ,"#83D0F5","#FFEF2C","#a84632","#b82aa5","#246643")
   man_col = man_col[1:length(unique(mes))]
   dispal = colorFactor(palette = man_col, domain = unique(mes), na.color = "lightgrey")
   
