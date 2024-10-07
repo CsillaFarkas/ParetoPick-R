@@ -859,6 +859,25 @@ server <- function(input, output, session) {
       })
       
       } })
+  ### Configure ####
+  
+      output$next_step <- renderUI({
+        if (input$show_tabs == "show") {
+          actionButton("go_to_tabs", "Go to Tabs")
+        } else {
+          actionButton("run_defaults", "Run with Defaults")
+        }
+      })
+      
+      #add behaviour for buttons
+      observeEvent(input$go_to_tabs, {
+        shinydashboard::updateTabItems(session, "tabs", "correlation_analysis")
+      })
+      
+      observeEvent(input$run_defaults, {
+        #run default processes
+        showModal(modalDialog("Running with default settings..."))
+      })
       
   ### Correlation Analysis ####
       
