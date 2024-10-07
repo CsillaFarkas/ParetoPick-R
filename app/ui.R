@@ -451,7 +451,19 @@ ui <-
                              titlePanel("Configure Cluster Settings"),
                              
                             mainPanel(
-                                      div(style = "text-align: left; font-size:150%; width: 100%;",
+                              div(style = "text-align: left; font-size:150%; width: 100%;",
+                                  "Would you like to limit the objective ranges prior to clustering?",
+                                  radioButtons("limra_clust", "", choices = c("Yes", "No"), selected = "No")),
+                              conditionalPanel(
+                                condition = "input.limra_clust == 'Yes'",
+                                sliderInput(inputId = "ran1", label= "Objective 1:",min = 0, max = 1, value = c(0,1), width = "110%"),
+                                sliderInput(inputId = "ran2", label= "Objective 2:",min = 0, max = 1, value = c(0,1), width = "110%"),
+                                sliderInput(inputId = "ran3", label= "Objective 3:",min = 0, max = 1, value = c(0,1), width = "110%"),
+                                sliderInput(inputId = "ran4", label= "Objective 4:",min = 0, max = 1, value = c(0,1), width = "110%")
+                                
+                              ),
+                              
+                              div(style = "text-align: left; font-size:150%; width: 100%;",
                                           "Would you like to alter the correlation and cluster settings or run with default settings?",
                                       radioButtons("show_tabs",label="",
                                       choices = list("show Correlation Tabs" = "show", "run with default settings" = "default"), selected = "default")),
