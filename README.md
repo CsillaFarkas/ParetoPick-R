@@ -79,6 +79,9 @@ the project consists of six folders:
   * parallel axis - get selected line to plot as top layer
   * right color status quo
 
+* Configure tab
+  * finish option for limiting range and check for missing files
+
 * Correlation tab
   * output largest accepted correlation in bold over table/could also be part of default setting
   * (python: deviations_step is currently the default value) 
@@ -101,6 +104,7 @@ the project consists of six folders:
     * find a way to select measures and analyse their density/combinations/areas in field
     * is there a way to introduce sliders for measures like Dennis suggested?
     * representation of "most important" measures that are part of all pareto-optimal solutions
+    * anonymous catchments something something
 
 
 
