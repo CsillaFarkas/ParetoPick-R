@@ -67,7 +67,7 @@ server <- function(input, output, session) {
   
   #figure in analysis rendering
   is_rendering <- reactiveVal(FALSE)
-  default_running <- reactiveVal(FALSE)#spinner in configure tab
+  default_running <- reactiveVal(NULL)#spinner in configure tab
   ### Introduction ####
   
   ### Play Around Tab ####
@@ -877,6 +877,7 @@ server <- function(input, output, session) {
       #default corrlation/cluster run
       observeEvent(input$run_defaults, {
         #MISSING check for missing files 
+        output$spinner_progress <- renderText({ "Clustering is running, please wait..." })
         
         default_running(TRUE)
         req(input$selements)
@@ -911,16 +912,21 @@ server <- function(input, output, session) {
          cmd = paste("python",py_script)
          result = system(cmd,intern=TRUE)
         
-         default_running(FALSE)#turn spinner off
+         default_running(FALSE) 
+         
       })
-      
-      output$default_running <- renderUI({
-        if (default_running()) {
+     
+      output$spinner_output <- renderUI({
+        if(isTRUE(default_running())) {
           return(NULL)  
+        } else if(isFALSE(default_running())) {
+          return("Process finished!") 
         } else {
-          return("Process finished!")  
+          return(NULL) 
         }
       })
+      
+      
   ### Correlation Analysis ####
       
       observeEvent(input$tabs == "correlation_analysis", {
@@ -1925,7 +1931,7 @@ server <- function(input, output, session) {
   
   observeEvent(input$plt_bo,{
   req(best_option(),needs_buffer())
-    
+    is_rendering(TRUE) 
   bo = best_option() 
   bo = bo %>% rownames_to_column("optimum")
    
@@ -1958,7 +1964,7 @@ server <- function(input, output, session) {
     return(m1)
 
     }
-   is_rendering(TRUE) 
+   
   
     output$plt_bo_measure = renderUI({single_meas_fun()})
     
