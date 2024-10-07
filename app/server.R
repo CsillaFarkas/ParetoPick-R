@@ -874,9 +874,42 @@ server <- function(input, output, session) {
         shinydashboard::updateTabItems(session, "tabs", "correlation_analysis")
       })
       
+      #default corrlation/cluster run
       observeEvent(input$run_defaults, {
-        #run default processes
-        showModal(modalDialog("Running with default settings..."))
+        #MISSING check for missing files 
+        
+        req(input$selements)
+        all_var <<- readRDS("../input/all_var.RDS")
+        
+        write_corr(vars = input$selements,cor_analysis = T, pca = F)
+        
+        check_align()#run a short check if all var_corr_par are in ini (sometimes they don't pass convert_optain) 
+        
+        ## run correlation
+          py_script <- "../python_files/correlation_matrix.py"
+          cmd <- paste("python", py_script)
+          result <- system(cmd, intern = TRUE)
+        
+        corr <<- read.csv("../output/correlation_matrix.csv", row.names = 1) #global because of re-rendering of plot
+        high_corr = find_high_corr(corr,threshold=0.7, tab=T, strike=NULL) 
+        
+        pca_content = all_var[-which(all_var %in% unique(high_corr$variable1))]
+        saveRDS(pca_content,file = "../input/pca_content.RDS") #required for PCA
+    
+        if(file.exists("../input/units.RDS")){axiselected(readRDS("../input/units.RDS"))}
+        
+        #prep pca
+        write_corr(pca_content = pca_content,pca=T, cor_analysis = F)
+        write_pcanum(pcamin=length(pca_content),pcamax=length(pca_content))
+        write_pca_ini(var1=objectives()[1],var2=objectives()[2],var3=objectives()[3],var4=objectives()[4],
+                      var1_lab=paste0(objectives()[1]," [",axiselected()[1],"]"),
+                      var2_lab=paste0(objectives()[2]," [",axiselected()[2],"]"),
+                      var3_lab=paste0(objectives()[3]," [",axiselected()[3],"]"),
+                      var4_lab=paste0(objectives()[4]," [",axiselected()[4],"]"))
+        #run python
+        run_python_script(path_script="../python_files/kmeans.py",pca_status)
+        
+        
       })
       
   ### Correlation Analysis ####
@@ -956,7 +989,7 @@ server <- function(input, output, session) {
           
           corr <<- read.csv("../output/correlation_matrix.csv", row.names = 1) #global because of re-rendering of plot
 
-          ## correlation Plot (does not change for different thresholds)
+          ## correlation plot (does not change for different thresholds)
           output$corrplot <- renderPlot({plt_corr(corr)})
         }else{ shinyjs::hide("show_conf")}
         
@@ -1007,7 +1040,7 @@ server <- function(input, output, session) {
     output$corrtable <- renderDT({
       req(corr)
       
-      find_high_corr(corr,threshold=input$thresh, tab=T, strike=NULL)}) #tab = T means this returns the full table, =F is for pulling variables
+      find_high_corr(corr,threshold=input$thresh, tab=T, strike=NULL) }) #tab = T means this returns the full table, =F is for pulling variables
    
     # top table with selected elements
     output$selements <- renderTable({
