@@ -11,8 +11,14 @@ ui <-
                   menuItem("Introduction",tabName = "intro", icon = icon("home"),selected=TRUE),
                   menuItem("Visualising the Pareto Front",tabName = "play_around",icon = icon("dashboard")),
                   menuItem("Data Preparation", icon=icon("file",lib = "font-awesome"),tabName = "data_prep"),
-                  menuItem("Correlation Analysis",icon=icon("random", lib="font-awesome"), tabName = "correlation_analysis"),
-                  menuItem("PCA & kmeans/kmedoids",icon=icon("project-diagram", lib="font-awesome"), tabName = "pca"),
+                  menuItem("Configure Clustering", tabName = "configure", icon = icon("cog")),
+                  
+                  conditionalPanel(
+                    condition = "input.show_tabs == 'show'",
+                    menuItem("Correlation Analysis",icon=icon("random", lib="font-awesome"), tabName = "correlation_analysis"),
+                    menuItem("PCA & kmeans/kmedoids",icon=icon("project-diagram", lib="font-awesome"), tabName = "pca")
+                  ),
+                  
                   menuItem("Analysis", icon = icon("th"),tabName = "analysis"),
                   menuItem("AHP",icon=icon("sliders-h", lib="font-awesome"),tabName = "ahp")
                   
@@ -55,7 +61,7 @@ ui <-
                                     background-color: #83D0F5 !important;
                                   }
 
-                                  /* Correlation Analysis and PCA tabs with same background color */
+                                  /* Configure, Correlation Analysis and PCA tabs with same background color */
                                   .sidebar-menu li a[data-value="correlation_analysis"] {
                                     background-color: #F7A600 !important;
                                   }
@@ -68,6 +74,13 @@ ui <-
                                     background-color: #F7A600 !important;
                                   }
                                   .sidebar-menu li a[data-value="pca"]:hover {
+                                    background-color: #83D0F5 !important;
+                                  }
+                                  
+                                    .sidebar-menu li a[data-value="configure"] {
+                                    background-color: #F7A600 !important;
+                                  }
+                                  .sidebar-menu li a[data-value="configure"]:hover {
                                     background-color: #83D0F5 !important;
                                   }
                                    .sidebar-menu li a[data-value="intro"]:hover {
@@ -356,7 +369,7 @@ ui <-
                      
                      ## DATA PREP PANEL #####
                      
-                     tabItem(tabName = "data_prep",
+               tabItem(tabName = "data_prep",
                              titlePanel("OPTAIN Data Preparation"),
                              
                              wellPanel(  p("This tab requires you to provide the required optimisation outputs, please retain their names as given here and as produced in the optimisation workflow."),
@@ -431,10 +444,20 @@ ui <-
                                
                              )# DATA PREP MAIN PANEL END
                      ), 
-                     
+                   ## CONFIGURE CLUSTERING PANEL - USER DECISION FOR HIDING OR SHOWING correlation AND clustering ####
+           
+                     tabItem(tabName = "configure",
+                             
+                             titlePanel("Configure Cluster Settings"),
+                            mainPanel(
+                                      div(style = "text-align: left; font-size:150%","Would you like to alter the correlation and cluster settings or run with default settings?",
+                                      radioButtons("show_tabs",label="",
+                                      choices = list("Show Correlation/Cluster Tabs" = "show", "Run with Defaults" = "default"), selected = "default")),
+                             uiOutput("next_step")
+                             )),
                      
                      ## CORRELATION ANALYSIS PANEL ####
-                     tabItem(tabName = "correlation_analysis",
+                tabItem(tabName = "correlation_analysis",
                              titlePanel("Clustering Part 1 - Correlation Analysis"),
                              
                              wellPanel( p(HTML("Since correlation among variables can skew cluster results, a correlation analysis and potential removal of variables is required. 
