@@ -67,7 +67,7 @@ server <- function(input, output, session) {
   
   #figure in analysis rendering
   is_rendering <- reactiveVal(FALSE)
-  
+  default_running <- reactiveVal(FALSE)#spinner in configure tab
   ### Introduction ####
   
   ### Play Around Tab ####
@@ -878,6 +878,7 @@ server <- function(input, output, session) {
       observeEvent(input$run_defaults, {
         #MISSING check for missing files 
         
+        default_running(TRUE)
         req(input$selements)
         all_var <<- readRDS("../input/all_var.RDS")
         
@@ -894,8 +895,7 @@ server <- function(input, output, session) {
         high_corr = find_high_corr(corr,threshold=0.7, tab=T, strike=NULL) 
         
         pca_content = all_var[-which(all_var %in% unique(high_corr$variable1))]
-        saveRDS(pca_content,file = "../input/pca_content.RDS") #required for PCA
-    
+
         if(file.exists("../input/units.RDS")){axiselected(readRDS("../input/units.RDS"))}
         
         #prep pca
@@ -906,12 +906,21 @@ server <- function(input, output, session) {
                       var2_lab=paste0(objectives()[2]," [",axiselected()[2],"]"),
                       var3_lab=paste0(objectives()[3]," [",axiselected()[3],"]"),
                       var4_lab=paste0(objectives()[4]," [",axiselected()[4],"]"))
-        #run python
-        run_python_script(path_script="../python_files/kmeans.py",pca_status)
+        ##run clustering
+         py_script = "../python_files/kmeans.py"
+         cmd = paste("python",py_script)
+         result = system(cmd,intern=TRUE)
         
-        
+         default_running(FALSE)#turn spinner off
       })
       
+      output$default_running <- renderUI({
+        if (default_running()) {
+          return(NULL)  
+        } else {
+          return("Process finished!")  
+        }
+      })
   ### Correlation Analysis ####
       
       observeEvent(input$tabs == "correlation_analysis", {
