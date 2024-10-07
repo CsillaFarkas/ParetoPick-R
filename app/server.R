@@ -132,6 +132,7 @@ server <- function(input, output, session) {
       for(i in 1:4){
         updateSliderInput(session, paste0("obj",i), label = obj[i])
         updateSliderInput(session, paste0("obj",i,"_ahp"), label = obj[i])
+        updateSliderInput(session, paste0("ran",i), label = obj[i])
         
         }
       updateCheckboxGroupInput(session, "sel_neg", choices = objectives(), selected = NULL)
@@ -175,7 +176,9 @@ server <- function(input, output, session) {
           assign(var_name, (min_max$max[i]-min_max$min[i])/20)
           
           updateSliderInput(session, paste0("obj",i,"_ahp"), value = c(min_max$min[i],min_max$max[i]),min =min_max$min[i],max = min_max$max[i],step=var_name)
-          initial_update_done(TRUE)
+          updateSliderInput(session, paste0("ran",i), value = c(min_max$min[i],min_max$max[i]),min =min_max$min[i],max = min_max$max[i],step=var_name)
+          
+           initial_update_done(TRUE)
           
           }
         
@@ -861,6 +864,8 @@ server <- function(input, output, session) {
       } })
   ### Configure ####
   
+      
+      
       output$next_step <- renderUI({
         if (input$show_tabs == "show") {
           actionButton("go_to_tabs", "Go to Tabs")
@@ -874,7 +879,7 @@ server <- function(input, output, session) {
         shinydashboard::updateTabItems(session, "tabs", "correlation_analysis")
       })
       
-      #default corrlation/cluster run
+      #default correlation/cluster run
       observeEvent(input$run_defaults, {
         #MISSING check for missing files 
         output$spinner_progress <- renderText({ "Clustering is running, please wait..." })
@@ -1828,8 +1833,8 @@ server <- function(input, output, session) {
     }
       
       table_data <-data.frame(
-        Variable = names(bo),  # Column names
-        value = unlist(bo),  # Values from the dataframe
+        Variable = objectives(), 
+        value = unlist(bo),  
         stringsAsFactors = FALSE
       )
       
