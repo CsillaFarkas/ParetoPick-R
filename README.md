@@ -65,7 +65,9 @@ the project consists of six folders:
 
 # Assumptions
 * General
-  * a restructure of the correlation/clustering approach (see below) would require default settings that can produce reasonable cluster outputs across all catchments
+  * do the current default settings produce reasonable cluster outputs across all catchments?
+  * current default is missing file check
+  * full list of measures across all catchments needed for nswrm_priorities.csv, is this available centrally?
 
 * AHP
   * the initial state of the pairwise comparison as "Equal" amplifies the mathematical definition of inconsistency, therefore only when at least three sliders are NOT set to "Equal" is inconsistency considered at all
@@ -100,14 +102,15 @@ the project consists of six folders:
     * is there a way to introduce sliders for measures like Dennis suggested?
 
 
+
 ## Workflow
 * General
-  * full list of measures across all catchments --> nswrm_priorities.csv, I don't know if this is available centrally
   * restructure - two-way representation of one simple and one complex workflow of correlation/clustering
     * hide both tabs and allow user to skip detailed steps - run automated removal of correlated variables (>0.7) and run cluster with default settings
     * cluster tab requires a lot of clicking around but those users who want to try it will figure it out
   * declutter app by removal of items that can instead be hovered (what could be moved there? --- unit, especially also in visualisation tab)
-
+  * AHP needs another visualisation - maybe each pair in different tab? 
+  * convert_optain requires some failsafe controls for empty values
 
 * Visualising tab:
   * status quo plotted in the right color
