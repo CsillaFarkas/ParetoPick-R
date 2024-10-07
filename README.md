@@ -100,14 +100,12 @@ the project consists of six folders:
     * add line plot for solutions to improve tradeoff representation
     * find a way to select measures and analyse their density/combinations/areas in field
     * is there a way to introduce sliders for measures like Dennis suggested?
+    * representation of "most important" measures that are part of all pareto-optimal solutions
 
 
 
 ## Workflow
 * General
-  * restructure - two-way representation of one simple and one complex workflow of correlation/clustering
-    * hide both tabs and allow user to skip detailed steps - run automated removal of correlated variables (>0.7) and run cluster with default settings
-    * cluster tab requires a lot of clicking around but those users who want to try it will figure it out
   * declutter app by removal of items that can instead be hovered (what could be moved there? --- unit, especially also in visualisation tab)
   * AHP needs another visualisation - maybe each pair in different tab? 
   * convert_optain requires some failsafe controls for empty values
