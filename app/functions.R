@@ -742,7 +742,8 @@ plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NUL
 
   if (!is.null(sel_tab)) {
     sel_tab$set <- "Selection"
-    all_extra_data <- rbind(all_extra_data,sel_tab)
+   
+    if(!is.null(all_extra_data)){all_extra_data <- rbind(all_extra_data,sel_tab)}else{all_extra_data = sel_tab}
     
   }
   
