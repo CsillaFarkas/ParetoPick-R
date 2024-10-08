@@ -29,6 +29,12 @@ server <- function(input, output, session) {
   
   best_option = reactiveVal(NULL)
   
+  #control/limit range of objectives, works in combination with slider input$ran1 etc.
+  default_vals = reactiveVal(list(ran1 = c(0,100),
+                                  ran2 = c(0,100),
+                                  ran3 = c(0,100),
+                                  ran4 = c(0,100)))
+  
   settings_text= reactiveVal("") #printing pca settings
   update_settings <- function() {
     settings <- pca_settings(input)
@@ -63,7 +69,7 @@ server <- function(input, output, session) {
   )
   coma = reactiveVal()
   range_controlled = reactiveVal(NULL)
-  initial_update_done = reactiveVal(FALSE)
+  initial_update_done = reactiveValues(initial = FALSE)
   
   #figure in analysis rendering
   is_rendering <- reactiveVal(FALSE)
@@ -136,6 +142,7 @@ server <- function(input, output, session) {
         
         }
       updateCheckboxGroupInput(session, "sel_neg", choices = objectives(), selected = NULL)
+      
     })
     
     
@@ -154,22 +161,28 @@ server <- function(input, output, session) {
         yo = fit() %>% mutate(across(everything(), ~ scales::rescale(.)))%>%mutate(id = row_number())
         f_scaled(yo)
         
-        output$uploaded_pareto <- renderText({"All Files found. You can now examine the Pareto front. 
-        How does it change when the objective ranges are modified?"})
+        output$uploaded_pareto <- renderText({"All Files found. 
+                                               You can now examine the Pareto front. 
+                                               How does it change when the objective ranges are modified?"})
         
         
-       ## adapt sliders in ahp tab
+       ## adapt sliders in ahp and configure tab
+          if(!(initial_update_done$initial)){ #making sure this only runs once
           min_max <-data.frame(t(sapply(data, function(x) range(x, na.rm = TRUE))))
           names(min_max) =c("min","max")
           range_value = NULL
+          
+          new_defaults <- default_vals()
+          
           for (i in 1:4) {
             var_name <- paste0("steps", i)
             
-            if (abs(min_max$max[i]) <= 0.05) {
+            if (abs(min_max$max[i]) <= 0.005) {
               min_max$max[i] = min_max$max[i] * 1000
               min_max$min[i] = min_max$min[i] * 1000
               
               range_value = append(range_value,(rownames(min_max[i, ])))
+              
             }
           range_controlled(range_value)
           
@@ -177,12 +190,12 @@ server <- function(input, output, session) {
           
           updateSliderInput(session, paste0("obj",i,"_ahp"), value = c(min_max$min[i],min_max$max[i]),min =min_max$min[i],max = min_max$max[i],step=var_name)
           updateSliderInput(session, paste0("ran",i), value = c(min_max$min[i],min_max$max[i]),min =min_max$min[i],max = min_max$max[i],step=var_name)
-          
-           initial_update_done(TRUE)
+          new_defaults[[paste0("ran",i)]] <- c(min_max$min[i], min_max$max[i]) 
           
           }
-        
-      } else {
+          default_vals(new_defaults)
+          initial_update_done$initial = TRUE
+      }} else {
         shinyjs::show(id = "parfit")
       }
     })
@@ -864,14 +877,27 @@ server <- function(input, output, session) {
       } })
   ### Configure ####
   
-      
-      
       output$next_step <- renderUI({
         if (input$show_tabs == "show") {
           actionButton("go_to_tabs", "Go to Tabs")
         } else {
           actionButton("run_defaults", "Run with Defaults")
         }
+      })
+      
+      observe({
+        req(fit(), input$ran1, range_controlled(),initial_update_done$initial)
+        df = match_abs(
+          minval = c(input$ran1[1], input$ran2[1], input$ran3[1], input$ran4[1]),
+          maxval = c(input$ran1[2], input$ran2[2], input$ran3[2], input$ran4[2]),
+          abs_tab = fit(),
+          ranger = range_controlled()
+        )
+        if (nrow(df) == 0 || ncol(df) == 0) {
+          output$check_range <- renderText({
+            paste("None of the points fulfill these criteria. Please select different data ranges!")
+          })
+        }else{output$check_range <- renderText({paste("")})}
       })
       
       #add behaviour for buttons
@@ -930,7 +956,7 @@ server <- function(input, output, session) {
           return(NULL) 
         }
       })
-      
+   
       
   ### Correlation Analysis ####
       
@@ -1030,17 +1056,19 @@ server <- function(input, output, session) {
         }
       )
       
-      
         ## make new corr
       observeEvent(input$run_corr,{
           shinyjs::show("show_conf") #show confirm selection button once correlation has run
         
-          req(input$selements)
+          req(input$selements,objectives(), range_controlled())
           all_var <<- readRDS("../input/all_var.RDS")
           
           write_corr(vars = input$selements,cor_analysis = T, pca = F)
           
           check_align()#run a short check if all var_corr_par are in ini (sometimes they don't pass convert_optain) 
+         
+          check_sliders(input_vals=list(input$ran1,input$ran2,input$ran3,input$ran4), 
+                        default_vals= default_vals(),ranger = range_controlled())   
           
           ## run the Python script
           py_script <- "../python_files/correlation_matrix.py"
@@ -1780,7 +1808,7 @@ server <- function(input, output, session) {
   
     output$best_option_output <- renderDT({
       
-    req(sols(),initial_update_done(),range_controlled(),objectives())
+    req(sols(),range_controlled(),objectives())
       
     if (input$best_cluster) {
       df = subset(sols(),select= -optimum) #best option out of optima
@@ -1899,7 +1927,7 @@ server <- function(input, output, session) {
   
     #table stays empty without inconsistencies
     inconsistency_check = function(tab) {
-      req(coma(),objectives(),cr)
+      req(coma(), objectives(), cr)
       slider_ids = c(input[["c1_c2"]], input[["c1_c3"]], input[["c1_c4"]], input[["c2_c3"]], input[["c2_c4"]], input[["c3_c4"]])
       
       se = sum(slider_ids == "Equal") #if majority on equal, large preferences amplify mathematical inconsistency
@@ -1919,19 +1947,25 @@ server <- function(input, output, session) {
       } else{
         if (tab == T) {
           inconsistencies = check_inconsistencies(coma(), weights = calculate_weights())
-        } else{
+        } else if (tab == F & nrow(inconsistency_check(tab = T)) == 0) {
           inconsistencies = paste("Potential inconsistencies, the inconsistency ratio is:",
                                   round(cr, 3))
+        } else{
+          inconsistencies = paste0(
+            "The inconsistency ratio is: ",
+            round(cr, 3),
+            ". Please change your priorities for the following objectives:"
+          )
         }
       }
       
       return(inconsistencies)
     }
     
-  output$consistency_check = renderText({inconsistency_check(tab=F) })
+    output$consistency_check = renderText({inconsistency_check(tab=F)})
     
-  output$which_inconsistency = renderTable({inconsistency_check(tab=T)},rownames =T)
-  
+    output$which_inconsistency = renderTable({rownames(inconsistency_check(tab=T))},rownames =T, colnames = F)
+    
   })
   
   observeEvent(input$plt_bo,{
