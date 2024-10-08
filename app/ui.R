@@ -277,16 +277,13 @@ ui <-
                                                column(10,
                                                       div("Objective Range", style = "text-align: left; font-size:150%; margin-top: 40px;"),
                                                       
-                                                      sliderInput(inputId = "obj1", label= "Objective 1:",min = 0, max = 1, value = c(0,1), step = 0.01,width = "110%"),
-                                                      sliderInput(inputId = "obj2", label = "Objective 2:", min = 0, max = 1,value= c(0,1),  step = 0.01,width = "110%"),
+                                                      sliderInput(inputId = "obj1", label=  "Objective 1:", min = 0, max = 1, value = c(0,1), step = 0.01,width = "110%"),
+                                                      sliderInput(inputId = "obj2", label = "Objective 2:", min = 0, max = 1, value = c(0,1), step = 0.01,width = "110%"),
                                                       sliderInput(inputId = "obj3", label = "Objective 3:", min = 0, max = 1, value = c(0,1), step = 0.01, width = "110%"),
-                                                      sliderInput(inputId = "obj4", label = "Objective 4:", min = 0, max = 1, value = c(0,1),  step = 0.01,width = "110%")))
+                                                      sliderInput(inputId = "obj4", label = "Objective 4:", min = 0, max = 1, value = c(0,1), step = 0.01,width = "110%")))
                                              # ,  
                                              # checkboxGroupInput("sel_neg", "Are any of the objectives provided on the negative scale?", choices = NULL, inline = FALSE),
-                                             
-                                             
-                                             
-                                             
+                                              
                                ),
                                mainPanel(
                                  tags$style(HTML(".js-irs-1 .irs-single, .js-irs-1 .irs-bar-edge, .js-irs-1 .irs-bar {background: #ffc61e ;border-top: 1px solid #ffc61e ;border-bottom: 1px solid #ffc61e;}.js-irs-1 .irs-from, .js-irs-1 .irs-to, .js-irs-1 .irs-single { font-size: 13px;background: #ffc61e !important }")),
@@ -298,10 +295,10 @@ ui <-
                                      plotOutput("first_pareto"), 
                                      checkboxInput("add_sq_f",label = "Show status quo",value = FALSE),
                                      fluidRow(
-                                       column(3,selectInput(inputId = "x_var3",label = "X-Axis", choices = NULL, multiple = F, selected=NULL)),
-                                       column(3,selectInput(inputId = "y_var3",label = "Y-Axis", choices = NULL, multiple = F,selected=NULL)),
-                                       column(3,selectInput(inputId = "col_var3",label = "Colour", choices = NULL, multiple = F,selected=NULL)),
-                                       column(3,selectInput(inputId = "size_var3",label = "Size", choices = NULL, multiple = F,selected=NULL))
+                                       column(3,selectInput(inputId = "x_var3",   label = "X-Axis", choices = NULL, multiple = F, selected=NULL)),
+                                       column(3,selectInput(inputId = "y_var3",   label = "Y-Axis", choices = NULL, multiple = F, selected=NULL)),
+                                       column(3,selectInput(inputId = "col_var3", label = "Colour", choices = NULL, multiple = F, selected=NULL)),
+                                       column(3,selectInput(inputId = "size_var3",label = "Size",   choices = NULL, multiple = F, selected=NULL))
                                      ),
                                      div(
                                        style = "display: inline-block; vertical-align: top; margin-right: 0px;",
@@ -456,22 +453,25 @@ ui <-
                                   radioButtons("limra_clust", "", choices = c("Yes", "No"), selected = "No")),
                               conditionalPanel(
                                 condition = "input.limra_clust == 'Yes'",
-                                sliderInput(inputId = "ran1", label= "Objective 1:",min = 0, max = 1, value = c(0,1), width = "110%"),
-                                sliderInput(inputId = "ran2", label= "Objective 2:",min = 0, max = 1, value = c(0,1), width = "110%"),
-                                sliderInput(inputId = "ran3", label= "Objective 3:",min = 0, max = 1, value = c(0,1), width = "110%"),
-                                sliderInput(inputId = "ran4", label= "Objective 4:",min = 0, max = 1, value = c(0,1), width = "110%")
+                                sliderInput(inputId = "ran1", label= "Objective 1:",min = 0, max = 1, value = c(0,100), width = "110%"),
+                                sliderInput(inputId = "ran2", label= "Objective 2:",min = 0, max = 1, value = c(0,100), width = "110%"),
+                                sliderInput(inputId = "ran3", label= "Objective 3:",min = 0, max = 1, value = c(0,100), width = "110%"),
+                                sliderInput(inputId = "ran4", label= "Objective 4:",min = 0, max = 1, value = c(0,100), width = "110%")
                                 
                               ),
+                              tags$div(textOutput("check_range"), style = "color: red;"),
+                              br(),
+                              br(),
                               
                               div(style = "text-align: left; font-size:150%; width: 100%;",
                                           "Would you like to alter the correlation and cluster settings or run with default settings?",
                                       radioButtons("show_tabs",label="",
-                                      choices = list("show Correlation Tabs" = "show", "run with default settings" = "default"), selected = "default")),
+                                      choices = list("show cluster tabs" = "show", "run with default settings" = "default"), selected = "default")),
                                       
                                       uiOutput("next_step"),
                                       withSpinner(
-                                        uiOutput("spinner_output"),  # This will show the spinner and the process finished message
-                                        type = 4  , color = "#F7A600"# Choose a spinner style (1 to 8)
+                                        uiOutput("spinner_output"),
+                                        type = 4  , color = "#F7A600"
                                       ))
                                     
                              ),
