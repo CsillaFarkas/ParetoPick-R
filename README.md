@@ -66,8 +66,11 @@ the project consists of six folders:
 # Assumptions
 * General
   * do the current default settings produce reasonable cluster outputs across all catchments?
-  * current default is missing file check
-  * full list of measures across all catchments needed for nswrm_priorities.csv, is this available centrally?
+  * currently default clustering is missing file check
+  * function for proper priorities needed, assigned according to measure_location$nswrm - see page 35 in deliverable 5.1 (esp. pond vs wetland)
+  * users should not produce optimisation outputs with values below 0, add a check and change pareto_fitness to all above 0, would mean overhaul of range_controlled()
+  * remove minus sign from sliders, where needed add imagery to explain good and bad
+
 
 * AHP
   * the initial state of the pairwise comparison as "Equal" amplifies the mathematical definition of inconsistency, therefore only when at least three sliders are NOT set to "Equal" is inconsistency considered at all
@@ -76,12 +79,14 @@ the project consists of six folders:
 # To do
 ## Content
 * Visualising tab:
-  * parallel axis - get selected line to plot as top layer
+  * parallel axis - get selected line to plot as top layer -- add points to line plot where selected (this could help to find the solution)
   * right color status quo
+  * add new sliders for measures - along share of area possible for this measure (similar to share_con), this probably requires a spinner in beginning
+  * catch R errors triggered by empty data frames better
 
 * Configure tab
   * finish option for limiting range and check for missing files
-
+ 
 * Correlation tab
   * output largest accepted correlation in bold over table/could also be part of default setting
   * (python: deviations_step is currently the default value) 
@@ -91,18 +96,18 @@ the project consists of six folders:
 
 * Analysis tab
   * this tab requires another name
-  * location of zoom in basin
 
+  
 * AHP and Analysis tabs
-  * sliders for measures (unclear how best represented though)
-  * option for reverse plotting to improve clarity in the presence of negative scales
+  * option for reverse plotting to improve clarity in the presence of negative scales (if possible only if X and Y Axis are <0)
   * better graphical representation of decison space across solutions:
+    * for selected point - plot the whole cluster as boxplot within the pareto front => which variable?
+    * share_con/linE - on y axis
     * frequency maps - produce during python call or based on button with Micha's R script and put in output
     * barplot of implemented measures per optimum
     * plot PCA variables against objectives
     * add line plot for solutions to improve tradeoff representation
     * find a way to select measures and analyse their density/combinations/areas in field
-    * is there a way to introduce sliders for measures like Dennis suggested?
     * representation of "most important" measures that are part of all pareto-optimal solutions
     * anonymous catchments something something
 
@@ -111,18 +116,17 @@ the project consists of six folders:
 ## Workflow
 * General
   * declutter app by removal of items that can instead be hovered (what could be moved there? --- unit, especially also in visualisation tab)
-  * AHP needs another visualisation - maybe each pair in different tab? 
+  * AHP needs another visualisation - each pair in different tab - only show results if inconsistency acceptable
   * convert_optain requires some failsafe controls for empty values
 
 * Visualising tab:
   * status quo plotted in the right color
   * tables are not super clear - add unit and show when hovered
-
+ 
 * Analysis tab
   * HTML download for measure implementation maps
   * no replotting when table is touched, that is so annoying
 
 * AHP
   * more reasonable representation of variables across different scales - we will need to test that with different datasets (currently just multiplied by 1000 if <0.005)
-  * can some of the crowded labels only be shown when hovered?
-  * add the option for rounding labels on sliders (potentially with decimals)
+  * keep ticks and remove labels on top (probably obsolete with restructure)
