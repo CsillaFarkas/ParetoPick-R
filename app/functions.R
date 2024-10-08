@@ -848,7 +848,7 @@ check_inconsistencies <- function(comparison_matrix, weights) {
     stringsAsFactors = FALSE
   )
   
-
+  
   for (i in 1:n) {
     for (j in 1:n) {
       for (k in 1:n) {
@@ -865,11 +865,11 @@ check_inconsistencies <- function(comparison_matrix, weights) {
       }
     }
   }
- 
-  ordered_inconsistencies <- inconsistencies[order(-inconsistencies$Level), ]
-  return(ordered_inconsistencies)
+  
+  ordered_i <- inconsistencies[order(-inconsistencies$Level), ]
+  ordered_i$Level = NULL
+  return(ordered_i)
 }
-
 
 #### Rescaling and matching Functions ####
 ## return the original value and the position of scaled value in the original dataset
@@ -1008,6 +1008,47 @@ get_mima = function(df){
   )
   
   return(min_max_df)
+}
+
+## check sliders and adapt var_corr_par accordingly
+check_sliders <- function(input_vals, default_vals, ranger = NULL) {  #input_vals as list made from input$ranx
+  touched <- sapply(1:4, function(s) {
+    !all(input_vals[[s]] == default_vals[[s]])
+  })
+  
+  
+  if (any(touched)) {
+    #check which var_corr_par are available, if previously touched take fresh one, store it, change it and safe it under new name
+    if (file.exists("../input/var_corr_par_bu.csv")) {
+      whole = read.csv("../input/var_corr_par_bu.csv", check.names = F)
+    } else{#if never been reduced we read in original and create back up
+      whole = read.csv("../input/var_corr_par.csv", check.names = F)
+      write.csv(whole, file = "../input/var_corr_par_bu.csv", row.names = F) #now its changed a backup is needed
+    }
+    
+    trs = whole
+    
+    if (!is.null(ranger)) {
+      indics <- which(names(trs) %in% ranger)
+    }else{indics = NULL}
+    
+    for (k in which(touched)) {
+      valma = input_vals[[k]][2]
+      valmi = input_vals[[k]][1]
+      
+      if (k %in% indics) {
+       valma = valma / 1000
+       valmi = valmi / 1000
+      }
+      trs =  trs %>% filter(trs[[k]] <= valma & trs[[k]] >= valmi)
+    }
+    
+   
+    
+    write.csv(trs,file="../input/var_corr_par.csv",row.names = F)
+    
+  } else{return(NULL)}
+  
 }
 
 ## remove minus (required for nicer plotting)
