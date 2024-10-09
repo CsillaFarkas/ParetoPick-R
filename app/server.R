@@ -54,7 +54,7 @@ server <- function(input, output, session) {
   #results table
   check_files<- reactiveVal(NULL)
   sols <- reactiveVal()
-  
+  sols2 <- reactiveVal()
   #catchment shapes
   cm <- reactiveVal()
   needs_buffer <- reactiveVal()
@@ -74,7 +74,12 @@ server <- function(input, output, session) {
   #figure in analysis rendering
   is_rendering <- reactiveVal(FALSE)
   default_running <- reactiveVal(NULL)#spinner in configure tab
+  
   ### Introduction ####
+  if (file.exists("../input/var_corr_par_bu.csv")) { #if back up exists, the original needs replacing
+    file.remove("../input/var_corr_par.csv")
+    file.rename("../input/var_corr_par_bu.csv", "../input/var_corr_par.csv")
+    }
   
   ### Play Around Tab ####
   
@@ -888,13 +893,13 @@ server <- function(input, output, session) {
       observe({
         req(fit(), input$ran1, range_controlled(),initial_update_done$initial)
         df = match_abs(
-          minval = c(input$ran1[1], input$ran2[1], input$ran3[1], input$ran4[1]),
-          maxval = c(input$ran1[2], input$ran2[2], input$ran3[2], input$ran4[2]),
-          abs_tab = fit(),
-          ranger = range_controlled()
-        )
+                      minval = c(input$ran1[1], input$ran2[1], input$ran3[1], input$ran4[1]),
+                      maxval = c(input$ran1[2], input$ran2[2], input$ran3[2], input$ran4[2]),
+                      abs_tab = fit(),
+                      ranger = range_controlled()
+                      )
         if (nrow(df) == 0 || ncol(df) == 0) {
-          output$check_range <- renderText({
+            output$check_range <- renderText({
             paste("None of the points fulfill these criteria. Please select different data ranges!")
           })
         }else{output$check_range <- renderText({paste("")})}
@@ -905,12 +910,13 @@ server <- function(input, output, session) {
         shinydashboard::updateTabItems(session, "tabs", "correlation_analysis")
       })
       
-      #default correlation/cluster run
+      ##default correlation/cluster run
       observeEvent(input$run_defaults, {
-        #MISSING check for missing files 
+        if(is.null(corr_file_check())){
+       
         output$spinner_progress <- renderText({ "Clustering is running, please wait..." })
         
-        default_running(TRUE)
+        default_running(TRUE) #for spinner
         req(input$selements)
         all_var <<- readRDS("../input/all_var.RDS")
         
@@ -918,6 +924,8 @@ server <- function(input, output, session) {
         
         check_align()#run a short check if all var_corr_par are in ini (sometimes they don't pass convert_optain) 
         
+        check_sliders(input_vals=list(input$ran1,input$ran2,input$ran3,input$ran4), #rewrite var_corr_par if sliders have moved
+                      default_vals= default_vals(),ranger = range_controlled())
         ## run correlation
           py_script <- "../python_files/correlation_matrix.py"
           cmd <- paste("python", py_script)
@@ -944,7 +952,9 @@ server <- function(input, output, session) {
          result = system(cmd,intern=TRUE)
         
          default_running(FALSE) 
-         
+        }else{output$corr_notthere_config <- renderText({corr_file_check()}) #default not run when there are files missing
+        }
+        
       })
      
       output$spinner_output <- renderUI({
@@ -959,8 +969,7 @@ server <- function(input, output, session) {
    
       
   ### Correlation Analysis ####
-      
-      observeEvent(input$tabs == "correlation_analysis", {
+      corr_file_check = function(){
         required_files <- c(
           "../data/pareto_genomes.txt",
           "../data/hru.con",
@@ -982,8 +991,9 @@ server <- function(input, output, session) {
           shinyjs::hide(id = "corr_sidebar")
           neednames = ""
           whatsmissing = ""
-          output$corr_notthere <- renderText({
-            missing_files = required_files[!checkFiles]
+          
+         
+        missing_files = required_files[!checkFiles]
             if ("../input/object_names.RDS" %in% missing_files && length(missing_files) != 1) {
               whatsmissing = "The following file(s) are missing and have to be provided in the Data Prep tab:<br/>"
               
@@ -1010,15 +1020,20 @@ server <- function(input, output, session) {
               
             }
             
-            HTML(paste(
+            return(HTML(paste(
               whatsmissing,
               paste(sub('../data/', '', missing_files), collapse = "<br/> "), "<br/> ",neednames
-            ))
-          })
+            )))
+         
         }else{ shinyjs::show(id = "corr_content")
           shinyjs::show(id = "corr_sidebar")
-          shinyjs::hide(id = "corr_notthere")}
-      })
+          shinyjs::hide(id = "corr_notthere")
+          return(NULL)}
+      } 
+      
+      observeEvent(input$tabs == "correlation_analysis", {
+        output$corr_notthere <- renderText({corr_file_check()})
+      }) 
       
       
       ## actual CORRELATION tab
@@ -1164,7 +1179,7 @@ server <- function(input, output, session) {
     }
     
     if(!file.exists("../input/object_names.RDS")) {
-      choices = "Please select objectives in Data Preparation Tab"
+      choices = "Please set the objective names in the Data Preparation Tab"
     } else{
       choices = readRDS("../input/object_names.RDS")
     }
@@ -1302,6 +1317,10 @@ server <- function(input, output, session) {
     
     ## prepare config.ini
     write_corr(pca_content = pca_content,pca=T, cor_analysis = F)# columns
+    
+    #rewrite var_corr_par if sliders have moved (user coming straight to this tab w/o using correlation)
+    check_sliders(input_vals=list(input$ran1,input$ran2,input$ran3,input$ran4), 
+                  default_vals= default_vals(),ranger = range_controlled())
     
     # command to run the Python script
     if(input$pcamethod=="k-means"){pca_script <- "../python_files/kmeans.py"}else{pca_script <- "../python_files/kmedoid.py"}
@@ -1458,10 +1477,17 @@ server <- function(input, output, session) {
                  select(1:5) %>% #PCA content is hard to read/limited additional value for user
                  rename_with(~new_col_sol,everything()))
           
+          
+          
+          sols2(sols_data %>% rownames_to_column("optimum") %>%  #for boxplot the whole thing is needed
+                  rename_with(~new_col_sol,1:5))
+          
         }else{
           sols(data.frame(Message = "something went wrong - has the PCA run properly?"))
           # shinyjs::hide(id="plt_opti")
         }
+      
+      
         output$antab <- renderDT({
           req(sols())
 
@@ -1506,7 +1532,35 @@ server <- function(input, output, session) {
       }
     }
     
-    output$par_plot_optima <- renderPlot({ clus_res_plt()  }) 
+    clus_dis_plt = function(){
+      req(objectives(),sols(), sols2(), fit())
+      
+      if(!is.null(input$antab_rows_selected)){
+        
+        mima = get_mima(fit())
+        
+        selected_row <- input$antab_rows_selected
+        selected_data <- sols()[selected_row,]   #sols not sols2, this is only one point
+        
+        clus_one <- sols2()[sols2()$optimum == selected_data$optimum,]
+        clus_all <- sols2()[sols2()$Cluster == clus_one$Cluster,]
+        
+        return(
+          grid.arrange(grobs=plt_boxpl_clus(dat=clus_all, all_obs=objectives()), ncol = 4, width=c(1,1,1,1)))
+        
+        
+      }else{selected_data <- NULL} #requires different output, maybe just empty boxplots with limits of the whole front
+    }
+    
+    
+    observeEvent(input$show_boxplot,{
+      if (input$show_boxplot) { #switch between plots
+      output$par_plot_optima <- renderPlot({clus_dis_plt()})
+    } else{
+      output$par_plot_optima <- renderPlot({clus_res_plt()})
+    }
+    })
+     
     
     output$download_clus_plot <- downloadHandler(
       filename = function() {
