@@ -66,7 +66,6 @@ the project consists of six folders:
 # Assumptions
 * General
   * do the current default settings produce reasonable cluster outputs across all catchments?
-  * currently default clustering is missing file check
   * function for proper priorities needed, assigned according to measure_location$nswrm - see page 35 in deliverable 5.1 (esp. pond vs wetland)
   * users should not produce optimisation outputs with values below 0, add a check and change pareto_fitness to all above 0, would mean overhaul of range_controlled()
   * remove minus sign from sliders, where needed add imagery to explain good and bad
@@ -79,7 +78,6 @@ the project consists of six folders:
 # To do
 ## Content
 * Visualising tab:
-  * parallel axis - get selected line to plot as top layer -- add points to line plot where selected (this could help to find the solution)
   * right color status quo
   * add new sliders for measures - along share of area possible for this measure (similar to share_con), this probably requires a spinner in beginning
   * catch R errors triggered by empty data frames better
@@ -90,9 +88,6 @@ the project consists of six folders:
 * Correlation tab
   * output largest accepted correlation in bold over table/could also be part of default setting
   * (python: deviations_step is currently the default value) 
-
-* Cluster tab
-  * add possibility to limit range before clustering (where?), this is also useful for new default clustering
 
 * Analysis tab
   * this tab requires another name
