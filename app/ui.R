@@ -469,6 +469,7 @@ ui <-
                                       choices = list("show cluster tabs" = "show", "run with default settings" = "default"), selected = "default")),
                                       
                                       uiOutput("next_step"),
+                                      uiOutput("corr_notthere_config"), 
                                       withSpinner(
                                         uiOutput("spinner_output"),
                                         type = 4  , color = "#F7A600"
@@ -680,7 +681,8 @@ ui <-
                            htmlOutput("tabtext"),
                            fluidRow(
                              column(6, div(style = "overflow-x: auto;", DTOutput("antab"))),
-                             column(6, plotOutput("par_plot_optima"),
+                             column(6, checkboxInput("show_boxplot",label="show cluster distribution instead",value=FALSE),
+                                    plotOutput("par_plot_optima"),
                                     checkboxInput("add_whole", label = "Show the whole Pareto front", value = FALSE),
                                     checkboxInput("add_sq",label = "Show status quo",value = FALSE),
                                     
