@@ -5,7 +5,6 @@
 ####################################################################
 
 #### Correlation Analysis Functions ####
-
 ## correlation plot
 plt_corr = function(corr,labelcol = "black",labelorder='alphabet',meth = 'square', tpe = 'lower'){
 corma = as.matrix(corr)
@@ -448,6 +447,50 @@ plt_sel = function(opti_sel, shp){
   plt_sel = st_make_valid(plt_sel) # too slow annoyingly
   return(plt_sel)
 }
+## plot boxplots
+plt_boxpl_clus = function(dat, sel, all_obs){
+  clus <- dat %>%
+    pivot_longer(
+      cols = 2:5
+    )
+  
+  plts=list()
+  
+  summ <- clus %>%
+    group_by(name) %>%
+    summarize(n = n())
+  
+  colli = c( "#FFC61E", "#009ADE","#AF58BA", "#F28522")
+  labs = length((unique(clus$optimum)))
+  
+  for(i in 1:4){
+    
+    coll = colli[i]
+    
+    mini = mima[i,2]
+    maxi = mima[i,3]
+    labspo =median(clus[clus$name == all_obs[i], ]$value)
+    
+    p =ggplot(clus[clus$name == all_obs[i], ], aes(x = name, y = value)) +
+      geom_violin(fill = coll) +
+      ylim(mini, maxi)+ 
+      theme_bw() + theme(
+        panel.background = element_blank(),
+        panel.grid.major = element_line(color = "lightgray", size = 0.3),
+        panel.grid.minor = element_blank(),
+        panel.border = element_blank(),
+        axis.text.y = element_text(size=9),
+        axis.text.x = element_text(size = 12),
+        axis.title = element_blank(),
+        legend.position = "none"
+      )+
+      annotate("text",x=1, y=labspo, label =labs )
+    
+    plts[[i]] = p
+  }
+  return(plts)
+}
+
 
 ## plot leaflet w/ specific column
 plt_lf <- function(data, mes, lo, la, buff_els, col_sel) {
@@ -582,7 +625,7 @@ plot_parline = function(datt,sizz=rep(.5, length(unique(datt$id))),colols=rep("g
   sizz <- c(sizz,  .5)
  
   }
-    
+   
   pl1 <- ggplot(datt, aes(x = name, y = value,group=id,size=id, color=id)) +   # group = id is important!
     
       annotate("rect", xmin=1, xmax=4, ymin=0,    ymax=0.3333333, alpha=0.1, fill="#dc3545") +
@@ -613,9 +656,11 @@ plot_parline = function(datt,sizz=rep(.5, length(unique(datt$id))),colols=rep("g
     scale_size_manual(values = sizz) +
     scale_color_manual(values = colols)+
     coord_cartesian(clip = "off") #prevent labels to be cut off
- 
-    
   
+  if("#FF5666" %in% colols){ #double the trouble, triple the fun
+   ids= which(colols != "grey50") 
+  pl1 = pl1 + geom_line(data=datt[which(datt$id %in% ids),],aes(x = name, y = value),color = "#FF5666", size=1)
+    }
   return(pl1)
   
 }
@@ -1028,7 +1073,7 @@ check_sliders <- function(input_vals, default_vals, ranger = NULL) {  #input_val
     
     trs = whole
     
-    if (!is.null(ranger)) {
+    if (!is.null(ranger)) {#basically what match_abs is doing too plus more columns
       indics <- which(names(trs) %in% ranger)
     }else{indics = NULL}
     
