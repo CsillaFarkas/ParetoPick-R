@@ -681,7 +681,8 @@ ui <-
                            htmlOutput("tabtext"),
                            fluidRow(
                              column(6, div(style = "overflow-x: auto;", DTOutput("antab"))),
-                             column(6, checkboxInput("show_boxplot",label="show cluster distribution instead",value=FALSE),
+                             column(6,tags$div(textOutput("check_default"), style = "color: red;"), 
+                                    checkboxInput("show_boxplot",label="show cluster distribution instead",value=FALSE),
                                     plotOutput("par_plot_optima"),
                                     checkboxInput("add_whole", label = "Show the whole Pareto front", value = FALSE),
                                     checkboxInput("add_sq",label = "Show status quo",value = FALSE),
