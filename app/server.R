@@ -1483,6 +1483,27 @@ server <- function(input, output, session) {
           sols2(sols_data %>% rownames_to_column("optimum") %>%  #for boxplot the whole thing is needed
                   rename_with(~new_col_sol[1:5],1:5))
           
+          observe({ #check for cluster quality (especially helpful in default runs)
+            #find largest cluster and calculate its ratio in whole set
+            crat = round(max(sols()[["cluster size"]])/nrow(sols()),2)
+            wc = sols()%>%select(optimum,`cluster size`)%>%
+              filter(`cluster size` == max(`cluster size`)) %>% pull(optimum)
+            
+            #calculate number of 1 - point clusters 
+            n1clu = sols()%>%dplyr::filter(`cluster size`==1)%>%nrow()
+            
+            #calculate share of these small cluster in cluster number (make dynamic as we might change that)
+            n1clu=round((n1clu/length(unique(sols2()$Cluster)))*100,2)
+            
+            if(n1clu > 60){
+              paste0("There is a high share (",n1clu,") of clusters with only one optimum, you might want to 
+                    rerun the clustering with different settings.")
+            }else if(crat>30){
+            #if clause with OR if fulfilled, else NULL
+            output$check_default <- renderText({paste0("A high share of points (",crat,") has been assigned to a single 
+                                                       cluster (representative point optimum ",wc,"), you might want to rerun the clustering with different settings.")})}
+          })
+          
         }else{
           sols(data.frame(Message = "something went wrong - has the PCA run properly?"))
           # shinyjs::hide(id="plt_opti")
