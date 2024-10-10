@@ -448,7 +448,7 @@ plt_sel = function(opti_sel, shp){
   return(plt_sel)
 }
 ## plot boxplots
-plt_boxpl_clus = function(dat, sel, all_obs){
+plt_boxpl_clus = function(dat, sel, all_obs,mima){
   clus <- dat %>%
     pivot_longer(
       cols = 2:5
@@ -456,14 +456,14 @@ plt_boxpl_clus = function(dat, sel, all_obs){
   
   plts=list()
   
-  summ <- clus %>%
-    group_by(name) %>%
-    summarize(n = n())
+  # summ <- clus %>%
+  #   group_by(name) %>%
+  #   summarize(n = n())
   
   colli = c( "#FFC61E", "#009ADE","#AF58BA", "#F28522")
   labs = length((unique(clus$optimum)))
   
-  for(i in 1:4){
+  for(i in 1:length(all_obs)){
     
     coll = colli[i]
     
@@ -697,7 +697,11 @@ plt_sc = function(dat, ranges,col=rep("grey",nrow(dat)),size=rep(1.8, nrow(dat))
           axis.title = element_text(size = 16)
         ) +  coord_cartesian(clip = "off") #prevent labels to be cut off
  
-     
+     if("#FF5666" %in% col){
+       ids= which(col == "#FF5666") 
+       
+       p = p + geom_point(data=dat[ids,], aes(x = .data[[xcol]], y= .data[[ycol]]), color="#FF5666", size=2.3)
+     }
       
       
       #correct for negative scale aesthetics
