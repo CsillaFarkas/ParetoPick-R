@@ -294,6 +294,7 @@ ui <-
                                  div(id = "tab_play1",div("Pareto Plot", style = "text-align: left; font-size:150%"),
                                      plotOutput("first_pareto"), 
                                      checkboxInput("add_sq_f",label = "Show status quo",value = FALSE),
+                                     div(id="rev_plot",checkboxInput("rev_box",label="reverse x and y axes"))%>%hidden(),
                                      fluidRow(
                                        column(3,selectInput(inputId = "x_var3",   label = "X-Axis", choices = NULL, multiple = F, selected=NULL)),
                                        column(3,selectInput(inputId = "y_var3",   label = "Y-Axis", choices = NULL, multiple = F, selected=NULL)),
