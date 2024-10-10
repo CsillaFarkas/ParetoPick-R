@@ -311,6 +311,11 @@ server <- function(input, output, session) {
     })
     ## pareto plot on top
     
+    observe({
+      if(all(fit()[[input$x_var3]]<=0) && 
+         all(fit()[[input$y_var3]]<=0)){shinyjs::show("rev_plot")}else{shinyjs::hide("rev_plot")}
+    })
+    
     first_pareto_fun = function(){
       req(f_scaled(),objectives(),fit(),input$obj1,input$x_var3)
       #match scaled input with unscaled fit() to create dat
