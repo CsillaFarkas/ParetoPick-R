@@ -455,11 +455,7 @@ plt_boxpl_clus = function(dat, sel, all_obs,mima){
     )
   
   plts=list()
-  
-  # summ <- clus %>%
-  #   group_by(name) %>%
-  #   summarize(n = n())
-  
+
   colli = c( "#FFC61E", "#009ADE","#AF58BA", "#F28522")
   labs = length((unique(clus$optimum)))
   
@@ -470,7 +466,23 @@ plt_boxpl_clus = function(dat, sel, all_obs,mima){
     mini = mima[i,2]
     maxi = mima[i,3]
     labspo =median(clus[clus$name == all_obs[i], ]$value)
-    
+    if(nrow(clus[clus$name == all_obs[i],])==1){
+      
+      p = ggplot(clus[clus$name == all_obs[i], ])+
+        geom_point(color=coll, aes(x = name, y = value),size=4) +
+        ylim(mini, maxi)+ 
+        theme_bw() + theme(
+          panel.background = element_blank(),
+          panel.grid.major = element_line(color = "lightgray", size = 0.3),
+          panel.grid.minor = element_blank(),
+          panel.border = element_blank(),
+          axis.text.y = element_text(size=9),
+          axis.text.x = element_text(size = 12),
+          axis.title = element_blank(),
+          legend.position = "none"
+        )+
+        annotate("text",x=1, y=labspo, label =labs ,size=6)
+    }else{
     p =ggplot(clus[clus$name == all_obs[i], ], aes(x = name, y = value)) +
       geom_violin(fill = coll) +
       ylim(mini, maxi)+ 
@@ -485,7 +497,7 @@ plt_boxpl_clus = function(dat, sel, all_obs,mima){
         legend.position = "none"
       )+
       annotate("text",x=1, y=labspo, label =labs )
-    
+    }
     plts[[i]] = p
   }
   return(plts)
