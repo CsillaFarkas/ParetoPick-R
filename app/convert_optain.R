@@ -319,10 +319,9 @@ for(op in paste0("V", 1:nopt)){ #instable looping, Cordi...
     rename_at(vars(meas),~paste0(., "_share_tot"))%>%mutate(id = row_number())
  
   ## share in implemented catchment area
-  share_con = arre %>% mutate(allarea = rowSums(across(everything()), na.rm =T))%>%
-    mutate(across(.cols = 1:length(meas),~ (.x/allarea)*100)) %>%select(-allarea)%>%
+  share_con = apply(arre,2,function(x) (x/max(x))*100)%>%as.data.frame()%>%
     rename_at(vars(meas),~paste0(., "_share_con"))%>%mutate(id = row_number())
-
+  
   ## merge with pareto fitness, # the first row is optimum V1
   fit = read.table("../data/pareto_fitness.txt", header=F,stringsAsFactors=FALSE,sep = ',')
   yolo = readRDS("../input/object_names.RDS")
