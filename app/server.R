@@ -562,7 +562,7 @@ server <- function(input, output, session) {
     if(!is.null(er())){
       rom = which(apply(scat_abs, 1, function(row) all(row == er())))
       col = rep("grey",nrow(scat_abs))
-      col[rom] = "red"
+      col[rom] = "#FF5666"
       sizz = rep(2.5, nrow(scat_abs))
       sizz[rom] = 3
     }else{col = rep("grey",nrow(scat_abs))
@@ -1470,17 +1470,18 @@ server <- function(input, output, session) {
           
           sols_data = read.csv(current_py_out)
           
-          new_col_sol = c("optimum", objectives())
+          new_col_sol = c("optimum", objectives(),"cluster size")
           
           sols(sols_data %>% rownames_to_column("optimum") %>%
+                 group_by(Cluster)%>%mutate(cluster_size = n())%>%ungroup()%>%
                  dplyr::filter(!is.na(Representative_Solution)& Representative_Solution != "" & Representative_Solution != "outlier") %>% 
-                 select(1:5) %>% #PCA content is hard to read/limited additional value for user
+                 select(1:5,cluster_size) %>% #PCA content is hard to read/limited additional value for user
                  rename_with(~new_col_sol,everything()))
           
           
           
           sols2(sols_data %>% rownames_to_column("optimum") %>%  #for boxplot the whole thing is needed
-                  rename_with(~new_col_sol,1:5))
+                  rename_with(~new_col_sol[1:5],1:5))
           
         }else{
           sols(data.frame(Message = "something went wrong - has the PCA run properly?"))
@@ -1543,10 +1544,11 @@ server <- function(input, output, session) {
         selected_data <- sols()[selected_row,]   #sols not sols2, this is only one point
         
         clus_one <- sols2()[sols2()$optimum == selected_data$optimum,]
+        
         clus_all <- sols2()[sols2()$Cluster == clus_one$Cluster,]
         
         return(
-          grid.arrange(grobs=plt_boxpl_clus(dat=clus_all, all_obs=objectives()), ncol = 4, width=c(1,1,1,1)))
+          grid.arrange(grobs=plt_boxpl_clus(dat=clus_all, all_obs=objectives(),mima=mima), ncol = 4, width=c(1,1,1,1)))
         
         
       }else{selected_data <- NULL} #requires different output, maybe just empty boxplots with limits of the whole front
