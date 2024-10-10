@@ -66,10 +66,9 @@ the project consists of six folders:
 # Assumptions
 * General
   * do the current default settings produce reasonable cluster outputs across all catchments?
-  * function for proper priorities needed, assigned according to measure_location$nswrm - see page 35 in deliverable 5.1 (esp. pond vs wetland)
+  * dynamic priority allocaiton according to measure_location$nswrm - see page 35 in deliverable 5.1 (esp. pond vs wetland)
   * users should not produce optimisation outputs with values below 0, add a check and change pareto_fitness to all above 0, would mean overhaul of range_controlled()
   * remove minus sign from sliders, where needed add imagery to explain good and bad
-
 
 * AHP
   * the initial state of the pairwise comparison as "Equal" amplifies the mathematical definition of inconsistency, therefore only when at least three sliders are NOT set to "Equal" is inconsistency considered at all
@@ -96,7 +95,6 @@ the project consists of six folders:
 * AHP and Analysis tabs
   * option for reverse plotting to improve clarity in the presence of negative scales (if possible only if X and Y Axis are <0)
   * better graphical representation of decison space across solutions:
-    * for selected point - plot the whole cluster as boxplot within the pareto front => which variable?
     * share_con/linE - on y axis
     * frequency maps - produce during python call or based on button with Micha's R script and put in output
     * barplot of implemented measures per optimum
