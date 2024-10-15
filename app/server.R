@@ -327,7 +327,7 @@ server <- function(input, output, session) {
       return(plt_sc_optima(dat=dat,    x_var = input$x_var3,
                     y_var = input$y_var3,
                     col_var = input$col_var3,
-                    size_var = input$size_var3, status_q = input$add_sq_f,an_tab=T))
+                    size_var = input$size_var3, status_q = input$add_sq_f,an_tab=T, rev = input$rev_box))
       
       
     }
@@ -1427,6 +1427,10 @@ server <- function(input, output, session) {
     updateSelectInput(session, "col_var2", choices = choices, selected = preselected[3])
     updateSelectInput(session, "size_var2",choices = choices, selected = preselected[4])
     
+    observe({
+      if(all(fit()[[input$x_var2]]<=0) && 
+         all(fit()[[input$y_var2]]<=0)){shinyjs::show("rev_plot2")}else{shinyjs::hide("rev_plot2")}
+    })
     
     clus_out <- list.files(path = output_dir, pattern = "clusters_representativesolutions.*\\.csv$", full.names = TRUE)
     
@@ -1554,7 +1558,8 @@ server <- function(input, output, session) {
           sel_tab = selected_data,
           add_whole = input$add_whole,
           an_tab = T,
-          status_q = input$add_sq
+          status_q = input$add_sq,
+          rev = input$rev_box2
         ))
       }
     }
@@ -1566,18 +1571,18 @@ server <- function(input, output, session) {
         
         mima = get_mima(fit())
         
-        selected_row <- input$antab_rows_selected
+        selected_row <- tail(input$antab_rows_selected,n=1) #take only row that was selected last
         selected_data <- sols()[selected_row,]   #sols not sols2, this is only one point
         
         clus_one <- sols2()[sols2()$optimum == selected_data$optimum,]
         
         clus_all <- sols2()[sols2()$Cluster == clus_one$Cluster,]
-        
+       print( head(clus_all))
         return(
           grid.arrange(grobs=plt_boxpl_clus(dat=clus_all, all_obs=objectives(),mima=mima), ncol = 4, width=c(1,1,1,1)))
         
         
-      }else{selected_data <- NULL} #requires different output, maybe just empty boxplots with limits of the whole front
+      }else{selected_data <- NULL} 
     }
     
     
