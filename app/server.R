@@ -1479,12 +1479,12 @@ server <- function(input, output, session) {
           
           sols_data = read.csv(current_py_out)
           
-          new_col_sol = c("optimum", objectives(),"cluster size")
+          new_col_sol = c("optimum", objectives(),"cluster size","cluster number")
           
           sols(sols_data %>% rownames_to_column("optimum") %>%
                  group_by(Cluster)%>%mutate(cluster_size = n())%>%ungroup()%>%
                  dplyr::filter(!is.na(Representative_Solution)& Representative_Solution != "" & Representative_Solution != "outlier") %>% 
-                 select(1:5,cluster_size) %>% #PCA content is hard to read/limited additional value for user
+                 select(1:5,cluster_size, Cluster) %>% #PCA content is hard to read/limited additional value for user
                  rename_with(~new_col_sol,everything()))
           
           
@@ -1528,7 +1528,9 @@ server <- function(input, output, session) {
         })
       })
      
+    ##three functions for output$par_plot_optima, depending on which checkbox is ticked
     
+    #1 default
     clus_res_plt = function(){
       req(objectives(),sols(), input$x_var2)
       
@@ -1539,14 +1541,14 @@ server <- function(input, output, session) {
                                  "representative solutions" or both ')))
       }else{
         req(objectives(),sols())
-        sol<<-sols()[,objectives()]
+        sol<<-sols()[,c(objectives(),"cluster number")]
         
         
         if(!is.null(input$antab_rows_selected)){
           
           selected_row <- input$antab_rows_selected
           selected_data <- sols()[selected_row,]
-          
+       
         }else{selected_data <- NULL}
         
       return(plt_sc_optima(
@@ -1564,6 +1566,7 @@ server <- function(input, output, session) {
       }
     }
     
+    #2 within-cluster
     clus_dis_plt = function(){
       req(objectives(),sols(), sols2(), fit())
       
@@ -1577,7 +1580,7 @@ server <- function(input, output, session) {
         clus_one <- sols2()[sols2()$optimum == selected_data$optimum,]
         
         clus_all <- sols2()[sols2()$Cluster == clus_one$Cluster,]
-       print( head(clus_all))
+       
         return(
           grid.arrange(grobs=plt_boxpl_clus(dat=clus_all, all_obs=objectives(),mima=mima), ncol = 4, width=c(1,1,1,1)))
         
@@ -1585,13 +1588,38 @@ server <- function(input, output, session) {
       }else{selected_data <- NULL} 
     }
     
-    
-    observeEvent(input$show_boxplot,{
-      if (input$show_boxplot) { #switch between plots
-      output$par_plot_optima <- renderPlot({clus_dis_plt()})
-    } else{
-      output$par_plot_optima <- renderPlot({clus_res_plt()})
+    #3 - share_con per measure
+    clus_share_con_plt = function(){
+      req(objectives(),sols(), sols2(), fit())
+      
+      if(!is.null(input$antab_rows_selected)){
+        
+        mima = get_mima(fit())
+        
+        selected_row <- input$antab_rows_selected #limit to four optima
+        selected_data <- sols()[selected_row,]  
+        
+        clus_one <- sols2()[sols2()$optimum %in% selected_data$optimum,]
+        
+        clus_all <<- sols2()[sols2()$Cluster %in% clus_one$Cluster,]
+        
+        return(plt_share_con(dat = clus_all))
+        
+      }else{selected_data <- NULL} 
     }
+    
+    #switch between plots/functions
+    observeEvent(list(input$show_boxplot, input$show_share_con), {
+      if (input$show_boxplot) {
+        output$par_plot_optima <- renderPlot({clus_dis_plt()})
+        
+      } else if (input$show_share_con) {
+        output$par_plot_optima <- renderPlot({clus_share_con_plt()})
+        
+      } else{
+        #default
+        output$par_plot_optima <- renderPlot({clus_res_plt()})
+      }
     })
      
     
@@ -1983,7 +2011,7 @@ server <- function(input, output, session) {
       
       return(plt_sc_optima(dat=df,x_var=input$x_var,y_var=input$y_var,
                     col_var=input$col_var,size_var=input$size_var,high_point=bo,extra_dat = sol,
-                    plt_extra = input$show_extra_dat, status_q = input$show_status_quo,an_tab = T))
+                    plt_extra = input$show_extra_dat, status_q = input$show_status_quo,an_tab = F))
     }
     
   output$weights_plot <- renderPlot({  weight_plt_fun() })
