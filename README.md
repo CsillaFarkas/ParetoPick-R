@@ -77,13 +77,13 @@ the project consists of six folders:
 # To do
 ## Content
 * Visualising tab:
-  * right color status quo
   * add new sliders for measures - along share of area possible for this measure (similar to share_con), this probably requires a spinner in beginning
   * catch R errors triggered by empty data frames better
 
 * Configure tab
   * finish option for limiting range and check for missing files
- 
+  * add widest range function to config writing for it to work in python
+
 * Correlation tab
   * output largest accepted correlation in bold over table/could also be part of default setting
   * (python: deviations_step is currently the default value) 
@@ -93,9 +93,8 @@ the project consists of six folders:
 
   
 * AHP and Analysis tabs
-  * option for reverse plotting to improve clarity in the presence of negative scales (if possible only if X and Y Axis are <0)
   * better graphical representation of decison space across solutions:
-    * share_con/linE - on y axis
+    * linE - on y axis
     * frequency maps - produce during python call or based on button with Micha's R script and put in output
     * barplot of implemented measures per optimum
     * plot PCA variables against objectives
@@ -113,7 +112,6 @@ the project consists of six folders:
   * convert_optain requires some failsafe controls for empty values
 
 * Visualising tab:
-  * status quo plotted in the right color
   * tables are not super clear - add unit and show when hovered
  
 * Analysis tab
