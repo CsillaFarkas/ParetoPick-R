@@ -447,6 +447,7 @@ plt_sel = function(opti_sel, shp){
   plt_sel = st_make_valid(plt_sel) # too slow annoyingly
   return(plt_sel)
 }
+
 ## plot boxplots
 plt_boxpl_clus = function(dat, sel, all_obs,mima){
   clus <- dat %>%
@@ -754,7 +755,8 @@ plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NUL
                           plt_extra=F, #potentially redundant tbf
                           sel_tab = NULL, #highlight table selection Analysis tab
                           add_whole = F, #add the whole pareto front Analysis tab
-                          status_q = FALSE) {
+                          status_q = FALSE,
+                          rev = FALSE) {
   
   if(!file.exists(pareto_path)){return(NULL)}
   
@@ -827,59 +829,23 @@ plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NUL
               )
   }
  
-  #correct for negative scale aesthetics
-  if (any(dat[[x_var]] < 0) && !(an_tab)) {
-    p <- p + scale_x_continuous(labels = function(x) {
-      rem_min(x)
-    })
-    xma = " (inverted scale!)"
-  }
-  
-  if (any(dat[[y_var]] < 0)&& !(an_tab)) {
-    p <- p + scale_y_continuous(labels = function(y) {
-      rem_min(y)
-    })
-    yma = " (inverted scale!)"
-    
-  }
-  
   #Analysis tab requires control of limits to show selection as part of whole front
   if(an_tab){
     
-    #pull fit(), establish limits
+    # #pull fit(), establish limits
     whole <- read.table(pareto_path, header = FALSE, stringsAsFactors = FALSE, sep = ',')
     colnames(whole) <- colnames(dat)
-    
-    #control for negative data
-    #both negative
-    if(any(dat[[x_var]] < 0) && any(dat[[y_var]] < 0)){
-      
-      p <- p + scale_x_continuous(labels = function(x) {rem_min(x)},
-                                  limits= c(range(whole[[x_var]])[1],range(whole[[x_var]])[2]))+
-               scale_y_continuous(labels = function(y) {rem_min(y)},
-                                  limits= c(range(whole[[y_var]])[1],range(whole[[y_var]])[2]))
-      
-      yma = " (inverted scale!)"
-      xma = " (inverted scale!)"
-      
-      #only y_scale
-     }else if(any(dat[[y_var]] < 0)){
-       
-       p <- p + scale_y_continuous(labels = function(y) {rem_min(y)},
-                                   limits= c(range(whole[[y_var]])[1],range(whole[[y_var]])[2]))
-       
-       yma = " (inverted scale!)"
-       
-      #only x_scale
-     }else if(any(dat[[x_var]] < 0)){ 
-       p <- p + scale_x_continuous(labels = function(x) {rem_min(x)},
-                                   limits= c(range(whole[[x_var]])[1],range(whole[[x_var]])[2]))
-       xma = " (inverted scale!)"
-       
-       #neither
-     }else{p <- p + scale_x_continuous(limits= c(range(whole[[x_var]])[1],range(whole[[x_var]])[2]))+
-      scale_y_continuous(limits= c(range(whole[[y_var]])[1],range(whole[[y_var]])[2])) }
-  }
+    # 
+ 
+    p <- p + scale_x_continuous(limits= c(range(whole[[x_var]])[1],range(whole[[x_var]])[2]))+
+      scale_y_continuous(limits= c(range(whole[[y_var]])[1],range(whole[[y_var]])[2]))
+    }
+
+  
+  if(rev){
+    yma = xma = " (inverted scale!)"
+    p = p+scale_y_reverse(labels = function(y) {rem_min(y)})+scale_x_reverse(labels = function(x) {rem_min(x)})}
+  
   
   p = p +labs(x=paste0(x_var,xma), y = paste0(y_var,yma))
   
