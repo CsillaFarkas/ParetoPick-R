@@ -678,6 +678,41 @@ plot_parline = function(datt,sizz=rep(.5, length(unique(datt$id))),colols=rep("g
   
 }
 
+## share_con plot in Analysis tab
+
+plt_share_con = function(dat){
+  
+  
+  # pull number of measures = number of subplots
+  # nsp = clus_all %>% select(ends_with("share_con"))%>%length()
+  
+  mesrs = dat%>%select(Cluster,ends_with("share_con")) %>%rename_with(~ sub("_share_con$", "", .),.cols = ends_with("share_con"))
+  
+  # pull number of selected clusters (max = 4)
+  # nc = length(unique(clus_all$Cluster))
+  
+  # find a nice/clear way to plot this
+  grp = mesrs %>% mutate(Cluster = as.factor(Cluster))%>%
+    pivot_longer(cols = -Cluster, names_to = "Variable", values_to = "Value")
+  
+  p = ggplot(grp, aes(x = Variable, y = Value, fill = Cluster)) +
+    geom_boxplot(position = position_dodge(width = 0.75)) +
+    scale_y_continuous(expand = c(0.02, 0.02),limits=c(0,105))+
+    theme_bw() +
+    theme_minimal() + 
+    theme(
+      plot.title =  element_blank(),
+      axis.text.y = element_text(size = 15),
+      axis.text.x = element_text(size = 18),
+      axis.title = element_blank(),
+      legend.position = "none"
+    )+geom_text(data = grp, aes(x = Variable, y = 100, label = Cluster), 
+                position = position_dodge(width = 0.75), vjust = 0,size=8)
+  
+  return(p)
+}
+
+
 ## scatter plot in play around
 plt_sc = function(dat, ranges,col=rep("grey",nrow(dat)),size=rep(1.8, nrow(dat))){
   plots <- list()
@@ -756,13 +791,19 @@ plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NUL
                           sel_tab = NULL, #highlight table selection Analysis tab
                           add_whole = F, #add the whole pareto front Analysis tab
                           status_q = FALSE,
-                          rev = FALSE) {
+                          rev = FALSE
+                          ) {
   
   if(!file.exists(pareto_path)){return(NULL)}
   
   xma = yma = NULL
-
   
+ if(an_tab){
+   #separate for label (so nothing else has to change)
+   dat2 = dat
+   dat = dat[,1:4]
+ }
+
   #plot with main data
   p = ggplot(dat, aes(x = .data[[x_var]], y = .data[[y_var]], fill = .data[[col_var]], size = .data[[size_var]])) +
     geom_point(shape = 21, stroke = 0.5 ) +
@@ -778,6 +819,15 @@ plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NUL
           legend.position = "right", 
           legend.text = element_text(size=13.5),
           legend.title = element_text(size=15))
+  
+  if(an_tab){
+    p= p +
+     geom_text(data = dat2, aes(x = .data[[x_var]]+(0.03*diff(range(.data[[x_var]]))), y = .data[[y_var]], label = `cluster number`), 
+              position = position_dodge(width = 0.85), hjust = 0,size=6)
+  }
+  
+  
+ 
   
   all_extra_data = NULL
   
