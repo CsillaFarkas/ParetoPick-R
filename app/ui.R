@@ -281,9 +281,7 @@ ui <-
                                                       sliderInput(inputId = "obj2", label = "Objective 2:", min = 0, max = 1, value = c(0,1), step = 0.01,width = "110%"),
                                                       sliderInput(inputId = "obj3", label = "Objective 3:", min = 0, max = 1, value = c(0,1), step = 0.01, width = "110%"),
                                                       sliderInput(inputId = "obj4", label = "Objective 4:", min = 0, max = 1, value = c(0,1), step = 0.01,width = "110%")))
-                                             # ,  
-                                             # checkboxGroupInput("sel_neg", "Are any of the objectives provided on the negative scale?", choices = NULL, inline = FALSE),
-                                              
+                                             
                                ),
                                mainPanel(
                                  tags$style(HTML(".js-irs-1 .irs-single, .js-irs-1 .irs-bar-edge, .js-irs-1 .irs-bar {background: #ffc61e ;border-top: 1px solid #ffc61e ;border-bottom: 1px solid #ffc61e;}.js-irs-1 .irs-from, .js-irs-1 .irs-to, .js-irs-1 .irs-single { font-size: 13px;background: #ffc61e !important }")),
@@ -808,32 +806,7 @@ ui <-
                                ),
                            useShinyjs(),
                            
-                           tags$head(
-                             tags$style(HTML("
-  .tooltip { 
-    position: absolute; 
-    background: rgba(255, 255, 0, 0.9); /* Bright yellow */
-    border: 2px solid #000; /* Black border for contrast */
-    padding: 5px; 
-    z-index: 2000; /* Higher z-index */
-    font-weight: bold; 
-    color: black; /* Text color */
-    border-radius: 5px; /* Rounded corners */
-  }
-")),
-                             tags$script(HTML("
-      $(document).on('mouseenter', 'td[data-unit]', function(event) {
-        var unit = $(this).data('unit');
-        if (unit) {
-          $('#tooltip').html(unit).css({top: event.pageY + 10, left: event.pageX + 10}).show();
-        }
-      });
-      $(document).on('mouseleave', 'td[data-unit]', function() {
-        $('#tooltip').hide();
-      });
-    "))
-                           ),
-                               div(DTOutput("best_option_output"), style = "margin: 0 auto; width: fit-content;"),
+                            div(DTOutput("best_option_output"), style = "margin: 0 auto; width: fit-content;"),
                                                                      
                                div(id = "tooltip", class = "tooltip"),
                            
