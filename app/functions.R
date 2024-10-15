@@ -1070,6 +1070,23 @@ rescale_column <- function(column, min_val, max_val) {
   rescale(column, to = c(0, 1), from = c(min_val, max_val))
 }
 
+## pull highest range for nice plot
+pull_high_range <- function(df) {
+  abs_ranges <- sapply(df, function(col) {
+    max(col, na.rm = TRUE) - min(col, na.rm = TRUE)
+  })
+  
+  res <- data.frame(
+    col = names(df),
+    order = rank(-abs_ranges, ties.method = "first")  # rank with highest absolute range first
+  )
+  
+  res = res[order(res$order),]$col
+  
+  return(res)
+}
+
+
 #### Other Functions ####
 
 get_mima = function(df){
