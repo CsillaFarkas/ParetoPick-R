@@ -294,7 +294,7 @@ ui <-
                                  div(id = "tab_play1",div("Pareto Plot", style = "text-align: left; font-size:150%"),
                                      plotOutput("first_pareto"), 
                                      checkboxInput("add_sq_f",label = "Show status quo",value = FALSE),
-                                     div(id="rev_plot",checkboxInput("rev_box",label="reverse x and y axes"))%>%hidden(),
+                                     div(id="rev_plot",checkboxInput("rev_box",label="reverse x and y axes",value = FALSE))%>%hidden(),
                                      fluidRow(
                                        column(3,selectInput(inputId = "x_var3",   label = "X-Axis", choices = NULL, multiple = F, selected=NULL)),
                                        column(3,selectInput(inputId = "y_var3",   label = "Y-Axis", choices = NULL, multiple = F, selected=NULL)),
@@ -683,11 +683,11 @@ ui <-
                            fluidRow(
                              column(6, div(style = "overflow-x: auto;", DTOutput("antab"))),
                              column(6,tags$div(textOutput("check_default"), style = "color: red;"), 
-                                    checkboxInput("show_boxplot",label="show cluster distribution instead",value=FALSE),
+                                    checkboxInput("show_boxplot",label="show within-cluster distribution instead",value=FALSE),
                                     plotOutput("par_plot_optima"),
                                     checkboxInput("add_whole", label = "Show the whole Pareto front", value = FALSE),
                                     checkboxInput("add_sq",label = "Show status quo",value = FALSE),
-                                    
+                                    div(id="rev_plot2",checkboxInput("rev_box2",label="reverse x and y axes",value = FALSE))%>%hidden(),
                                     div(id="analysis_random",
                                         fluidRow(
                                           column(3,selectInput(inputId = "x_var2",label = "X-Axis", choices = NULL, multiple = F, selected=NULL)),
