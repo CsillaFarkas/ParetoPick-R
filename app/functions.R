@@ -629,15 +629,7 @@ plt_scat2 = function(dat, x, y){
 
 ## parallel axis plot
 plot_parline = function(datt,sizz=rep(.5, length(unique(datt$id))),colols=rep("grey50", length(unique(datt$id))),sq=NULL){
-  if(!is.null(sq)){
-  sq$id <- as.factor(rep("10000",nrow(sq)))
-    
-  datt = rbind(datt, sq)
-  
-  colols <- c(colols, "cyan")
-  sizz <- c(sizz,  .5)
  
-  }
    
   pl1 <- ggplot(datt, aes(x = name, y = value,group=id,size=id, color=id)) +   # group = id is important!
     
@@ -673,7 +665,14 @@ plot_parline = function(datt,sizz=rep(.5, length(unique(datt$id))),colols=rep("g
   if("#FF5666" %in% colols){ #double the trouble, triple the fun
    ids= which(colols != "grey50") 
   pl1 = pl1 + geom_line(data=datt[which(datt$id %in% ids),],aes(x = name, y = value),color = "#FF5666", size=1)
-    }
+  }
+  
+  if(!is.null(sq)){
+    sq$id = rep("1000",nrow(sq))
+   pl1 = pl1 + geom_line(data=sq, aes(x=name,y=value),color="cyan",size=1)
+
+  }
+  
   return(pl1)
   
 }
@@ -786,7 +785,7 @@ return(plots)
 
 plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NULL, pareto_path = "../data/pareto_fitness.txt",sq_path ="../data/sq_fitness.txt",
                           extra_dat = NULL, #highlight optima in AHP tab
-                          an_tab = F,
+                          an_tab = FALSE,
                           plt_extra=F, #potentially redundant tbf
                           sel_tab = NULL, #highlight table selection Analysis tab
                           add_whole = F, #add the whole pareto front Analysis tab
@@ -820,7 +819,7 @@ plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NUL
           legend.text = element_text(size=13.5),
           legend.title = element_text(size=15))
   
-  if(an_tab){
+  if(an_tab && "cluster number" %in% colnames(dat2)){
     p= p +
      geom_text(data = dat2, aes(x = .data[[x_var]]+(0.03*diff(range(.data[[x_var]]))), y = .data[[y_var]], label = `cluster number`), 
               position = position_dodge(width = 0.85), hjust = 0,size=6)
