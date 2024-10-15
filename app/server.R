@@ -12,6 +12,7 @@ server <- function(input, output, session) {
   sq_file <- reactiveVal(NULL)#handling sq_fitness
   fit <- reactiveVal(NULL) #absolute value dataframe
   f_scaled <- reactiveVal(NULL) #scaled value dataframe
+  rng_plt <- reactiveVal(NULL) #getting the highest range across dataframe
   pca_remove <- reactiveVal(NULL) #variables removed from pca
   stq <- reactiveVal(NULL) #status quo
   #data prep
@@ -91,6 +92,7 @@ server <- function(input, output, session) {
   
   
   ##check if names of objectives have to be supplied or already present
+  ## CONSOLIDATE THIS, da ist ne dumme unnoetige Dopplung
   observeEvent(input$tabs == "play_around",{ 
     ## make or pull objectives()
     if(!file.exists("../input/object_names.RDS")) {
@@ -101,14 +103,14 @@ server <- function(input, output, session) {
       
       ##get new objective names
       observe({
-        req(input$short1, input$short2, input$short3, input$short4)
+        req(input$short1, input$short2, input$short3, input$short4,rng_plt())
         short <<- c(input$short1, input$short2, input$short3, input$short4)
         objectives(short)
         
-        updateSelectInput(session, "x_var3",   choices = short, selected = short[1])
-        updateSelectInput(session, "y_var3",   choices = short, selected = short[2])
-        updateSelectInput(session, "col_var3", choices = short, selected = short[3])
-        updateSelectInput(session, "size_var3",choices = short, selected = short[4])
+        updateSelectInput(session, "x_var3",   choices = short, selected = rng_plt()[1])
+        updateSelectInput(session, "y_var3",   choices = short, selected = rng_plt()[2])
+        updateSelectInput(session, "col_var3", choices = short, selected = rng_plt()[3])
+        updateSelectInput(session, "size_var3",choices = short, selected = rng_plt()[4])
         
       })
       
@@ -130,10 +132,10 @@ server <- function(input, output, session) {
       short = readRDS("../input/object_names.RDS")
       objectives(short)
       
-      updateSelectInput(session, "x_var3",   choices = short, selected = short[1])
-      updateSelectInput(session, "y_var3",   choices = short, selected = short[2])
-      updateSelectInput(session, "col_var3", choices = short, selected = short[3])
-      updateSelectInput(session, "size_var3",choices = short, selected = short[4])
+      updateSelectInput(session, "x_var3",   choices = short, selected = rng_plt()[1])
+      updateSelectInput(session, "y_var3",   choices = short, selected = rng_plt()[2])
+      updateSelectInput(session, "col_var3", choices = short, selected = rng_plt()[3])
+      updateSelectInput(session, "size_var3",choices = short, selected = rng_plt()[4])
     }
     
     ## update slider labels based on objectives
@@ -158,13 +160,16 @@ server <- function(input, output, session) {
         req(objectives())
         shinyjs::hide(id = "parfit")
 
-        data <- read.table( pareto_path, header = FALSE, stringsAsFactors = FALSE,sep = ',')
+        data <- read.table(pareto_path, header = FALSE, stringsAsFactors = FALSE,sep = ',')
         new_col_data <- objectives()
         colnames(data) = new_col_data
         fit(data)
         
         yo = fit() %>% mutate(across(everything(), ~ scales::rescale(.)))%>%mutate(id = row_number())
         f_scaled(yo)
+        
+        yo2 <- pull_high_range(fit())
+        rng_plt(yo2)
         
         output$uploaded_pareto <- renderText({"All Files found. 
                                                You can now examine the Pareto front. 
@@ -374,7 +379,7 @@ server <- function(input, output, session) {
         
         stq_ko <- pivot_longer(stq_sk,cols = everything(),names_to = "name",values_to = "value")
         stq_ko <- stq_ko %>% mutate(name=forcats::fct_relevel(name,objectives()))
-        
+       
         return(plot_parline(datt = ko,colols = rv$colls,   sizz = rv$sizes, sq = stq_ko))
         
       }else{
@@ -519,7 +524,7 @@ server <- function(input, output, session) {
   
   
   mima_fun = function(){
-    req(fit)
+    req(fit())
     df = as.data.frame(t(get_mima(fit()))[-1,])
     df = df[nrow(df):1,]
     df[] = lapply(df, function(x) as.numeric(as.character(x)))
@@ -937,7 +942,7 @@ server <- function(input, output, session) {
           result <- system(cmd, intern = TRUE)
         
         corr <<- read.csv("../output/correlation_matrix.csv", row.names = 1) #global because of re-rendering of plot
-        high_corr = find_high_corr(corr,threshold=0.7, tab=T, strike=NULL) 
+        high_corr = find_high_corr(corr,threshold=0.65, tab=T, strike=NULL) 
         
         pca_content = all_var[-which(all_var %in% unique(high_corr$variable1))]
 
@@ -1419,13 +1424,13 @@ server <- function(input, output, session) {
       choices = readRDS("../input/object_names.RDS")
     }
     
-    preselected = read_config_plt(obj = T, axis = F)
+    # preselected = read_config_plt(obj = T, axis = F)
     
     #update Analysis tab plot without "off"
-    updateSelectInput(session, "x_var2",   choices = choices, selected = preselected[1])
-    updateSelectInput(session, "y_var2",   choices = choices, selected = preselected[2])
-    updateSelectInput(session, "col_var2", choices = choices, selected = preselected[3])
-    updateSelectInput(session, "size_var2",choices = choices, selected = preselected[4])
+    updateSelectInput(session, "x_var2",   choices = choices, selected = rng_plt()[1])
+    updateSelectInput(session, "y_var2",   choices = choices, selected = rng_plt()[2])
+    updateSelectInput(session, "col_var2", choices = choices, selected = rng_plt()[3])
+    updateSelectInput(session, "size_var2",choices = choices, selected = rng_plt()[4])
     
     observe({
       if(all(fit()[[input$x_var2]]<=0) && 
@@ -1494,9 +1499,11 @@ server <- function(input, output, session) {
           
           observe({ #check for cluster quality (especially helpful in default runs)
             #find largest cluster and calculate its ratio in whole set
-            crat = round(max(sols()[["cluster size"]])/nrow(sols()),2)
-            wc = sols()%>%select(optimum,`cluster size`)%>%
-              filter(`cluster size` == max(`cluster size`)) %>% pull(optimum)
+            req(sols())
+            crat = round((max(sols()[["cluster size"]])/sum(sols()[["cluster size"]]))*100,2)
+            
+            wc = sols()%>%select(`cluster size`,`cluster number`)%>%
+              filter(`cluster size` == max(`cluster size`)) %>% pull(`cluster number`)
             
             #calculate number of 1 - point clusters 
             n1clu = sols()%>%dplyr::filter(`cluster size`==1)%>%nrow()
@@ -1510,7 +1517,7 @@ server <- function(input, output, session) {
             }else if(crat>30){
             #if clause with OR if fulfilled, else NULL
             output$check_default <- renderText({paste0("A high share of points (",crat,") has been assigned to a single 
-                                                       cluster (representative point optimum ",wc,"), you might want to rerun the clustering with different settings.")})}
+                                                       cluster (cluster number ",wc,"), you might want to rerun the clustering with different settings.")})}
           })
           
         }else{
@@ -1924,9 +1931,9 @@ server <- function(input, output, session) {
     output$best_option_output <- renderDT({
       
     req(sols(),range_controlled(),objectives())
-      
+     
     if (input$best_cluster) {
-      df = subset(sols(),select= -optimum) #best option out of optima
+      df = subset(sols(),select= -c(optimum,`cluster number`,`cluster size`)) #best option out of optima
       
       df = match_abs(minval=c(input$obj1_ahp[1],input$obj2_ahp[1], input$obj3_ahp[1], input$obj4_ahp[1]),
                      maxval=c(input$obj1_ahp[2],input$obj2_ahp[2], input$obj3_ahp[2], input$obj4_ahp[2]),
@@ -1967,27 +1974,12 @@ server <- function(input, output, session) {
     
     bo = best_option()
     
-    #MUCH more bloated with hovering
-    if (file.exists("../input/units.RDS")) {
-      units = readRDS("../input/units.RDS")
-      } else{
-      units = as.character(rep("not provided", 4))
-      }
+  
     }
       
-      table_data <-data.frame(
-        Variable = objectives(), 
-        value = unlist(bo),  
-        stringsAsFactors = FALSE
-      )
-      
-      table_data$Unit <- units
-      table_data$value <- paste0('<span data-unit="', table_data$Unit, '">', table_data$value, '</span>')
-      
-      
-      
+  
       datatable(
-        t(table_data[, "value"]),
+        bo,
         colnames = names(bo),
         rownames = FALSE,  
         escape = FALSE,  
