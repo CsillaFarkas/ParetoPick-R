@@ -641,7 +641,7 @@ ui <-
                                                h4("3.2 Please specify how many extreme variables within a datapoint shall be tested:"),
                                                numericInput("count_min", "Minimum number of extreme variables", value = 3),
                                                numericInput("count_max", "Maximum number of extreme variables", value = 3),
-                                               h4("3.3 Please specify set a limit for the number of extreme solutions allowed in the final clustering:"),
+                                               h4("3.3 Please select a limit for the number of extreme solutions allowed in the final clustering:"),
                                                numericInput("outlier_ratio", "Outlier to cluster ratio", value = 0.5, min=0.1, max=0.9),
                                                actionButton("write_outl", "Confirm Outlier Testing")
                                              ),
