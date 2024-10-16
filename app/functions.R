@@ -713,7 +713,7 @@ plt_share_con = function(dat){
 
 
 ## scatter plot in play around
-plt_sc = function(dat, ranges,col=rep("grey",nrow(dat)),size=rep(1.8, nrow(dat))){
+plt_sc = function(dat, ranges,col=rep("grey",nrow(dat)),size=rep(1.8, nrow(dat)),sq=NULL){
   plots <- list()
   vars <- colnames(dat)
   num_vars <- length(vars)
@@ -748,6 +748,9 @@ plt_sc = function(dat, ranges,col=rep("grey",nrow(dat)),size=rep(1.8, nrow(dat))
        ids= which(col == "#FF5666") 
        
        p = p + geom_point(data=dat[ids,], aes(x = .data[[xcol]], y= .data[[ycol]]), color="#FF5666", size=2.3)
+     }
+     if(!is.null(sq)){
+       p = p+ geom_point(data=sq,aes(x = .data[[xcol]], y= .data[[ycol]]), color="cyan", size=2.3)
      }
       
       
