@@ -580,8 +580,16 @@ server <- function(input, output, session) {
     sizz = rep(2.5, nrow(scat_abs))}
     
     mima = get_mima(fit())
+    
+    if (input$plt_sq) {
+      req(stq())
+      print(stq())
+      plot_scatter = plt_sc(dat = scat_abs, ranges = mima,col = col,size = sizz,sq=stq())
+      
+    } else{
+      plot_scatter = plt_sc(dat = scat_abs, ranges = mima,col = col,size = sizz)
+    }
 
-    plot_scatter = plt_sc(dat = scat_abs, ranges=mima, col = col, size= sizz)
     
     grid.arrange(grobs = plot_scatter, nrow = 3, ncol = 2)}
   
@@ -942,7 +950,7 @@ server <- function(input, output, session) {
           result <- system(cmd, intern = TRUE)
         
         corr <<- read.csv("../output/correlation_matrix.csv", row.names = 1) #global because of re-rendering of plot
-        high_corr = find_high_corr(corr,threshold=0.65, tab=T, strike=NULL) 
+        high_corr = find_high_corr(corr,threshold=0.7, tab=T, strike=NULL) 
         
         pca_content = all_var[-which(all_var %in% unique(high_corr$variable1))]
 
@@ -956,6 +964,8 @@ server <- function(input, output, session) {
                       var2_lab=paste0(objectives()[2]," [",axiselected()[2],"]"),
                       var3_lab=paste0(objectives()[3]," [",axiselected()[3],"]"),
                       var4_lab=paste0(objectives()[4]," [",axiselected()[4],"]"))
+        write_outl(handle_outliers_boolean = "false")
+        write_cluster(fixed_cluster_boolean="true",fixed_clusters=15)
         ##run clustering
          py_script = "../python_files/kmeans.py"
          cmd = paste("python",py_script)
