@@ -66,7 +66,7 @@ the project consists of six folders:
 # Assumptions
 * General
   * do the current default settings produce reasonable cluster outputs across all catchments?
-  * dynamic priority allocaiton according to measure_location$nswrm - see page 35 in deliverable 5.1 (esp. pond vs wetland)
+  * dynamic priority allocation according to measure_location$nswrm - see page 35 in deliverable 5.1 (esp. pond vs wetland)
   * users should not produce optimisation outputs with values below 0, add a check and change pareto_fitness to all above 0, would mean overhaul of range_controlled()
   * remove minus sign from sliders, where needed add imagery to explain good and bad
 
@@ -81,15 +81,19 @@ the project consists of six folders:
   * catch R errors triggered by empty data frames better
 
 * Configure tab
+  * we might want to automate the number of clusters (k in k means) and outlier testing 
   * finish option for limiting range and check for missing files
-  * add widest range function to config writing for it to work in python
+  * automate widest range function to config writing for it to work in python
 
 * Correlation tab
   * output largest accepted correlation in bold over table/could also be part of default setting
   * (python: deviations_step is currently the default value) 
+  * add spinner so user knows something is happening
+  * fix share_tot - new share_con is fully correlated
 
 * Analysis tab
   * this tab requires another name
+  * fix reading and plotting of outliers
 
   
 * AHP and Analysis tabs
@@ -119,5 +123,5 @@ the project consists of six folders:
   * no replotting when table is touched, that is so annoying
 
 * AHP
-  * more reasonable representation of variables across different scales - we will need to test that with different datasets (currently just multiplied by 1000 if <0.005)
+  * more reasonable representation of variables across different scales - we will need to test that with different datasets (currently just multiplied by 1000 if <0.005) --> this will be solved by the check to pareto_fitness (see under General)
   * keep ticks and remove labels on top (probably obsolete with restructure)
