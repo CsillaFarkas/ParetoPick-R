@@ -583,7 +583,7 @@ server <- function(input, output, session) {
     
     if (input$plt_sq) {
       req(stq())
-      print(stq())
+      
       plot_scatter = plt_sc(dat = scat_abs, ranges = mima,col = col,size = sizz,sq=stq())
       
     } else{
@@ -1484,6 +1484,30 @@ server <- function(input, output, session) {
          
           check_files(matching_files)
         })
+      
+      observe({ #check for cluster quality (especially helpful in default runs)
+        #find largest cluster and calculate its ratio in whole set
+        req(sols())
+        
+        crat = round((max(sols()[["cluster size"]])/sum(sols()[["cluster size"]]))*100,2)
+        
+        wc = sols()%>%select(`cluster size`,`cluster number`)%>%
+          filter(`cluster size` == max(`cluster size`)) %>% pull(`cluster number`)
+        
+        #calculate number of 1 - point clusters 
+        n1clu = sols()%>%dplyr::filter(`cluster size`==1)%>%nrow()
+        
+        #calculate share of these small cluster in cluster number (make dynamic as we might change that)
+        n1clu=round((n1clu/length(unique(sols2()$Cluster)))*100,2)
+        
+        if(n1clu > 60){
+          paste0("There is a high share (",n1clu,") of clusters with only one optimum, you might want to 
+                    rerun the clustering with different settings.")
+        }else if(crat>30){
+          #if clause with OR if fulfilled, else NULL
+          output$check_default <- renderText({paste0("A high share of points (",crat,") has been assigned to a single 
+                                                       cluster (cluster number ",wc,"), you might want to rerun the clustering with different settings.")})}
+      })
 
     observeEvent(check_files(),{
         if(!is.null(check_files())) {
@@ -1507,28 +1531,7 @@ server <- function(input, output, session) {
           sols2(sols_data %>% rownames_to_column("optimum") %>%  #for boxplot the whole thing is needed
                   rename_with(~new_col_sol[1:5],1:5))
           
-          observe({ #check for cluster quality (especially helpful in default runs)
-            #find largest cluster and calculate its ratio in whole set
-            req(sols())
-            crat = round((max(sols()[["cluster size"]])/sum(sols()[["cluster size"]]))*100,2)
-            
-            wc = sols()%>%select(`cluster size`,`cluster number`)%>%
-              filter(`cluster size` == max(`cluster size`)) %>% pull(`cluster number`)
-            
-            #calculate number of 1 - point clusters 
-            n1clu = sols()%>%dplyr::filter(`cluster size`==1)%>%nrow()
-            
-            #calculate share of these small cluster in cluster number (make dynamic as we might change that)
-            n1clu=round((n1clu/length(unique(sols2()$Cluster)))*100,2)
-            
-            if(n1clu > 60){
-              paste0("There is a high share (",n1clu,") of clusters with only one optimum, you might want to 
-                    rerun the clustering with different settings.")
-            }else if(crat>30){
-            #if clause with OR if fulfilled, else NULL
-            output$check_default <- renderText({paste0("A high share of points (",crat,") has been assigned to a single 
-                                                       cluster (cluster number ",wc,"), you might want to rerun the clustering with different settings.")})}
-          })
+     
           
         }else{
           sols(data.frame(Message = "something went wrong - has the PCA run properly?"))
@@ -1538,8 +1541,11 @@ server <- function(input, output, session) {
       
         output$antab <- renderDT({
           req(sols())
-
-          datatable(sols()%>%mutate(across(where(is.numeric), round, digits = 5)),
+          
+          df = sols()%>%mutate(across(where(is.numeric), round, digits = 2))
+          df = as.data.frame(lapply(df, function(x) as.numeric(gsub("-", "", as.character(x)))))
+          colnames(df) = names(sols())
+          datatable(df,
                     selection = list(mode = "multiple", target = 'row', max = 12), rownames= FALSE,
                     options = list(pageLength = 20, autoWidth = TRUE))
         })
@@ -1793,17 +1799,12 @@ server <- function(input, output, session) {
       choices = readRDS("../input/object_names.RDS")
     }
     ahp_choices(choices)
-    preselect = ahp_choices()
+   
     
-    preselect1 = preselect[1]
-    preselect2 = preselect[2]
-    preselect3 = preselect[3]
-    preselect4 = preselect[4]
-    
-    updateSelectInput(session,inputId = "x_var",choices = choices,selected = preselect1)
-    updateSelectInput(session,inputId = "y_var",choices = choices, selected = preselect2)
-    updateSelectInput(session,inputId = "col_var", choices = choices, selected = preselect3)
-    updateSelectInput(session,inputId = "size_var", choices = choices, selected = preselect4)
+    updateSelectInput(session,inputId = "x_var",choices = choices,selected = rng_plt()[1])
+    updateSelectInput(session,inputId = "y_var",choices = choices, selected = rng_plt()[2])
+    updateSelectInput(session,inputId = "col_var", choices = choices, selected = rng_plt()[3])
+    updateSelectInput(session,inputId = "size_var", choices = choices, selected = rng_plt()[4])
     
     })
   
@@ -1961,7 +1962,8 @@ server <- function(input, output, session) {
     }
 
     if(nrow(df)==0 || ncol(df) == 0){
-      bo = "None of the points fulfill these criteria. Please select different data ranges!"
+      bo = as.data.frame(array(0,dim=c(1,length(objectives())))) #to prevent error when tab is touched first
+      colnames(bo) = objectives()
     }else{  
     
     
@@ -1986,22 +1988,16 @@ server <- function(input, output, session) {
     
   
     }
+      datatable(bo,  colnames = names(bo), rownames = FALSE, escape = FALSE, options = list(dom = 't', paging = FALSE,bSort = FALSE))
       
-  
-      datatable(
-        bo,
-        colnames = names(bo),
-        rownames = FALSE,  
-        escape = FALSE,  
-        options = list(dom = 't', paging = FALSE,bSort = FALSE)
-      )
-      
- 
-    
   })
   
- 
+   #show reverse option when needed
   observe({
+    observe({
+      if(all(fit()[[input$x_var]]<=0) && 
+         all(fit()[[input$y_var]]<=0)){shinyjs::show("rev_plot3")}else{shinyjs::hide("rev_plot3")}
+    })
     
     weight_plt_fun = function(){
       req(objectives(),fit(),best_option(),input$x_var,sols(),range_controlled())
@@ -2013,7 +2009,7 @@ server <- function(input, output, session) {
       
       return(plt_sc_optima(dat=df,x_var=input$x_var,y_var=input$y_var,
                     col_var=input$col_var,size_var=input$size_var,high_point=bo,extra_dat = sol,
-                    plt_extra = input$show_extra_dat, status_q = input$show_status_quo,an_tab = F))
+                    plt_extra = input$show_extra_dat, status_q = input$show_status_quo,an_tab = F,rev = input$rev_box3))
     }
     
   output$weights_plot <- renderPlot({  weight_plt_fun() })
