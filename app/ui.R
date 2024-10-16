@@ -824,6 +824,7 @@ ui <-
                              
                              checkboxInput("show_extra_dat", label = "Show cluster solutions", value = FALSE),
                              checkboxInput("show_status_quo", label = "Show Status Quo", value = FALSE),
+                             div(id="rev_plot3",checkboxInput("rev_box3",label="reverse x and y axes",value = FALSE))%>%hidden(),
                              
                              div(
                                style = "display: inline-block; vertical-align: top; margin-right: 0px;",
