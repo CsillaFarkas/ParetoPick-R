@@ -485,7 +485,7 @@ plt_boxpl_clus = function(dat, sel, all_obs,mima){
         annotate("text",x=1, y=labspo, label =labs ,size=6)
     }else{
     p =ggplot(clus[clus$name == all_obs[i], ], aes(x = name, y = value)) +
-      geom_violin(fill = coll) +
+      geom_boxplot(fill = coll) +
       ylim(mini, maxi)+ 
       theme_bw() + theme(
         panel.background = element_blank(),
@@ -755,27 +755,10 @@ plt_sc = function(dat, ranges,col=rep("grey",nrow(dat)),size=rep(1.8, nrow(dat))
       
       
       #correct for negative scale aesthetics
-      if(x_min < 0 && y_min <0){
-        # both negative
-        p <- p + scale_x_continuous(labels = function(x) {rem_min(x)},limits = c(x_min, x_max)) + 
-          scale_y_continuous(labels = function(y) {rem_min(y)},limits = c(y_min, y_max))
-        xma = " (negative)"
-        yma = " (negative)"
-        
-      } else if (x_min < 0) {
-        p <- p + scale_x_continuous(labels = function(x) {rem_min(x)},limits = c(x_min, x_max))
-        xma = " (negative)"
-      } else if (y_min < 0) {
-        p <- p + scale_y_continuous(labels = function(y) {rem_min(y)},limits = c(y_min, y_max))
-        yma = " (negative)"
-        
-      }else{
-        #no neg values
-        p = p +
-          scale_x_continuous(limits = c(x_min, x_max)) +
-          scale_y_continuous(limits = c(y_min, y_max))
-      }
-      
+         p = p +
+          scale_x_continuous(limits = c(x_min, x_max),labels = function(x) {rem_min(x)}) +
+          scale_y_continuous(limits = c(y_min, y_max),labels = function(y) {rem_min(y)})
+   
      plots[[plot_index]] <- p
      plot_index <- plot_index + 1
     }
@@ -810,7 +793,7 @@ plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NUL
   p = ggplot(dat, aes(x = .data[[x_var]], y = .data[[y_var]], fill = .data[[col_var]], size = .data[[size_var]])) +
     geom_point(shape = 21, stroke = 0.5 ) +
     viridis::scale_fill_viridis(alpha = 0.8, name = col_var) +  
-    scale_size(range = c(1, 10), name = size_var) +     
+    scale_size(range = c(1, 10), name = size_var,labels = function(x) abs(as.numeric(x))) +     
     theme_bw() + 
     theme(panel.background = element_blank(),
           panel.grid.major = element_line(color = "lightgray", size = 0.3),
@@ -828,12 +811,8 @@ plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NUL
               position = position_dodge(width = 0.85), hjust = 0,size=6)
   }
   
-  
- 
-  
   all_extra_data = NULL
   
- 
   if (add_whole) {
     whole <- read.table(pareto_path, header = FALSE, stringsAsFactors = FALSE, sep = ',')
     colnames(whole) <- colnames(dat)
@@ -841,7 +820,6 @@ plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NUL
     all_extra_data <- rbind(all_extra_data,whole)
     
   }
-  
   
   if (!is.null(extra_dat) && plt_extra) {
     extra_dat$set <- "cluster solutions"
@@ -874,11 +852,12 @@ plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NUL
     p <- p +
       geom_point(data = all_extra_data, aes(x = .data[[x_var]], y = .data[[y_var]], shape = set, color = set, size = .data[[size_var]]), 
                   stroke = 1.8, show.legend = TRUE, alpha=0.7) +
-      scale_shape_manual(values = c("Whole front" = 21,"cluster solutions" = 21, "AHP - best option" = 22, "Selection" =21, "Status Quo" = 17),name="") + 
-      scale_color_manual(values = c( "Whole front" = "lightgrey","cluster solutions" = "cyan", "AHP - best option" = "#FF4D4D", "Selection" = "black", "Status Quo" = "#FF00FF"),name="") + 
-      guides(color = guide_legend(override.aes = list(size = 5))
-             ,shape = guide_legend(override.aes = list(size = 5))
-              )
+      scale_shape_manual(labels = function(x) gsub("-", "", x),
+        values = c("Whole front" = 21,"cluster solutions" = 21, "AHP - best option" = 22, "Selection" =21, "Status Quo" = 17),name="") + 
+      scale_color_manual(labels = function(x) gsub("-", "", x),
+        values = c( "Whole front" = "lightgrey","cluster solutions" = "cyan", "AHP - best option" = "#FF4D4D", "Selection" = "black", "Status Quo" = "#FF00FF"),name="") + 
+      guides(color = guide_legend(override.aes = list(size = 5)),shape = guide_legend(override.aes = list(size = 5)))+
+      scale_x_continuous(labels = function(x) {rem_min(x)})+scale_y_continuous(labels = function(x) {rem_min(x)})
   }
  
   #Analysis tab requires control of limits to show selection as part of whole front
@@ -889,19 +868,14 @@ plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NUL
     colnames(whole) <- colnames(dat)
     # 
  
-    p <- p + scale_x_continuous(limits= c(range(whole[[x_var]])[1],range(whole[[x_var]])[2]))+
-      scale_y_continuous(limits= c(range(whole[[y_var]])[1],range(whole[[y_var]])[2]))
+    p <- p + scale_x_continuous(limits= c(range(whole[[x_var]])[1],range(whole[[x_var]])[2]),labels = function(x) {rem_min(x)})+
+      scale_y_continuous(limits= c(range(whole[[y_var]])[1],range(whole[[y_var]])[2]),labels = function(x) {rem_min(x)})
     }
 
   
   if(rev){
-    yma = xma = " (inverted scale!)"
     p = p+scale_y_reverse(labels = function(y) {rem_min(y)})+scale_x_reverse(labels = function(x) {rem_min(x)})}
-  
-  
-  p = p +labs(x=paste0(x_var,xma), y = paste0(y_var,yma))
-  
-  
+ 
   return(p)
 }
 
