@@ -65,10 +65,12 @@ the project consists of six folders:
 
 # Assumptions
 * General
-  * do the current default settings produce reasonable cluster outputs across all catchments?
+  * do the current default settings produce reasonable cluster outputs across all catchments? potentially we need to add outlier testing
   * dynamic priority allocation according to measure_location$nswrm - see page 35 in deliverable 5.1 (esp. pond vs wetland)
   * users should not produce optimisation outputs with values below 0, add a check and change pareto_fitness to all above 0, would mean overhaul of range_controlled()
-  * remove minus sign from sliders, where needed add imagery to explain good and bad
+  * remove minus signs everywhere
+  * share to GitLab
+
 
 * AHP
   * the initial state of the pairwise comparison as "Equal" amplifies the mathematical definition of inconsistency, therefore only when at least three sliders are NOT set to "Equal" is inconsistency considered at all
@@ -79,6 +81,8 @@ the project consists of six folders:
 * Visualising tab:
   * add new sliders for measures - along share of area possible for this measure (similar to share_con), this probably requires a spinner in beginning
   * catch R errors triggered by empty data frames better
+  * add option to save selected optimum
+  * add "inverted" to plot, remove all minus signs
 
 * Configure tab
   * we might want to automate the number of clusters (k in k means) and outlier testing 
@@ -93,8 +97,7 @@ the project consists of six folders:
 
 * Analysis tab
   * this tab requires another name
-  * fix reading and plotting of outliers
-
+  
   
 * AHP and Analysis tabs
   * better graphical representation of decison space across solutions:
