@@ -446,18 +446,22 @@ ui <-
                              
                              titlePanel("Configure Cluster Settings"),
                              
-                            mainPanel(
-                              div(style = "text-align: left; font-size:150%; width: 100%;",
-                                  "Would you like to limit the objective ranges prior to clustering?",
-                                  radioButtons("limra_clust", "", choices = c("Yes", "No"), selected = "No")),
-                              conditionalPanel(
+                    mainPanel(
+       
+                        div(style = "text-align: left; font-size:150%; width: 100%;",
+                                    "Would you like to limit the objective ranges prior to clustering?",
+                              radioButtons("limra_clust", "", choices = c("Yes", "No"), selected = "No")),
+                              
+                        conditionalPanel(
+                          
                                 condition = "input.limra_clust == 'Yes'",
-                                sliderInput(inputId = "ran1", label= "Objective 1:",min = 0, max = 1, value = c(0,100), width = "110%"),
-                                sliderInput(inputId = "ran2", label= "Objective 2:",min = 0, max = 1, value = c(0,100), width = "110%"),
-                                sliderInput(inputId = "ran3", label= "Objective 3:",min = 0, max = 1, value = c(0,100), width = "110%"),
-                                sliderInput(inputId = "ran4", label= "Objective 4:",min = 0, max = 1, value = c(0,100), width = "110%")
-                                
-                              ),
+                                                        
+                                sliderInput(inputId = "ran1", label= "Objective 1:",min = 0, max = 100, value = c(0,100), width = "110%"),
+                                sliderInput(inputId = "ran2", label= "Objective 2:",min = 0, max = 100, value = c(0,100), width = "110%"),
+                                sliderInput(inputId = "ran3", label= "Objective 3:",min = 0, max = 100, value = c(0,100), width = "110%"),
+                                sliderInput(inputId = "ran4", label= "Objective 4:",min = 0, max = 100, value = c(0,100), width = "110%"),
+                                 ),
+    
                               tags$div(textOutput("check_range"), style = "color: red;"),
                               br(),
                               br(),
@@ -472,7 +476,8 @@ ui <-
                                       withSpinner(
                                         uiOutput("spinner_output"),
                                         type = 4  , color = "#F7A600"
-                                      ))
+                                      )
+                        )##################CONFIG MAIN PANEL END
                                     
                              ),
                      
