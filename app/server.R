@@ -15,6 +15,7 @@ server <- function(input, output, session) {
   rng_plt <- reactiveVal(NULL) #getting the highest range across dataframe
   pca_remove <- reactiveVal(NULL) #variables removed from pca
   stq <- reactiveVal(NULL) #status quo
+  
   #data prep
   run_prep_possible = reactiveValues(files_avail = FALSE) #allow prep script to run when all required files available
   script_output <- reactiveVal("") # data prep R output
@@ -71,7 +72,7 @@ server <- function(input, output, session) {
   coma = reactiveVal()
   range_controlled = reactiveVal(NULL)
   initial_update_done = reactiveValues(initial = FALSE)
-  
+
   #figure in analysis rendering
   is_rendering <- reactiveVal(FALSE)
   default_running <- reactiveVal(NULL)#spinner in configure tab
@@ -181,10 +182,10 @@ server <- function(input, output, session) {
           min_max <-data.frame(t(sapply(data, function(x) range(x, na.rm = TRUE))))
           names(min_max) =c("min","max")
           range_value = NULL
-          
+         
           new_defaults <- default_vals()
           
-          for (i in 1:4) {
+          for (i in 1:4) {#this should become obsolete with new function
             var_name <- paste0("steps", i)
             
             if (abs(min_max$max[i]) <= 0.005) {
@@ -194,9 +195,11 @@ server <- function(input, output, session) {
               range_value = append(range_value,(rownames(min_max[i, ])))
               
             }
+            
+            assign(var_name, (min_max$max[i]-min_max$min[i])/20)
+            
+         
           range_controlled(range_value)
-          
-          assign(var_name, (min_max$max[i]-min_max$min[i])/20)
           
           updateSliderInput(session, paste0("obj",i,"_ahp"), value = c(min_max$min[i],min_max$max[i]),min =min_max$min[i],max = min_max$max[i],step=var_name)
           updateSliderInput(session, paste0("ran",i), value = c(min_max$min[i],min_max$max[i]),min =min_max$min[i],max = min_max$max[i],step=var_name)
@@ -1518,15 +1521,18 @@ server <- function(input, output, session) {
           
           sols_data = read.csv(current_py_out)
           
-          new_col_sol = c("optimum", objectives(),"cluster size","cluster number")
+          new_col_sol = c("optimum", objectives(),"cluster size","cluster number","outlier")
           
           sols(sols_data %>% rownames_to_column("optimum") %>%
                  group_by(Cluster)%>%mutate(cluster_size = n())%>%ungroup()%>%
-                 dplyr::filter(!is.na(Representative_Solution)& Representative_Solution != "" & Representative_Solution != "outlier") %>% 
-                 select(1:5,cluster_size, Cluster) %>% #PCA content is hard to read/limited additional value for user
-                 rename_with(~new_col_sol,everything()))
+                 dplyr::filter(!is.na(Representative_Solution)& Representative_Solution != "") %>% 
+                 select(1:5,cluster_size, Cluster) %>%
+                 mutate(outlier = case_when(
+                   Cluster == "outlier" | cluster_size == 1 ~ "outlier",  # Condition for "inactive" or value == 6
+                   TRUE ~ "" 
+                 ))%>% rename_with(~new_col_sol,everything()))
           
-          
+         
           
           sols2(sols_data %>% rownames_to_column("optimum") %>%  #for boxplot the whole thing is needed
                   rename_with(~new_col_sol[1:5],1:5))
@@ -1542,12 +1548,19 @@ server <- function(input, output, session) {
         output$antab <- renderDT({
           req(sols())
           
-          df = sols()%>%mutate(across(where(is.numeric), round, digits = 2))
-          df = as.data.frame(lapply(df, function(x) as.numeric(gsub("-", "", as.character(x)))))
-          colnames(df) = names(sols())
+          df <- sols() %>%
+            mutate(across(where(is.numeric), round, digits = 2)) %>%
+            mutate(across(where(is.numeric), ~as.numeric(gsub("-", "", as.character(.)))))
+          
+         
+          df <- as.data.frame(df)
+          colnames(df) <- names(sols())
+          
           datatable(df,
-                    selection = list(mode = "multiple", target = 'row', max = 12), rownames= FALSE,
+                    selection = list(mode = "multiple", target = 'row', max = 12),
+                    rownames = FALSE,
                     options = list(pageLength = 20, autoWidth = TRUE))
+          
         })
       })
      
@@ -1944,7 +1957,7 @@ server <- function(input, output, session) {
     req(sols(),range_controlled(),objectives())
      
     if (input$best_cluster) {
-      df = subset(sols(),select= -c(optimum,`cluster number`,`cluster size`)) #best option out of optima
+      df = subset(sols(),select= -c(optimum,`cluster number`,`cluster size`,outlier )) #best option out of optima
       
       df = match_abs(minval=c(input$obj1_ahp[1],input$obj2_ahp[1], input$obj3_ahp[1], input$obj4_ahp[1]),
                      maxval=c(input$obj1_ahp[2],input$obj2_ahp[2], input$obj3_ahp[2], input$obj4_ahp[2]),
