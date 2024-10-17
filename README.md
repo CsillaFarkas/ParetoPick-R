@@ -65,9 +65,9 @@ the project consists of six folders:
 
 # Assumptions
 * General
-  * do the current default settings produce reasonable cluster outputs across all catchments? potentially we need to add outlier testing
+  * do the current default settings produce reasonable cluster outputs across all catchments? the default might need outlier testing we need to add outlier testing
   * dynamic priority allocation according to measure_location$nswrm - see page 35 in deliverable 5.1 (esp. pond vs wetland)
-  * users should not produce optimisation outputs with values below 0, add a check and change pareto_fitness to all above 0, would mean overhaul of range_controlled()
+  * users should not produce optimisation outputs with values below 0 and if possible no values smaller than 1, the app will not include a check/balancing function for this
   * remove minus signs everywhere
   * share to GitLab
 
@@ -79,10 +79,8 @@ the project consists of six folders:
 # To do
 ## Content
 * Visualising tab:
-  * add new sliders for measures - along share of area possible for this measure (similar to share_con), this probably requires a spinner in beginning
+  * add new sliders for measures - along share of area possible for this measure (similar to share_con), this requires an earlier request to the user for data supply
   * catch R errors triggered by empty data frames better
-  * add option to save selected optimum
-  * add "inverted" to plot, remove all minus signs
 
 * Configure tab
   * we might want to automate the number of clusters (k in k means) and outlier testing 
@@ -126,5 +124,4 @@ the project consists of six folders:
   * no replotting when table is touched, that is so annoying
 
 * AHP
-  * more reasonable representation of variables across different scales - we will need to test that with different datasets (currently just multiplied by 1000 if <0.005) --> this will be solved by the check to pareto_fitness (see under General)
   * keep ticks and remove labels on top (probably obsolete with restructure)
