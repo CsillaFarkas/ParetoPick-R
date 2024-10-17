@@ -394,7 +394,9 @@ server <- function(input, output, session) {
     
     output$linePlot <- renderPlot({ parplot_fun() })
     
- 
+  observe({if(!is.null(input$clickline)){shinyjs::show("save_click_line")}})
+  observeEvent(input$clickline, {updateCheckboxInput(session, "save_click_line", value = FALSE) })
+  
   ## pull values from parallel axis line when clicked
   observeEvent(input$clickline,{
     req(fit(), objectives())
@@ -445,12 +447,26 @@ server <- function(input, output, session) {
         }
       }, col = colnms, unit = uns, SIMPLIFY = TRUE)
       
-      lclick = as.data.frame(er())
+      lclick <<- as.data.frame(er())
       colnames(lclick) = new_colnms
       lclick
         }, include.rownames = F)
     
     }, ignoreNULL = TRUE)
+  
+  observeEvent(input$save_click_line,{
+    req(lclick)
+    if(input$save_click_line){if(file.exists(paste0(output_dir,"selected_optima.csv"))){
+      lclick <- cbind(optimum = rownames(lclick), lclick)
+      write.table(lclick, file = paste0(output_dir,"selected_optima.csv"), sep = ",",
+                  append = TRUE, col.names = FALSE, row.names = FALSE)
+      
+    }else{lclick <- cbind(optimum = rownames(lclick), lclick)
+           write.csv(lclick,file=paste0(output_dir,"selected_optima.csv"),row.names = F)
+      
+      write.table()
+    }}
+  })
   
   
   
@@ -476,7 +492,7 @@ server <- function(input, output, session) {
       col2 = c(input$obj2[2],input$obj2[1]),
       col3 = c(input$obj3[2],input$obj3[1]),
       col4 = c(input$obj4[2],input$obj4[1]),
-      row.names = c("max","min")
+      row.names = c("best","worst")
     )
      colnames(slid) = objectives()
      
@@ -545,7 +561,16 @@ server <- function(input, output, session) {
   
 
   output$whole_range <- renderTable({
-   mima_fun()
+    req(objectives(),uns)
+    new_colnms <- mapply(function(col, unit) {
+      if (unit != "") {
+        paste(col, " (", unit, ")", sep = "")
+      } else {col}
+      
+    }, col = objectives(), unit = uns, SIMPLIFY = TRUE)
+   df = mima_fun()
+   colnames(df) = new_colnms
+   df
   }, rownames = T)
   
   ## barplot
