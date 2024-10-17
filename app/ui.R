@@ -315,7 +315,9 @@ ui <-
                                                               tableOutput("sliders_abs"))),
                                               fluidRow(column(6,
                                                               div("Selected Optimum (select in line plot)", style = "text-align: left; font-size:150%"),
-                                                              tableOutput("click_info")),
+                                                              tableOutput("click_info"),
+                                                              checkboxInput("save_click_line",label = "Click here to save the selected optimum to the output folder",value=F)%>%hidden()),
+                                                       
                                                        column(6,div("Maximum Objective Ranges (absolute)",style = "text-align: left; font-size:150%"),
                                                               tableOutput("whole_range"))
                                                        
