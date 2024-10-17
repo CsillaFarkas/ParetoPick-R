@@ -286,6 +286,23 @@ read_config_plt = function(obj=T,axis=F,inipath="../input/config.ini"){
 
 #### Table/Output Formatting Functions ####
 
+## scale fit() - function
+# scale_data <- function(x) {
+#   if (max(abs(x), na.rm = TRUE) <= 0.001) {
+#     return(x * 100000) 
+#   } else if (max(abs(x), na.rm = TRUE) <= 0.01) {
+#     return(x * 10000)   
+#   }else if (max(abs(x), na.rm = TRUE) <= 0.1) {
+#     return(x * 1000)   
+#   } else if (max(abs(x), na.rm = TRUE) <= 1) {
+#     return(x * 100)       
+#   } else if (max(abs(x), na.rm = TRUE) >= 1000) {
+#     return(x / 10)       
+#   } else if (max(abs(x), na.rm = TRUE) > 10000) {
+#     return(x / 10000)       
+#   }else{return(x)}
+# }
+
 ## Micha's smartly rounding functions :)
 round_signif <- function(x) {
    ifelse(abs(x) >= 100, round(x, 0),  signif(x, 2)) #alternatively round(x,num.decimals(x))
@@ -865,6 +882,7 @@ plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NUL
     
     # #pull fit(), establish limits
     whole <- read.table(pareto_path, header = FALSE, stringsAsFactors = FALSE, sep = ',')
+
     colnames(whole) <- colnames(dat)
     # 
  
