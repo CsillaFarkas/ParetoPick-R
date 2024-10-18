@@ -410,6 +410,9 @@ run_python_script <- function(path_script="",pca_status) {
 #### Plotting the optima ####
 ## get linear elements requiring a buffer
 pull_buffer = function(prios= "../input/nswrm_priorities.csv"){
+  if (!file.exists(prios)) {
+    return(NULL)  
+  }
   priodf = read.csv(prios)
   strct_obj = priodf%>%filter(mngmt ==0)%>%select(nswrm)%>%pull()#structural measures
   return(strct_obj)
