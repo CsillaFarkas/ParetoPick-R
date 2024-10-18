@@ -455,8 +455,10 @@ server <- function(input, output, session) {
     }, ignoreNULL = TRUE)
   
   observeEvent(input$save_click_line,{
-    req(lclick)
-    if(input$save_click_line){if(file.exists(paste0(output_dir,"selected_optima.csv"))){
+    
+    if(input$save_click_line){
+      req(lclick)
+      if(file.exists(paste0(output_dir,"selected_optima.csv"))){
       lclick <- cbind(optimum = rownames(lclick), lclick)
       write.table(lclick, file = paste0(output_dir,"selected_optima.csv"), sep = ",",
                   append = TRUE, col.names = FALSE, row.names = FALSE)
@@ -1703,7 +1705,7 @@ server <- function(input, output, session) {
     
     if(file.exists("../data/hru.shp")) {
       ##shp for location plot
-      cm_clean(pull_shp_pure(layername = "basin"))
+      # cm_clean(pull_shp_pure(layername = "basin"))
       ##shps for maps
       if (file.exists("../input/hru_in_optima.RDS")) {
         cm(
@@ -1723,7 +1725,7 @@ server <- function(input, output, session) {
   comp_fun = function(){
     # if(!file.exists("../data/measure_location.csv")){return(NULL)}else{
     
-    req(sols(),cm(),cm_clean()) #req is also used in functions
+    req(sols(),cm()) 
     selected_row <- input$antab_rows_selected
     
     selected_data <- sols()[selected_row,]
@@ -1735,13 +1737,14 @@ server <- function(input, output, session) {
     
     col_sel = names(hru_sel)[grep("Optim",names(hru_sel))]  #variable length of columns selected
     
-    nplots = length(col_sel)+1
+    nplots = length(col_sel)#+1
     m1 = plt_lf(data=hru_sel, col_sel = col_sel, mes = unique(mes$nswrm),la = lalo[1],lo =lalo[2], buff_els=buffs)
     
-    cm2 = plt_cm_pure(data=cm_clean(), la = lalo[1],lo =lalo[2])
-    m <- c(list(cm2), m1)
+    # cm2 = plt_cm_pure(data=cm_clean(), la = lalo[1],lo =lalo[2])
+    # m <- c(list(cm2), m1)
+    m = m1
     
-    sync(m,sync = list(2:nplots),sync.cursor = F)
+    sync(m,sync = list(1:nplots),sync.cursor = F) #list(2:nplots) when cm_clean() used
   }#}
   
   observeEvent(input$plt_opti,{
