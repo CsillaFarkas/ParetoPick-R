@@ -1723,7 +1723,7 @@ server <- function(input, output, session) {
     # if(!file.exists("../data/measure_location.csv")){return(NULL)}else{
     
     req(sols(),cm()) 
-    selected_row <- input$antab_rows_selected
+    selected_row <- isolate(input$antab_rows_selected)
     
     selected_data <- sols()[selected_row,]
     
@@ -1745,7 +1745,7 @@ server <- function(input, output, session) {
   }#}
   
   observeEvent(input$plt_opti,{
-    selected_row <- input$antab_rows_selected
+    selected_row <- isolate(input$antab_rows_selected)
     
     if (is.null(selected_row)) {
       
@@ -1805,15 +1805,14 @@ server <- function(input, output, session) {
     shinyjs::toggle("plot_spinner", condition = is_rendering())
   })
   
-  
+  #pulling with html tags does not work for leaflet
   # output$download_meas_plot <- downloadHandler(
-  #   filename = function() {
-  #     paste(input$meas_plot_savename, ".html", sep = "")
-  #   },
-  #   content = function(file) {
-  #     htmlwidgets::saveWidget(comp_fun(), file)
-  #   }
-  # )
+    filename = function() {
+      paste(ifelse(input$meas_plot_savename == "", "measure_implementation", input$meas_plot_savename), ".html", sep = "")
+    },
+         
+          save_tags(comp_fun(), filename, selfcontained=TRUE)
+      )
 
   
   
