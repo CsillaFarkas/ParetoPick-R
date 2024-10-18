@@ -27,16 +27,18 @@ the project consists of six folders:
 
 ### Files provided in the package
 * config.ini 
-* nswrm_priorities.csv 
+
 
 ### Files created and used in the process
 (stored in input folder)
 * var_corr_par.csv (created in convert_optain.R, contains all variables considered in the clustering)
 * hru_in_optima.RDS (created in convert_optain.R based on measure_location.csv, connection between activated HRUs and optima)
+* nswrm_priorities.csv (created in covert_optain.R based on measure_location.csv)
 * object_names.RDS
 * pca_content.RDS
 * all_var.RDS
 * units.RDS
+
 
 ### Required input files 
 (app pulls these into the data folder)
