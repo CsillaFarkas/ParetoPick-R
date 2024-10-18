@@ -911,10 +911,7 @@ server <- function(input, output, session) {
           if (length(remaining_files) == 0) {
             status <- "All files have been deleted."
             
-            file.copy("../data for container/nswrm_priorities.csv", input_dir, overwrite = TRUE)
-            
             file.copy("../data for container/config.ini", input_dir, overwrite = TRUE)
-            
             
           } else {
             status <- "Some files could not be deleted."
