@@ -68,10 +68,10 @@ the project consists of six folders:
 # Assumptions
 
 * General to do and open questions
-  * do the current default settings produce reasonable cluster outputs across all catchments? the default might need outlier testing we need to add outlier testing
+  * do the current default settings produce reasonable cluster outputs across all catchments? the default might need outlier testing 
   * users should not produce optimisation outputs with values below 0 and if possible no values smaller than 1, the app will not include a check/balancing function for this
   * removing minus signs everywhere possible?
-  * new nswrm_priorities() function might require more measures, depending on what was used, it currently allocates: "pond","constr_wetland","wetland","hedge","buffer","grassslope","lowtillcc","lowtill","droughtplt"
+  * new nswrm_priorities() function might require more measures, depending on what was used. It currently considers: pond, constr_wetland, wetland, hedge, buffer, grassslope, lowtillcc, lowtill, droughtplt
   * share to GitLab
 
 
@@ -87,7 +87,7 @@ the project consists of six folders:
 
 * Configure tab
   * we might want to automate the number of clusters (k in k means) and outlier testing 
-  * finish option for limiting range and check for missing files
+  * check for missing files
   * automate widest range function to config writing for it to work in python
 
 * Correlation tab
@@ -95,12 +95,8 @@ the project consists of six folders:
   * (python: deviations_step is currently the default value) 
   * add spinner so user knows something is happening
   * fix share_tot - new share_con is fully correlated
-
-* Analysis tab
-  * this tab requires another name
   
-  
-* AHP and Analysis tabs
+* AHP and Cluster Analysis tabs
   * better graphical representation of decison space across solutions:
     * linE - on y axis
     * frequency maps - produce during python call or based on button with Micha's R script and put in output
@@ -119,12 +115,9 @@ the project consists of six folders:
   * AHP needs another visualisation - each pair in different tab - only show results if inconsistency acceptable
   * convert_optain requires some failsafe controls for empty values
 
-* Visualising tab:
-  * tables are not super clear - add unit and show when hovered
  
 * Analysis tab
-  * HTML download for measure implementation maps
-  * no replotting when table is touched, that is so annoying
+  * HTML download for measure implementation maps - might be possible with replotting and individual saving and stitching back together
 
 * AHP
   * keep ticks and remove labels on top (probably obsolete with restructure)
