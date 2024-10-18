@@ -64,11 +64,12 @@ the project consists of six folders:
 * min_components & max_components
 
 # Assumptions
-* General
+
+* General to do and open questions
   * do the current default settings produce reasonable cluster outputs across all catchments? the default might need outlier testing we need to add outlier testing
-  * dynamic priority allocation according to measure_location$nswrm - see page 35 in deliverable 5.1 (esp. pond vs wetland)
   * users should not produce optimisation outputs with values below 0 and if possible no values smaller than 1, the app will not include a check/balancing function for this
-  * remove minus signs everywhere
+  * removing minus signs everywhere possible?
+  * new nswrm_priorities() function might require more measures, depending on what was used, it currently allocates: "pond","constr_wetland","wetland","hedge","buffer","grassslope","lowtillcc","lowtill","droughtplt"
   * share to GitLab
 
 
