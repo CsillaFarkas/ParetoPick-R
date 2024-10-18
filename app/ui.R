@@ -19,7 +19,7 @@ ui <-
                     menuItem("PCA & kmeans/kmedoids",icon=icon("project-diagram", lib="font-awesome"), tabName = "pca")
                   ),
                   
-                  menuItem("Analysis", icon = icon("th"),tabName = "analysis"),
+                  menuItem("Cluster Analysis", icon = icon("th"),tabName = "analysis"),
                   menuItem("AHP",icon=icon("sliders-h", lib="font-awesome"),tabName = "ahp")
                   
       )),
@@ -732,7 +732,7 @@ ui <-
                            #   style = "display: inline-block; vertical-align: top; margin-left: 0px;",
                            #   downloadButton("download_meas_plot", "Download Plot")
                            # )
-                           
+                           # 
                            
                          )),
                        tags$script(HTML("
