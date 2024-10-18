@@ -44,7 +44,7 @@ suppressPackageStartupMessages({
   # library(htmlwidgets) #save html files
   library(ini)#
   library(leaflet)#
-  library(processx) # manage system processes from within shiny (e.g. for pulling R output into shiny)
+  # library(processx) # manage system processes from within shiny (e.g. for pulling R output into shiny)
   library(purrr)
   library(leafsync)
   library(quanteda)
@@ -54,7 +54,7 @@ suppressPackageStartupMessages({
   library(sf)#
   library(shiny)#
   options(shiny.maxRequestSize = 1000*1024^2)
-  library(shinycssloaders) # for withSpinner()
+  # library(shinycssloaders) # for withSpinner()
   library(shinydashboard)#
   library(shinyFiles) #drag and drop
   library(shinyjs) # for hiding parts of the app
@@ -64,6 +64,34 @@ suppressPackageStartupMessages({
   library(tidyverse)
   library(viridis)
 })
+## Function to check, assign and write priorities
+nswrm_priorities <- function(lu){
+  
+  prio <- data.frame(nswrm = character(), priority = integer(), mngmt=integer(), stringsAsFactors = FALSE)
+  priority <- 1
+  
+  prio_mes <- c("pond","constr_wetland","wetland")  # structural elements (1st prio)
+  
+  for(lus in prio_mes){if(lus %in% lu){
+    prio <- rbind(prio, data.frame(nswrm = lus, priority = priority,mngmt= 0 ))
+    priority <- priority + 1
+  }}
+  
+  lu_match <- rev(mesrs[mesrs %in% c("hedge","buffer","grassslope")])  # land use and their order (2nd prio)
+  for(lus in lu_match) {if(lus %in% lu) {
+    prio <- rbind(prio, data.frame(nswrm = lus, priority = priority,mngmt= 0 ))
+    priority <- priority + 1
+  }}
+  
+  mn_match = rev(mesrs[mesrs %in% c("lowtillcc","lowtill","droughtplt")])  # management and their order (3rd prio)
+  for(lus in mn_match){if(lus %in% lu) {
+    prio <- rbind(prio, data.frame(nswrm = lus, priority = priority,mngmt= 1 ))
+    priority <- priority + 1
+  }}
+  
+  write.csv(prio,file = paste0("../input/nswrm_priorities.csv"),row.names = F)#okay to have this here, Oct 24 - only used for buffer plotting
+  return(prio)
+}
 
 
 ## Genomes
@@ -94,8 +122,12 @@ suppressPackageStartupMessages({
    relocate(name_new, .after = obj_id)%>%drop_na(name_new)
 
 # Eliminate space before some "name_new"
-  gen_act$name_new <- str_remove(gen_act$name_new, " ") 
-  prios <- read.csv("../input/nswrm_priorities.csv") ## this comes with the package
+  gen_act$name_new <- str_remove(gen_act$name_new, " ")
+  
+# Pull priorities
+  meloc <- read.csv("../data/measure_location.csv") 
+  mesrs = unique(meloc$nswrm) #only these have to be allocated
+  prios <- nswrm_priorities(mesrs)
 
   gen_act_prio= gen_act %>%
     left_join(prios, by = c("nswrm" = "nswrm")) %>%
