@@ -689,11 +689,10 @@ ui <-
                              column(6, tags$div(textOutput("check_default"), style = "color: red;"), 
                                     div(style = "overflow-x: auto;", DTOutput("antab"))),
                              column(6,
-                                    tags$div("The default plot shows the pareto front, you can also select representative optima in the table and
-                                             plot the objectives' within-cluster distribution or the measure's area use",style = "text-align: center;font-size: 125%;"),
+                                    tags$div("The default plot shows the pareto front.",style = "text-align: center;font-size: 125%;"),
                                     fluidRow(
-                                      column(6,checkboxInput("show_boxplot",label="show within-cluster distribution instead",value=FALSE)),
-                                      column(6,checkboxInput("show_share_con",label="show the individual measures' share in total considered area instead",value=FALSE))
+                                      column(6,checkboxInput("show_boxplot",label="show the objectives' within-cluster distribution (select from table)",value=FALSE)),
+                                      column(6,checkboxInput("show_share_con",label="show the individual measures' share in total considered area (select from table)",value=FALSE))
                                     ),
                                     plotOutput("par_plot_optima"),
                                     checkboxInput("add_whole", label = "Show the whole Pareto front", value = FALSE),
@@ -799,7 +798,26 @@ ui <-
                          ),
                          
                          mainPanel(
-     
+                           
+                           fluidRow(
+                             column(
+                               width = 12,
+                               actionButton("ahp_card1", "Show Card 1"),
+                               actionButton("ahp_card2", "Show Card 2"),
+                               actionButton("ahp_card3", "Show Card 3"),
+                               actionButton("ahp_card4", "Show Card 4"),
+                               actionButton("ahp_card5", "Show Card 5"),
+                               actionButton("ahp_card6", "Show Card 6")
+                             )
+                           ),
+                           fluidRow(
+                             uiOutput("card1_ui"),
+                             uiOutput("card2_ui"),
+                             uiOutput("card3_ui"),
+                             uiOutput("card4_ui"),
+                             uiOutput("card5_ui"),
+                             uiOutput("card6_ui")
+                           ),
                            
                            
                            fluidRow(
@@ -855,6 +873,7 @@ ui <-
                            
                          )
                        )
+                       
                      )
                    )
     )
