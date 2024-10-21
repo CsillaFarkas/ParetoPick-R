@@ -72,7 +72,8 @@ server <- function(input, output, session) {
   coma = reactiveVal()
   range_controlled = reactiveVal(NULL)
   initial_update_done = reactiveValues(initial = FALSE)
-
+  card_shown <- reactiveValues(card1 = FALSE, card2 = FALSE, card3 = FALSE, card4 = FALSE, card5 = FALSE, card6 = FALSE)
+  
   #figure in analysis rendering
   is_rendering <- reactiveVal(FALSE)
   default_running <- reactiveVal(NULL)#spinner in configure tab
@@ -1669,19 +1670,24 @@ server <- function(input, output, session) {
     }
     
     #switch between plots/functions
-    observeEvent(list(input$show_boxplot, input$show_share_con), {
+    observeEvent(input$show_boxplot,{
       if (input$show_boxplot) {
         output$par_plot_optima <- renderPlot({clus_dis_plt()})
-        
-      } else if (input$show_share_con) {
-        output$par_plot_optima <- renderPlot({clus_share_con_plt()})
-        
-      } else{
-        #default
-        output$par_plot_optima <- renderPlot({clus_res_plt()})
-      }
+        updateCheckboxInput(session, "show_share_con", value = FALSE)
+        } 
     })
-     
+      
+    observeEvent(input$show_share_con,{
+      if (input$show_share_con) {
+        output$par_plot_optima <- renderPlot({clus_share_con_plt()})
+        updateCheckboxInput(session, "show_boxplot", value = FALSE)
+      } 
+    })
+      
+    observe({if(!(input$show_boxplot) && !(input$show_share_con)){
+      output$par_plot_optima <- renderPlot({clus_res_plt()})
+      
+    }})
     
     output$download_clus_plot <- downloadHandler(
       filename = function() {
@@ -1807,12 +1813,12 @@ server <- function(input, output, session) {
   
   #pulling with html tags does not work for leaflet
   # output$download_meas_plot <- downloadHandler(
-    filename = function() {
-      paste(ifelse(input$meas_plot_savename == "", "measure_implementation", input$meas_plot_savename), ".html", sep = "")
-    },
-         
-          save_tags(comp_fun(), filename, selfcontained=TRUE)
-      )
+    # filename = function() {
+    #   paste(ifelse(input$meas_plot_savename == "", "measure_implementation", input$meas_plot_savename), ".html", sep = "")
+    # },
+    #      
+    #       save_tags(comp_fun(), filename, selfcontained=TRUE)
+    #   )
 
   
   
@@ -2022,7 +2028,6 @@ server <- function(input, output, session) {
     best_option(df[best_option_index, ])
     
     bo = best_option()
-    
   
     }
       datatable(bo,  colnames = names(bo), rownames = FALSE, escape = FALSE, options = list(dom = 't', paging = FALSE,bSort = FALSE))
@@ -2149,16 +2154,115 @@ server <- function(input, output, session) {
 
     m1 = plt_lf(data=hru_one,  mes = unique(mes$nswrm),la = lalo[1],lo =lalo[2],
                 buff_els=needs_buffer(),col_sel=col_sel)
-
     return(m1)
 
     }
-   
-  
     output$plt_bo_measure = renderUI({single_meas_fun()})
     
     output$plot_ready <- renderText({is_rendering(FALSE)})#blind output required for spinner
   })
   
   observe({ shinyjs::toggle("ahp_spinner", condition = is_rendering())})
+  
+  
+  # dummy sliders only for structure
+  sliders <- lapply(1:6, function(i) {
+    sliderInput(paste0("slider", i), label = paste("Slider", i), min = 0, max = 100, value = i * 10)
+  })
+  
+  # dummy func only for structure
+  create_plot <- function(slider_value) {
+    ggplot(mtcars, aes(x = wt, y = mpg)) +
+      geom_point() +
+      ggtitle(paste("Example Plot - Slider Value:", slider_value))
+  }
+  
+  #fun for putting both scatter and slider in one card
+  create_card <- function(title, slider, plot) {
+    box(
+      title = title,
+      width = 12,
+      status = "primary",
+      tagList(
+        slider,
+        plotOutput(plot)
+      )
+    )
+  }
+  
+  # ahp card 1
+  observeEvent(input$ahp_card1, {
+    card_shown$card1 <- TRUE
+    output$plot1 <- renderPlot({
+      create_plot(input$slider1)
+    })
+    output$card1_ui <- renderUI({
+      create_card("Card 1", sliders[[1]], "plot1")
+    })
+  })
+  
+  # ahp card 2
+  observeEvent(input$ahp_card2, {
+    if (card_shown$card1) {
+      card_shown$card2 <- TRUE
+      output$plot2 <- renderPlot({
+        create_plot(input$slider2)
+      })
+      output$card2_ui <- renderUI({
+        create_card("Card 2", sliders[[2]], "plot2")
+      })
+    }
+  })
+  
+  # ahp card 3
+  observeEvent(input$ahp_card3, {
+    if (card_shown$card2) {
+      card_shown$card3 <- TRUE
+      output$plot3 <- renderPlot({
+        create_plot(input$slider3)
+      })
+      output$card3_ui <- renderUI({
+        create_card("Card 3", sliders[[3]], "plot3")
+      })
+    }
+  })
+  
+  # ahp card 4
+  observeEvent(input$ahp_card4, {
+    if (card_shown$card3) {
+      card_shown$card4 <- TRUE
+      output$plot4 <- renderPlot({
+        create_plot(input$slider4)
+      })
+      output$card4_ui <- renderUI({
+        create_card("Card 4", sliders[[4]], "plot4")
+      })
+    }
+  })
+  
+  # ahp card 5
+  observeEvent(input$ahp_card5, {
+    if (card_shown$card4) {
+      card_shown$card5 <- TRUE
+      output$plot5 <- renderPlot({
+        create_plot(input$slider5)
+      })
+      output$card5_ui <- renderUI({
+        create_card("Card 5", sliders[[5]], "plot5")
+      })
+    }
+  })
+  
+  # ahp card 6
+  observeEvent(input$ahp_card6, {
+    if (card_shown$card5) {
+      card_shown$card6 <- TRUE
+      output$plot6 <- renderPlot({
+        create_plot(input$slider6)
+      })
+      output$card6_ui <- renderUI({
+        create_card("Card 6", sliders[[6]], "plot6")
+      })
+    }
+  })
 }
