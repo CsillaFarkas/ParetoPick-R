@@ -105,8 +105,7 @@ the project consists of six folders:
     * add line plot for solutions to improve tradeoff representation
     * find a way to select measures and analyse their density/combinations/areas in field
     * representation of "most important" measures that are part of all pareto-optimal solutions
-    * anonymous catchments something something
-
+  
 
 
 ## Workflow
@@ -121,3 +120,4 @@ the project consists of six folders:
 
 * AHP
   * keep ticks and remove labels on top (probably obsolete with restructure)
+  * in plot - retain original range when sliders moved (alreade implemented for analysis tab)
