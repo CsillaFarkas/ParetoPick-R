@@ -286,23 +286,6 @@ read_config_plt = function(obj=T,axis=F,inipath="../input/config.ini"){
 
 #### Table/Output Formatting Functions ####
 
-## scale fit() - function
-# scale_data <- function(x) {
-#   if (max(abs(x), na.rm = TRUE) <= 0.001) {
-#     return(x * 100000) 
-#   } else if (max(abs(x), na.rm = TRUE) <= 0.01) {
-#     return(x * 10000)   
-#   }else if (max(abs(x), na.rm = TRUE) <= 0.1) {
-#     return(x * 1000)   
-#   } else if (max(abs(x), na.rm = TRUE) <= 1) {
-#     return(x * 100)       
-#   } else if (max(abs(x), na.rm = TRUE) >= 1000) {
-#     return(x / 10)       
-#   } else if (max(abs(x), na.rm = TRUE) > 10000) {
-#     return(x / 10000)       
-#   }else{return(x)}
-# }
-
 ## Micha's smartly rounding functions :)
 round_signif <- function(x) {
    ifelse(abs(x) >= 100, round(x, 0),  signif(x, 2)) #alternatively round(x,num.decimals(x))
@@ -801,6 +784,10 @@ plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NUL
   
   if(!file.exists(pareto_path)){return(NULL)}
   
+  #pull fit() establish range limits
+  whole <- read.table(pareto_path, header = FALSE, stringsAsFactors = FALSE, sep = ',')
+  colnames(whole) <- colnames(dat)
+  
   xma = yma = NULL
   
  if(an_tab){
@@ -812,7 +799,7 @@ plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NUL
   #plot with main data
   p = ggplot(dat, aes(x = .data[[x_var]], y = .data[[y_var]], fill = .data[[col_var]], size = .data[[size_var]])) +
     geom_point(shape = 21, stroke = 0.5 ) +
-    viridis::scale_fill_viridis(alpha = 0.8, name = col_var) +  
+    viridis::scale_fill_viridis(alpha = 0.8, name = col_var,labels = function(x) abs(as.numeric(x))) +  
     scale_size(range = c(1, 10), name = size_var,labels = function(x) abs(as.numeric(x))) +     
     theme_bw() + 
     theme(panel.background = element_blank(),
@@ -834,8 +821,6 @@ plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NUL
   all_extra_data = NULL
   
   if (add_whole) {
-    whole <- read.table(pareto_path, header = FALSE, stringsAsFactors = FALSE, sep = ',')
-    colnames(whole) <- colnames(dat)
     whole$set <- "Whole front" #pulled above, only applied in analysis tab
     all_extra_data <- rbind(all_extra_data,whole)
     
@@ -876,22 +861,12 @@ plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NUL
         values = c("Whole front" = 21,"cluster solutions" = 21, "AHP - best option" = 22, "Selection" =21, "Status Quo" = 17),name="") + 
       scale_color_manual(labels = function(x) gsub("-", "", x),
         values = c( "Whole front" = "lightgrey","cluster solutions" = "cyan", "AHP - best option" = "#FF4D4D", "Selection" = "black", "Status Quo" = "#FF00FF"),name="") + 
-      guides(color = guide_legend(override.aes = list(size = 5)),shape = guide_legend(override.aes = list(size = 5)))+
-      scale_x_continuous(labels = function(x) {rem_min(x)})+scale_y_continuous(labels = function(x) {rem_min(x)})
+      guides(color = guide_legend(override.aes = list(size = 5)),shape = guide_legend(override.aes = list(size = 5)))
   }
- 
-  #Analysis tab requires control of limits to show selection as part of whole front
-  if(an_tab){
-    
-    # #pull fit(), establish limits
-    whole <- read.table(pareto_path, header = FALSE, stringsAsFactors = FALSE, sep = ',')
-
-    colnames(whole) <- colnames(dat)
-    # 
- 
+  #control range limits with fit() as reference
     p <- p + scale_x_continuous(limits= c(range(whole[[x_var]])[1],range(whole[[x_var]])[2]),labels = function(x) {rem_min(x)})+
       scale_y_continuous(limits= c(range(whole[[y_var]])[1],range(whole[[y_var]])[2]),labels = function(x) {rem_min(x)})
-    }
+    
 
   
   if(rev){
@@ -1084,6 +1059,30 @@ pull_high_range <- function(df) {
   return(res)
 }
 
+## scale fit() - function
+scale_data <- function(x) {
+  med <- median(abs(x), na.rm = TRUE)
+  
+  if (med <= 0.0001) {
+    return(as.numeric(x * 1000000))
+  } else if (med <= 0.001) {
+    return(as.numeric(x * 100000))
+  } else if (med <= 0.01) {
+    return(as.numeric(x * 10000))
+  } else if (med <= 0.1) {
+    return(as.numeric(x * 1000))
+  } else if (med <= 1) {
+    return(as.numeric(x * 100))
+  } else if (med >= 1000 && med < 10000) {
+    return(as.numeric(x / 100))
+  } else if (med >= 10000 && med < 100000) {
+    return(as.numeric(x / 1000))
+  } else if (med > 100000) {
+    return(as.numeric(x / 10000))
+  } else {
+    return(as.numeric(x))
+  }
+}
 
 #### Other Functions ####
 
