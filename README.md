@@ -69,8 +69,9 @@ the project consists of six folders:
 
 * General to do and open questions
   * do the current default settings produce reasonable cluster outputs across all catchments? the default might need outlier testing 
-  * users should not produce optimisation outputs with values below 0 and if possible no values smaller than 1, the app will not include a check/balancing function for this
+  * users should not produce optimisation outputs with values below 0 and if possible no values smaller than 1, the app currently runs a rescale to roughly balance the values between 1 and 100 but this is not a nice solution
   * removing minus signs everywhere possible?
+  * cannot take percentage of 0 so those changes are not visible in Visualisation tab
   * new nswrm_priorities() function might require more measures, depending on what was used. It currently considers: pond, constr_wetland, wetland, hedge, buffer, grassslope, lowtillcc, lowtill, droughtplt
   * share to GitLab
 
@@ -102,7 +103,7 @@ the project consists of six folders:
     * frequency maps - produce during python call or based on button with Micha's R script and put in output
     * barplot of implemented measures per optimum
     * plot PCA variables against objectives
-    * add line plot for solutions to improve tradeoff representation
+    * add line plot for solutions to improve tradeoff representation in Analysis tab
     * find a way to select measures and analyse their density/combinations/areas in field
     * representation of "most important" measures that are part of all pareto-optimal solutions
   
@@ -111,7 +112,7 @@ the project consists of six folders:
 ## Workflow
 * General
   * declutter app by removal of items that can instead be hovered (what could be moved there? --- unit, especially also in visualisation tab)
-  * AHP needs another visualisation - each pair in different tab - only show results if inconsistency acceptable
+  * only show results if inconsistency acceptable - color tabs when they're shown, maybe move plot above (where should the map go then?)
   * convert_optain requires some failsafe controls for empty values
 
  
