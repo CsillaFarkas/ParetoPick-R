@@ -78,11 +78,26 @@ server <- function(input, output, session) {
   is_rendering <- reactiveVal(FALSE)
   default_running <- reactiveVal(NULL)#spinner in configure tab
   
-  ### Introduction ####
+  ### Startup ####
   if (file.exists("../input/var_corr_par_bu.csv")) { #if back up exists, the original needs replacing
     file.remove("../input/var_corr_par.csv")
     file.rename("../input/var_corr_par_bu.csv", "../input/var_corr_par.csv")
-    }
+  }
+  
+  observe({
+
+  if (file.exists("../data/pareto_fitness_original.txt") ) {
+    return()
+  } else if (!file.exists(pareto_path)) { #if user hasn't supplied it yet
+    return()
+  } else{
+    data <- read.table(pareto_path, header = FALSE, stringsAsFactors = FALSE,sep = ',')
+    file.rename(pareto_path,"../data/pareto_fitness_original.txt")
+    data = as.data.frame(lapply(data, scale_data))
+    write.table(data,pareto_path,row.names = F,col.names = F, sep=",")
+  }
+
+  })
   
   ### Play Around Tab ####
   
@@ -166,10 +181,10 @@ server <- function(input, output, session) {
         new_col_data <- objectives()
         colnames(data) = new_col_data
         fit(data)
-        
+       
         yo = fit() %>% mutate(across(everything(), ~ scales::rescale(.)))%>%mutate(id = row_number())
         f_scaled(yo)
-        
+       
         yo2 <- pull_high_range(fit())
         rng_plt(yo2)
         
@@ -427,11 +442,11 @@ server <- function(input, output, session) {
                            allobs = objectives(),smll=F)
 
     te = fml[yo$id,]   # te <- fit()[yo$id,] would not work!!
-   
+    
     ete <- te
-    for(i in 1:4){
-      ete[,i] = formatC(te[,i],digits =num.decimals(te[,i]),drop0trailing = T,format = "f")
-    }
+    # for (i in 1:4) {
+    #   ete[,i] <- round_signif(te[,i])
+    # }
    
     er(ete)
     
@@ -959,7 +974,7 @@ server <- function(input, output, session) {
       ##default correlation/cluster run
       observeEvent(input$run_defaults, {
         if(is.null(corr_file_check())){
-       
+        
         output$spinner_progress <- renderText({ "Clustering is running, please wait..." })
         
         default_running(TRUE) #for spinner
@@ -1838,26 +1853,22 @@ server <- function(input, output, session) {
       
       lapply(ids_to_hide, shinyjs::hide)
     
-    } else{
-      choices = readRDS("../input/object_names.RDS")
-    }
+      } else{choices = readRDS("../input/object_names.RDS")}
+    
     ahp_choices(choices)
    
-    
-    updateSelectInput(session,inputId = "x_var",choices = choices,selected = rng_plt()[1])
-    updateSelectInput(session,inputId = "y_var",choices = choices, selected = rng_plt()[2])
+    updateSelectInput(session,inputId = "x_var", choices = choices,selected = rng_plt()[1])
+    updateSelectInput(session,inputId = "y_var", choices = choices, selected = rng_plt()[2])
     updateSelectInput(session,inputId = "col_var", choices = choices, selected = rng_plt()[3])
     updateSelectInput(session,inputId = "size_var", choices = choices, selected = rng_plt()[4])
     
     })
   
-  
-  criteria_choices <- reactive({
-    req(fit())
-    colnames(fit())
+  criteria_choices <- reactive({req(fit())
+                                colnames(fit())
   })
 
-  # Generate the UI for selecting the first criterion dynamically based on the uploaded data
+  ## UI for selecting the first criterion dynamically based on the uploaded data
   output$criterion1_ui <- renderUI({
     choices <- criteria_choices()
     selectInput("criterion1", "Select the first objective (x-axis)", choices = choices)
@@ -1898,35 +1909,6 @@ server <- function(input, output, session) {
     
       metrics_df
     }, rownames = F, colnames = F, sanitize.text.function = function(x) x)
-  })
-  
-
-  ## AHP sliders
-  output$sliders_ui <- renderUI({
-    req(objectives())
-    sliders <- list()
-    num_criteria <- length(objectives())
-    
-    for (i in 1:(num_criteria - 1)) {
-      for (j in (i + 1):num_criteria) {
-        slider_id <- paste0("c", i, "_c", j)
-        sliders[[slider_id]] <- sliderTextInput(
-          inputId = slider_id,
-          label =paste0(objectives()[j]," vs. ",objectives()[i]), 
-          choices = c(paste0(objectives()[j]," - ",9:2),"Equal",paste0(2:9," - ",objectives()[i])),
-          
-          selected = "Equal",
-          grid = TRUE,
-          hide_min_max = FALSE,
-          animate = FALSE,
-          width = "100%", 
-          force_edges = T
-          
-        )
-      }
-    }
-    
-    do.call(tagList, sliders)
   })
   
   calculate_weights = reactive({
@@ -1982,7 +1964,7 @@ server <- function(input, output, session) {
                                        wgt
                                        }, colnames = T)
   
-    output$best_option_output <- renderDT({
+    output$best_option_output <- renderTable({
       
     req(sols(),range_controlled(),objectives())
      
@@ -2001,14 +1983,20 @@ server <- function(input, output, session) {
     }
     
     if (!all(names(calculate_weights()) %in% colnames(df))) {
-      return("Dataframe columns do not match criteria names.")
+      return(
+             data.frame(Message = "Dataframe columns do not match criteria names."))
     }
+      
+      if (nrow(df) == 0 || ncol(df) == 0) {
+        shinyjs::hide("save_ahp")
+        return(
+          data.frame(Message = "None of the values match these criteria."))
+      }
 
     if(nrow(df)==0 || ncol(df) == 0){
       bo = as.data.frame(array(0,dim=c(1,length(objectives())))) #to prevent error when tab is touched first
       colnames(bo) = objectives()
     }else{  
-    
     
     weights <- calculate_weights()
     
@@ -2018,7 +2006,7 @@ server <- function(input, output, session) {
     #scale to 0 and 1 not anchoring with original
     df_sc <- as.data.frame(mapply(function(col_name, column) {
       rescale_column(column, min_fit[col_name], max_fit[col_name])
-    }, colnames(df), df, SIMPLIFY = FALSE))
+     }, colnames(df), df, SIMPLIFY = FALSE))
     
     #final score based on df within 0 and 1
     df$Score <- rowSums(df_sc * weights)
@@ -2030,9 +2018,35 @@ server <- function(input, output, session) {
     bo = best_option()
   
     }
-      datatable(bo,  colnames = names(bo), rownames = FALSE, escape = FALSE, options = list(dom = 't', paging = FALSE,bSort = FALSE))
-      
-  })
+      # datatable(bo,  colnames = names(bo), rownames = FALSE, escape = FALSE, options = list(dom = 't', paging = FALSE,bSort = FALSE))
+      bo
+  },colnames = T )
+    
+    observe({
+      req(sols(),range_controlled(),objectives())
+      if(!is.null(sols())) {shinyjs::show("save_ahp")}})
+    
+    observe({
+      req(best_option())
+      updateCheckboxInput(session, "save_ahp", value = FALSE) })
+    
+    observeEvent(input$save_ahp,{
+   
+      if(input$save_ahp){
+        req(best_option())
+        if(file.exists(paste0(output_dir,"selected_optima.csv"))){
+          bp <-best_option()
+          bp = cbind(optimum = rownames(bp), bp)
+          write.table(bp, file = paste0(output_dir,"selected_optima.csv"), sep = ",",
+                      append = TRUE, col.names = FALSE, row.names = FALSE)
+
+        }else{bp <-best_option()
+        bp = cbind(optimum = rownames(bp), bp)
+        write.csv(bp,file=paste0(output_dir,"selected_optima.csv"),row.names = F)
+
+        write.table()
+        }}
+    })
   
    #show reverse option when needed
   observe({
@@ -2070,7 +2084,6 @@ server <- function(input, output, session) {
       }
   )
   })
-  
   
   observe({
     req(coma(), calculate_weights())
@@ -2164,11 +2177,65 @@ server <- function(input, output, session) {
   
   observe({ shinyjs::toggle("ahp_spinner", condition = is_rendering())})
   
-  
-  # dummy sliders only for structure
-  sliders <- lapply(1:6, function(i) {
-    sliderInput(paste0("slider", i), label = paste("Slider", i), min = 0, max = 100, value = i * 10)
+  ## AHP sliders
+  # output$sliders_ui <- renderUI({
+  #   req(objectives())
+  #   sliders <- list()
+  #   num_criteria <- length(objectives())
+  #   
+  #   for (i in 1:(num_criteria - 1)) {
+  #     for (j in (i + 1):num_criteria) {
+  #       slider_id <- paste0("c", i, "_c", j)
+  #       sliders[[slider_id]] <- sliderTextInput(
+  #         inputId = slider_id,
+  #         label =paste0(objectives()[j]," vs. ",objectives()[i]), 
+  #         choices = c(paste0(objectives()[j]," - ",9:2),"Equal",paste0(2:9," - ",objectives()[i])),
+  #         
+  #         selected = "Equal",
+  #         grid = TRUE,
+  #         hide_min_max = FALSE,
+  #         animate = FALSE,
+  #         width = "100%", 
+  #         force_edges = T
+  #         
+  #       )
+  #     }
+  #   }
+  #   
+  #   do.call(tagList, sliders)
+  # })
+  ## AHP sliders
+  observe({  
+  if(!is.null(objectives())){
+    
+    sliders <- list()
+    num_criteria <- length(objectives())
+      
+    
+    for (i in 1:(num_criteria - 1)) {
+      for (j in (i + 1):num_criteria) {
+        slider_id <- paste0("c", i, "_c", j)
+        sliders[[slider_id]] <- sliderTextInput(
+          inputId = slider_id,
+          label =paste0(objectives()[j]," vs. ",objectives()[i]), 
+          choices = c(paste0(objectives()[j]," - ",9:2),"Equal",paste0(2:9," - ",objectives()[i])),
+          
+          selected = "Equal",
+          grid = TRUE,
+          hide_min_max = FALSE,
+          animate = FALSE,
+          width = "100%", 
+          force_edges = T
+          
+        )
+      }
+    }
+  }
   })
+    
+ 
+ 
+ 
   
   # dummy func only for structure
   create_plot <- function(slider_value) {
