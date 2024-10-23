@@ -69,10 +69,12 @@ server <- function(input, output, session) {
     color_var = NULL,
     size_var = NULL
   )
+  ahp_combo = reactiveVal(character(0))
   coma = reactiveVal()
   range_controlled = reactiveVal(NULL)
   initial_update_done = reactiveValues(initial = FALSE)
   card_shown <- reactiveValues(card1 = FALSE, card2 = FALSE, card3 = FALSE, card4 = FALSE, card5 = FALSE, card6 = FALSE)
+  sliders <- reactiveValues()
   
   #figure in analysis rendering
   is_rendering <- reactiveVal(FALSE)
@@ -129,6 +131,15 @@ server <- function(input, output, session) {
         updateSelectInput(session, "col_var3", choices = short, selected = rng_plt()[3])
         updateSelectInput(session, "size_var3",choices = short, selected = rng_plt()[4])
         
+        num_criteria = length(objectives())
+        k=1
+        for (i in 1:(num_criteria - 1)) {
+          for (j in (i + 1):num_criteria) {
+            new_label <- paste0(objectives()[j]," vs. ",objectives()[i])
+            updateActionButton(session, paste0("ahp_card",k), label = new_label)
+            k = k+1}}
+      
+        
       })
       
       observeEvent(input$save_par_fiti, {
@@ -153,6 +164,19 @@ server <- function(input, output, session) {
       updateSelectInput(session, "y_var3",   choices = short, selected = rng_plt()[2])
       updateSelectInput(session, "col_var3", choices = short, selected = rng_plt()[3])
       updateSelectInput(session, "size_var3",choices = short, selected = rng_plt()[4])
+      
+      num_criteria = length(objectives())
+      k=1
+      ahp_combo(character(0))
+      for (i in 1:(num_criteria - 1)) {
+            for (j in (i + 1):num_criteria) {
+          new_label <- paste0(objectives()[j]," vs. ",objectives()[i])
+          updateActionButton(session, paste0("ahp_card",k), label = new_label)
+          ahp_combo(c(ahp_combo(), new_label))  #identifier for ahp scatter plots
+          k = k+1}}
+      
+
+      
     }
     
     ## update slider labels based on objectives
@@ -1864,52 +1888,8 @@ server <- function(input, output, session) {
     
     })
   
-  criteria_choices <- reactive({req(fit())
-                                colnames(fit())
-  })
-
-  ## UI for selecting the first criterion dynamically based on the uploaded data
-  output$criterion1_ui <- renderUI({
-    choices <- criteria_choices()
-    selectInput("criterion1", "Select the first objective (x-axis)", choices = choices)
-  })
-
-  ## select the second criterion dynamically based on the uploaded data
-  output$criterion2_ui <- renderUI({
-    req(input$criterion1)
-    choices <- setdiff(criteria_choices(), input$criterion1)
-    selectInput("criterion2", "Select the second objective (y-axis)", choices = choices)
-  })
-
-  observeEvent(input$criterion1, {
-    updateSelectInput(session, "criterion2", choices = setdiff(criteria_choices(), input$criterion1))
-  })
 
 
-  observeEvent(list(input$criterion2,input$criterion1),{# input$plot_sc,{
-    req(fit(),input$criterion1, input$criterion2)
-    
-    x <- fit()[,input$criterion1]
-    y <- fit()[,input$criterion2]
-    
-    ## linear model
-    model <- lm(y ~ x)
-  
-    output$scatterPlot <- renderPlot({
-      
-      plt_scat2(dat= fit(), x= input$criterion1, y=input$criterion2)
-
-    })
-    
-    output$relation <- renderTable({
-      metrics_df <- data.frame(
-        Metric = c("R<sup>2</sup>", "Pearson's r"),  # HTML for R²
-        Value = c(round(summary(model)$r.squared, 3), round(cor(x, y), 3))
-      )
-    
-      metrics_df
-    }, rownames = F, colnames = F, sanitize.text.function = function(x) x)
-  })
   
   calculate_weights = reactive({
     req(objectives())
@@ -2205,131 +2185,217 @@ server <- function(input, output, session) {
   #   do.call(tagList, sliders)
   # })
   ## AHP sliders
-  observe({  
-  if(!is.null(objectives())){
+  # 
+  #   
+  # sliders <- lapply(1:6, function(i) {
+  #   
+  #   
+  #   sliderInput(paste0("slider", i), label = paste("Slider", i), min = 0, max = 100, value = i * 10)
+  #   
+  #  
+  # })
+ 
+  
+  
+  # scatter function
+  create_plot <- function(cn) { #cn - card number
+    req(fit(),ahp_combo())
     
-    sliders <- list()
-    num_criteria <- length(objectives())
-      
+    combi = unlist(strsplit(ahp_combo()[cn],split = " vs. "))
     
-    for (i in 1:(num_criteria - 1)) {
-      for (j in (i + 1):num_criteria) {
-        slider_id <- paste0("c", i, "_c", j)
-        sliders[[slider_id]] <- sliderTextInput(
-          inputId = slider_id,
-          label =paste0(objectives()[j]," vs. ",objectives()[i]), 
-          choices = c(paste0(objectives()[j]," - ",9:2),"Equal",paste0(2:9," - ",objectives()[i])),
-          
-          selected = "Equal",
-          grid = TRUE,
-          hide_min_max = FALSE,
-          animate = FALSE,
-          width = "100%", 
-          force_edges = T
-          
-        )
-      }
+    x <- fit()[,combi[1]]
+    y <- fit()[,combi[2]]
+    
+    plt_scat2(dat= fit(), x= combi[1], y=combi[2])
+    
+  }
+  
+  # R2 
+  create_r2tab <- function(cn){
+    req(fit(),ahp_combo())
+    
+    combi = unlist(strsplit(ahp_combo()[cn],split = " vs. "))
+    x <- fit()[,combi[1]]
+    y <- fit()[,combi[2]]
+    ## linear model
+    model <- lm(y ~ x)
+    metrics_df <- data.frame(
+      Metric = c("R<sup>2</sup>", "Pearson's r"),  # HTML for R²
+      Value = c(round(summary(model)$r.squared, 3), round(cor(x, y), 3))
+    )
+    
+    metrics_df
+  }
+  
+  # weight sliders
+  ahp_slider_maker = function(){
+    req(objectives())
+    num_criteria = length(objectives())
+  for (i in 1:(num_criteria - 1)) {
+    for (j in (i + 1):num_criteria) {
+      slider_id <- paste0("c", i, "_c", j)
+      sliders[[slider_id]] <- sliderTextInput(
+        inputId = slider_id,
+        label =paste0(objectives()[j]," vs. ",objectives()[i]),
+        choices = c(paste0(objectives()[j]," - ",9:2),"Equal",paste0(2:9," - ",objectives()[i])),
+        
+        selected = "Equal",
+        grid = TRUE,
+        hide_min_max = FALSE,
+        animate = FALSE,
+        width = "100%",
+        force_edges = T
+        
+      )
     }
   }
-  })
-    
- 
- 
- 
-  
-  # dummy func only for structure
-  create_plot <- function(slider_value) {
-    ggplot(mtcars, aes(x = wt, y = mpg)) +
-      geom_point() +
-      ggtitle(paste("Example Plot - Slider Value:", slider_value))
   }
   
-  #fun for putting both scatter and slider in one card
-  create_card <- function(title, slider, plot) {
+  #make sliders
+  observe({
+    req(objectives())
+    ahp_slider_maker()})
+ 
+  #fun for putting all three, slider, table with r2 and scatter plot in one
+  create_card <- function(title, slider, plot, table) {
     box(
       title = title,
       width = 12,
       status = "primary",
-      tagList(
-        slider,
-        plotOutput(plot)
-      )
+      tagList( div(
+        style = "display: flex; justify-content: center; align-items: center;",
+        div(
+          style = "margin-right: 20px;", 
+          plotOutput(plot, width = "400px", height = "300px") 
+        ),
+        div(
+          style = "margin-left: 20px;",  
+          tableOutput(table)  
+        )
+      ),
+      slider
+    )
     )
   }
   
+  
   # ahp card 1
   observeEvent(input$ahp_card1, {
-    card_shown$card1 <- TRUE
-    output$plot1 <- renderPlot({
-      create_plot(input$slider1)
+    req(ahp_combo())
+    card_shown$card1 <- !card_shown$card1
+    if(card_shown$card1){
+      shinyjs::show("card1_ui")
+      output$plot1 <- renderPlot({
+      create_plot(1)
     })
+      
+      output$table1 <-  renderTable({create_r2tab(1)}, rownames = F, colnames = F, sanitize.text.function = function(x) x)
+      
     output$card1_ui <- renderUI({
-      create_card("Card 1", sliders[[1]], "plot1")
-    })
+      create_card(ahp_combo()[1], sliders$c1_c2, "plot1","table1")
+    })}else{
+      shinyjs::hide("card1_ui")
+    }
   })
   
   # ahp card 2
   observeEvent(input$ahp_card2, {
-    if (card_shown$card1) {
-      card_shown$card2 <- TRUE
-      output$plot2 <- renderPlot({
-        create_plot(input$slider2)
+    req(ahp_combo())
+      card_shown$card2 <- !card_shown$card2
+      if(card_shown$card2){
+        shinyjs::show("card2_ui")
+        output$plot2 <- renderPlot({
+        create_plot(2)
       })
+        
+        output$table2 <-  renderTable({create_r2tab(2)}, rownames = F, colnames = F, sanitize.text.function = function(x) x)
+        
       output$card2_ui <- renderUI({
-        create_card("Card 2", sliders[[2]], "plot2")
-      })
-    }
+        create_card(ahp_combo()[2], sliders$c1_c3, "plot2","table2")
+      })}else{
+        shinyjs::hide("card2_ui")
+      }
+   
   })
   
   # ahp card 3
   observeEvent(input$ahp_card3, {
-    if (card_shown$card2) {
-      card_shown$card3 <- TRUE
-      output$plot3 <- renderPlot({
-        create_plot(input$slider3)
+    req(ahp_combo())
+      card_shown$card3 <- !card_shown$card3
+      if(card_shown$card3){
+        shinyjs::show("card3_ui")
+        output$plot3 <- renderPlot({
+        create_plot(3)
       })
+        output$table3 <-  renderTable({create_r2tab(3)}, rownames = F, colnames = F, sanitize.text.function = function(x) x)
+        
       output$card3_ui <- renderUI({
-        create_card("Card 3", sliders[[3]], "plot3")
-      })
-    }
+        create_card(ahp_combo()[3], sliders$c1_c4, "plot3","table3")
+      })}else{
+        shinyjs::hide("card3_ui")
+      }
+    
   })
   
   # ahp card 4
   observeEvent(input$ahp_card4, {
-    if (card_shown$card3) {
-      card_shown$card4 <- TRUE
-      output$plot4 <- renderPlot({
-        create_plot(input$slider4)
+    req(ahp_combo())
+      card_shown$card4 <- !card_shown$card4
+      if(card_shown$card4){
+        shinyjs::show("card4_ui")
+        
+        output$plot4 <- renderPlot({
+        create_plot(4)
       })
+        
+        output$table4 <-  renderTable({create_r2tab(4)}, rownames = F, colnames = F, sanitize.text.function = function(x) x)
+        
       output$card4_ui <- renderUI({
-        create_card("Card 4", sliders[[4]], "plot4")
-      })
-    }
+        create_card(ahp_combo()[4], sliders$c2_c3, "plot4","table4")
+      })}else{
+        shinyjs::hide("card4_ui")
+      }
+   
   })
   
   # ahp card 5
   observeEvent(input$ahp_card5, {
-    if (card_shown$card4) {
-      card_shown$card5 <- TRUE
-      output$plot5 <- renderPlot({
-        create_plot(input$slider5)
+    req(ahp_combo())
+      card_shown$card5 <- !card_shown$card5
+      
+      if(card_shown$card5){
+        shinyjs::show("card5_ui")
+        
+        output$plot5 <- renderPlot({
+        create_plot(5)
       })
+        output$table5 <-  renderTable({create_r2tab(5)}, rownames = F, colnames = F, sanitize.text.function = function(x) x)
+        
       output$card5_ui <- renderUI({
-        create_card("Card 5", sliders[[5]], "plot5")
-      })
-    }
+        create_card(ahp_combo()[5], sliders$c2_c4, "plot5","table5")
+      })}else{
+        shinyjs::hide("card5_ui")
+      }
   })
   
   # ahp card 6
   observeEvent(input$ahp_card6, {
-    if (card_shown$card5) {
-      card_shown$card6 <- TRUE
+    req(ahp_combo())
+      card_shown$card6 <- !card_shown$card6
+      
+      if(card_shown$card6){
+        shinyjs::show("card6_ui")
+        
       output$plot6 <- renderPlot({
-        create_plot(input$slider6)
+        create_plot(6)
       })
+      output$table6 <-  renderTable({create_r2tab(6)}, rownames = F, colnames = F, sanitize.text.function = function(x) x)
+      
       output$card6_ui <- renderUI({
-        create_card("Card 6", sliders[[6]], "plot6")
-      })
-    }
+        create_card(ahp_combo()[6], sliders$c3_c4, "plot6","table6")
+      })}else{
+        shinyjs::hide("card6_ui")
+      }
+    
   })
 }
