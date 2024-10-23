@@ -595,7 +595,9 @@ plt_scat2 = function(dat, x, y){
       panel.grid.minor = element_blank(),
       panel.border = element_blank(),
       axis.text = element_text(size = 12),
-      axis.title = element_text(size = 16))
+      axis.title = element_text(size = 16)) +
+    scale_x_continuous(labels = function(x) {rem_min(x)}) +
+    scale_y_continuous(labels = function(y) {rem_min(y)})
 }
 
 #### Plotting the exploration tab
