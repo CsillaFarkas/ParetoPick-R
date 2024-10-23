@@ -316,7 +316,7 @@ ui <-
                                               fluidRow(column(6,
                                                               div("Selected Optimum (select in line plot)", style = "text-align: left; font-size:150%"),
                                                               tableOutput("click_info"),
-                                                              checkboxInput("save_click_line",label = "Click here to save the selected optimum to the output folder",value=F)%>%hidden()),
+                                                              checkboxInput("save_click_line",label = "Click here to save the selected optimum to the output folder (selected_optima.csv)",value=F)%>%hidden()),
                                                        
                                                        column(6,div("Maximum Objective Ranges (absolute)",style = "text-align: left; font-size:150%"),
                                                               tableOutput("whole_range"))
@@ -831,10 +831,10 @@ ui <-
                                ),
                            useShinyjs(),
                            
-                            div(DTOutput("best_option_output"), style = "margin: 0 auto; width: fit-content;"),
+                            div(tableOutput("best_option_output"), style = "margin: 0 auto; width: fit-content;"),
                                                                      
-                               div(id = "tooltip", class = "tooltip"),
-                           
+                           checkboxInput("save_ahp",label = "Click here to save the selected optimum to the output folder (selected_optima.csv)",value=F)%>%hidden(),
+                         
                                div(id = "random_ahp",
                                   checkboxInput("best_cluster", label = "Best option among cluster solutions", value = FALSE),
                                   style = "margin: 0 auto; width: fit-content;font-size: 100%;"
