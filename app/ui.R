@@ -767,19 +767,19 @@ ui <-
                            
                            textOutput("nothing_ran_ahp"),
                            div(id = "ahp_analysis",
-                               "1. Examining the relationship between the objectives.",style = "text-align: left; font-size:150%",
+                               # "1. Examining the relationship between the objectives.",style = "text-align: left; font-size:150%",
                                
-                               fluidRow(
-                                 column(6, uiOutput("criterion1_ui")),
-                                 column(6, uiOutput("criterion2_ui")),
+                               # fluidRow(
+                                 # column(6, uiOutput("criterion1_ui")),
+                                 # column(6, uiOutput("criterion2_ui")),
                                  
                                  # column(6, actionButton("plot_sc", label = "analyse objectives"))
-                               ),
+                               # ),
                                
                                fluidRow(
                                  
                                  column(10,
-                                        div("2. Limiting the objective space (optional)"),
+                                        div("1. Limiting the objective space (optional)"),
                                         sliderInput(inputId = "obj1_ahp", label = "Objective 1:", min = 0, max = 100, value = c(0, 100), width = "110%"),
                                         sliderInput(inputId = "obj2_ahp", label = "Objective 2:", min = 0, max = 100, value = c(0, 100), width = "110%"),
                                         sliderInput(inputId = "obj3_ahp", label = "Objective 3:", min = 0, max = 100, value = c(0, 100), width = "110%"),
@@ -787,10 +787,10 @@ ui <-
                                )),
                            br(),
                            
-                           div(id = "ahp_weights",
-                               "3. Deciding on priorities and weighting the objectives.",
-                               style = "text-align: left; font-size:150%",
-                               uiOutput("sliders_ui")),
+                           # div(id = "ahp_weights",
+                           #     "3. Deciding on priorities and weighting the objectives.",
+                           #     style = "text-align: left; font-size:150%",
+                           #     uiOutput("sliders_ui")),
                            
                            div(id="sel_wgt","Selected Weights", style = "text-align: center; font-size: 150%;",
                                div(tableOutput("weights_output"), style = "margin: 0 auto; width: fit-content;")),
@@ -811,12 +811,12 @@ ui <-
                              )
                            ),
                            fluidRow(
-                             uiOutput("card1_ui"),
-                             uiOutput("card2_ui"),
-                             uiOutput("card3_ui"),
-                             uiOutput("card4_ui"),
-                             uiOutput("card5_ui"),
-                             uiOutput("card6_ui")
+                             uiOutput("card1_ui")%>%hidden(),
+                             uiOutput("card2_ui")%>%hidden(),
+                             uiOutput("card3_ui")%>%hidden(),
+                             uiOutput("card4_ui")%>%hidden(),
+                             uiOutput("card5_ui")%>%hidden(),
+                             uiOutput("card6_ui")%>%hidden()
                            ),
                            
                            
