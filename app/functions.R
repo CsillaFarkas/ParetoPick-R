@@ -76,13 +76,13 @@ write_corr = function(vars,
       varmes = append(varmes, paste(mes, "moran", sep = "_"))
     }
     if ("linE" %in% vars) {
-      varmes = append(varmes, "linE") #linE is the only variable that is not calculated for each measure
+      varmes = append(varmes, "linE") #linE is not calculated for each measure
     }
     if ("share_con" %in% vars) {
       varmes = append(varmes, paste(mes, "share_con", sep = "_"))
     }
-    if ("share_tot" %in% vars) {
-      varmes = append(varmes, paste(mes, "share_tot", sep = "_"))
+    if ("lu_share" %in% vars) {
+      varmes = append(varmes, "lu_share") #lu_share is not calculated for each measure
     }
     if ("channel_frac" %in% vars) {
       varmes = append(varmes, paste(mes, "channel_frac", sep = "_"))
@@ -788,7 +788,7 @@ plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NUL
   
   #pull fit() establish range limits
   whole <- read.table(pareto_path, header = FALSE, stringsAsFactors = FALSE, sep = ',')
-  colnames(whole) <- colnames(dat)
+  colnames(whole) <- colnames(dat)[1:4]
   
   xma = yma = NULL
   
