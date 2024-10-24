@@ -3,11 +3,11 @@ It provides a dashboard for the user to supply their own data, visualise it and 
 The code allows the user to select variables to be analysed in a correlation analysis and a cluster algorithm. 
 
 * Variables considered by the cluster algorithm, the first 3 are produced seperately for each measure (in a call to convert_optain)
-  1. **share_tot** - catchment area covered by measure (per measure type) 
-  2. **share_con** - ratio between area covered by measure and area available for measure implementation (per measure type) 
-  3. **channel_frac** - fraction of water from measure hru draining straight into the channel (per measure type) 
-  4. **moran** - Moran's I 
-  5. **linE** - ratio of structural to management options 
+  1. **share_con** - ratio between area covered by measure and area available for measure implementation (per measure type) 
+  2. **channel_frac** - fraction of water from measure hru draining straight into the channel (per measure type) 
+  3. **moran** - Moran's I (per measure type) 
+  4. **linE** - ratio of structural to management options 
+  5. **lu_share** - share of area used for "land use" measures (buffer, grassslope and hedge) in area available for measure implementation
 
 
 The cluster algorithm relies on Principal Component Analysis (PCA) and kmeans/kmedoid. While the variables that can be considered in 
@@ -68,6 +68,7 @@ the project consists of six folders:
 # Assumptions
 
 * General to do and open questions
+  * as "land use" measures currently only hedge, buffer and grassslope considered - if more needed global.R, functions.R (write_corr) and convert_optain require adapting
   * do the current default settings produce reasonable cluster outputs across all catchments? the default might need outlier testing 
   * users should not produce optimisation outputs with values below 0 and if possible no values smaller than 1, the app currently runs a rescale to roughly balance the values between 1 and 100 but this is not a nice solution
   * removing minus signs everywhere possible?
@@ -95,8 +96,7 @@ the project consists of six folders:
   * output largest accepted correlation in bold over table/could also be part of default setting
   * (python: deviations_step is currently the default value) 
   * add spinner so user knows something is happening
-  * fix share_tot - new share_con is fully correlated
-  
+   
 * AHP and Cluster Analysis tabs
   * better graphical representation of decison space across solutions:
     * linE - on y axis
@@ -118,7 +118,3 @@ the project consists of six folders:
  
 * Analysis tab
   * HTML download for measure implementation maps - might be possible with replotting and individual saving and stitching back together
-
-* AHP
-  * keep ticks and remove labels on top (probably obsolete with restructure)
-  * in plot - retain original range when sliders moved (alreade implemented for analysis tab)
