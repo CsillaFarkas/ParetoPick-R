@@ -72,9 +72,9 @@ if(!dir.exists(output_dir)){  dir.create(output_dir)}
 
 optain_pca_content <- c(
   
-  "share_tot" = "Each measure's share in total catchment area (*).",
   "share_con"= "Each measure's share in area considered for implementation (*).",
   "moran"= "The median spatial autocorrelation between HRUs allocated to each implemented measure.",
   "channel_frac"= "The median fraction of water under each implemented measure that is routed directly into the channel (*).",
-  "linE"= "The ratio between structural and management measures."
+  "linE"= "The ratio between structural and management measures.",
+  "lu_share" = "The share of land use measures (hedge, buffer, grassslope) in catchment area considered for implementation."
 )

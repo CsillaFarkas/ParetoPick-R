@@ -1642,8 +1642,7 @@ server <- function(input, output, session) {
       }else{
         req(objectives(),sols())
         sol<<-sols()[,c(objectives(),"cluster number")]
-        
-        
+
         if(!is.null(input$antab_rows_selected)){
           
           selected_row <- input$antab_rows_selected

@@ -507,13 +507,13 @@ ui <-
                                      style = "text-align: left; font-size:80%"
                                    ),
                                    checkboxGroupInput("selements", "",  
-                                                      choiceNames = c("share_tot (*)", 
-                                                                      "share_con (*)",
+                                                      choiceNames = c("share_con (*)",
                                                                       "Moran's I",
                                                                       "channel_frac (*)",
-                                                                      "linE"),
-                                                      choiceValues=c("share_tot","share_con","moran","channel_frac","linE"),
-                                                      selected = c("share_tot","share_con","moran","channel_frac","linE")),
+                                                                      "linE",
+                                                                      "lu_share"),
+                                                      choiceValues=c("share_con","moran","channel_frac","linE","lu_share"),
+                                                      selected = c("share_con","moran","channel_frac","linE","lu_share")),
                                    
                                    textOutput("numbercorr"),
                                    div("2. Perform the Correlation Analysis", style = "text-align: left; font-size:150%"),
