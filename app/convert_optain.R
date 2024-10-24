@@ -77,7 +77,7 @@ nswrm_priorities <- function(lu){
     priority <- priority + 1
   }}
   
-  lu_match <- rev(mesrs[mesrs %in% c("hedge","buffer","grassslope")])  # land use and their order (2nd prio)
+  lu_match <- rev(mesrs[mesrs %in% c("hedge","buffer","grassslope")])  # land use and their order (2nd prio) ADAPTING THIS WILL REQUIRE ADAPTING lu_share too!!
   for(lus in lu_match) {if(lus %in% lu) {
     prio <- rbind(prio, data.frame(nswrm = lus, priority = priority,mngmt= 0 ))
     priority <- priority + 1
@@ -322,7 +322,7 @@ for(op in paste0("V", 1:nopt)){ #instable looping, Cordi...
   ## Area per measure, required for calculating share below
   # empty dataframe
    arre = as.data.frame(array(NA, dim =c(nopt,length(meas)))) # Pareto front in rows
-   colnames(arre) =meas  
+   colnames(arre) = meas  
    rownames(arre) = paste0("V", 1:nopt)
   
   for (op in paste0("V", 1:nopt)) {
@@ -344,15 +344,23 @@ for(op in paste0("V", 1:nopt)){ #instable looping, Cordi...
     print(paste0("caculated area share of measures across Optimum ",op,"..."),quote=F)
     
   }
+   
+   ## share in implemented catchment area
+   share_con = apply(arre,2,function(x) (x/max(x))*100)%>%as.data.frame()%>%
+     rename_at(vars(meas),~paste0(., "_share_con"))%>%mutate(id = row_number())
   
-  ## share in total catchment area
-  totar = sum(con$area)
-  share_tot = arre %>% mutate(across(meas,~ (.x/totar)*100))%>%
-    rename_at(vars(meas),~paste0(., "_share_tot"))%>%mutate(id = row_number())
- 
-  ## share in implemented catchment area
-  share_con = apply(arre,2,function(x) (x/max(x))*100)%>%as.data.frame()%>%
-    rename_at(vars(meas),~paste0(., "_share_con"))%>%mutate(id = row_number())
+   ## land use share in considered/implemented catchment area
+   if(any(meas %in% c("hedge","buffer","grassslope"))){
+     lu = meas[which(meas %in% c("hedge","buffer","grassslope"))]
+   
+     # new column with combined area share
+     lu_share = arre %>%
+       mutate(lu_share = (rowSums(across(all_of(lu)))/rowSums(across(all_of(meas))))*100)%>%
+       mutate(lu_share = ifelse(is.nan(lu_share), 0, lu_share))%>%mutate(id=row_number())%>%select(id,lu_share)
+     
+     share_con = share_con %>%left_join(lu_share,by="id") #we chuck it here, otherwise too much testing needed
+   }
+
   
   ## merge with pareto fitness, # the first row is optimum V1
   fit = read.table("../data/pareto_fitness.txt", header=F,stringsAsFactors=FALSE,sep = ',')
@@ -361,11 +369,14 @@ for(op in paste0("V", 1:nopt)){ #instable looping, Cordi...
   fit$id = 1:nrow(fit)
   print("check: read pareto_fitness.txt, assigned names...",quote=F)
   
-  test_clu = fit %>%left_join(lin,by="id")%>%left_join(share_con, by = "id") %>%
-                 left_join(share_tot, by ="id") %>% left_join(mesur, by="id")%>%
-                           left_join(channel_frac, by = "id")%>% select(-id)%>%
-                                                replace(is.na(.), 0)%>%select_if(~ !all(. == 0))
-   
+  test_clu = fit %>% 
+    left_join(lin, by = "id") %>%
+    left_join(share_con, by = "id") %>%
+    left_join(mesur, by = "id") %>%
+    left_join(channel_frac, by = "id") %>%
+    select(-id) %>% replace(is.na(.), 0) %>% select_if( ~ !all(. == 0))
+
+  
   write.csv(test_clu, "../input/var_corr_par.csv",  row.names = FALSE, fileEncoding = "UTF8")  
   print("check: printed output ---> /input/var_corr_par...",quote=F)
 
