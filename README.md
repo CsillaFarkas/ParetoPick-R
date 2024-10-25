@@ -86,6 +86,7 @@ the project consists of six folders:
 * Visualising tab:
   * add new sliders for measures - along share of area possible for this measure (similar to share_con), this requires an earlier request to the user for data supply
   * catch R errors triggered by empty data frames better
+  * implement plot_ly (maybe in another window after setting axis, color, shape)
 
 * Configure tab
   * we might want to automate the number of clusters (k in k means) and outlier testing 
