@@ -243,7 +243,7 @@ ui <-
                                                id="parfit",
                                                "Please provide the pareto_fitness.txt file here and click Save:",style = "text-align: left; font-size:115%",
                                                fileInput("par_fit", "", accept = ".txt"),
-                                               actionButton("save_paretofit","Save")),
+                                               actionButton("save_paretofit","Save"))%>%hidden(),
                                              div(
                                                id="sq",
                                                "If you want you can supply the sq_fitness.txt file here to plot the status quo.",style = "text-align: left; font-size:115%",
@@ -258,9 +258,8 @@ ui <-
                                                textInput("short2", "Objective 2\n (Column 2)"), 
                                                textInput("short3", "Objective 3\n (Column 3)"), 
                                                textInput("short4", "Objective 4\n (Column 4)"),
-                                               actionButton("save_par_fiti", "Save"))
-                                             # %>% hidden(), 
-                                             ,
+                                               actionButton("save_par_fiti", "Save")) %>% hidden(), 
+                                             
                                              div(id="units",
                                                  "If you want you can supply the objectives' units and save them for future use:",
                                                  style= "text-align: left; font-size:115%",
