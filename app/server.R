@@ -112,6 +112,7 @@ server <- function(input, output, session) {
   
   ##check if names of objectives have to be supplied or already present
   ## CONSOLIDATE THIS, da ist ne dumme unnoetige Dopplung
+  ## CONSOLIDATE THIS, da ist ne dumme unnoetige Dopplung
   observeEvent(input$tabs == "play_around",{ 
     ## make or pull objectives()
     if(!file.exists("../input/object_names.RDS")) {
@@ -121,6 +122,22 @@ server <- function(input, output, session) {
       shinyjs::hide(id = "tab_play2")
       
       ##get new objective names
+      observeEvent(input$save_par_fiti, {
+        short <<- c(input$short1, input$short2, input$short3, input$short4)
+        objectives(short)
+        
+        saveRDS(short, file = "../input/object_names.RDS")
+        
+        updateTextInput(session,"col1", value = objectives()[1] )
+        updateTextInput(session,"col2", value = objectives()[2] )
+        updateTextInput(session,"col3", value = objectives()[3] )
+        updateTextInput(session,"col4", value = objectives()[4] )
+        
+        write_pca_ini(var1=input$short1,var2=input$short2,var3=input$short3,var4=input$short4,
+                      var1_lab="",var2_lab="",var3_lab="",var4_lab="")#save label for future use (pulled w/ read_config_plt in Data prep, pca and cluster)
+       shinyjs::hide("obj_first")
+         })
+      
       observe({
         req(input$short1, input$short2, input$short3, input$short4,rng_plt())
         short <<- c(input$short1, input$short2, input$short3, input$short4)
@@ -138,25 +155,13 @@ server <- function(input, output, session) {
             new_label <- paste0(objectives()[j]," vs. ",objectives()[i])
             updateActionButton(session, paste0("ahp_card",k), label = new_label)
             k = k+1}}
-      
+        
         
       })
       
-      observeEvent(input$save_par_fiti, {
-        req(objectives(),input$short1, input$short2, input$short3, input$short4)
-        saveRDS(short, file = "../input/object_names.RDS")
-        
-        updateTextInput(session,"col1", value = objectives()[1] )
-        updateTextInput(session,"col2", value = objectives()[2] )
-        updateTextInput(session,"col3", value = objectives()[3] )
-        updateTextInput(session,"col4", value = objectives()[4] )
-        
-        write_pca_ini(var1=input$short1,var2=input$short2,var3=input$short3,var4=input$short4,
-                      var1_lab="",var2_lab="",var3_lab="",var4_lab="")#save label for future use (pulled w/ read_config_plt in Data prep, pca and cluster)
-      }) 
+      
       
     } else {
-      shinyjs::hide(id="obj_first")
       short = readRDS("../input/object_names.RDS")
       objectives(short)
       
@@ -169,13 +174,13 @@ server <- function(input, output, session) {
       k=1
       ahp_combo(character(0))
       for (i in 1:(num_criteria - 1)) {
-            for (j in (i + 1):num_criteria) {
+        for (j in (i + 1):num_criteria) {
           new_label <- paste0(objectives()[j]," vs. ",objectives()[i])
           updateActionButton(session, paste0("ahp_card",k), label = new_label)
           ahp_combo(c(ahp_combo(), new_label))  #identifier for ahp scatter plots
           k = k+1}}
       
-
+      
       
     }
     
@@ -188,19 +193,18 @@ server <- function(input, output, session) {
         updateSliderInput(session, paste0("obj",i,"_ahp"), label = obj[i])
         updateSliderInput(session, paste0("ran",i), label = obj[i])
         
-        }
+      }
       updateCheckboxGroupInput(session, "sel_neg", choices = objectives(), selected = NULL)
       
     })
     
-    
     ## make or pull fit()
     observe({
+      
       if (file.exists(pareto_path)) {
         
         req(objectives())
-        shinyjs::hide(id = "parfit")
-
+        
         data <- read.table(pareto_path, header = FALSE, stringsAsFactors = FALSE,sep = ',')
         new_col_data <- objectives()
         colnames(data) = new_col_data
@@ -252,6 +256,8 @@ server <- function(input, output, session) {
         shinyjs::show(id = "parfit")
       }
     })
+    
+   
     
     ## make fit() based on user input
     observeEvent(input$par_fit, {     
@@ -1568,11 +1574,11 @@ server <- function(input, output, session) {
         n1clu=round((n1clu/length(unique(sols2()$Cluster)))*100,2)
         
         if(n1clu > 60){
-          paste0("There is a high share (",n1clu,") of clusters with only one optimum, you might want to 
+          paste0("There is a high share (",n1clu,"%) of clusters with only one optimum, you might want to 
                     rerun the clustering with different settings.")
         }else if(crat>30){
           #if clause with OR if fulfilled, else NULL
-          output$check_default <- renderText({paste0("A high share of points (",crat,") has been assigned to a single 
+          output$check_default <- renderText({paste0("A high share of points (",crat,"%) has been assigned to a single 
                                                        cluster (cluster number ",wc,"), you might want to rerun the clustering with different settings.")})}
       })
 
