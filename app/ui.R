@@ -778,35 +778,38 @@ ui <-
                                fluidRow(
                                  
                                  column(10,
-                                        div("1. Limiting the objective space (optional)"),
+                                        div("1. Limiting the objective space (optional)",style = "text-align: center; font-size: 120%;"),
                                         sliderInput(inputId = "obj1_ahp", label = "Objective 1:", min = 0, max = 100, value = c(0, 100), width = "110%"),
                                         sliderInput(inputId = "obj2_ahp", label = "Objective 2:", min = 0, max = 100, value = c(0, 100), width = "110%"),
                                         sliderInput(inputId = "obj3_ahp", label = "Objective 3:", min = 0, max = 100, value = c(0, 100), width = "110%"),
                                         sliderInput(inputId = "obj4_ahp", label = "Objective 4:", min = 0, max = 100, value = c(0, 100), width = "110%"))
                                )),
-                           br(),
-                           
-                           # div(id = "ahp_weights",
-                           #     "3. Deciding on priorities and weighting the objectives.",
-                           #     style = "text-align: left; font-size:150%",
-                           #     uiOutput("sliders_ui")),
-                           
-                           div(id="sel_wgt","Selected Weights", style = "text-align: center; font-size: 150%;",
-                               div(tableOutput("weights_output"), style = "margin: 0 auto; width: fit-content;")),
-                           uiOutput("consistency_check"),tableOutput("which_inconsistency")
+                          
                          ),
                          
                          mainPanel(
+                           div(id="sel_wgt","Selected Weights", style = "text-align: center; font-size: 150%;",
+                               div(tableOutput("weights_output"), style = "margin: 0 auto; width: fit-content;")),
+                           br(),
                            
+                           uiOutput("consistency_check"),tableOutput("which_inconsistency"),
                            fluidRow(
+                             div("2. Assign weights",style = "text-align: center; font-size: 150%;"),
+                             
                              column(
                                width = 12,
-                               actionButton("ahp_card1", "Show Card 1"),
-                               actionButton("ahp_card2", "Show Card 2"),
-                               actionButton("ahp_card3", "Show Card 3"),
-                               actionButton("ahp_card4", "Show Card 4"),
-                               actionButton("ahp_card5", "Show Card 5"),
-                               actionButton("ahp_card6", "Show Card 6")
+                               actionButton("ahp_card1", "Show Card 1", 
+                                            style="background-color: #0487bf; border-color: #2e6da4"),
+                               actionButton("ahp_card2", "Show Card 2", 
+                                            style="background-color: #0487bf; border-color: #2e6da4"),
+                               actionButton("ahp_card3", "Show Card 3", 
+                                            style="background-color: #0487bf; border-color: #2e6da4"),
+                               actionButton("ahp_card4", "Show Card 4", 
+                                            style="background-color: #0487bf; border-color: #2e6da4"),
+                               actionButton("ahp_card5", "Show Card 5", 
+                                            style="background-color: #0487bf; border-color: #2e6da4"),
+                               actionButton("ahp_card6", "Show Card 6", 
+                                            style="background-color: #0487bf; border-color: #2e6da4")
                              )
                            ),
                            fluidRow(
