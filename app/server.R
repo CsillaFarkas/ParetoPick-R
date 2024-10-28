@@ -70,6 +70,7 @@ server <- function(input, output, session) {
     size_var = NULL
   )
   ahp_combo = reactiveVal(character(0))
+  sids = reactiveVal()
   coma = reactiveVal()
   range_controlled = reactiveVal(NULL)
   initial_update_done = reactiveValues(initial = FALSE)
@@ -100,6 +101,20 @@ server <- function(input, output, session) {
   }
 
   })
+  
+  observe({
+  if (file.exists("../data/sq_fitness_original.txt") ) {
+    return()
+  } else if (!file.exists(pareto_path)) { #if user hasn't supplied it yet
+    return()
+  } else{
+    data <- read.table("../data/sq_fitness.txt", header = FALSE, stringsAsFactors = FALSE,sep = ' ')
+    file.rename("../data/sq_fitness.txt","../data/sq_fitness_original.txt")
+    data = as.data.frame(t(scale_data(as.numeric(data))))
+    write.table(data,"../data/sq_fitness.txt",row.names = F,col.names = F, sep=",")
+  }
+  
+})
   
   ### Play Around Tab ####
   
@@ -1930,7 +1945,7 @@ server <- function(input, output, session) {
         }}
       }
     }
-    
+      sids(c("c1_c2", "c1_c3", "c1_c4","c2_c3","c2_c4", "c3_c4"))
       coma(comparison_matrix)
       
       normalized_matrix <- comparison_matrix / colSums(comparison_matrix)
@@ -2241,7 +2256,7 @@ server <- function(input, output, session) {
       slider_id <- paste0("c", i, "_c", j)
       sliders[[slider_id]] <- sliderTextInput(
         inputId = slider_id,
-        label =paste0(objectives()[j]," vs. ",objectives()[i]),
+        label = "",
         choices = c(paste0(objectives()[j]," - ",9:2),"Equal",paste0(2:9," - ",objectives()[i])),
         
         selected = "Equal",
@@ -2264,14 +2279,14 @@ server <- function(input, output, session) {
   #fun for putting all three, slider, table with r2 and scatter plot in one
   create_card <- function(title, slider, plot, table) {
     box(
-      title = title,
+      title = h1(title, style = "text-align: center; font-size: 140%; margin-top: -15px;"),
       width = 12,
       status = "primary",
       tagList( div(
         style = "display: flex; justify-content: center; align-items: center;",
         div(
           style = "margin-right: 20px;", 
-          plotOutput(plot, width = "400px", height = "300px") 
+          plotOutput(plot, width = "266px", height = "200px") 
         ),
         div(
           style = "margin-left: 20px;",  
@@ -2283,124 +2298,40 @@ server <- function(input, output, session) {
     )
   }
   
-  
-  # ahp card 1
-  observeEvent(input$ahp_card1, {
-    req(ahp_combo())
-    card_shown$card1 <- !card_shown$card1
-    if(card_shown$card1){
-      shinyjs::show("card1_ui")
-      output$plot1 <- renderPlot({
-      create_plot(1)
+  for (k in 1:6) {
+   
+    local({
+      i = k
+      ahp_card <- paste0("ahp_card", i)
+      card <- paste0("card",i)
+      plt = paste0("plot",i)
+      tabl = paste0("table",i)
+      cardui = paste0("card",i,"_ui")
+      
+      observeEvent(input[[ahp_card]], {
+       
+        req(ahp_combo(),sids())
+        card_shown[[card]] <- !card_shown[[card]]
+        
+        if(card_shown[[card]]){
+          
+          runjs(paste0('document.getElementById("', ahp_card, '").style.backgroundColor = "#F7A600";'))
+          
+          shinyjs::show(cardui)
+          output[[plt]] <- renderPlot({create_plot(i)})
+          
+          output[[tabl]] <-  renderTable({create_r2tab(i)}, rownames = F, colnames = F, sanitize.text.function = function(x) x)
+          
+          output[[cardui]] <- renderUI({
+            create_card(ahp_combo()[i],sliders[[sids()[i]]] , plt,tabl)
+          })}else{
+            shinyjs::hide(paste0(cardui))
+            runjs(paste0('document.getElementById("', ahp_card, '").style.backgroundColor = "#0487bf";'))
+            
+          }
+      })
     })
-      
-      output$table1 <-  renderTable({create_r2tab(1)}, rownames = F, colnames = F, sanitize.text.function = function(x) x)
-      
-    output$card1_ui <- renderUI({
-      create_card(ahp_combo()[1], sliders$c1_c2, "plot1","table1")
-    })}else{
-      shinyjs::hide("card1_ui")
-    }
-  })
-  
-  # ahp card 2
-  observeEvent(input$ahp_card2, {
-    req(ahp_combo())
-      card_shown$card2 <- !card_shown$card2
-      if(card_shown$card2){
-        shinyjs::show("card2_ui")
-        output$plot2 <- renderPlot({
-        create_plot(2)
-      })
-        
-        output$table2 <-  renderTable({create_r2tab(2)}, rownames = F, colnames = F, sanitize.text.function = function(x) x)
-        
-      output$card2_ui <- renderUI({
-        create_card(ahp_combo()[2], sliders$c1_c3, "plot2","table2")
-      })}else{
-        shinyjs::hide("card2_ui")
-      }
-   
-  })
-  
-  # ahp card 3
-  observeEvent(input$ahp_card3, {
-    req(ahp_combo())
-      card_shown$card3 <- !card_shown$card3
-      if(card_shown$card3){
-        shinyjs::show("card3_ui")
-        output$plot3 <- renderPlot({
-        create_plot(3)
-      })
-        output$table3 <-  renderTable({create_r2tab(3)}, rownames = F, colnames = F, sanitize.text.function = function(x) x)
-        
-      output$card3_ui <- renderUI({
-        create_card(ahp_combo()[3], sliders$c1_c4, "plot3","table3")
-      })}else{
-        shinyjs::hide("card3_ui")
-      }
     
-  })
-  
-  # ahp card 4
-  observeEvent(input$ahp_card4, {
-    req(ahp_combo())
-      card_shown$card4 <- !card_shown$card4
-      if(card_shown$card4){
-        shinyjs::show("card4_ui")
-        
-        output$plot4 <- renderPlot({
-        create_plot(4)
-      })
-        
-        output$table4 <-  renderTable({create_r2tab(4)}, rownames = F, colnames = F, sanitize.text.function = function(x) x)
-        
-      output$card4_ui <- renderUI({
-        create_card(ahp_combo()[4], sliders$c2_c3, "plot4","table4")
-      })}else{
-        shinyjs::hide("card4_ui")
-      }
-   
-  })
-  
-  # ahp card 5
-  observeEvent(input$ahp_card5, {
-    req(ahp_combo())
-      card_shown$card5 <- !card_shown$card5
-      
-      if(card_shown$card5){
-        shinyjs::show("card5_ui")
-        
-        output$plot5 <- renderPlot({
-        create_plot(5)
-      })
-        output$table5 <-  renderTable({create_r2tab(5)}, rownames = F, colnames = F, sanitize.text.function = function(x) x)
-        
-      output$card5_ui <- renderUI({
-        create_card(ahp_combo()[5], sliders$c2_c4, "plot5","table5")
-      })}else{
-        shinyjs::hide("card5_ui")
-      }
-  })
-  
-  # ahp card 6
-  observeEvent(input$ahp_card6, {
-    req(ahp_combo())
-      card_shown$card6 <- !card_shown$card6
-      
-      if(card_shown$card6){
-        shinyjs::show("card6_ui")
-        
-      output$plot6 <- renderPlot({
-        create_plot(6)
-      })
-      output$table6 <-  renderTable({create_r2tab(6)}, rownames = F, colnames = F, sanitize.text.function = function(x) x)
-      
-      output$card6_ui <- renderUI({
-        create_card(ahp_combo()[6], sliders$c3_c4, "plot6","table6")
-      })}else{
-        shinyjs::hide("card6_ui")
-      }
-    
-  })
+  }
+ 
 }
