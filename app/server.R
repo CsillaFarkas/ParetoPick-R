@@ -49,10 +49,10 @@ server <- function(input, output, session) {
   output$pca_incl <- renderTable({pca_table()}, rownames = T, colnames = F)
   
   pca_status <- reactiveVal("")
-  
+  pca_spin <- reactiveVal(NULL)#spinner in cluster tab
   axiselected = reactiveVal(read_config_plt(obj=F,axis=T))
   max_pca <- reactiveVal()# required for max pc field
-  pca_available <- reactiveValues(button1_clicked = FALSE, button2_clicked = FALSE) #controls config.ini writing previous to clustering
+  pca_available <- reactiveValues(button1_clicked = FALSE, button2_clicked = FALSE, button3_clicked = FALSE) #controls config.ini writing previous to clustering
   #results table
   check_files<- reactiveVal(NULL)
   sols <- reactiveVal()
@@ -1278,12 +1278,14 @@ server <- function(input, output, session) {
   observeEvent(input$tabs == "pca",{ 
     
     if(!file.exists("../input/pca_content.RDS") || !any(file.exists(list.files(path = output_dir, pattern = "correlation.*\\.csv$", full.names = TRUE)))
-    ){shinyjs::hide("everything_cluster_sidebar")
+    ){shinyjs::hide("everything_else_clustering")
+      shinyjs::hide("everything_cluster_sidebar")
       shinyjs::hide("everything_cluster_mainpanel")
      output$no_cluster <- renderText({HTML("Please run the correlation analysis first before proceeding with the clustering!")})
     }else{shinyjs::hide("no_cluster")
       shinyjs::show("everything_cluster_sidebar") #this is needed as previously turned off and somehow that sticks
       shinyjs::show("everything_cluster_mainpanel")
+      shinyjs::show("everything_else_clustering")
     }
     
     if(!file.exists("../input/object_names.RDS")) {
@@ -1394,7 +1396,7 @@ server <- function(input, output, session) {
   
   ## confirm that axis is picked and label is written
   observe({
-    if (pca_available$button1_clicked && pca_available$button2_clicked) {
+    if (pca_available$button1_clicked && pca_available$button2_clicked && pca_available$button3_clicked) {
       shinyjs::enable("runPCA")
       output$pca_available <- renderText("")  # Clear the notification
     } else {
@@ -1403,13 +1405,15 @@ server <- function(input, output, session) {
         missing_buttons <- c()
         if (!pca_available$button1_clicked) missing_buttons <- c(missing_buttons, "Confirm Choice")
         if (!pca_available$button2_clicked) missing_buttons <- c(missing_buttons, "Confirm Axis Labels")
-
+        if (!pca_available$button3_clicked) missing_buttons <- c(missing_buttons, "Confirm Number of PCs tested")
+        
         paste("Please, ", paste(missing_buttons, collapse = " and ")," first!")
       })
     }
   })
   
   observeEvent(input$runPCA,{
+    pca_spin(TRUE) #spinner
     # python status
     output$pca_status <- renderText({pca_status()})
     pca_content <<- readRDS("../input/pca_content.RDS")
@@ -1434,8 +1438,20 @@ server <- function(input, output, session) {
     if(input$pcamethod=="k-means"){pca_script <- "../python_files/kmeans.py"}else{pca_script <- "../python_files/kmedoid.py"}
     
     run_python_script(path_script=pca_script,pca_status)
-    
+    pca_spin(FALSE) #spinner
     })
+  
+  output$cluster_spin <- renderUI({
+    if(isTRUE(pca_spin())) {
+      return(NULL) 
+    } else if(isFALSE(pca_spin())) {
+      return("Process finished!")  
+    }else{
+      return(NULL)
+    }
+  })
+  
+
   
   ## cluster specs
   observeEvent(input$write_clust, {
@@ -1506,7 +1522,7 @@ server <- function(input, output, session) {
   
   ## pca min/max specs
   observeEvent(input$pcaminmax,{
-    
+    pca_available$button3_clicked = TRUE
     write_pcanum(pcamin=input$pca_min,pcamax=input$pca_max)
     update_settings()
   })

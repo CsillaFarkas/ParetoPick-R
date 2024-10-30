@@ -571,6 +571,22 @@ ui <-
                                
                                textOutput("no_cluster"),
                                
+                               div(id="everything_else_clustering",
+                                 div("5. Select a clustering method", style = "text-align: left; font-size:150%"),
+                               
+                               div(
+                                 style = "margin-top: -15px;",
+                                 radioButtons(
+                                   "pcamethod",
+                                   "",
+                                   choices = c("k-means", "k-medoids"),
+                                   selected = "k-means"
+                                 )
+                               )),
+                               actionButton("runPCA", "Run PCA and Cluster Analysis"),
+                               withSpinner(uiOutput("cluster_spin"),color= "#F7A600"),  # Spinner style (1-8)
+                               textOutput("pca_available")  ,
+                               uiOutput("pca_mess"),
                                div(
                                  id = "everything_cluster_sidebar",
                                  div("Variables included in the PCA", style = "text-align: left; font-size:150%"),
@@ -581,26 +597,12 @@ ui <-
                                  
                                  tableOutput("pca_incl"),
                                  div("PCA Settings (please specify on the right)", style = "text-align: left; font-size:150%"),
-                                 htmlOutput("pca_settings_summary"),
-                                 div("5. Select a clustering method", style = "text-align: left; font-size:150%"),
-                                 
-                                 div(
-                                   style = "margin-top: -15px;",
-                                   radioButtons(
-                                     "pcamethod",
-                                     "",
-                                     choices = c("k-means", "k-medoids"),
-                                     selected = "k-means"
-                                   )
-                                 ),
-                                 actionButton("runPCA", "Run PCA and Cluster Analysis"),
-                                 textOutput("pca_available")  ,
-                                 uiOutput("pca_mess")
+                                 htmlOutput("pca_settings_summary")
                                )), 
                                
                                # PCA Main Panel
                                mainPanel(div(id="everything_cluster_mainpanel",
-                                             div("Refine PCA Settings here and then click Run Principal Component Analysis on the left", style = "text-align: left; font-size:150%"),
+                                             div("Refine PCA Settings here and click Confirm Choice, Confirm Axis Labels and Confirm Number of PCs tested, then click Run Principal Component Analysis on the left", style = "text-align: left; font-size:150%"),
                                              
                                              div("1. Please select how the objectives should be plotted", style = "margin-top: 10px; text-align: left; font-size:150%"),
                                              fluidRow(column(6,
@@ -617,23 +619,13 @@ ui <-
                                                              textInput("size","Size Label",value = ""),
                                                              actionButton("confirm_axis","Confirm Axis Labels"),
                                                              htmlOutput("axis_text"))),
-                                             # PCA Clustering
-                                             div("2. Shall several number of clusters be tested?", style = "text-align: left; font-size:150%"),
-                                             div(style = "margin-top: -15px;",radioButtons("clusyn", "", choices = c("Yes", "No"),selected = "No")),
+                                             #number of PCAs
+                                             div("2. Please specify the number of principal components that shall be tested", style = "text-align: left; font-size:150%"),
+                                             numericInput("pca_min", "Minimum number of PCs", value = 7),
+                                             numericInput("pca_max", "Maximum number of PCs", value = 7),
+                                             actionButton("pcaminmax", "Confirm Number of PCs tested"),
                                              
-                                             conditionalPanel(
-                                               condition = "input.clusyn == 'Yes'",
-                                               h4("Please specify how many clusters to iterate through:"),
-                                               numericInput("clus_min", "Minimum number of Clusters", value = 3),
-                                               numericInput("clus_max", "Maximum number of Clusters", value = 3),
-                                               
-                                             ),
                                              
-                                             conditionalPanel(
-                                               condition = "input.clusyn == 'No'",
-                                               numericInput("clus_fix", "Fixed number of Clusters", value = 15)
-                                             ),
-                                             actionButton("write_clust", "Confirm Cluster Number"),
                                              
                                              # PCA Outlier
                                              div("3. Shall outliers be analysed and potentially removed?", style = "text-align: left; font-size:150%"),
@@ -656,10 +648,24 @@ ui <-
                                                condition = "input.outlyn == 'No'",
                                                actionButton("write_outl", "Confirm No Outlier Testing") ),
                                              
-                                             div("4. Please specify the number of principal components that shall be tested", style = "text-align: left; font-size:150%"),
-                                             numericInput("pca_min", "Minimum number of PCs", value = 7),
-                                             numericInput("pca_max", "Maximum number of PCs", value = 7),
-                                             actionButton("pcaminmax", "Confirm Number of PCs tested"),
+                                             
+                                             #  Cluster number
+                                             div("4. Shall several number of clusters be tested?", style = "text-align: left; font-size:150%"),
+                                             div(style = "margin-top: -15px;",radioButtons("clusyn", "", choices = c("Yes", "No"),selected = "No")),
+                                             
+                                             conditionalPanel(
+                                               condition = "input.clusyn == 'Yes'",
+                                               h4("Please specify how many clusters to iterate through:"),
+                                               numericInput("clus_min", "Minimum number of Clusters", value = 3),
+                                               numericInput("clus_max", "Maximum number of Clusters", value = 3),
+                                               
+                                             ),
+                                             
+                                             conditionalPanel(
+                                               condition = "input.clusyn == 'No'",
+                                               numericInput("clus_fix", "Fixed number of Clusters", value = 15)
+                                             ),
+                                             actionButton("write_clust", "Confirm Cluster Number"),
                                              
                                              # PCA printing Background Processes
                                              conditionalPanel(condition = "output.isElementVisible == true",div("Python Background Processes",style = "text-align: left; font-size:150%"),        
