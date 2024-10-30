@@ -96,7 +96,6 @@ the project consists of six folders:
 * Correlation tab
   * output largest accepted correlation in bold over table/could also be part of default setting
   * (python: deviations_step is currently the default value) 
-  * add spinner so user knows something is happening
    
 * AHP and Cluster Analysis tabs
   * better graphical representation of decison space across solutions:
@@ -107,8 +106,7 @@ the project consists of six folders:
     * add line plot for solutions to improve tradeoff representation in Analysis tab
     * find a way to select measures and analyse their density/combinations/areas in field
     * representation of "most important" measures that are part of all pareto-optimal solutions
-  
-
+ 
 
 ## Workflow
 * General
@@ -118,4 +116,4 @@ the project consists of six folders:
 
  
 * Analysis tab
-  * HTML download for measure implementation maps - might be possible with replotting and individual saving and stitching back together
+  * HTML download for individual measure implementation maps, not possible across all
