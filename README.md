@@ -69,17 +69,17 @@ the project consists of six folders:
 
 * General to do and open questions
   * as "land use" measures currently only hedge, buffer and grassslope considered - if more needed global.R, functions.R (write_corr) and convert_optain require adapting
+  * new nswrm_priorities() function currently considers: pond, constr_wetland, wetland, hedge, buffer, grassslope, lowtillcc, lowtill, droughtplt
   * do the current default settings produce reasonable cluster outputs across all catchments? the default might need outlier testing 
-  * users should not produce optimisation outputs with values below 0 and if possible no values smaller than 1, the app currently runs a rescale to roughly balance the values between 1 and 100 but this is not a nice solution
+  * users should not produce optimisation outputs with values below 0 and if possible no values smaller than 1, the app currently runs a rescale to roughly balance the values between 1 and 100 but this is not a nice solution, also this solution currently doesn't adapt the axes scales
   * removing minus signs everywhere possible?
   * cannot take percentage of 0 so those changes are not visible in Visualisation tab
-  * new nswrm_priorities() function might require more measures, depending on what was used. It currently considers: pond, constr_wetland, wetland, hedge, buffer, grassslope, lowtillcc, lowtill, droughtplt
   * share to GitLab
 
 
 * AHP
   * the initial state of the pairwise comparison as "Equal" amplifies the mathematical definition of inconsistency, therefore only when at least three sliders are NOT set to "Equal" is inconsistency considered at all
-  * normalising the dataframe prior to weighting relies on scaling to between 0 and 1. Should the individual solutions be spaced equally to get more effect through weighting?
+  * normalising the dataframe prior to weighting relies on scaling to between 0 and 1
 
 # To do
 ## Content
@@ -89,19 +89,14 @@ the project consists of six folders:
   * implement plot_ly (maybe in another window after setting axis, color, shape)
 
 * Configure tab
-  * we might want to automate the number of clusters (k in k means) and outlier testing 
+  * outlier testing in default run?
   * check for missing files
   * automate widest range function to config writing for it to work in python
-
-* Correlation tab
-  * output largest accepted correlation in bold over table/could also be part of default setting
-  * (python: deviations_step is currently the default value) 
    
 * AHP and Cluster Analysis tabs
   * better graphical representation of decison space across solutions:
     * linE - on y axis
     * frequency maps - produce during python call or based on button with Micha's R script and put in output
-    * barplot of implemented measures per optimum
     * plot PCA variables against objectives
     * add line plot for solutions to improve tradeoff representation in Analysis tab
     * find a way to select measures and analyse their density/combinations/areas in field
@@ -111,7 +106,7 @@ the project consists of six folders:
 ## Workflow
 * General
   * declutter app by removal of items that can instead be hovered (what could be moved there? --- unit, especially also in visualisation tab)
-  * only show results if inconsistency acceptable - color tabs when they're shown, maybe move plot above (where should the map go then?)
+  * only show results if inconsistency acceptable
   * convert_optain requires some failsafe controls for empty values
 
  
