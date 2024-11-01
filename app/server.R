@@ -70,13 +70,19 @@ server <- function(input, output, session) {
     size_var = NULL
   )
   ahp_combo = reactiveVal(character(0))
-  sids = reactiveVal()
+  sids =   reactiveVal(c("c1_c2", "c1_c3", "c1_c4","c2_c3","c2_c4", "c3_c4"))
+  slider_ahp <- reactiveValues(c1_c2 = "Equal",
+                               c1_c3 = "Equal",
+                               c1_c4 = "Equal",
+                               c2_c3= "Equal",
+                               c2_c4= "Equal",
+                               c3_c4= "Equal")
+  
   coma = reactiveVal()
   range_controlled = reactiveVal(NULL)
   initial_update_done = reactiveValues(initial = FALSE)
   card_shown <- reactiveValues(card1 = FALSE, card2 = FALSE, card3 = FALSE, card4 = FALSE, card5 = FALSE, card6 = FALSE)
   sliders <- reactiveValues()
-  
   #figure in analysis rendering
   is_rendering <- reactiveVal(FALSE)
   default_running <- reactiveVal(NULL)#spinner in configure tab
@@ -1961,7 +1967,6 @@ server <- function(input, output, session) {
         }}
       }
     }
-      sids(c("c1_c2", "c1_c3", "c1_c4","c2_c3","c2_c4", "c3_c4"))
       coma(comparison_matrix)
       
       normalized_matrix <- comparison_matrix / colSums(comparison_matrix)
@@ -2220,17 +2225,7 @@ server <- function(input, output, session) {
   #   
   #   do.call(tagList, sliders)
   # })
-  ## AHP sliders
-  # 
-  #   
-  # sliders <- lapply(1:6, function(i) {
-  #   
-  #   
-  #   sliderInput(paste0("slider", i), label = paste("Slider", i), min = 0, max = 100, value = i * 10)
-  #   
-  #  
-  # })
- 
+
   
   
   # scatter function
@@ -2269,7 +2264,7 @@ server <- function(input, output, session) {
     num_criteria = length(objectives())
   for (i in 1:(num_criteria - 1)) {
     for (j in (i + 1):num_criteria) {
-      slider_id <- paste0("c", i, "_c", j)
+      slider_id <- paste0("c", i, "_c", j) #aligns with sid()
       sliders[[slider_id]] <- sliderTextInput(
         inputId = slider_id,
         label = "",
@@ -2286,6 +2281,8 @@ server <- function(input, output, session) {
     }
   }
   }
+  
+
   
   #make sliders
   observe({
@@ -2315,7 +2312,8 @@ server <- function(input, output, session) {
   }
   
   for (k in 1:6) {
-   
+    
+    
     local({
       i = k
       ahp_card <- paste0("ahp_card", i)
@@ -2324,12 +2322,18 @@ server <- function(input, output, session) {
       tabl = paste0("table",i)
       cardui = paste0("card",i,"_ui")
       
+      
       observeEvent(input[[ahp_card]], {
-       
-        req(ahp_combo(),sids())
+
+        sliid <- isolate(sids()[i])  
+        if (!is.null(slider_ahp[[sliid]])) {
+          updateSliderInput(session, sliid, value = slider_ahp[[sliid]])
+        }
         card_shown[[card]] <- !card_shown[[card]]
         
         if(card_shown[[card]]){
+          
+          
           
           runjs(paste0('document.getElementById("', ahp_card, '").style.backgroundColor = "#F7A600";'))
           
@@ -2339,8 +2343,12 @@ server <- function(input, output, session) {
           output[[tabl]] <-  renderTable({create_r2tab(i)}, rownames = F, colnames = F, sanitize.text.function = function(x) x)
           
           output[[cardui]] <- renderUI({
-            create_card(ahp_combo()[i],sliders[[sids()[i]]] , plt,tabl)
-          })}else{
+            create_card(ahp_combo()[i],
+                        slider = sliders[[sliid]] , plt,tabl)
+          })
+          
+          observe({ slider_ahp[[sliid]] <- input[[sliid]]})
+          }else{
             shinyjs::hide(paste0(cardui))
             runjs(paste0('document.getElementById("', ahp_card, '").style.backgroundColor = "#0487bf";'))
             

@@ -760,9 +760,8 @@ ui <-
                        
                        wellPanel( p("This tab allows you to run a different approach (AHP) to selecting those pareto optima best matching your preferences.
                      AHP is a decision making tool that helps you prioritise different objectives by comparing them in pairs."),
-                                  p(HTML("Clicking <strong>analyse objectives</strong> allows you to receive a broad overview of the different objectives' relationships.")),
-                                  p("If you want you can limit the objective ranges under 2."),
-                                  p("Under 3. you can compare objectives two at a time and and decide which objective is more important and by how much. 
+                                  p("If you want you can limit the objective ranges under 1."),
+                                  p("Under 2. you can compare objectives two at a time and and decide which objective is more important and by how much. 
                      ParetoPick-R will assign weights to each objective based on your inputs and check how consistent your choices are. 
                      The respective best choice is plotted on the right and you can decide whether 
                      it should be selected from the whole pareto front or from the subset of cluster results.")),
