@@ -823,7 +823,7 @@ ui <-
                           checkboxInput("save_ahp",label = "Click here to save the selected optimum to the output folder (selected_optima.csv)",value=F)%>%hidden(),
                          
                           br(),
-                          uiOutput("consistency_check"),textOutput("which_inconsistency"),
+                          uiOutput("consistency_check"),div(id="cc",textOutput("which_inconsistency"), style = "color: red;"),
                           br(),
                           
                                div(id = "random_ahp",

@@ -132,8 +132,6 @@ server <- function(input, output, session) {
   
   
   ##check if names of objectives have to be supplied or already present
-  ## CONSOLIDATE THIS, da ist ne dumme unnoetige Dopplung
-  ## CONSOLIDATE THIS, da ist ne dumme unnoetige Dopplung
   observeEvent(input$tabs == "play_around",{ 
     ## make or pull objectives()
     if(!file.exists("../input/object_names.RDS")) {

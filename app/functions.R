@@ -312,13 +312,29 @@ get_obj_range = function(filepath = "../data/pareto_fitness.txt",colnames=paste0
   pf = read.table(filepath,sep=",")
   colnames(pf) = colnames
   
-  range_df <- data.frame(column = character(), min = numeric(), max = numeric(), stringsAsFactors = FALSE)
+  range_df <- data.frame(objective = character(), min_original = numeric(), max_original = numeric(), stringsAsFactors = FALSE)
   
   for (col_name in colnames) {
     min_val <- min(pf[[col_name]], na.rm = TRUE)
     max_val <- max(pf[[col_name]], na.rm = TRUE)
-    range_df <- rbind(range_df, data.frame(column = col_name, min = min_val, max = max_val, stringsAsFactors = FALSE))
+    range_df <- rbind(range_df, data.frame(objective = col_name, min_original = min_val, max_original = max_val, stringsAsFactors = FALSE))
   }
+  
+  if(file.exists("../data/pareto_fitness_original.txt")){
+    pf = read.table("../data/pareto_fitness_original.txt",sep=",")
+    colnames(pf) = colnames
+    
+    range_df2 <- data.frame(objective = character(), min_paretoPickR = numeric(), max_paretoPickR = numeric(), stringsAsFactors = FALSE)
+    
+    for (col_name in colnames) {
+      min_val <- min(pf[[col_name]], na.rm = TRUE)
+      max_val <- max(pf[[col_name]], na.rm = TRUE)
+      range_df2 <- rbind(range_df2, data.frame(objective = col_name, min_paretoPickR = min_val, max_paretoPickR = max_val, stringsAsFactors = FALSE))
+    }
+    range_df$objective = NULL
+    range_df = cbind(range_df2, range_df)
+  }
+  
   return(range_df)##
 }
 
