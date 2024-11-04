@@ -2290,7 +2290,9 @@ server <- function(input, output, session) {
     ahp_slider_maker()})
  
   #fun for putting all three, slider, table with r2 and scatter plot in one
-  create_card <- function(title, slider, plot, table) {
+  create_card <- function(title, sliid, plot, table, session, slider_val, sliders) {
+    
+    updateSliderTextInput(session, inputId = sliid, selected = slider_val)
     box(
       title = h1(title, style = "text-align: center; font-size: 140%; margin-top: -15px;"),
       width = 12,
@@ -2306,7 +2308,7 @@ server <- function(input, output, session) {
           tableOutput(table)  
         )
       ),
-      slider
+      sliders[[sliid]]
     )
     )
   }
@@ -2322,19 +2324,16 @@ server <- function(input, output, session) {
       tabl = paste0("table",i)
       cardui = paste0("card",i,"_ui")
       
-      
       observeEvent(input[[ahp_card]], {
 
         sliid <- isolate(sids()[i])  
-        if (!is.null(slider_ahp[[sliid]])) {
-          updateSliderInput(session, sliid, value = slider_ahp[[sliid]])
-        }
+        slider_val <- slider_ahp[[sliid]] 
+        
         card_shown[[card]] <- !card_shown[[card]]
         
+        # observe({ slider_ahp[[sliid]] <- input[[sliid]]})
+       
         if(card_shown[[card]]){
-          
-          
-          
           runjs(paste0('document.getElementById("', ahp_card, '").style.backgroundColor = "#F7A600";'))
           
           shinyjs::show(cardui)
@@ -2342,12 +2341,13 @@ server <- function(input, output, session) {
           
           output[[tabl]] <-  renderTable({create_r2tab(i)}, rownames = F, colnames = F, sanitize.text.function = function(x) x)
           
+          #title, sliid, plot, table, session, slider_val
           output[[cardui]] <- renderUI({
-            create_card(ahp_combo()[i],
-                        slider = sliders[[sliid]] , plt,tabl)
+            create_card(ahp_combo()[i],sliid=sliid, plt,tabl,session,slider_val=slider_val,sliders )
           })
           
-          observe({ slider_ahp[[sliid]] <- input[[sliid]]})
+         
+          
           }else{
             shinyjs::hide(paste0(cardui))
             runjs(paste0('document.getElementById("', ahp_card, '").style.backgroundColor = "#0487bf";'))
@@ -2357,5 +2357,14 @@ server <- function(input, output, session) {
     })
     
   }
+  
+  observe({
+    lapply(sids(), function(sliid) {
+      observeEvent(input[[sliid]], {
+        slider_ahp[[sliid]] <- input[[sliid]]
+      })
+    })
+
+  })
  
 }
