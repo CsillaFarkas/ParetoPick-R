@@ -210,7 +210,7 @@ ui <-
                                   in other objectives), choosing among a large number of solutions can be daunting."),
                                br(), 
                                p("To reduce complexity while minimising information loss, this application provides two ways to filter/reduce the pareto front:"),
-                               tags$ol(tags$li("A clustering algorithm based on a Principal Component Analysis (PCA) and kmeans/kmedoidss.
+                               tags$ol(tags$li("A clustering algorithm based on a Principal Component Analysis (PCA) and kmeans/kmedoids.
                                                 The user can modify the clustering process, alter the number of tested clusters and the way outliers are handled or how much correlation is accepted across the considered variables.
                                                 Finally, those optima  representative for different clusters can be plotted and the measure implementation they recommend can be compared.
                                                "),
@@ -223,8 +223,8 @@ ui <-
                                p(HTML("The third tab <b>Data Preparation</b> is needed to produce the data required for the subsequent analyses. Several files need to be provided so the variables considered in the clustering can be calculated.")),
                                p(HTML("The fourth tab <strong>Clustering Part 1 - Correlation Analysis</strong> allows to assess and alter variables considered in the subsequent clustering.")),
                                p(HTML("The fifth tab <strong>Clustering Part 2 - PCA & kmeans/kmedoids</strong> provides the possibility to adapt, modify and finally perform the clustering process.")),
-                               p(HTML("The <strong>Analysis</strong> tab lets the user plot the optima remaining after the clustering. Each of these optima is representative for one cluster.")),
-                               p(HTML("The tab <strong>AHP - Analytical Hierarchy Process</strong> allows to determine priorities across the pareto front in a different way using weights across the optima. It is possible to combine the clustering results with the AHP."))
+                               p(HTML("The <strong>Cluster Analysis</strong> tab lets the user plot the optima remaining after the clustering. Each of these optima is representative for one cluster.")),
+                               p(HTML("The tab <strong>AHP - Analytical Hierarchy Process</strong> allows to determine priorities across the pareto front in a different way through assigning weights across the optima. It is possible to combine the clustering results with the AHP."))
                                
                              )
                              )),
@@ -233,7 +233,7 @@ ui <-
                titlePanel("Visualising the Optimisation Output"),
                
                 wellPanel(    p("After providing the pareto_fitness.txt and the objective names (given in the first four columns of pareto_fitness.txt) either here or in the next tab, this tab lets you plot the pareto front in two different ways
-                              and explore the effects of reduced objective ranges."),p("You can also select specific points on the pareto front by clicking on the line plot.")),
+                              and explore the effects of reduced objective ranges. You can select specific points on the pareto front by clicking on the line plot.")),
                              
                              sidebarLayout(
                                
@@ -369,9 +369,8 @@ ui <-
                tabItem(tabName = "data_prep",
                              titlePanel("OPTAIN Data Preparation"),
                              
-                             wellPanel(  p("This tab requires you to provide the required optimisation outputs, please retain their names as given here and as produced in the optimisation workflow."),
-                                         p(HTML("Please click <strong>Check Files</strong> after doing so.")),
-                                         p(HTML("If all files have been found, you can click <strong>Run Prep</strong> to prepare the variables for the subsequent correlation and cluster analysis. This takes can take up to 5 minutes."))),
+                             wellPanel(  p(HTML("This tab requires you to provide the optimisation outputs, please retain their names as given here and as produced in the optimisation workflow. Please click <strong>Check Files</strong> after doing so.
+                                         If all files have been found, you can click <strong>Run Prep</strong> to prepare the variables for the subsequent correlation and cluster analysis. This can take up to 5 minutes."))),
                              
                              mainPanel(
                                p("To prepare the data for the subsequent correlation and cluster analysis, please provide the following files:",style =  "text-align: left; font-size:150%"),
@@ -486,10 +485,9 @@ ui <-
                 tabItem(tabName = "correlation_analysis",
                              titlePanel("Clustering Part 1 - Correlation Analysis"),
                              
-                             wellPanel( p(HTML("Since correlation among variables can skew cluster results, a correlation analysis and potential removal of variables is required. 
-                             For this purpose, please click <strong>Run Correlation Analysis</strong>. 
-                             Based on the levels of correlation you can select those variables you would like to exclude from the subsequent clustering. Select them and then click <strong>Confirm Selection</strong>. You can come back to this tab to change the selection of variables later.")),
-                                        p(HTML("It is also possible to run the clustering across all variables and select no variables to exclude in this tab, however please always click <strong>Confirm Selection</strong>."))),
+                             wellPanel( p(HTML("A correlation analysis is needed as correlation among variables can skew cluster results. Therefore, please click <strong>Run Correlation Analysis</strong>. 
+                             Based on the levels of correlation you can select those variables you would like to exclude from the subsequent clustering. Select them and then click <strong>Confirm Selection</strong>. You can come back to this tab to change the selection of variables later.
+                                        It is also possible to run the clustering across all variables and select no variables to exclude in this tab, however please always click <strong>Confirm Selection</strong>."))),
                              sidebarLayout(
                                
                                sidebarPanel(
@@ -563,8 +561,8 @@ ui <-
                              
                              titlePanel("Clustering Part 2 - PCA & kmeans/kmedoids"),
                              
-                             wellPanel(  p("This tab requires you to decide on the cluster settings. After selecting which objectives shall be plotted on the x-axis, y-axis and as color and size and after deciding on the axis titles, the clustering can be run with default settings."),
-                                         p(HTML("Selecting <strong>Yes</strong> under either 2. or 3. allows to change those default settings and test a variable number of clusters and outlier considerations.")),
+                             wellPanel(  p(HTML("This tab requires you to decide on the cluster settings. After selecting how the objectives shall be plotted, deciding on the axis titles and confirming the number of PCAs tested, the clustering can be run with default settings.
+                                         Selecting <strong>Yes</strong> under either 2. or 3. allows to change those default settings and test a variable number of clusters and outlier considerations.")),
                                          p(HTML("The cluster outputs open in separate tabs and can be saved as images."))),
                              
                              sidebarLayout(sidebarPanel(
@@ -679,9 +677,8 @@ ui <-
                      tabItem(
                        tabName = "analysis",
                        titlePanel("Analysing the remaining optima"), 
-                       wellPanel(p("This tab allows you to analyse the cluster outputs and plot and compare the measure implementation across the pareto solutions selected in the clustering. The table shows the subset of pareto_fitness selected as representative for the different clusters."),
-                                 p("The plot on the right aligns with the one produced during the clustering. It shows where the representative solutions selected in the table lie."),
-                                 p("Please be aware that the plotting of the measure allocation takes about 20 seconds.")), 
+                       wellPanel(p("This tab allows you to analyse the cluster outputs and plot and compare the measure implementation across the pareto solutions selected in the clustering. The table shows those optima selected as representative for the different clusters. The plot on the right aligns with the one produced during the clustering. 
+                       It shows the location of the optima selected in the table. Please be aware that plotting the measure allocation takes around 20 seconds.")), 
                        
                        sidebarLayout(
                          sidebarPanel(id ="analysis_sidebar",
@@ -759,11 +756,11 @@ ui <-
                        titlePanel("Analytical Hierarchy Process"),
                        
                        wellPanel( p("This tab allows you to run a different approach (AHP) to selecting those pareto optima best matching your preferences.
-                     AHP is a decision making tool that helps you prioritise different objectives by comparing them in pairs."),
-                                  p("If you want you can limit the objective ranges under 1."),
+                     AHP is a decision making tool that helps you prioritise different objectives by comparing them in pairs.
+                                    If you want you can limit the objective ranges under 1."),
                                   p("Under 2. you can compare objectives two at a time and and decide which objective is more important and by how much. 
-                     ParetoPick-R will assign weights to each objective based on your inputs and check how consistent your choices are. 
-                     The respective best choice is plotted on the right and you can decide whether 
+                     ParetoPick-R will assign weights to each objective based on your inputs and check its consistency. 
+                     The respective best choice is plotted below and you can decide whether 
                      it should be selected from the whole pareto front or from the subset of cluster results.")),
                        
                        sidebarLayout(
@@ -771,15 +768,7 @@ ui <-
                            
                            textOutput("nothing_ran_ahp"),
                            div(id = "ahp_analysis",
-                               # "1. Examining the relationship between the objectives.",style = "text-align: left; font-size:150%",
-                               
-                               # fluidRow(
-                                 # column(6, uiOutput("criterion1_ui")),
-                                 # column(6, uiOutput("criterion2_ui")),
-                                 
-                                 # column(6, actionButton("plot_sc", label = "analyse objectives"))
-                               # ),
-                               
+                            
                                fluidRow(
                                  
                                  column(10,
@@ -797,7 +786,7 @@ ui <-
                                div(tableOutput("weights_output"), style = "margin: 0 auto; width: fit-content;")),
                            br(),
                            
-                           uiOutput("consistency_check"),tableOutput("which_inconsistency"),
+                           
                            fluidRow(
                              div("2. Assign weights",style = "text-align: center; font-size: 150%;"),
                              
@@ -825,23 +814,18 @@ ui <-
                              uiOutput("card5_ui")%>%hidden(),
                              uiOutput("card6_ui")%>%hidden()
                            ),
+                           br(),
+                       
+                           div(id = "pareto_weighted", "Best Option under selected weighting", style = "text-align: center; font-size: 150%;"),
                            
-                           
-                           fluidRow(
-                             column(9, plotOutput("scatterPlot")), # 9/12 of the width for the plot
-                             column(3, tableOutput("relation")) # 3/12 of the width for the table
-                           ),
-                           
-                           div(id = "pareto_weighted",
-                               "Best Option under selected weighting",
-                               style = "text-align: center; font-size: 150%;"
-                               ),
-                           useShinyjs(),
-                           
-                            div(tableOutput("best_option_output"), style = "margin: 0 auto; width: fit-content;"),
+                          div(tableOutput("best_option_output"), style = "margin: 0 auto; width: fit-content; font-size: 150%;"),
                                                                      
-                           checkboxInput("save_ahp",label = "Click here to save the selected optimum to the output folder (selected_optima.csv)",value=F)%>%hidden(),
+                          checkboxInput("save_ahp",label = "Click here to save the selected optimum to the output folder (selected_optima.csv)",value=F)%>%hidden(),
                          
+                          br(),
+                          uiOutput("consistency_check"),textOutput("which_inconsistency"),
+                          br(),
+                          
                                div(id = "random_ahp",
                                   checkboxInput("best_cluster", label = "Best option among cluster solutions", value = FALSE),
                                   style = "margin: 0 auto; width: fit-content;font-size: 100%;"

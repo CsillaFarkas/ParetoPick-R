@@ -893,7 +893,6 @@ consistency_index <- function(m) {
 check_inconsistencies <- function(comparison_matrix, weights) {
   n <- nrow(comparison_matrix)
   inconsistencies <- data.frame(
-    # LastChangedElement = character(),
     Level = numeric(),
     weight = numeric(),
     stringsAsFactors = FALSE
@@ -906,7 +905,6 @@ check_inconsistencies <- function(comparison_matrix, weights) {
         if (i != j && j != k && i != k) {
           if (comparison_matrix[i, j] > 1 && comparison_matrix[j, k] > 1 && comparison_matrix[i, k] <= 1) {
             inconsistencies <- rbind(inconsistencies, data.frame(
-              # LastChangedElement = paste0("(", i, ", ", j, ") -> (", j, ", ", k, ")"),
               Level = comparison_matrix[i, j] * comparison_matrix[j, k],  
               weight = weights[i],
               stringsAsFactors = FALSE
@@ -915,11 +913,12 @@ check_inconsistencies <- function(comparison_matrix, weights) {
         }
       }
     }
+    inconsistencies <- unique(inconsistencies)
   }
+  inconsistencies <- inconsistencies %>% distinct(Level, weight, .keep_all = TRUE)
   
   ordered_i <- inconsistencies[order(-inconsistencies$Level), ]
-  ordered_i$Level = NULL
-  return(ordered_i)
+  return(rownames(ordered_i))
 }
 
 #### Rescaling and matching Functions ####

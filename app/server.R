@@ -2107,8 +2107,9 @@ server <- function(input, output, session) {
   })
   
   observe({
-    req(coma(), calculate_weights())
     
+    req(coma(), calculate_weights())
+
     ## consistency checks
     ci = consistency_index(coma())
 
@@ -2121,22 +2122,22 @@ server <- function(input, output, session) {
       
       se = sum(slider_ids == "Equal") #if majority on equal, large preferences amplify mathematical inconsistency
       
-      
       if (se > 3) {
         inconsistencies = paste("No major inconsistencies.")
         if (tab == T) {
-          inconsistencies = data.frame()
+          inconsistencies = character(0)
         }
       } else if (cr <= 0.15) {
         inconsistencies = paste("No major inconsistencies, the inconsistency ratio is:",
                                 round(cr, 3))
         if (tab == T) {
-          inconsistencies = data.frame()
+          inconsistencies = character(0)
         }
       } else{
         if (tab == T) {
           inconsistencies = check_inconsistencies(coma(), weights = calculate_weights())
-        } else if (tab == F & nrow(inconsistency_check(tab = T)) == 0) {
+          
+        } else if (tab == F &  is.null(inconsistency_check(tab = T))) {
           inconsistencies = paste("Potential inconsistencies, the inconsistency ratio is:",
                                   round(cr, 3))
         } else{
@@ -2153,7 +2154,7 @@ server <- function(input, output, session) {
     
     output$consistency_check = renderText({inconsistency_check(tab=F)})
     
-    output$which_inconsistency = renderTable({rownames(inconsistency_check(tab=T))},rownames =T, colnames = F)
+    output$which_inconsistency = renderText({inconsistency_check(tab=T)})
     
   })
   
@@ -2313,6 +2314,7 @@ server <- function(input, output, session) {
     )
   }
   
+
   for (k in 1:6) {
     
     
