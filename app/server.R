@@ -2109,7 +2109,7 @@ server <- function(input, output, session) {
   observe({
     
     req(coma(), calculate_weights())
-
+# print(slider_ahp$c1_c2)
     ## consistency checks
     ci = consistency_index(coma())
 
@@ -2118,8 +2118,8 @@ server <- function(input, output, session) {
     #table stays empty without inconsistencies
     inconsistency_check = function(tab) {
       req(coma(), objectives(), cr)
-      slider_ids = c(input[["c1_c2"]], input[["c1_c3"]], input[["c1_c4"]], input[["c2_c3"]], input[["c2_c4"]], input[["c3_c4"]])
-      
+      slider_ids = c(slider_ahp[["c1_c2"]], slider_ahp[["c1_c3"]], slider_ahp[["c1_c4"]], slider_ahp[["c2_c3"]], slider_ahp[["c2_c4"]], slider_ahp[["c3_c4"]])
+     
       se = sum(slider_ids == "Equal") #if majority on equal, large preferences amplify mathematical inconsistency
       
       if (se > 3) {
@@ -2137,7 +2137,7 @@ server <- function(input, output, session) {
         if (tab == T) {
           inconsistencies = check_inconsistencies(coma(), weights = calculate_weights())
           
-        } else if (tab == F &  is.null(inconsistency_check(tab = T))) {
+        } else if (tab == F &  is.null(check_inconsistencies(coma(), weights = calculate_weights()))) {
           inconsistencies = paste("Potential inconsistencies, the inconsistency ratio is:",
                                   round(cr, 3))
         } else{
