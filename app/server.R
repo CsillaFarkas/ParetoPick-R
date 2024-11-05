@@ -259,9 +259,14 @@ server <- function(input, output, session) {
               
             }
             
-            assign(var_name, (min_max$max[i]-min_max$min[i])/20)
+          
+          if ((min_max$max[i] - min_max$min[i]) < 2) {
+            min_max$max[i] = round(min_max$max[i],3)
+            min_max$min[i] = round(min_max$min[i],3)
+          }
+          assign(var_name,(min_max$max[i]-min_max$min[i])/20)
             
-         
+                 
           range_controlled(range_value)
           
           updateSliderInput(session, paste0("obj",i,"_ahp"), value = c(min_max$min[i],min_max$max[i]),min =min_max$min[i],max = min_max$max[i],step=var_name)
@@ -309,7 +314,7 @@ server <- function(input, output, session) {
         shinyjs::enable("plt_sq")
         
         shinyjs::hide("sq")
-        st_q = read.table("../data/sq_fitness.txt", header = FALSE, stringsAsFactors = FALSE, sep = ' ')
+        st_q = read.table("../data/sq_fitness.txt", header = FALSE, stringsAsFactors = FALSE, sep = ',')
         names(st_q) = objectives()
         stq(st_q)
         
