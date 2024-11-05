@@ -95,8 +95,6 @@ the project consists of six folders:
    
 * AHP and Cluster Analysis tabs
   * better graphical representation of decison space across solutions:
-    * linE - on y axis
-    * frequency maps - produce during python call or based on button with Micha's R script and put in output
     * plot PCA variables against objectives
     * add line plot for solutions to improve tradeoff representation in Analysis tab
     * find a way to select measures and analyse their density/combinations/areas in field
