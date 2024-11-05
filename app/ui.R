@@ -429,7 +429,7 @@ ui <-
                                    actionButton("runprep", "Run Prep"))%>%hidden,
                                uiOutput("script_output"),
                                br(),br(),
-                               div(id="range_title","Range of objective values as given in pareto_fitness.txt",style = "text-align: left; font-size:120%"),
+                               div(id="range_title","Range of objective values given in pareto_fitness.txt and as used in this app",style = "text-align: left; font-size:120%"),
                                tableOutput("obj_conf"),
                                
                                br(),br(),br(),
