@@ -312,27 +312,28 @@ get_obj_range = function(filepath = "../data/pareto_fitness.txt",colnames=paste0
   pf = read.table(filepath,sep=",")
   colnames(pf) = colnames
   
-  range_df <- data.frame(objective = character(), min_original = numeric(), max_original = numeric(), stringsAsFactors = FALSE)
+  range_df <- data.frame(objective = character(), min = numeric(), max = numeric(), stringsAsFactors = FALSE)
   
   for (col_name in colnames) {
     min_val <- min(pf[[col_name]], na.rm = TRUE)
     max_val <- max(pf[[col_name]], na.rm = TRUE)
-    range_df <- rbind(range_df, data.frame(objective = col_name, min_original = min_val, max_original = max_val, stringsAsFactors = FALSE))
+    range_df <- rbind(range_df, data.frame(objective = col_name, min = min_val, max = max_val, stringsAsFactors = FALSE))
   }
   
   if(file.exists("../data/pareto_fitness_original.txt")){
     pf = read.table("../data/pareto_fitness_original.txt",sep=",")
     colnames(pf) = colnames
     
-    range_df2 <- data.frame(objective = character(), min_paretoPickR = numeric(), max_paretoPickR = numeric(), stringsAsFactors = FALSE)
+    range_df2 <- data.frame(objective = character(), min = numeric(), max = numeric(), stringsAsFactors = FALSE)
     
     for (col_name in colnames) {
       min_val <- min(pf[[col_name]], na.rm = TRUE)
       max_val <- max(pf[[col_name]], na.rm = TRUE)
-      range_df2 <- rbind(range_df2, data.frame(objective = col_name, min_paretoPickR = min_val, max_paretoPickR = max_val, stringsAsFactors = FALSE))
+      range_df2 <- rbind(range_df2, data.frame(objective = col_name, min = min_val, max = max_val, stringsAsFactors = FALSE))
     }
     range_df$objective = NULL
     range_df = cbind(range_df2, range_df)
+    colnames(range_df) = c("objective","min_original","max_original","min_ParetoPickR","max_ParetoPickR")
   }
   
   return(range_df)##
@@ -1081,21 +1082,21 @@ scale_data <- function(x) {
   med <- median(abs(x), na.rm = TRUE)
   
   if (med <= 0.0001) {
-    return(as.numeric(x * 1000000))
-  } else if (med <= 0.001) {
     return(as.numeric(x * 100000))
-  } else if (med <= 0.01) {
+  } else if (med <= 0.001) {
     return(as.numeric(x * 10000))
-  } else if (med <= 0.1) {
+  } else if (med <= 0.01) {
     return(as.numeric(x * 1000))
-  } else if (med <= 1) {
+  } else if (med <= 0.1) {
     return(as.numeric(x * 100))
+  } else if (med <= 1) {
+    return(as.numeric(x * 10))
   } else if (med >= 1000 && med < 10000) {
-    return(as.numeric(x / 100))
+    return(as.numeric(x / 10))
   } else if (med >= 10000 && med < 100000) {
-    return(as.numeric(x / 1000))
+    return(as.numeric(x / 100))
   } else if (med > 100000) {
-    return(as.numeric(x / 10000))
+    return(as.numeric(x / 1000))
   } else {
     return(as.numeric(x))
   }
