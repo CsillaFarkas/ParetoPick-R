@@ -9,8 +9,8 @@ ui <-
     dashboardSidebar(
       sidebarMenu(id = "tabs",
                   menuItem("Introduction",tabName = "intro", icon = icon("home"),selected=TRUE),
-                  menuItem("Visualising the Pareto Front",tabName = "play_around",icon = icon("dashboard")),
                   menuItem("Data Preparation", icon=icon("file",lib = "font-awesome"),tabName = "data_prep"),
+                  menuItem("Visualising the Pareto Front",tabName = "play_around",icon = icon("dashboard")),
                   menuItem("Configure Clustering", tabName = "configure", icon = icon("cog")),
                   
                   conditionalPanel(
@@ -58,6 +58,14 @@ ui <-
                                   }
                                   
                                   .sidebar-menu li a[data-value="analysis"]:hover {
+                                    background-color: #9eb1cf !important;
+                                  }
+                                  
+                                  .sidebar-menu li a[data-value="play_around"] {
+                                    background-color: #95C11F !important;
+                                  }
+                                  
+                                  .sidebar-menu li a[data-value="play_around"]:hover {
                                     background-color: #83D0F5 !important;
                                   }
 
@@ -228,153 +236,58 @@ ui <-
                                
                              )
                              )),
-                     ### PLAY AROUND TAB ####
-            tabItem(tabName = "play_around",
-               titlePanel("Visualising the Optimisation Output"),
-               
-                wellPanel(    p("After providing the pareto_fitness.txt and the objective names (given in the first four columns of pareto_fitness.txt) either here or in the next tab, this tab lets you plot the pareto front in two different ways
-                              and explore the effects of reduced objective ranges. You can select specific points on the pareto front by clicking on the line plot.")),
-                             
-                             sidebarLayout(
-                               
-                               
-                               sidebarPanel( width = 3,
-                                             div(
-                                               id="parfit",
-                                               "Please provide the pareto_fitness.txt file here and click Save:",style = "text-align: left; font-size:115%",
-                                               fileInput("par_fit", "", accept = ".txt"),
-                                               actionButton("save_paretofit","Save"))%>%hidden(),
-                                             div(
-                                               id="sq",
-                                               "If you want you can supply the sq_fitness.txt file here to plot the status quo.",style = "text-align: left; font-size:115%",
-                                               fileInput("sq_in","",accept = ".txt"),
-                                               actionButton("save_sq_in","Save")),
-                                             
-                                             div(
-                                               id = "obj_first",
-                                               "Please provide the objective names as given in the first four columns of the pareto_fitness.txt file:",
-                                               style = "text-align: left; font-size:115%", 
-                                               textInput("short1", "Objective 1\n (Column 1)"), 
-                                               textInput("short2", "Objective 2\n (Column 2)"), 
-                                               textInput("short3", "Objective 3\n (Column 3)"), 
-                                               textInput("short4", "Objective 4\n (Column 4)"),
-                                               actionButton("save_par_fiti", "Save")) %>% hidden(), 
-                                             
-                                             div(id="units",
-                                                 "If you want you can supply the objectives' units and save them for future use:",
-                                                 style= "text-align: left; font-size:115%",
-                                                 textInput("unit1","unit Objective 1", value = ""),
-                                                 textInput("unit2","unit Objective 2", value = ""),
-                                                 textInput("unit3","unit Objective 3", value = ""),
-                                                 textInput("unit4","unit Objective 4", value = ""),
-                                                 actionButton("save_unit","Save")),
-                                             
-                                             textOutput("uploaded_pareto"),
-                                             br(),
-                                             br(),
-                                             div(
-                                               column(10,
-                                                      div("Objective Range", style = "text-align: left; font-size:150%; margin-top: 40px;"),
-                                                      
-                                                      sliderInput(inputId = "obj1", label=  "Objective 1:", min = 0, max = 1, value = c(0,1), step = 0.01,width = "110%"),
-                                                      sliderInput(inputId = "obj2", label = "Objective 2:", min = 0, max = 1, value = c(0,1), step = 0.01,width = "110%"),
-                                                      sliderInput(inputId = "obj3", label = "Objective 3:", min = 0, max = 1, value = c(0,1), step = 0.01, width = "110%"),
-                                                      sliderInput(inputId = "obj4", label = "Objective 4:", min = 0, max = 1, value = c(0,1), step = 0.01,width = "110%")))
-                                             
-                               ),
-                               mainPanel(
-                                 tags$style(HTML(".js-irs-1 .irs-single, .js-irs-1 .irs-bar-edge, .js-irs-1 .irs-bar {background: #ffc61e ;border-top: 1px solid #ffc61e ;border-bottom: 1px solid #ffc61e;}.js-irs-1 .irs-from, .js-irs-1 .irs-to, .js-irs-1 .irs-single { font-size: 13px;background: #ffc61e !important }")),
-                                 tags$style(HTML(".js-irs-2 .irs-single, .js-irs-2 .irs-bar-edge, .js-irs-2 .irs-bar {background: #009ade ;border-top: 1px solid #009ade ;border-bottom: 1px solid #009ade;}.js-irs-2 .irs-from, .js-irs-2 .irs-to, .js-irs-2 .irs-single { font-size: 13px;background: #009ade !important }")),
-                                 tags$style(HTML(".js-irs-3 .irs-single, .js-irs-3 .irs-bar-edge, .js-irs-3 .irs-bar {background: #aF58ba ;border-top: 1px solid #aF58ba ;border-bottom: 1px solid #aF58ba;}.js-irs-3 .irs-from, .js-irs-3 .irs-to, .js-irs-3 .irs-single { font-size: 13px;background: #aF58ba !important }")),
-                                 tags$style(HTML(".js-irs-4 .irs-single, .js-irs-4 .irs-bar-edge, .js-irs-4 .irs-bar {background: #f28522 ;border-top: 1px solid #f28522 ;border-bottom: 1px solid #f28522;}.js-irs-4 .irs-from, .js-irs-4 .irs-to, .js-irs-4 .irs-single { font-size: 13px;background: #f28522 !important }")),
-                                 
-                                 div(id = "tab_play1",div("Pareto Plot", style = "text-align: left; font-size:150%"),
-                                     plotOutput("first_pareto"), 
-                                     checkboxInput("add_sq_f",label = "Show status quo",value = FALSE),
-                                     div(id="rev_plot",checkboxInput("rev_box",label="reverse x and y axes",value = FALSE))%>%hidden(),
-                                     fluidRow(
-                                       column(3,selectInput(inputId = "x_var3",   label = "X-Axis", choices = NULL, multiple = F, selected=NULL)),
-                                       column(3,selectInput(inputId = "y_var3",   label = "Y-Axis", choices = NULL, multiple = F, selected=NULL)),
-                                       column(3,selectInput(inputId = "col_var3", label = "Colour", choices = NULL, multiple = F, selected=NULL)),
-                                       column(3,selectInput(inputId = "size_var3",label = "Size",   choices = NULL, multiple = F, selected=NULL))
-                                     ),
-                                     div(
-                                       style = "display: inline-block; vertical-align: top; margin-right: 0px;",
-                                       textInput("fp_plot_savename", label = NULL, value = "pareto")
-                                     ),
-                                     div(
-                                       style = "display: inline-block; vertical-align: top; margin-left: 0px;",
-                                       downloadButton("download_fp_plot", "Download Plot")),
-                                     
-                                     fluidRow(
-                                       column(12,
-                                              fluidRow(column(6, div("Selected Objective Ranges (scaled)", style = "text-align: left; font-size:150%"),
-                                                              tableOutput("sliders")),
-                                                       column(6, div("Selected Objective Ranges (absolute)", style = "text-align: left; font-size:150%"),
-                                                              tableOutput("sliders_abs"),
-                                                              div("*the percentage values signify the difference between the full range and the current max and min selection.", style = "text-align: left; font-size:100%"))),
-                                              fluidRow(column(6,
-                                                              div("Selected Optimum (select in line plot)", style = "text-align: left; font-size:150%"),
-                                                              tableOutput("click_info"),
-                                                              checkboxInput("save_click_line",label = "Click here to save the selected optimum to the output folder (selected_optima.csv)",value=F)%>%hidden()),
-                                                       
-                                                       column(6,div("Maximum Objective Ranges (absolute)",style = "text-align: left; font-size:150%"),
-                                                              tableOutput("whole_range"))
-                                                       
-                                              ))),
-                                     
-                                     
-                                     
-                                     checkboxInput("plt_sq", label = "Show status quo", value = FALSE)),
-                                 
-                                 div(id = "tab_play2",div("Parallel Axis plot", style = "text-align: left; font-size:150%"),
-                                     plotOutput("linePlot",click="clickline"),
-                                     div(
-                                       style = "display: inline-block; vertical-align: top; margin-right: 0px;",
-                                       textInput("line_plot_savename", label = NULL, value = "parallel line")
-                                     ),
-                                     div(
-                                       style = "display: inline-block; vertical-align: top; margin-left: 0px;",
-                                       downloadButton("download_line_plot", "Download Plot")),
-                                     verbatimTextOutput("lineDetails"),
-                                     
-                                     div(id="scatter","Scatter Plot",style = "text-align: left; font-size:150%"),
-                                     plotOutput("scatter_plot"),
-                                     
-                                     div(
-                                       style = "display: inline-block; vertical-align: top; margin-right: 0px;",
-                                       textInput("scat_plot_savename", label = NULL, value = "pairwise scatter")
-                                     ),
-                                     div(
-                                       style = "display: inline-block; vertical-align: top; margin-left: 0px;",
-                                       downloadButton("download_scat_plot", "Download Plot")
-                                     ),
-                                     
-                                     # div("Difference between selection and the whole Pareto Front", style = "text-align: left; font-size:150%"),
-                                     # plotOutput("sliders_plot"),
-                                     # div(
-                                     # style = "display: inline-block; vertical-align: top; margin-right: 0px;",
-                                     # textInput("diff_plot_savename", label = NULL, value = "difference barplot")
-                                     # ),
-                                     # div(
-                                     #   style = "display: inline-block; vertical-align: top; margin-left: 0px;",
-                                     #   downloadButton("download_diff_plot", "Download Plot")
-                                     # )
-                                 )
-                                 
-                               )## PLAY AROUND MAIN PANEL END
-                             )),
-                     
+                    
                      ## DATA PREP PANEL #####
                      
                tabItem(tabName = "data_prep",
                              titlePanel("OPTAIN Data Preparation"),
                              
-                             wellPanel(  p(HTML("This tab requires you to provide the optimisation outputs, please retain their names as given here and as produced in the optimisation workflow. Please click <strong>Check Files</strong> after doing so.
-                                         If all files have been found, you can click <strong>Run Prep</strong> to prepare the variables for the subsequent correlation and cluster analysis. This can take up to 5 minutes."))),
+                             wellPanel(  p(HTML("This tab requires you to provide the optimisation outputs. 
+                                                 Please retain their names as given here and refer to the Readme for examples of their structure.
+                                                 You can provide a limited set of outputs to only analyse the Pareto Front in the next tab.
+                                                 Alternatively, you can upload more data and prepare the variables for the subsequent correlation and cluster analysis
+                                                 by clicking <strong>Check Files</strong> and
+                                                (if all files have been found) <strong>Run Prep</strong>. Please be aware that the preparation might take up to 5 minutes."))),
                              
                              mainPanel(
-                               p("To prepare the data for the subsequent correlation and cluster analysis, please provide the following files:",style =  "text-align: left; font-size:150%"),
+                               div(p("For being able to plot and analyse the Pareto front, please provide pareto_fitness.txt as well as the objective names. 
+                                     If you would like to plot the status quo, sq_fitness.txt is also required:"),style = "text-align: left; font-size:140%"),
+                               # div(id="fitness_avail",
+                                   
+                               div("pareto_fitness.txt",style = "text-align: left; font-size:115%;",
+                                   div(style = "margin-top: -15px;",fileInput("par_fit", "", accept = ".txt"),
+                                       div(style= "vertical-align: top; margin-top: -25px;",actionButton("save_paretofit","Save")))),
+                               
+                               
+                               
+                               br(),
+                               div("sq_fitness.txt (optional)",style = "text-align: left; font-size:115%;",
+                                   div(style = "margin-top: -15px;",fileInput("sq_in", "", accept = ".txt"),
+                                   div(style= "vertical-align: top; margin-top: -25px;",actionButton("save_sq_in","Save")))),
+                             
+                               br(),
+                               div(
+                                 id = "obj_first",
+                                 "The objective names should align with the first four columns of the pareto_fitness.txt file:",
+                                 style = "text-align: left; font-size:115%", 
+                                 textInput("short1", "Objective 1\n (Column 1)"), 
+                                 textInput("short2", "Objective 2\n (Column 2)"), 
+                                 textInput("short3", "Objective 3\n (Column 3)"), 
+                                 textInput("short4", "Objective 4\n (Column 4)"),
+                                 actionButton("save_par_fiti", "Save")), 
+                               
+                               br(),
+                               
+                               div(textOutput("can_visualise"),style = "text-align: left; font-size:115%"),
+                               
+                               br(),
+                               
+                               ############################################################# rest not needed for non-OPTAIN projects
+                               
+                               
+                               hr(style = "border-top: 2px solid #03597F;"),  # Horizontal line with custom styling
+                               br(),
+                               p("If you also want to run the subsequent correlation and cluster analysis, please provide the following files:",style =  "text-align: left; font-size:140%"),
                                
                                #file numbers are jumbled but just here     
                                div("1. pareto_genomes.txt",style = "text-align: left; font-size:115%"),
@@ -400,30 +313,13 @@ ui <-
                                div(style = "margin-top: -15px;",fileInput("basfile", "", multiple = TRUE, 
                                                                           accept = c(".shp", ".shx", ".dbf", ".prj"))),
                                
-                               div(id="sq_avail",
-                                   
-                                   div("7. sq_fitness.txt (not obligatory but required if you want to plot the status quo)",style = "text-align: left; font-size:115%"),
-                                   div(style = "margin-top: -15px;",fileInput("file5", "", accept = ".txt")))%>%hidden(),
-                               
-                               
-                               div(id="fitness_avail",
-                                   
-                                   div("8. pareto_fitness.txt (if not provided in the previous tab)",style = "text-align: left; font-size:115%"),
-                                   div(style = "margin-top: -15px;",fileInput("file4", "", accept = ".txt")))%>%hidden(), 
-                               
+                             
                                
                                
                                actionButton("files_avail", "Check Files"),
                                uiOutput("fileStatusMessage"),
                                
-                               fluidRow(
-                                 id="sel_obj",
-                                 column(3, textInput("col1", "Objective 1\n (Column 1)")),
-                                 column(3, textInput("col2", "Objective 2\n (Column 2)")),
-                                 column(3, textInput("col3", "Objective 3\n (Column 3)")),
-                                 column(3, textInput("col4", "Objective 4\n (Column 4)")),
-                                 actionButton("obj_conf", "Confirm Objective Names")
-                               )%>% hidden(), 
+                                
                                hr(),
                                
                                div(id="runprep_show",p("Run Preparation Script when ready (this should take no more than five minutes)",style =  "text-align: left; font-size:150%"),
@@ -441,6 +337,134 @@ ui <-
                                
                              )# DATA PREP MAIN PANEL END
                      ), 
+               ### PLAY AROUND TAB ####
+               tabItem(tabName = "play_around",
+                       titlePanel("Visualising the Optimisation Output"),
+                       
+                       wellPanel(    p("This tab lets you plot the pareto front in two different ways
+                              and lets you explore the effects of reduced objective ranges. You can select specific points on the pareto front by clicking on the line plot.")),
+                       
+                       sidebarLayout(
+                         
+                         
+                         sidebarPanel( width = 3,
+                                       
+                                       
+                                       div(id="units",
+                                           "If you want you can supply the objectives' units and save them for future use:",
+                                           style= "text-align: left; font-size:115%",
+                                           textInput("unit1","unit Objective 1", value = ""),
+                                           textInput("unit2","unit Objective 2", value = ""),
+                                           textInput("unit3","unit Objective 3", value = ""),
+                                           textInput("unit4","unit Objective 4", value = ""),
+                                           actionButton("save_unit","Save")),
+                                       
+                                       textOutput("uploaded_pareto"),
+                                       br(),
+                                       br(),
+                                       div(
+                                         column(10,
+                                                div("Objective Range", style = "text-align: left; font-size:150%; margin-top: 40px;"),
+                                                
+                                                sliderInput(inputId = "obj1", label=  "Objective 1:", min = 0, max = 1, value = c(0,1), step = 0.01,width = "110%"),
+                                                sliderInput(inputId = "obj2", label = "Objective 2:", min = 0, max = 1, value = c(0,1), step = 0.01,width = "110%"),
+                                                sliderInput(inputId = "obj3", label = "Objective 3:", min = 0, max = 1, value = c(0,1), step = 0.01, width = "110%"),
+                                                sliderInput(inputId = "obj4", label = "Objective 4:", min = 0, max = 1, value = c(0,1), step = 0.01,width = "110%"),
+                                                tags$p(
+                                                  tags$strong("Please Note:"),
+                                                  "For some of the visualisations and analyses in this tool, the objectives have been scaled to between 0 and 1.
+                                             1 aligns with the best achievable outcome while 0 aligns with the worst."
+                                                )
+                                         )
+                                         
+                                       ), br(), 
+                                       
+                                       
+                                       
+                         ),
+                         mainPanel(
+                           tags$style(HTML(".js-irs-1 .irs-single, .js-irs-1 .irs-bar-edge, .js-irs-1 .irs-bar {background: #ffc61e ;border-top: 1px solid #ffc61e ;border-bottom: 1px solid #ffc61e;}.js-irs-1 .irs-from, .js-irs-1 .irs-to, .js-irs-1 .irs-single { font-size: 13px;background: #ffc61e !important }")),
+                           tags$style(HTML(".js-irs-2 .irs-single, .js-irs-2 .irs-bar-edge, .js-irs-2 .irs-bar {background: #009ade ;border-top: 1px solid #009ade ;border-bottom: 1px solid #009ade;}.js-irs-2 .irs-from, .js-irs-2 .irs-to, .js-irs-2 .irs-single { font-size: 13px;background: #009ade !important }")),
+                           tags$style(HTML(".js-irs-3 .irs-single, .js-irs-3 .irs-bar-edge, .js-irs-3 .irs-bar {background: #aF58ba ;border-top: 1px solid #aF58ba ;border-bottom: 1px solid #aF58ba;}.js-irs-3 .irs-from, .js-irs-3 .irs-to, .js-irs-3 .irs-single { font-size: 13px;background: #aF58ba !important }")),
+                           tags$style(HTML(".js-irs-4 .irs-single, .js-irs-4 .irs-bar-edge, .js-irs-4 .irs-bar {background: #f28522 ;border-top: 1px solid #f28522 ;border-bottom: 1px solid #f28522;}.js-irs-4 .irs-from, .js-irs-4 .irs-to, .js-irs-4 .irs-single { font-size: 13px;background: #f28522 !important }")),
+                           
+                           div(id = "tab_play1",div("Pareto Plot", style = "text-align: left; font-size:150%"),
+                               plotOutput("first_pareto"), 
+                               checkboxInput("add_sq_f",label = "Show status quo",value = FALSE),
+                               div(id="rev_plot",checkboxInput("rev_box",label="reverse x and y axes",value = FALSE))%>%hidden(),
+                               fluidRow(
+                                 column(3,selectInput(inputId = "x_var3",   label = "X-Axis", choices = NULL, multiple = F, selected=NULL)),
+                                 column(3,selectInput(inputId = "y_var3",   label = "Y-Axis", choices = NULL, multiple = F, selected=NULL)),
+                                 column(3,selectInput(inputId = "col_var3", label = "Colour", choices = NULL, multiple = F, selected=NULL)),
+                                 column(3,selectInput(inputId = "size_var3",label = "Size",   choices = NULL, multiple = F, selected=NULL))
+                               ),
+                               div(
+                                 style = "display: inline-block; vertical-align: top; margin-right: 0px;",
+                                 textInput("fp_plot_savename", label = NULL, value = "pareto")
+                               ),
+                               div(
+                                 style = "display: inline-block; vertical-align: top; margin-left: 0px;",
+                                 downloadButton("download_fp_plot", "Download Plot")),
+                               
+                               fluidRow(
+                                 column(12,
+                                        fluidRow(column(6, div("Selected Objective Ranges (scaled)", style = "text-align: left; font-size:150%"),
+                                                        tableOutput("sliders")),
+                                                 column(6, div("Selected Objective Ranges (absolute)", style = "text-align: left; font-size:150%"),
+                                                        tableOutput("sliders_abs"),
+                                                        div("*the percentage values signify the difference between the full range and the current max and min selection.", style = "text-align: left; font-size:100%"))),
+                                        fluidRow(column(6,
+                                                        div("Selected Optimum (select in line plot)", style = "text-align: left; font-size:150%"),
+                                                        tableOutput("click_info"),
+                                                        checkboxInput("save_click_line",label = "Click here to save the selected optimum to the output folder (selected_optima.csv)",value=F)%>%hidden()),
+                                                 
+                                                 column(6,div("Maximum Objective Ranges (absolute)",style = "text-align: left; font-size:150%"),
+                                                        tableOutput("whole_range"))
+                                                 
+                                        ))),
+                               
+                               
+                               
+                               checkboxInput("plt_sq", label = "Show status quo", value = FALSE)),
+                           
+                           div(id = "tab_play2",div("Parallel Axis plot", style = "text-align: left; font-size:150%"),
+                               plotOutput("linePlot",click="clickline"),
+                               div(
+                                 style = "display: inline-block; vertical-align: top; margin-right: 0px;",
+                                 textInput("line_plot_savename", label = NULL, value = "parallel line")
+                               ),
+                               div(
+                                 style = "display: inline-block; vertical-align: top; margin-left: 0px;",
+                                 downloadButton("download_line_plot", "Download Plot")),
+                               verbatimTextOutput("lineDetails"),
+                               
+                               div(id="scatter","Scatter Plot",style = "text-align: left; font-size:150%"),
+                               plotOutput("scatter_plot"),
+                               
+                               div(
+                                 style = "display: inline-block; vertical-align: top; margin-right: 0px;",
+                                 textInput("scat_plot_savename", label = NULL, value = "pairwise scatter")
+                               ),
+                               div(
+                                 style = "display: inline-block; vertical-align: top; margin-left: 0px;",
+                                 downloadButton("download_scat_plot", "Download Plot")
+                               ),
+                               
+                               # div("Difference between selection and the whole Pareto Front", style = "text-align: left; font-size:150%"),
+                               # plotOutput("sliders_plot"),
+                               # div(
+                               # style = "display: inline-block; vertical-align: top; margin-right: 0px;",
+                               # textInput("diff_plot_savename", label = NULL, value = "difference barplot")
+                               # ),
+                               # div(
+                               #   style = "display: inline-block; vertical-align: top; margin-left: 0px;",
+                               #   downloadButton("download_diff_plot", "Download Plot")
+                               # )
+                           )
+                           
+                         )## PLAY AROUND MAIN PANEL END
+                       )),
+               
                    ## CONFIGURE CLUSTERING PANEL - USER DECISION FOR HIDING OR SHOWING correlation AND clustering ####
            
                      tabItem(tabName = "configure",
@@ -824,10 +848,11 @@ ui <-
                            br(),
                        
                            div(id = "pareto_weighted", "Best Option under selected weighting", style = "text-align: center; font-size: 150%;"),
-                           
-                          div(tableOutput("best_option_output"), style = "margin: 0 auto; width: fit-content; font-size: 150%;"),
+                                                   div(tableOutput("best_option_output"), style = "margin: 0 auto; width: fit-content; font-size: 150%;"),
+                         
+                         checkboxInput("save_ahp",label = "Click here to save the selected optimum to the output folder (selected_optima.csv)",value=F, width = "100%")%>%hidden(),
                                                                      
-                          checkboxInput("save_ahp",label = "Click here to save the selected optimum to the output folder (selected_optima.csv)",value=F)%>%hidden(),
+                       
                          
                           br(),
                           uiOutput("consistency_check"),div(id="cc",textOutput("which_inconsistency"), style = "color: red;"),
