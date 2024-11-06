@@ -804,7 +804,7 @@ plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NUL
   if(!file.exists(pareto_path)){return(NULL)}
   
   #pull fit() establish range limits
-  whole <- read.table(pareto_path, header = FALSE, stringsAsFactors = FALSE, sep = ',')
+  whole <- read.table(pareto_path, header = FALSE, stringsAsFactors = FALSE, sep = ',' )
   colnames(whole) <- colnames(dat)[1:4]
   
   xma = yma = NULL
@@ -865,7 +865,7 @@ plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NUL
   }
   
   if (status_q) {
-    st_q <- read.table(sq_path, header = FALSE, stringsAsFactors = FALSE, sep = ' ')
+    st_q <- read.table(sq_path, header = FALSE, stringsAsFactors = FALSE, sep = ',',colClasses = rep("numeric",4))
     names(st_q) <- names(dat)
     st_q$set <- "Status Quo"
     all_extra_data <- rbind(all_extra_data,st_q)
@@ -1078,28 +1078,30 @@ pull_high_range <- function(df) {
 }
 
 ## scale fit() - function
-scale_data <- function(x) {
-  med <- median(abs(x), na.rm = TRUE)
-  
-  if (med <= 0.0001) {
-    return(as.numeric(x * 100000))
-  } else if (med <= 0.001) {
-    return(as.numeric(x * 10000))
-  } else if (med <= 0.01) {
-    return(as.numeric(x * 1000))
-  } else if (med <= 0.1) {
-    return(as.numeric(x * 100))
-  } else if (med <= 1) {
-    return(as.numeric(x * 10))
-  } else if (med >= 1000 && med < 10000) {
-    return(as.numeric(x / 10))
-  } else if (med >= 10000 && med < 100000) {
-    return(as.numeric(x / 100))
-  } else if (med > 100000) {
-    return(as.numeric(x / 1000))
-  } else {
-    return(as.numeric(x))
+scale_data <- function(df, target_min = 10, target_max = 100) {
+  target_range <- target_max - target_min
+  if (is.data.frame(df) && nrow(df) == 1) {
+    
+    for(k in 1:4){
+      if(df[k] != 0){
+        scale_factor <- 10 ^ round(log10(target_range / abs(df[k])))
+      df[k] = df[k] * scale_factor
+      }else{df[k] = df[k]}
+      
+    }
+
+  return(as.data.frame(df)) 
   }
+  else{
+  df %>% mutate(across(everything(), ~ {
+    col_min <- min(.)
+    col_max <- max(.)
+    col_range <- col_max - col_min
+    
+    scale_factor <- 10 ^ round(log10(target_range / col_range))
+    
+    . * scale_factor
+  }))}
 }
 
 #### Other Functions ####

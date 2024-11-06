@@ -311,7 +311,8 @@ ui <-
                                               fluidRow(column(6, div("Selected Objective Ranges (scaled)", style = "text-align: left; font-size:150%"),
                                                               tableOutput("sliders")),
                                                        column(6, div("Selected Objective Ranges (absolute)", style = "text-align: left; font-size:150%"),
-                                                              tableOutput("sliders_abs"))),
+                                                              tableOutput("sliders_abs"),
+                                                              div("*the percentage values signify the difference between the full range and the current max and min selection.", style = "text-align: left; font-size:100%"))),
                                               fluidRow(column(6,
                                                               div("Selected Optimum (select in line plot)", style = "text-align: left; font-size:150%"),
                                                               tableOutput("click_info"),
@@ -519,7 +520,7 @@ ui <-
                                    div("3. Choose threshold for correlation",style = "text-align: left; font-size:150%"),
                                    div(style = "margin-top: -15px;",shinyWidgets::sliderTextInput(inputId = "thresh", label= "",choices = seq(0.65,0.95,0.05), selected=0.75)),
                                    
-                                   div("4. Choose variables that shall be excluded from the PCA",style = "text-align: left; font-size:150%"),
+                                   div("4. Choose variables that shall be excluded from the Cluster Analysis",style = "text-align: left; font-size:150%"),
                                    selectInput(inputId = "excl",label = "variables to exclude", choices = NULL, multiple = TRUE),
                                    
                                    div(id="show_conf","5. Please confirm your choice before proceeding to the next tab.",style = "text-align: left; font-size:150%"
@@ -686,9 +687,13 @@ ui <-
                          
                          mainPanel(
                            id ="main_analysis", 
-                           htmlOutput("tabtext"),
                            fluidRow(
-                             column(6, tags$div(textOutput("check_default"), style = "color: red;"), 
+                             column(6,
+                                    div(id="table_an_title","Optima Representative for Clusters",style="text-align; center;font-size: 150%;"),
+                                    htmlOutput("tabtext"),
+                                    
+                                    tags$div(textOutput("check_default"), style = "color: red;"),
+                                    
                                     div(style = "overflow-x: auto;", DTOutput("antab"))),
                              column(6,
                                     tags$div("The default plot shows the pareto front.",style = "text-align: center;font-size: 125%;"),
@@ -782,9 +787,8 @@ ui <-
                          ),
                          
                          mainPanel(
-                           div(id="sel_wgt","Selected Weights", style = "text-align: center; font-size: 150%;",
-                               div(tableOutput("weights_output"), style = "margin: 0 auto; width: fit-content;")),
-                           br(),
+                           
+                          
                            
                            
                            fluidRow(
@@ -793,18 +797,21 @@ ui <-
                              column(
                                width = 12,
                                actionButton("ahp_card1", "Show Card 1", 
-                                            style="background-color: #0487bf; border-color: #2e6da4"),
+                                            style="background-color: #f4f4f4; border-color: #2e6da4"),
                                actionButton("ahp_card2", "Show Card 2", 
-                                            style="background-color: #0487bf; border-color: #2e6da4"),
+                                            style="background-color: #f4f4f4; border-color: #2e6da4"),
                                actionButton("ahp_card3", "Show Card 3", 
-                                            style="background-color: #0487bf; border-color: #2e6da4"),
+                                            style="background-color: #f4f4f4; border-color: #2e6da4"),
                                actionButton("ahp_card4", "Show Card 4", 
-                                            style="background-color: #0487bf; border-color: #2e6da4"),
+                                            style="background-color: #f4f4f4; border-color: #2e6da4"),
                                actionButton("ahp_card5", "Show Card 5", 
-                                            style="background-color: #0487bf; border-color: #2e6da4"),
+                                            style="background-color: #f4f4f4; border-color: #2e6da4"),
                                actionButton("ahp_card6", "Show Card 6", 
-                                            style="background-color: #0487bf; border-color: #2e6da4")
-                             )
+                                            style="background-color: #f4f4f4; border-color: #2e6da4"),
+                                 ),br(),
+                             br(),
+                             div(id="sel_wgt","Selected Weights", style = "text-align: center; font-size: 150%;",
+                                 div(tableOutput("weights_output"), style = "margin: 0 auto; width: fit-content;")),
                            ),
                            fluidRow(
                              uiOutput("card1_ui")%>%hidden(),
@@ -838,7 +845,7 @@ ui <-
                              column(3,selectInput(inputId = "col_var",label = "Colour", choices = NULL, multiple = F,selected=NULL)),
                              column(3,selectInput(inputId = "size_var",label = "Size", choices = NULL, multiple = F,selected=NULL))),
                              
-                             checkboxInput("show_extra_dat", label = "Show cluster solutions", value = FALSE),
+                             checkboxInput("show_extra_dat", label = "Show cluster solutions", value = T),
                              checkboxInput("show_status_quo", label = "Show Status Quo", value = FALSE),
                              div(id="rev_plot3",checkboxInput("rev_box3",label="reverse x and y axes",value = FALSE))%>%hidden(),
                              

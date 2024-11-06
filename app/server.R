@@ -102,7 +102,7 @@ server <- function(input, output, session) {
   } else{
     data <- read.table(pareto_path, header = FALSE, stringsAsFactors = FALSE,sep = ',')
     file.rename(pareto_path,"../data/pareto_fitness_original.txt")
-    data = as.data.frame(lapply(data, scale_data))
+    data = as.data.frame(scale_data(data))
     write.table(data,pareto_path,row.names = F,col.names = F, sep=",")
   }
 
@@ -114,9 +114,9 @@ server <- function(input, output, session) {
   } else if (!file.exists(pareto_path)) { #if user hasn't supplied it yet
     return()
   } else{
-    data <- read.table("../data/sq_fitness.txt", header = FALSE, stringsAsFactors = FALSE,sep = ' ')
+    data <- read.table("../data/sq_fitness.txt", header = FALSE, stringsAsFactors = FALSE,sep = ',')
     file.rename("../data/sq_fitness.txt","../data/sq_fitness_original.txt")
-    data = as.data.frame(t(scale_data(as.numeric(data))))
+    data = as.data.frame(scale_data(data))
     write.table(data,"../data/sq_fitness.txt",row.names = F,col.names = F, sep=",")
   }
   
@@ -317,7 +317,6 @@ server <- function(input, output, session) {
         st_q = read.table("../data/sq_fitness.txt", header = FALSE, stringsAsFactors = FALSE, sep = ',')
         names(st_q) = objectives()
         stq(st_q)
-        
         }else{shinyjs::show("sq")
           shinyjs::disable("plt_sq")} })
     
@@ -336,7 +335,9 @@ server <- function(input, output, session) {
       save_path_sq <- file.path(save_dir, save_sq)
       file.copy(sq_file()$path,save_path_sq,overwrite = TRUE) #copy sq_fitness.txt
       
-      st_q = read.table("../data/sq_fitness.txt", header = FALSE, stringsAsFactors = FALSE, sep = ' ')
+      st_q = read.table("../data/sq_fitness.txt", header = FALSE, stringsAsFactors = FALSE, sep = ',')
+      st_q = as.numeric(st_q)
+      
       names(st_q) = objectives()
       stq(st_q)
     })
