@@ -7,7 +7,14 @@ server <- function(input, output, session) {
 
   ## reactive values
   objectives <- reactiveVal(character()) #objective names
+  file_data1 <- reactiveVal(NULL)
+  file_data2 <- reactiveVal(NULL)
+  file_data3 <- reactiveVal(NULL)
+  file_data6 <- reactiveVal(NULL)
   
+  shapefile <- reactiveVal(NULL)
+  
+  sf = reactiveVal()
   par_fiti <- reactiveVal(NULL)#handling pareto_fitness
   sq_file <- reactiveVal(NULL)#handling sq_fitness
   fit <- reactiveVal(NULL) #absolute value dataframe
@@ -44,6 +51,7 @@ server <- function(input, output, session) {
   }
   pca_ini <- read_pca()
   pca_table <- reactiveVal(pca_ini)
+  pca_in <- reactiveValues(data = read_pca()) #this only reads config$columns, NULL if opening for the first time
   
   #empty pca table
   output$pca_incl <- renderTable({pca_table()}, rownames = T, colnames = F)
@@ -93,36 +101,71 @@ server <- function(input, output, session) {
     file.rename("../input/var_corr_par_bu.csv", "../input/var_corr_par.csv")
   }
   
+  
+  ## UNCOMMENT for rescaling (also see get_scaler() and scale_data() in functions.R)
+#   observe({
+# 
+#   if (file.exists("../data/pareto_fitness_original.txt") ) {
+#      data <- read.table("../data/pareto_fitness_original.txt", header = FALSE, stringsAsFactors = FALSE,sep = ',')
+#      sf(get_scaler(data))
+#   
+#    } else if (!file.exists(pareto_path)) { #if user hasn't supplied it yet
+#       return()
+#       } else{
+#         data <- read.table(pareto_path, header = FALSE, stringsAsFactors = FALSE,sep = ',')
+#         file.rename(pareto_path,"../data/pareto_fitness_original.txt")
+#         sf(get_scaler(data))
+#         data = as.data.frame(scale_data(data))
+#         write.table(data,pareto_path,row.names = F,col.names = F, sep=",")
+#   }
+# 
+#   })
+#   
+#   observe({
+#   if (file.exists("../data/sq_fitness_original.txt") ) {
+#     return()
+#   } else if (!file.exists("../data/sq_fitness.txt")) { #if user hasn't supplied it yet
+#      return()
+#       } else if(is.null(sf())){return()
+#          }else{
+#            scale_vals = sf()
+#            val <- read.table("../data/sq_fitness.txt", header = FALSE, stringsAsFactors = FALSE,sep = ',')
+#            file.rename("../data/sq_fitness.txt","../data/sq_fitness_original.txt")
+#            data = as.data.frame(val*scale_vals)
+#            write.table(data,"../data/sq_fitness.txt",row.names = F,col.names = F, sep=",")
+#   } 
+#   
+# })
+  
+  
+  #pull status quo
   observe({
-
-  if (file.exists("../data/pareto_fitness_original.txt") ) {
-    return()
-  } else if (!file.exists(pareto_path)) { #if user hasn't supplied it yet
-    return()
-  } else{
-    data <- read.table(pareto_path, header = FALSE, stringsAsFactors = FALSE,sep = ',')
-    file.rename(pareto_path,"../data/pareto_fitness_original.txt")
-    data = as.data.frame(scale_data(data))
-    write.table(data,pareto_path,row.names = F,col.names = F, sep=",")
-  }
-
+    if (file.exists("../data/sq_fitness.txt")) {
+      req(objectives())
+      
+      shinyjs::enable("plt_sq")
+      
+      st_q = read.table("../data/sq_fitness.txt", header = FALSE, stringsAsFactors = FALSE, sep = ',')
+      names(st_q) = objectives()
+      stq(st_q)
+    }else{
+      shinyjs::disable("plt_sq")} })
+  
+  
+  ## ggplot melt and change plotting order
+  pp <- reactive({
+    req(f_scaled(),objectives())
+    f_scaled()%>% pivot_longer(.,cols=-id)%>%mutate(name=factor(name,levels=objectives()),id=as.factor(id))
   })
   
   observe({
-  if (file.exists("../data/sq_fitness_original.txt") ) {
-    return()
-  } else if (!file.exists(pareto_path)) { #if user hasn't supplied it yet
-    return()
-  } else{
-    data <- read.table("../data/sq_fitness.txt", header = FALSE, stringsAsFactors = FALSE,sep = ',')
-    file.rename("../data/sq_fitness.txt","../data/sq_fitness_original.txt")
-    data = as.data.frame(scale_data(data))
-    write.table(data,"../data/sq_fitness.txt",row.names = F,col.names = F, sep=",")
-  }
+    req(pp())
+    rv$sizes= rep(0.5, length(unique(pp()$id)))
+    rv$colls = rep("grey50", length(unique(pp()$id)))
+  })
   
-})
   
-  ### Play Around Tab ####
+  ### Data Prep ####
   
   # limit input size of objective names
   shinyjs::runjs("$('#short1').attr('maxlength', 17)")
@@ -131,57 +174,87 @@ server <- function(input, output, session) {
   shinyjs::runjs("$('#short4').attr('maxlength', 17)")
   
   
-  ##check if names of objectives have to be supplied or already present
-  observeEvent(input$tabs == "play_around",{ 
-    ## make or pull objectives()
-    if(!file.exists("../input/object_names.RDS")) {
+  observeEvent(input$tabs == "data_prep",{
+    
+    ## make fit() based on user input
+    observeEvent(input$par_fit, {     
+      req(input$par_fit)
+      file <- input$par_fit
+      if (is.null(file)) {return(NULL)}
+      par_fiti(list(path = file$datapath, name = file$name))
+    })
+    
+    #get pareto_fitness.txt and make fit()
+    observeEvent(input$save_paretofit,{
+      req(par_fiti(),objectives())
+      save_par_fiti <- par_fiti()$name
+      save_path_par_fiti <- file.path(save_dir, save_par_fiti)
+      file.copy(par_fiti()$path, save_path_par_fiti, overwrite = TRUE) #copy pareto_fitness.txt
       
-      shinyjs::show(id = "obj_first")
-      shinyjs::hide(id = "tab_play1")
-      shinyjs::hide(id = "tab_play2")
+      data = read.table(pareto_path, header=F,stringsAsFactors=FALSE,sep = ',')
+      names(data) = objectives()
+      fit(data)
       
-      ##get new objective names
-      observeEvent(input$save_par_fiti, {
-        short <<- c(input$short1, input$short2, input$short3, input$short4)
-        objectives(short)
-        
-        saveRDS(short, file = "../input/object_names.RDS")
-        
-        updateTextInput(session,"col1", value = objectives()[1] )
-        updateTextInput(session,"col2", value = objectives()[2] )
-        updateTextInput(session,"col3", value = objectives()[3] )
-        updateTextInput(session,"col4", value = objectives()[4] )
-        
-        write_pca_ini(var1=input$short1,var2=input$short2,var3=input$short3,var4=input$short4,
-                      var1_lab="",var2_lab="",var3_lab="",var4_lab="")#save label for future use (pulled w/ read_config_plt in Data prep, pca and cluster)
-       shinyjs::hide("obj_first")
-         })
+      yo = fit() %>% mutate(across(everything(), ~ scales::rescale(.)))%>%mutate(id = row_number())
+      f_scaled(yo)
+    })
+    
+    #make status quo based on user input
+    observeEvent(input$sq_in, {
+      req(input$sq_in)
+      file <- input$sq_in
+      if(is.null(file)){return(NULL)}
+      sq_file(list(path=file$datapath, name = file$name))
       
-      observe({
-        req(input$short1, input$short2, input$short3, input$short4,rng_plt())
-        short <<- c(input$short1, input$short2, input$short3, input$short4)
-        objectives(short)
+    })
+    
+    observeEvent(input$save_sq_in, {
+      req(sq_file(), req(objectives))
+      save_sq <- sq_file()$name
+      save_path_sq <- file.path(save_dir, save_sq)
+      file.copy(sq_file()$path,save_path_sq,overwrite = TRUE) #copy sq_fitness.txt
+      
+      st_q = read.table("../data/sq_fitness.txt", header = FALSE, stringsAsFactors = FALSE, sep = ',')
+      st_q = as.numeric(st_q)
+      
+      names(st_q) = objectives()
+      stq(st_q)
+    })
+    
+    ##get new objective names
+    observeEvent(input$save_par_fiti, {
+      short <<- c(input$short1, input$short2, input$short3, input$short4)
+      objectives(short)
+      
+      saveRDS(short, file = "../input/object_names.RDS")
+      
+      updateTextInput(session,"col1", value = objectives()[1] )
+      updateTextInput(session,"col2", value = objectives()[2] )
+      updateTextInput(session,"col3", value = objectives()[3] )
+      updateTextInput(session,"col4", value = objectives()[4] )
+      
+      write_pca_ini(var1=input$short1,var2=input$short2,var3=input$short3,var4=input$short4,
+                    var1_lab="",var2_lab="",var3_lab="",var4_lab="")#save label for future use (pulled w/ read_config_plt in Data prep, pca and cluster)
+      
+      output$obj_conf <- renderTable({
+        rng = get_obj_range(colnames = short)
+        bng = rng
         
-        updateSelectInput(session, "x_var3",   choices = short, selected = rng_plt()[1])
-        updateSelectInput(session, "y_var3",   choices = short, selected = rng_plt()[2])
-        updateSelectInput(session, "col_var3", choices = short, selected = rng_plt()[3])
-        updateSelectInput(session, "size_var3",choices = short, selected = rng_plt()[4])
+        for(i in 1:4){
+          for(j in 2:3){
+            bng[i,j] = formatC(rng[i,j],digits= unlist(lapply(rng[,2],num.decimals))[i],drop0trailing = T,format="f")#same decimal for min and max
+          }
+        }
+        bng
         
-        num_criteria = length(objectives())
-        k=1
-        for (i in 1:(num_criteria - 1)) {
-          for (j in (i + 1):num_criteria) {
-            new_label <- paste0(objectives()[j]," vs. ",objectives()[i])
-            updateActionButton(session, paste0("ahp_card",k), label = new_label)
-            k = k+1}}
-        
-        
-      })
+      },rownames = T)
       
       
-      
-    } else {
-      short = readRDS("../input/object_names.RDS")
+    })
+    
+    observe({
+      req(input$short1, input$short2, input$short3, input$short4,rng_plt())
+      short <<- c(input$short1, input$short2, input$short3, input$short4)
       objectives(short)
       
       updateSelectInput(session, "x_var3",   choices = short, selected = rng_plt()[1])
@@ -191,17 +264,287 @@ server <- function(input, output, session) {
       
       num_criteria = length(objectives())
       k=1
-      ahp_combo(character(0))
       for (i in 1:(num_criteria - 1)) {
         for (j in (i + 1):num_criteria) {
           new_label <- paste0(objectives()[j]," vs. ",objectives()[i])
           updateActionButton(session, paste0("ahp_card",k), label = new_label)
-          ahp_combo(c(ahp_combo(), new_label))  #identifier for ahp scatter plots
           k = k+1}}
       
+    })
+    
+    output$obj_conf <- renderTable({
+      req(fit(),objectives()) #fit() is proxy for file connection
+      rng = get_obj_range(colnames = objectives())
+      bng = rng
       
+      for(i in 1:4){
+        for(j in 2:3){
+          bng[i,j] = formatC(rng[i,j],digits= unlist(lapply(rng[,2],num.decimals))[i],drop0trailing = T,format="f")#same decimal for min and max
+        }
+      }
+      bng
+      
+    } ,rownames = T) 
+   
+    # text if visualisation would work
+    observe({
+      if(file.exists("../input/object_names.RDS") && file.exists(pareto_path) && file.exists("../data/sq_fitness.txt")){
+        output$can_visualise = renderText({
+          "You can now proceed to the next tab and analyse the pareto front!"
+        })
+      }else if(file.exists("../input/object_names.RDS") && file.exists(pareto_path) && !file.exists("../data/sq_fitness.txt")){
+        "You can now proceed to the next tab and analyse the pareto front. If you'd like to also plot the status quo, please provide sq_fitness.txt above."
+}else{""}
+    })
+    
+    ## check if required files exist
+    observeEvent(input$file1, { file <- input$file1
+    if (is.null(file)) {return(NULL)}
+    file_data1(list(path = file$datapath, name = file$name))})
+    
+    observeEvent(input$file2, { file <- input$file2
+    if (is.null(file)) {return(NULL)}
+    file_data2(list(path = file$datapath, name = file$name))})
+    
+    observeEvent(input$file3, { file <- input$file3
+    if (is.null(file)) {return(NULL)}
+    file_data3(list(path = file$datapath, name = file$name))})
+    
+    observeEvent(input$file6, { file <- input$file6
+    if (is.null(file)) {return(NULL)}
+    file_data6(list(path = file$datapath, name = file$name))})
+    
+    observeEvent(input$shapefile, { file <- input$shapefile
+    if (is.null(file)) {return(NULL)}
+    shapefile(list(path = file$datapath, name = file$name))})
+    
+    
+    observeEvent(input$files_avail,{
+      
+      save_filename1 <- file_data1()$name
+      save_filename2 <- file_data2()$name
+      save_filename3 <- file_data3()$name
+      save_filename6 <- file_data6()$name
+      
+      save_path1 <- file.path(save_dir, save_filename1)
+      save_path2 <- file.path(save_dir, save_filename2)
+      save_path3 <- file.path(save_dir, save_filename3)
+      save_path6 <- file.path(save_dir, save_filename6)
+      
+      
+      file.copy(file_data1()$path, save_path1, overwrite = TRUE)
+      file.copy(file_data2()$path, save_path2, overwrite = TRUE)
+      file.copy(file_data3()$path, save_path3, overwrite = TRUE)
+      file.copy(file_data6()$path, save_path6, overwrite = TRUE)
+      
+      #cm shapefile
+      shp_req = c(".shp",".shx", ".dbf", ".prj")
+      shapefile <- input$shapefile
+      shapefile_names <- shapefile$name
+      shapefile_paths <- shapefile$datapath
+      missing_shapefile_components <- shp_req[!sapply(shp_req, function(ext) any(grepl(paste0(ext, "$"), shapefile_names)))]
+      
+      # copy shapefile components if none are missing
+      if (length(missing_shapefile_components) == 0) {
+        lapply(seq_along(shapefile_paths), function(i) {
+          save_path <- file.path(save_dir, shapefile_names[i])
+          if (!file.exists(save_path)) {
+            file.copy(shapefile_paths[i], save_path, overwrite = TRUE)
+          }
+        })
+      }
+      
+      #basin shapefile
+      bas_req = c(".shp",".shx", ".dbf", ".prj")
+      basfile <- input$basfile
+      basfile_names <- basfile$name
+      basfile_paths <- basfile$datapath
+      missing_basfile_components <- bas_req[!sapply(bas_req, function(ext) any(grepl(paste0(ext, "$"), basfile_names)))]
+      
+      # copy basfile components if none are missing
+      if (length(missing_basfile_components) == 0) {
+        lapply(seq_along(basfile_paths), function(i) {
+          save_path <- file.path(save_dir, basfile_names[i])
+          if (!file.exists(save_path)) {
+            file.copy(basfile_paths[i], save_path, overwrite = TRUE)
+          }
+        })
+      }
+      
+      required_files <- c("../data/pareto_genomes.txt","../data/hru.con",   "../data/measure_location.csv",
+                          "../data/hru.shp","../data/hru.shx", "../data/hru.dbf", "../data/hru.prj",
+                          "../data/basin.shp","../data/basin.shx", "../data/basin.dbf", "../data/basin.prj",
+                          "../data/rout_unit.con",
+                          "../data/pareto_fitness.txt")
+      
+      checkFiles <- sapply(required_files, function(file) file.exists(file))
+      
+      if(all(checkFiles)& file.exists("../input/object_names.RDS")){run_prep_possible$files_avail = T}
+      
+      output$fileStatusMessage <- renderText({
+        if (all(checkFiles) & file.exists("../input/object_names.RDS")) {
+          HTML("All Files found.")
+          
+        } else if(all(checkFiles) & !file.exists("../input/object_names.RDS")){
+          HTML("All files found. <br>Please provide the names of the objectives represented in the Pareto front.
+             The names and the order in which they are given have
+             to align with what is provided in the first four columns of pareto_fitness.txt")
+        }else {
+          missing_files = required_files[!checkFiles]
+          HTML(paste("The following file(s) are missing:<br/>", paste(sub('../data/', '', missing_files), collapse = "<br/> ")))
+        }
+      })
+      
+      
+    })
+    #cannot run if already exists, has to be deleted manually
+    if (!file.exists("../input/var_corr_par.csv") | !file.exists("../input/hru_in_optima.RDS") | !file.exists("../input/all_var.RDS")) {
+      shinyjs::show(id = "runprep_show")
+      observe({     if (run_prep_possible$files_avail) {  shinyjs::enable("runprep")} else{  shinyjs::disable("runprep")
+      } })
       
     }
+    
+    ## run external script that produces variables considered in the clustering
+    
+    observeEvent(input$runprep,{
+      
+      dp_done(FALSE)
+      script_output(character()) #clear old output
+      
+      optain <- process$new("Rscript",c("convert_optain.R"),stdout = "|", stderr = NULL) #stdout | ---> pipe output, stderr ---> ignore
+      autoInvalidate <- reactiveTimer(100)
+      
+      observe({autoInvalidate()
+        if (optain$is_alive()) {
+          new_output <- optain$read_output_lines()
+          if (length(new_output) > 0) {
+            current_output <- script_output()
+            
+            # append new output lines and limit to last 10 lines
+            updated_output <- c(current_output, new_output)
+            if (length(updated_output) > 10) {
+              updated_output <- tail(updated_output, 10)
+            }
+            # update the reactive value
+            script_output(updated_output)
+          }
+        }else{
+          final_output <- optain$read_output_lines()
+          if (length(final_output) > 0) {
+            current_output <- script_output()
+            updated_output <- c(current_output, final_output)
+            if (length(updated_output) > 10) {
+              updated_output <- tail(updated_output, 10)
+            }
+            script_output(updated_output)
+          }
+          dp_done(TRUE)
+        }
+      })
+    })
+    
+    
+    output$script_output  <- renderUI({
+      if(dp_done() & file.exists("../input/var_corr_par.csv")){
+        tags$strong("The data preparation was successful. You can now continue with the Correlation and Principal Component Analysis. You will not need this tab again.")
+      }else{verbatimTextOutput("rscriptcmd")}
+      
+    })
+    output$rscriptcmd <- renderText({
+      paste(script_output(), collapse = "\n")
+    })
+    
+    observe({ 
+      if(length(list.files(c(save_dir,output_dir), full.names = TRUE))==0){ #do not show reset option if there haven't been files uploaded
+        shinyjs::hide(id="reset")
+        
+      }else{
+        output$reset_prompt <- renderText({
+          HTML(paste("<p style='color: red;'> If you would like to restart the app if it crashes or behaves inconsistently, you can hard reset it here. Clicking this button
+                   deletes all files you provided. The contents of the Output folder are also deleted, please move or copy those files you would like to keep. For all changes to take effect please restart the app after each Hard Reset. Please proceed with caution!</p>"))
+        })
+        
+        
+        observeEvent(input$reset_btn, {
+          if (dir.exists(save_dir) & dir.exists(input_dir)) {
+            files1 <- list.files(save_dir, full.names = TRUE)
+            files2 <- list.files(input_dir, full.names = TRUE)
+            files3 <- list.files(output_dir, full.names = TRUE)
+            
+            sapply(files1, file.remove)
+            sapply(files2, file.remove)
+            sapply(files3, file.remove)
+            
+            remaining_files <- list.files(save_dir, full.names = TRUE)
+            if (length(remaining_files) == 0) {
+              status <- "All files have been deleted."
+              
+              file.copy("../data for container/config.ini", input_dir, overwrite = TRUE)
+              
+            } else {
+              status <- "Some files could not be deleted."
+            }
+          } else {
+            status <- "Directory does not exist."
+          }
+          
+          # Update the status text output
+          output$reset_status <- renderText(status)
+        })
+        
+      } })
+    
+    
+    
+    
+  })
+  
+  if (!file.exists("../data/sq_fitness.txt")){
+    shinyjs::disable("plt_sq")}else{shinyjs::enable("plt_sq")}
+  
+ 
+  
+  
+  ### Play Around Tab ####
+  
+  
+  ##check if names of objectives have to be supplied or already present
+  observeEvent(input$tabs=="play_around",{ 
+    ## make or pull objectives()
+    if(!file.exists("../input/object_names.RDS")) {
+      
+      shinyjs::hide(id = "tab_play1")#do not show visualisation tab content 
+      shinyjs::hide(id = "tab_play2")
+      
+      
+      }else {
+        short = readRDS("../input/object_names.RDS")
+        objectives(short)
+        
+        updateSelectInput(session, "x_var3",   choices = short, selected = rng_plt()[1])
+        updateSelectInput(session, "y_var3",   choices = short, selected = rng_plt()[2])
+        updateSelectInput(session, "col_var3", choices = short, selected = rng_plt()[3])
+        updateSelectInput(session, "size_var3",choices = short, selected = rng_plt()[4])
+        
+        num_criteria = length(objectives())
+        k=1
+        ahp_combo(character(0))
+        for (i in 1:(num_criteria - 1)) {
+          for (j in (i + 1):num_criteria) {
+            new_label <- paste0(objectives()[j]," vs. ",objectives()[i])
+            updateActionButton(session, paste0("ahp_card",k), label = new_label)
+            ahp_combo(c(ahp_combo(), new_label))  #identifier for ahp scatter plots
+            k = k+1}}
+        
+        
+        
+      }
+    
+   
+   
+    
+
     
     ## update slider labels based on objectives
     observe({
@@ -276,84 +619,10 @@ server <- function(input, output, session) {
           }
           default_vals(new_defaults)
           initial_update_done$initial = TRUE
-      }} else {
-        shinyjs::show(id = "parfit")
-      }
+      }}
     })
     
-   
-    
-    ## make fit() based on user input
-    observeEvent(input$par_fit, {     
-      req(input$par_fit)
-      file <- input$par_fit
-      if (is.null(file)) {return(NULL)}
-      par_fiti(list(path = file$datapath, name = file$name))
-    })
-    
-    #get pareto_fitness.txt and make fit()
-    observeEvent(input$save_paretofit,{
-      req(par_fiti(),objectives())
-      save_par_fiti <- par_fiti()$name
-      save_path_par_fiti <- file.path(save_dir, save_par_fiti)
-      file.copy(par_fiti()$path, save_path_par_fiti, overwrite = TRUE) #copy pareto_fitness.txt
-      
-      data = read.table(pareto_path, header=F,stringsAsFactors=FALSE,sep = ',')
-      names(data) = objectives()
-      fit(data)
-      
-      yo = fit() %>% mutate(across(everything(), ~ scales::rescale(.)))%>%mutate(id = row_number())
-      f_scaled(yo)
-    })
-    
-   #pull status quo
-    observe({
-      if (file.exists("../data/sq_fitness.txt")) {
-        req(objectives())
-        
-        shinyjs::enable("plt_sq")
-        
-        shinyjs::hide("sq")
-        st_q = read.table("../data/sq_fitness.txt", header = FALSE, stringsAsFactors = FALSE, sep = ',')
-        names(st_q) = objectives()
-        stq(st_q)
-        }else{shinyjs::show("sq")
-          shinyjs::disable("plt_sq")} })
-    
-    #make status quo based on user input
-    observeEvent(input$sq_in, {
-      req(input$sq_in)
-      file <- input$sq_in
-      if(is.null(file)){return(NULL)}
-      sq_file(list(path=file$datapath, name = file$name))
-      
-    })
-    
-    observeEvent(input$save_sq_in, {
-      req(sq_file(), req(objectives))
-      save_sq <- sq_file()$name
-      save_path_sq <- file.path(save_dir, save_sq)
-      file.copy(sq_file()$path,save_path_sq,overwrite = TRUE) #copy sq_fitness.txt
-      
-      st_q = read.table("../data/sq_fitness.txt", header = FALSE, stringsAsFactors = FALSE, sep = ',')
-      st_q = as.numeric(st_q)
-      
-      names(st_q) = objectives()
-      stq(st_q)
-    })
-    
-    
-    ## ggplot melt and change plotting order
-    pp <- reactive({
-      req(f_scaled(),objectives())
-      f_scaled()%>% pivot_longer(.,cols=-id)%>%mutate(name=factor(name,levels=objectives()),id=as.factor(id))
-    })
-    
-    observe({
-      req(pp())
-      rv$sizes= rep(0.5, length(unique(pp()$id)))
-      rv$colls = rep("grey50", length(unique(pp()$id)))
-    })
+
     
     ## get unit input 
    if(file.exists("../input/units.RDS")){shinyjs::hide(id="units")
@@ -599,8 +868,10 @@ server <- function(input, output, session) {
       }}
     
     dn2 = add_perc(df1=dn, df2= wr)
+    dn2 = dn2 %>%as.data.frame() %>%mutate(across(where(is.numeric), ~as.numeric(gsub("-", "", as.character(.))))) #remove minus
     
-    #get unit input 
+    
+    #get unit input (this turns into matrix)
     new_colnms <- mapply(function(col, unit) {
       if (unit != "") {
         paste(col, " (", unit, ")", sep = "")
@@ -642,6 +913,8 @@ server <- function(input, output, session) {
       
     }, col = objectives(), unit = uns, SIMPLIFY = TRUE)
    df = mima_fun()
+   df = df %>%mutate(across(where(is.numeric), ~as.numeric(gsub("-", "", as.character(.)))))
+   
    colnames(df) = new_colnms
    df
   }, rownames = T)
@@ -722,280 +995,7 @@ server <- function(input, output, session) {
   # )
   
   
-  ### Data Prep ####
-  
-  if (!file.exists("../data/pareto_fitness.txt")) {shinyjs::show}
-  if (!file.exists("../data/sq_fitness.txt")){shinyjs::show(id = "sq_avail")
-                                              shinyjs::disable("plt_sq")}else{shinyjs::enable("plt_sq")}
-  
-  file_data1 <- reactiveVal(NULL)
-  file_data2 <- reactiveVal(NULL)
-  file_data3 <- reactiveVal(NULL)
-  file_data4 <- reactiveVal(NULL)
-  file_data5 <- reactiveVal(NULL)
-  file_data6 <- reactiveVal(NULL)
-  
-  shapefile <- reactiveVal(NULL)
 
-  ## check if required files exist
-  observeEvent(input$file1, { file <- input$file1
-    if (is.null(file)) {return(NULL)}
-     file_data1(list(path = file$datapath, name = file$name))})
-  
-  observeEvent(input$file2, { file <- input$file2
-    if (is.null(file)) {return(NULL)}
-    file_data2(list(path = file$datapath, name = file$name))})
-  
-  observeEvent(input$file3, { file <- input$file3
-    if (is.null(file)) {return(NULL)}
-    file_data3(list(path = file$datapath, name = file$name))})
-  
-  observeEvent(input$file4, { file <- input$file4
-  if (is.null(file)) {return(NULL)}
-  file_data4(list(path = file$datapath, name = file$name))})
-  
-  observeEvent(input$file5, { file <- input$file5
-  if (is.null(file)) {return(NULL)}
-  file_data5(list(path = file$datapath, name = file$name))})
-  
-  observeEvent(input$file6, { file <- input$file6
-  if (is.null(file)) {return(NULL)}
-  file_data6(list(path = file$datapath, name = file$name))})
-  
-  observeEvent(input$shapefile, { file <- input$shapefile
-  if (is.null(file)) {return(NULL)}
-  shapefile(list(path = file$datapath, name = file$name))})
- 
-  
-  observeEvent(input$files_avail,{
-     
-     save_filename1 <- file_data1()$name
-     save_filename2 <- file_data2()$name
-     save_filename3 <- file_data3()$name
-     save_filename4 <- file_data4()$name
-     save_filename5 <- file_data5()$name
-     save_filename6 <- file_data6()$name
-     
-     save_path1 <- file.path(save_dir, save_filename1)
-     save_path2 <- file.path(save_dir, save_filename2)
-     save_path3 <- file.path(save_dir, save_filename3)
-     save_path4 <- file.path(save_dir, save_filename4)
-     save_path5 <- file.path(save_dir, save_filename5)
-     save_path6 <- file.path(save_dir, save_filename6)
-     
-
-     file.copy(file_data1()$path, save_path1, overwrite = TRUE)
-     file.copy(file_data2()$path, save_path2, overwrite = TRUE)
-     file.copy(file_data3()$path, save_path3, overwrite = TRUE)
-     file.copy(file_data4()$path, save_path4, overwrite = TRUE)
-     file.copy(file_data5()$path, save_path5, overwrite = TRUE)
-     file.copy(file_data6()$path, save_path6, overwrite = TRUE)
-     
-     #cm shapefile
-     shp_req = c(".shp",".shx", ".dbf", ".prj")
-     shapefile <- input$shapefile
-     shapefile_names <- shapefile$name
-     shapefile_paths <- shapefile$datapath
-     missing_shapefile_components <- shp_req[!sapply(shp_req, function(ext) any(grepl(paste0(ext, "$"), shapefile_names)))]
-     
-     # copy shapefile components if none are missing
-     if (length(missing_shapefile_components) == 0) {
-       lapply(seq_along(shapefile_paths), function(i) {
-         save_path <- file.path(save_dir, shapefile_names[i])
-         if (!file.exists(save_path)) {
-           file.copy(shapefile_paths[i], save_path, overwrite = TRUE)
-         }
-       })
-     }
-     
-     #basin shapefile
-     bas_req = c(".shp",".shx", ".dbf", ".prj")
-     basfile <- input$basfile
-     basfile_names <- basfile$name
-     basfile_paths <- basfile$datapath
-     missing_basfile_components <- bas_req[!sapply(bas_req, function(ext) any(grepl(paste0(ext, "$"), basfile_names)))]
-     
-     # copy basfile components if none are missing
-     if (length(missing_basfile_components) == 0) {
-       lapply(seq_along(basfile_paths), function(i) {
-         save_path <- file.path(save_dir, basfile_names[i])
-         if (!file.exists(save_path)) {
-           file.copy(basfile_paths[i], save_path, overwrite = TRUE)
-         }
-       })
-     }
-     
-     required_files <- c("../data/pareto_genomes.txt","../data/hru.con",   "../data/measure_location.csv",
-                         "../data/hru.shp","../data/hru.shx", "../data/hru.dbf", "../data/hru.prj",
-                         "../data/basin.shp","../data/basin.shx", "../data/basin.dbf", "../data/basin.prj",
-                         "../data/rout_unit.con",
-                         "../data/pareto_fitness.txt")
-     
-     checkFiles <- sapply(required_files, function(file) file.exists(file))
-     
-     if(all(checkFiles)& file.exists("../input/object_names.RDS")){run_prep_possible$files_avail = T}
-     
-     output$fileStatusMessage <- renderText({
-       if (all(checkFiles) & file.exists("../input/object_names.RDS")) {
-         HTML("All Files found.")
-         
-       } else if(all(checkFiles) & !file.exists("../input/object_names.RDS")){
-        HTML("All files found. <br>Please provide the names of the objectives represented in the Pareto front.
-             The names and the order in which they are given have
-             to align with what is provided in the first four columns of pareto_fitness.txt")
-         }else {
-         missing_files = required_files[!checkFiles]
-         HTML(paste("The following file(s) are missing:<br/>", paste(sub('../data/', '', missing_files), collapse = "<br/> ")))
-       }
-     })
-    
-     
-  })
-  #cannot run if already exists, has to be deleted manually
-  if (!file.exists("../input/var_corr_par.csv") | !file.exists("../input/hru_in_optima.RDS") | !file.exists("../input/all_var.RDS")) {
-                 shinyjs::show(id = "runprep_show")
-    observe({     if (run_prep_possible$files_avail) {  shinyjs::enable("runprep")} else{  shinyjs::disable("runprep")
-     } })
-    
-    
-  }
-  
-  
-   ## initialise PCA table when app starts
-   pca_in <- reactiveValues(data = read_pca()) #this only reads config$columns, NULL if opening for the first time
-   
-   objs <- reactiveValues(data=NULL)
-   
-   ## observe event for confirm button
-   if(!file.exists("../input/object_names.RDS")){
-     shinyjs::show(id = "sel_obj")
-     
-   observeEvent(input$obj_conf, {
-     shinyjs::show(id="range_title")
-     objs$data<- data.frame(Objective = c(input$col1, input$col2, input$col3, input$col4), stringsAsFactors = FALSE )
-     
-     objs$objectives <- c(input$col1, input$col2, input$col3, input$col4)
-     
-     assigned_objnames <<- objs$objectives
-     saveRDS(assigned_objnames,file="../input/object_names.RDS") #for later use in background script
-   
-     output$obj_conf <- renderTable({
-       rng = get_obj_range(colnames = objs$objectives)
-       bng = rng
-       
-       for(i in 1:4){
-         for(j in 2:3){
-          bng[i,j] = formatC(rng[i,j],digits= unlist(lapply(rng[,2],num.decimals))[i],drop0trailing = T,format="f")#same decimal for min and max
-         }
-       }
-       bng
-       
-     },rownames = T)})}else{assigned_objnames <<- readRDS("../input/object_names.RDS")
-     
-     output$obj_conf <- renderTable({
-       req(assigned_objnames,fit()) #fit() is proxy for file connection
-       rng = get_obj_range(colnames = assigned_objnames)
-       bng = rng
-       
-       for(i in 1:4){
-         for(j in 2:3){
-           bng[i,j] = formatC(rng[i,j],digits= unlist(lapply(rng[,2],num.decimals))[i],drop0trailing = T,format="f")#same decimal for min and max
-         }
-       }
-       bng
-       
-     },rownames = T)}
-     
-   ## run external script that calculates all variables considered in the clustering
-    
-     observeEvent(input$runprep,{
-       
-       dp_done(FALSE)
-       script_output(character()) #clear old output
-       
-       optain <- process$new("Rscript",c("convert_optain.R"),stdout = "|", stderr = NULL) #stdout | ---> pipe output, stderr ---> ignore
-       autoInvalidate <- reactiveTimer(100)
-       
-       observe({autoInvalidate()
-         if (optain$is_alive()) {
-           new_output <- optain$read_output_lines()
-           if (length(new_output) > 0) {
-             current_output <- script_output()
-             
-             # append new output lines and limit to last 10 lines
-             updated_output <- c(current_output, new_output)
-             if (length(updated_output) > 10) {
-               updated_output <- tail(updated_output, 10)
-             }
-             # update the reactive value
-             script_output(updated_output)
-           }
-         }else{
-           final_output <- optain$read_output_lines()
-           if (length(final_output) > 0) {
-             current_output <- script_output()
-             updated_output <- c(current_output, final_output)
-             if (length(updated_output) > 10) {
-               updated_output <- tail(updated_output, 10)
-             }
-             script_output(updated_output)
-           }
-           dp_done(TRUE)
-         }
-       })
-     })
-      
-     
-     
-      output$script_output  <- renderUI({
-        if(dp_done() & file.exists("../input/var_corr_par.csv")){
-          tags$strong("The data preparation was successful. You can now continue with the Correlation and Principal Component Analysis. You will not need this tab again.")
-        }else{verbatimTextOutput("rscriptcmd")}
-        
-        })
-      output$rscriptcmd <- renderText({
-        paste(script_output(), collapse = "\n")
-      })
-      
-      observe({ 
-      if(length(list.files(c(save_dir,output_dir), full.names = TRUE))==0){ #do not show reset option if there haven't been files uploaded
-        shinyjs::hide(id="reset")
-       
-      }else{
-      output$reset_prompt <- renderText({
-        HTML(paste("<p style='color: red;'> If you would like to restart the app if it crashes or behaves inconsistently, you can hard reset it here. Clicking this button
-                   deletes all files you provided. The contents of the Output folder are also deleted, please move or copy those files you would like to keep. For all changes to take effect please restart the app after each Hard Reset. Please proceed with caution!</p>"))
-      })
-      
-
-      observeEvent(input$reset_btn, {
-        if (dir.exists(save_dir) & dir.exists(input_dir)) {
-          files1 <- list.files(save_dir, full.names = TRUE)
-          files2 <- list.files(input_dir, full.names = TRUE)
-          files3 <- list.files(output_dir, full.names = TRUE)
-          
-          sapply(files1, file.remove)
-          sapply(files2, file.remove)
-          sapply(files3, file.remove)
-          
-          remaining_files <- list.files(save_dir, full.names = TRUE)
-          if (length(remaining_files) == 0) {
-            status <- "All files have been deleted."
-            
-            file.copy("../data for container/config.ini", input_dir, overwrite = TRUE)
-            
-          } else {
-            status <- "Some files could not be deleted."
-          }
-        } else {
-          status <- "Directory does not exist."
-        }
-        
-        # Update the status text output
-        output$reset_status <- renderText(status)
-      })
-      
-      } })
   ### Configure ####
   
       output$next_step <- renderUI({
@@ -2043,6 +2043,9 @@ server <- function(input, output, session) {
     bo = best_option()
   
     }
+      bo = bo %>%mutate(across(where(is.numeric), ~as.numeric(gsub("-", "", as.character(.)))))
+      
+      
       # datatable(bo,  colnames = names(bo), rownames = FALSE, escape = FALSE, options = list(dom = 't', paging = FALSE,bSort = FALSE))
       bo
   },colnames = T )
@@ -2127,7 +2130,7 @@ server <- function(input, output, session) {
       se = sum(slider_ids == "Equal") #if majority on equal, large preferences amplify mathematical inconsistency
       
       if (se > 3) {
-        inconsistencies = paste("No major inconsistencies.")
+        inconsistencies = paste("")
         if (tab == T) {
           inconsistencies = character(0)
         }
