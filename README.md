@@ -71,10 +71,12 @@ the project consists of six folders:
   * as "land use" measures currently only hedge, buffer and grassslope considered - if more needed global.R, functions.R (write_corr) and convert_optain require adapting
   * new nswrm_priorities() function currently considers: pond, constr_wetland, wetland, hedge, buffer, grassslope, lowtillcc, lowtill, droughtplt
   * do the current default settings produce reasonable cluster outputs across all catchments? the default might need outlier testing 
+  * stratified variables such as lowflow in the Schoeps do not work in the tool, the sliders cannot be moved
   * users should not produce optimisation outputs with values below 0 and if possible no values smaller than 1, the app currently runs a rescale to roughly balance the values between 1 and 100 but this is not a nice solution, also this solution currently doesn't adapt the axes scales
   * removing minus signs everywhere possible?
   * cannot take percentage of 0 so those changes are not visible in Visualisation tab
   * share to GitLab
+  * write a comprehensive Readme walking the user through the use of the tool including an explanation of the data format input requirements
 
 
 * AHP
@@ -83,30 +85,43 @@ the project consists of six folders:
 
 # To do
 ## Content
+* Data Prep tab:
+  * explain the altered scale and minus removal
+  * allow user to change labels reflecting for altered scale
+
 * Visualising tab:
-  * add new sliders for measures - along share of area possible for this measure (similar to share_con), this requires an earlier request to the user for data supply
-  * catch R errors triggered by empty data frames better
-  * implement plot_ly (maybe in another window after setting axis, color, shape)
+  * add explanation textbox outlining significance of 0 to 1 and absolute range
+  * add one plot of map with measure frequency, percentage of implemented across current selection
 
 * Configure tab
+  * provide the _internal folder and call exe instead??
   * outlier testing in default run?
   * check for missing files
   * automate widest range function to config writing for it to work in python
    
 * AHP and Cluster Analysis tabs
+  * four checkboxes with default selection being pareto front, show axis stuff only when pareto front is selected
   * better graphical representation of decison space across solutions:
-    * plot PCA variables against objectives
-    * add line plot for solutions to improve tradeoff representation in Analysis tab
-    * find a way to select measures and analyse their density/combinations/areas in field
-    * representation of "most important" measures that are part of all pareto-optimal solutions
+  * plot PCA variables against objectives, as one of four checkboxes, show new set of drop down menus when selected
  
 
 ## Workflow
 * General
-  * declutter app by removal of items that can instead be hovered (what could be moved there? --- unit, especially also in visualisation tab)
-  * only show results if inconsistency acceptable
+  * restructure and put Data Prep tab before Visualisation clearly specifying which data inputs are needed for what
   * convert_optain requires some failsafe controls for empty values
 
+* Visualisation tab
+  * catch empty selectiona and replace "replacement has lenght zero" with "no optima fulfill these conditions", fix reload when selection changes
+  * expand scatterplot to more frame space and capture longer numbers
  
+Correlation tab
+  * only strike through the variable that has been removed
+  * new button to jump to correlation tab
+
 * Analysis tab
+  * restructure table w/ cluster number, cluster size, outlier and then optimum - sorted according to cluster number
   * HTML download for individual measure implementation maps, not possible across all
+
+* AHP
+  * add checkbox to allow showing all cards at once
+  * show only one card at once, remove all others when one is clicked
