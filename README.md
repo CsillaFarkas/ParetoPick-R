@@ -72,7 +72,7 @@ the project consists of six folders:
   * new nswrm_priorities() function currently considers: pond, constr_wetland, wetland, hedge, buffer, grassslope, lowtillcc, lowtill, droughtplt
   * do the current default settings produce reasonable cluster outputs across all catchments? the default might need outlier testing 
   * stratified variables such as lowflow in the Schoeps do not work in the tool, the sliders cannot be moved
-  * users should not produce optimisation outputs with values below 0 and if possible no values smaller than 1, the app currently runs a rescale to roughly balance the values between 1 and 100 but this is not a nice solution, also this solution currently doesn't adapt the axes scales
+  * users should not produce optimisation outputs with values below 0 and if possible no values smaller than 1, the app allows a rescale to roughly balance the values between 1 and 100 but it is turned off
   * removing minus signs everywhere possible?
   * cannot take percentage of 0 so those changes are not visible in Visualisation tab
   * share to GitLab
@@ -90,7 +90,6 @@ the project consists of six folders:
   * allow user to change labels reflecting for altered scale
 
 * Visualising tab:
-  * add explanation textbox outlining significance of 0 to 1 and absolute range
   * add one plot of map with measure frequency, percentage of implemented across current selection
 
 * Configure tab
