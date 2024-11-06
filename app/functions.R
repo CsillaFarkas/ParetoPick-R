@@ -1078,31 +1078,35 @@ pull_high_range <- function(df) {
 }
 
 ## scale fit() - function
-scale_data <- function(df, target_min = 10, target_max = 100) {
-  target_range <- target_max - target_min
-  if (is.data.frame(df) && nrow(df) == 1) {
-    
-    for(k in 1:4){
-      if(df[k] != 0){
-        scale_factor <- 10 ^ round(log10(target_range / abs(df[k])))
-      df[k] = df[k] * scale_factor
-      }else{df[k] = df[k]}
-      
-    }
+# scale_data <- function(df, target_min = 10, target_max = 100) {
+#   target_range <- target_max - target_min
+#   
+# df %>% mutate(across(everything(), ~ {
+#     col_min <- min(.)
+#     col_max <- max(.)
+#     col_range <- col_max - col_min
+#     
+#     scale_factor <- 10 ^ round(log10(target_range / col_range))
+#     
+#     . * scale_factor
+#   }))
+# 
+# }
+# 
+# get_scaler <- function(df, target_min = 10, target_max = 100) {
+#   target_range <- target_max - target_min
+#   
+#   scale_facs <- sapply(df, function(col) {
+#     col_min <- min(col, na.rm = TRUE)
+#     col_max <- max(col, na.rm = TRUE)
+#     col_range <- col_max - col_min
+#     
+#     10 ^ round(log10(target_range / col_range))
+#   })
+#   
+#   return(scale_facs)
+# }
 
-  return(as.data.frame(df)) 
-  }
-  else{
-  df %>% mutate(across(everything(), ~ {
-    col_min <- min(.)
-    col_max <- max(.)
-    col_range <- col_max - col_min
-    
-    scale_factor <- 10 ^ round(log10(target_range / col_range))
-    
-    . * scale_factor
-  }))}
-}
 
 #### Other Functions ####
 
