@@ -20,6 +20,7 @@ server <- function(input, output, session) {
   fit <- reactiveVal(NULL) #absolute value dataframe
   f_scaled <- reactiveVal(NULL) #scaled value dataframe
   rng_plt <- reactiveVal(NULL) #getting the highest range across dataframe
+  rng_plt_axes <- reactiveVal(NULL) #getting matching axis labels for highest range
   pca_remove <- reactiveVal(NULL) #variables removed from pca
   stq <- reactiveVal(NULL) #status quo
   
@@ -575,6 +576,9 @@ server <- function(input, output, session) {
         yo2 <- pull_high_range(fit())
         rng_plt(yo2)
         
+        yo2 <- pull_high_range(fit(),num_order=T)
+        rng_plt_axes(yo2)
+        
         output$uploaded_pareto <- renderText({"All Files found. 
                                                You can now examine the Pareto front. 
                                                How does it change when the objective ranges are modified?"})
@@ -1025,6 +1029,7 @@ server <- function(input, output, session) {
       
       ##default correlation/cluster run
       observeEvent(input$run_defaults, {
+        req(rng_plt(),rng_plt_axes())
         if(is.null(corr_file_check())){
         
         output$spinner_progress <- renderText({ "Clustering is running, please wait..." })
@@ -1039,6 +1044,7 @@ server <- function(input, output, session) {
         
         check_sliders(input_vals=list(input$ran1,input$ran2,input$ran3,input$ran4), #rewrite var_corr_par if sliders have moved
                       default_vals= default_vals(),ranger = range_controlled())
+        
         ## run correlation
           cmd <- paste("../python_files/correlation_matrix.exe")
           result <- system(cmd, intern = TRUE)
@@ -1049,15 +1055,15 @@ server <- function(input, output, session) {
         pca_content = all_var[-which(all_var %in% unique(high_corr$variable1))]
 
         if(file.exists("../input/units.RDS")){axiselected(readRDS("../input/units.RDS"))}
-        
+        axis_high_range <- axiselected()[rng_plt_axes()]#reorder axis labels
         #prep pca
         write_corr(pca_content = pca_content,pca=T, cor_analysis = F)
         write_pcanum(pcamin=length(pca_content),pcamax=length(pca_content))
-        write_pca_ini(var1=objectives()[1],var2=objectives()[2],var3=objectives()[3],var4=objectives()[4],
-                      var1_lab=paste0(objectives()[1]," [",axiselected()[1],"]"),
-                      var2_lab=paste0(objectives()[2]," [",axiselected()[2],"]"),
-                      var3_lab=paste0(objectives()[3]," [",axiselected()[3],"]"),
-                      var4_lab=paste0(objectives()[4]," [",axiselected()[4],"]"))
+        write_pca_ini(var1=rng_plt()[1],var2=rng_plt()[2],var3=rng_plt()[3],var4=rng_plt()[4],
+                      var1_lab=paste0(rng_plt()[1]," [",axis_high_range[1],"]"),
+                      var2_lab=paste0(rng_plt()[2]," [",axis_high_range[2],"]"),
+                      var3_lab=paste0(rng_plt()[3]," [",axis_high_range[3],"]"),
+                      var4_lab=paste0(rng_plt()[4]," [",axis_high_range[4],"]"))
         write_outl(handle_outliers_boolean = "false")
         write_cluster(fixed_cluster_boolean="true",fixed_clusters=15)
         ##run clustering

@@ -122,11 +122,6 @@ check_align = function(inipath="../input/config.ini",var_path="../input/var_corr
   }
 }
 
-  
-  
-  
- 
-
 ##
 write_pca_ini <- function(var1 = "", var2 = "", var3 = "", var4 = "",
                           var1_lab= "", var2_lab = "", var3_lab = "", var4_lab = "",inipath="../input/config.ini") {
@@ -1100,7 +1095,7 @@ rescale_column <- function(column, min_val, max_val) {
 }
 
 ## pull highest range for nice plot
-pull_high_range <- function(df) {
+pull_high_range <- function(df, num_order=F) {
   abs_ranges <- sapply(df, function(col) {
     max(col, na.rm = TRUE) - min(col, na.rm = TRUE)
   })
@@ -1110,9 +1105,13 @@ pull_high_range <- function(df) {
     order = rank(-abs_ranges, ties.method = "first")  # rank with highest absolute range first
   )
   
-  res = res[order(res$order),]$col
-  
-  return(res)
+
+  if(num_order) {
+    return(order(res$order)) #order of objectives, needed to match unit labels
+  } else{
+    return(res[order(res$order), ]$col) #reordered objectives
+  }
+
 }
 
 ## scale fit() - function

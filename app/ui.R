@@ -325,10 +325,10 @@ ui <-
                                div(style = "margin-top: -15px;",fileInput("shapefile", "", multiple = TRUE, 
                                                                           accept = c(".shp", ".shx", ".dbf", ".prj"))),
                                
-                               div("6. shapefile called \"basin\" with four components (.shp .dbf .prj and .shx)",style = "text-align: left; font-size:115%"),
-                               div(style = "margin-top: -15px;",fileInput("basfile", "", multiple = TRUE, 
-                                                                          accept = c(".shp", ".shx", ".dbf", ".prj"))),
-                               
+                               # div("6. shapefile called \"basin\" with four components (.shp .dbf .prj and .shx)",style = "text-align: left; font-size:115%"),
+                               # div(style = "margin-top: -15px;",fileInput("basfile", "", multiple = TRUE, 
+                               #                                            accept = c(".shp", ".shx", ".dbf", ".prj"))),
+                               # 
                              
                                
                                
