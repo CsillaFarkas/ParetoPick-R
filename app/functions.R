@@ -427,17 +427,17 @@ plt_latlon = function(conpath){
 }
 
 ## whole basin for location plot
-pull_shp_pure = function(layername = "basin"){
-  if(file.exists(paste0("../data/",layername,".shp"))){
-
-    cm = read_sf(dsn = "../data/", layer = layername) #adapt path
-    
-    cm = st_buffer(cm, 0.0) #clean geometry
-    cm = cm %>%st_transform(., 4326)
-    
-    return(cm)}else{return(NULL)}
-  
-}
+# pull_shp_pure = function(layername = "basin"){
+#   if(file.exists(paste0("../data/",layername,".shp"))){
+# 
+#     cm = read_sf(dsn = "../data/", layer = layername) #adapt path
+#     
+#     cm = st_buffer(cm, 0.0) #clean geometry
+#     cm = cm %>%st_transform(., 4326)
+#     
+#     return(cm)}else{return(NULL)}
+#   
+# }
 
 ## make large dataset
 pull_shp = function(layername = "hru", optims, hru_in_opt_path){

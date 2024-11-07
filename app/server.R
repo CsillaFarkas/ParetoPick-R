@@ -356,25 +356,25 @@ server <- function(input, output, session) {
       }
       
       #basin shapefile
-      bas_req = c(".shp",".shx", ".dbf", ".prj")
-      basfile <- input$basfile
-      basfile_names <- basfile$name
-      basfile_paths <- basfile$datapath
-      missing_basfile_components <- bas_req[!sapply(bas_req, function(ext) any(grepl(paste0(ext, "$"), basfile_names)))]
-      
-      # copy basfile components if none are missing
-      if (length(missing_basfile_components) == 0) {
-        lapply(seq_along(basfile_paths), function(i) {
-          save_path <- file.path(save_dir, basfile_names[i])
-          if (!file.exists(save_path)) {
-            file.copy(basfile_paths[i], save_path, overwrite = TRUE)
-          }
-        })
-      }
+      # bas_req = c(".shp",".shx", ".dbf", ".prj")
+      # basfile <- input$basfile
+      # basfile_names <- basfile$name
+      # basfile_paths <- basfile$datapath
+      # missing_basfile_components <- bas_req[!sapply(bas_req, function(ext) any(grepl(paste0(ext, "$"), basfile_names)))]
+      # 
+      # # copy basfile components if none are missing
+      # if (length(missing_basfile_components) == 0) {
+      #   lapply(seq_along(basfile_paths), function(i) {
+      #     save_path <- file.path(save_dir, basfile_names[i])
+      #     if (!file.exists(save_path)) {
+      #       file.copy(basfile_paths[i], save_path, overwrite = TRUE)
+      #     }
+      #   })
+      # }
       
       required_files <- c("../data/pareto_genomes.txt","../data/hru.con",   "../data/measure_location.csv",
                           "../data/hru.shp","../data/hru.shx", "../data/hru.dbf", "../data/hru.prj",
-                          "../data/basin.shp","../data/basin.shx", "../data/basin.dbf", "../data/basin.prj",
+                          # "../data/basin.shp","../data/basin.shx", "../data/basin.dbf", "../data/basin.prj",
                           "../data/rout_unit.con",
                           "../data/pareto_fitness.txt")
       
