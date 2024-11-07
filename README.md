@@ -18,9 +18,9 @@ Please note that the Python code used in this app is part of another project and
 
 # Folder Structure
 the project consists of six folders
-$ tree -L 2
+
+```
 .
-│
 ├── app
 │   ├── ui.R
 │   ├── server.R
@@ -29,16 +29,15 @@ $ tree -L 2
 ├── python_files
 │   ├── kmeans.exe
 │   ├── kmedoid.exe
-│   └── correlation_matrix.exe
+│   ├── correlation_matrix.exe
+│   └── _internal
 ├── input
 │   └── config.ini
-├── data (folder the user input is written to)
+├── data
 ├── data for container
 │   └── config.ini (for hard reset)
 ├── output
-
-
-
+```
 ### Files created and used in the process
 (stored in input folder)
 * var_corr_par.csv (created in convert_optain.R, contains all variables considered in the clustering)
