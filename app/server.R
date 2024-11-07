@@ -622,7 +622,7 @@ server <- function(input, output, session) {
       }}
     })
     
-
+  
     
     ## get unit input 
    if(file.exists("../input/units.RDS")){shinyjs::hide(id="units")
@@ -1657,7 +1657,7 @@ server <- function(input, output, session) {
       
       
         output$antab <- renderDT({
-          req(sols())
+          req(sols(),objectives())
           
           df <- sols() %>%
             mutate(across(where(is.numeric), round, digits = 2)) %>%
@@ -1667,10 +1667,22 @@ server <- function(input, output, session) {
           df <- as.data.frame(df)
           colnames(df) <- names(sols())
           
+          df = df %>% select(`cluster number`, `cluster size`,outlier,objectives(), optimum)
+
+          
           datatable(df,
                     selection = list(mode = "multiple", target = 'row', max = 12),
                     rownames = FALSE,
-                    options = list(pageLength = 20, autoWidth = TRUE))
+                    
+                    options = list(dom = "t",
+                                   pageLength = 10000, 
+                                   order = list(list(0, 'asc')), #sort according to first column cluster number
+                                   responsive = TRUE,  #slightly responsive column width
+                                   columnDefs = list(
+                                     list(targets = 2, className = "border-column"),#add vertical lines with html$style
+                                     list(targets = 6, className = "border-column"),
+                                     list(targets = 0:2, width = '50px'), #adjust column width
+                                     list(targets = "_all", className = "dt-right"))))
           
         })
       })

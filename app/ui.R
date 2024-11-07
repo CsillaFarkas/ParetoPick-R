@@ -96,7 +96,6 @@ ui <-
                                   }
                                   
                                   
-
                                   /* AHP sidebar specific background color */
                                   .sidebar-menu li a[data-value="ahp"] {
                                     background-color: #FFEF2C !important;
@@ -151,28 +150,28 @@ ui <-
                                     font-size: 13px;
                                   }
 
-                              /* Main panel full-width adjustment */
-                                .main-panel-full-width {
-                                 margin-left: 0 !important;
-                                 width: 100% !important;
-                                }
+                                /* Main panel full-width adjustment */
+                                  .main-panel-full-width {
+                                   margin-left: 0 !important;
+                                   width: 100% !important;
+                                  }
 
                                 /* Main panel size relative to sidebar width */
-                                .main-panel {
-                                 margin-left: 250px; /* adjust sidebar width */
-                                 width: calc(100% - 250px); /* adjust sidebar width */
-                                }
+                                  .main-panel {
+                                   margin-left: 250px; /* adjust sidebar width */
+                                   width: calc(100% - 250px); /* adjust sidebar width */
+                                  }
 
                                /* AHP criterion labels made non-bold */
-                                #criterion1_ui label,
-                                #criterion2_ui label {font-weight: 400;}
+                                  #criterion1_ui label,
+                                  #criterion2_ui label {font-weight: 400;}
    
                                /* Title on maps in analysis tab */
-                                 .map-title {
-                                  font-weight: bold; font-size:
-                                  16px; margin-bottom: 
-                                  5px; text-align: center;
-                                  }
+                                  .map-title {
+                                   font-weight: bold; font-size:
+                                   16px; margin-bottom: 
+                                   5px; text-align: center;
+                                   }
 
                                /* R2 and Pearson table in AHP tab */
                                   #relation {
@@ -184,6 +183,11 @@ ui <-
                                   border: none;
                                   padding: 8px;
                                   }
+                                  
+                                   /* datatable in Analysis tab with vertical lines */
+                                  .dataTable td.border-column {
+                                   border-right: 1px solid #03597F; 
+                                     }
                                   
                                       ')),
  
