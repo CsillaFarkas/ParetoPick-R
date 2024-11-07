@@ -60,19 +60,6 @@ the project consists of six folders
 7. sq_fitness.txt
 8. rout_unit.con
 
-### Elements touched in config.ini (adapt when final version of Python project available)
-* col_correlation_matrix
-* var1 to var4
-* var_1_label to var_4_label
-* qualitative_clustering_columns
-* fixed_clusters_boolean
-* fixed_clusters
-* min_clusters & max_clusters
-* handle_outliers_boolean
-* deviations_min & deviations_max
-* count_min & count_max
-* outlier_to_cluster_ratio
-* min_components & max_components
 
 # Assumptions
 
@@ -82,7 +69,6 @@ the project consists of six folders
   * do the current default settings produce reasonable cluster outputs across all catchments? the default might need outlier testing 
   * stratified variables such as lowflow in the Schoeps do not work in the tool, the sliders cannot be moved
   * users should not produce optimisation outputs with values below 0 and if possible no values smaller than 1, the app allows a rescale to roughly balance the values between 1 and 100 but it is turned off
-  * cannot take percentage of 0 so those changes are not visible in Visualisation tab
   * share to GitLab
   * write a comprehensive Readme walking the user through the use of the tool including an explanation of the data format input requirements
 
@@ -104,20 +90,14 @@ the project consists of six folders
   * outlier testing in default run?
   * check for missing files
   * automate widest range function to config writing for it to work in python
-   
-* AHP and Cluster Analysis tabs
-  * four checkboxes with default selection being pareto front, show axis stuff only when pareto front is selected
-  * better graphical representation of decison space across solutions:
-  * plot PCA variables against objectives, as one of four checkboxes, show new set of drop down menus when selected
- 
+
 
 ## Workflow
 * General
   * convert_optain requires some failsafe controls for empty values
 
 * Visualisation tab
-  * catch empty selectiona and replace "replacement has lenght zero" with "no optima fulfill these conditions", fix reload when selection changes
-  * expand scatterplot to more frame space and capture longer numbers
+  * catch empty selection and replace "replacement has lenght zero" with "no optima fulfill these conditions", fix reload when selection changes
  
 Correlation tab
   * only strike through the variable that has been removed
