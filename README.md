@@ -125,8 +125,6 @@ id,	name,	nswrm,	obj_id
 * Configure tab
   * outlier testing in default run?
   * check for missing files
-  * automate widest range function to config writing for it to work in python
-
 
 ## Workflow
 * General
