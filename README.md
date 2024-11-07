@@ -39,8 +39,8 @@ the project consists of six folders
 ├── output
 ```
 
-# Required input files and data structure (example data structures from the Schwarzer Schöps catchment)
-(app pulls these into the data folder)
+# Required input files and data structure 
+(with example data structures from the Schwarzer Schöps catchment)
 1. pareto_fitness.txt
   * comma delineated, four columns representing the objectives that were maximised in optimisation
 ```
@@ -52,7 +52,7 @@ the project consists of six folders
 -6765.0, -0.053, 59099.121, -25536.89511
 ```
 2. pareto_genomes.txt
-  * comma separated list of 1 and 2, delineating activated (2) and non-activated (1) hydrological response units (hrus)
+  * comma separated list delineating activated (2) and non-activated (1) hydrological response units (hrus)
 ```
 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 
 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
@@ -106,7 +106,7 @@ id,	name,	nswrm,	obj_id
   * stratified variables such as lowflow in the Schoeps do not work in the tool, the sliders cannot be moved
   * users should not produce optimisation outputs with values below 0 and if possible no values smaller than 1, the app allows a rescale to roughly balance the values between 1 and 100 but it is turned off
   * share to GitLab
-  * write a comprehensive Readme walking the user through the use of the tool including an explanation of the data format input requirements
+  * write a comprehensive Readme walking the user through the use of the tool
 
 
 * AHP
