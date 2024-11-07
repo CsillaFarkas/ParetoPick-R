@@ -1043,8 +1043,7 @@ server <- function(input, output, session) {
         check_sliders(input_vals=list(input$ran1,input$ran2,input$ran3,input$ran4), #rewrite var_corr_par if sliders have moved
                       default_vals= default_vals(),ranger = range_controlled())
         ## run correlation
-          py_script <- "../python_files/correlation_matrix.py"
-          cmd <- paste("python", py_script)
+          cmd <- paste("../python_files/correlation_matrix.exe")
           result <- system(cmd, intern = TRUE)
         
         corr <<- read.csv("../output/correlation_matrix.csv", row.names = 1) #global because of re-rendering of plot
@@ -1065,8 +1064,7 @@ server <- function(input, output, session) {
         write_outl(handle_outliers_boolean = "false")
         write_cluster(fixed_cluster_boolean="true",fixed_clusters=15)
         ##run clustering
-         py_script = "../python_files/kmeans.py"
-         cmd = paste("python",py_script)
+         cmd = paste("../python_files/kmeans.exe")
          result = system(cmd,intern=TRUE)
         
          default_running(FALSE) 
@@ -1204,8 +1202,7 @@ server <- function(input, output, session) {
                         default_vals= default_vals(),ranger = range_controlled())   
           
           ## run the Python script
-          py_script <- "../python_files/correlation_matrix.py"
-          cmd <- paste("python", py_script)
+          cmd <- paste("../python_files/correlation_matrix.exe")
           
           ## capture python output
           result <- system(cmd, intern = TRUE)
@@ -1445,7 +1442,8 @@ server <- function(input, output, session) {
                   default_vals= default_vals(),ranger = range_controlled())
     
     # command to run the Python script
-    if(input$pcamethod=="k-means"){pca_script <- "../python_files/kmeans.py"}else{pca_script <- "../python_files/kmedoid.py"}
+    # if(input$pcamethod=="k-means"){pca_script <- "../python_files/kmeans.py"}else{pca_script <- "../python_files/kmedoid.py"}
+    if(input$pcamethod=="k-means"){pca_script <- "../python_files/kmeans.exe"}else{pca_script <- "../python_files/kmedoid.exe"}
     
     run_python_script(path_script=pca_script,pca_status)
     pca_spin(FALSE) #spinner

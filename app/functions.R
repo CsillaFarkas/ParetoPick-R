@@ -380,14 +380,14 @@ add_perc <- function(df1, df2) {
   return(df1_new)
 }
 
-
 #### Python Caller ####
 
 run_python_script <- function(path_script="",pca_status) {
   pca_status("")
   p <- processx::process$new(
-    "python",
-    c(path_script),
+    # "python",  #old - when running with .py files
+    # c(path_script),
+    path_script,
     stdout = "|", stderr = "|"
   )
   
