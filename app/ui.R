@@ -151,27 +151,6 @@ ui <-
                                     font-size: 13px;
                                   }
 
-                                  .js-irs-0 .irs-single,
-                                  .js-irs-0 .irs-bar-edge,
-                                  .js-irs-0 .irs-bar {
-                                    background: #ffc61e;
-                                    border-top: 1px solid #ffc61e;
-                                    border-bottom: 1px solid #ffc61e;
-                                  }
-
-                                  .js-irs-0 .irs-from,
-                                  .js-irs-0 .irs-to,
-                                  .js-irs-0 .irs-single {
-                                    font-size: 13px;
-                                    background: #ffc61e !important;
-                                  }
-
-                                  .js-irs-0 .irs-single,
-                                  .js-irs-0 .irs-bar-edge,
-                                  .js-irs-0 .irs-bar {
-                                    background: darkslateblue;
-                                  }
-
                               /* Main panel full-width adjustment */
                                 .main-panel-full-width {
                                  margin-left: 0 !important;
@@ -205,9 +184,42 @@ ui <-
                                   border: none;
                                   padding: 8px;
                                   }
-                                ')),
-                   useShinyjs(),
+                                  
+                                      ')),
+ 
+                     useShinyjs(),
                    
+                   tags$script(HTML("
+                                    $(document).on('shiny:value', function(event) {
+                                      function removeMinusSigns() {
+                                        $('.irs-grid-text, .irs-to, .irs-from').each(function() {
+                                          $(this).text($(this).text().replace('-', ''));
+                                        });
+                                     }
+    
+                                      removeMinusSigns();
+                                        
+                                   $(document).on('shiny:inputchanged', function(event) {
+                                        if (event.name.startsWith('obj')) { // last tab ahp slider
+                                           setTimeout(removeMinusSigns, 5);
+                                        }
+                                      }); 
+    
+                              $(document).on('shiny:inputchanged', function(event) {
+                                        if (event.name.startsWith('ran')) { // configure tab range slider
+                                          setTimeout(removeMinusSigns, 5); 
+                                        }
+                                      });
+                                        
+
+                                   $(document).on('input change', '.irs-with-grid, .irs-to, .irs-from', function() {
+                                        setTimeout(removeMinusSigns, 7);
+                                      });
+                                    });
+                                 ")),
+                   
+                 
+                 
                    tabItems(
                      tabItem(tabName = "intro",
                              titlePanel("Introduction and Background"),
@@ -388,6 +400,17 @@ ui <-
                            tags$style(HTML(".js-irs-3 .irs-single, .js-irs-3 .irs-bar-edge, .js-irs-3 .irs-bar {background: #aF58ba ;border-top: 1px solid #aF58ba ;border-bottom: 1px solid #aF58ba;}.js-irs-3 .irs-from, .js-irs-3 .irs-to, .js-irs-3 .irs-single { font-size: 13px;background: #aF58ba !important }")),
                            tags$style(HTML(".js-irs-4 .irs-single, .js-irs-4 .irs-bar-edge, .js-irs-4 .irs-bar {background: #f28522 ;border-top: 1px solid #f28522 ;border-bottom: 1px solid #f28522;}.js-irs-4 .irs-from, .js-irs-4 .irs-to, .js-irs-4 .irs-single { font-size: 13px;background: #f28522 !important }")),
                            
+                           tags$style(HTML(".js-irs-5 .irs-single, .js-irs-5 .irs-bar-edge, .js-irs-5 .irs-bar {background: #ffc61e ;border-top: 1px solid #ffc61e ;border-bottom: 1px solid #ffc61e;}.js-irs-5 .irs-from, .js-irs-5 .irs-to, .js-irs-5 .irs-single { font-size: 13px;background: #ffc61e !important }")),
+                           tags$style(HTML(".js-irs-6 .irs-single, .js-irs-6 .irs-bar-edge, .js-irs-6 .irs-bar {background: #009ade ;border-top: 1px solid #009ade ;border-bottom: 1px solid #009ade;}.js-irs-6 .irs-from, .js-irs-6 .irs-to, .js-irs-6 .irs-single { font-size: 13px;background: #009ade !important }")),
+                           tags$style(HTML(".js-irs-7 .irs-single, .js-irs-7 .irs-bar-edge, .js-irs-7 .irs-bar {background: #aF58ba ;border-top: 1px solid #aF58ba ;border-bottom: 1px solid #aF58ba;}.js-irs-7 .irs-from, .js-irs-7 .irs-to, .js-irs-7 .irs-single { font-size: 13px;background: #aF58ba !important }")),
+                           tags$style(HTML(".js-irs-8 .irs-single, .js-irs-8 .irs-bar-edge, .js-irs-8 .irs-bar {background: #f28522 ;border-top: 1px solid #f28522 ;border-bottom: 1px solid #f28522;}.js-irs-8 .irs-from, .js-irs-8 .irs-to, .js-irs-8 .irs-single { font-size: 13px;background: #f28522 !important }")),
+                           
+                           tags$style(HTML(".js-irs-9 .irs-single, .js-irs-9 .irs-bar-edge, .js-irs-9 .irs-bar {background: #ffc61e ;border-top: 1px solid #ffc61e ;border-bottom: 1px solid #ffc61e;}.js-irs-9 .irs-from, .js-irs-9 .irs-to, .js-irs-9 .irs-single { font-size: 13px;background: #ffc61e !important }")),
+                           tags$style(HTML(".js-irs-10 .irs-single, .js-irs-10 .irs-bar-edge, .js-irs-10 .irs-bar {background: #009ade ;border-top: 1px solid #009ade ;border-bottom: 1px solid #009ade;}.js-irs-10 .irs-from, .js-irs-10 .irs-to, .js-irs-10 .irs-single { font-size: 13px;background: #009ade !important }")),
+                           tags$style(HTML(".js-irs-12 .irs-single, .js-irs-11 .irs-bar-edge, .js-irs-11 .irs-bar {background: #aF58ba ;border-top: 1px solid #aF58ba ;border-bottom: 1px solid #aF58ba;}.js-irs-11 .irs-from, .js-irs-11 .irs-to, .js-irs-11 .irs-single { font-size: 13px;background: #aF58ba !important }")),
+                           tags$style(HTML(".js-irs-13 .irs-single, .js-irs-12 .irs-bar-edge, .js-irs-12 .irs-bar {background: #f28522 ;border-top: 1px solid #f28522 ;border-bottom: 1px solid #f28522;}.js-irs-12 .irs-from, .js-irs-12 .irs-to, .js-irs-12 .irs-single { font-size: 13px;background: #f28522 !important }")),
+                           
+                           
                            div(id = "tab_play1",div("Pareto Plot", style = "text-align: left; font-size:150%"),
                                plotOutput("first_pareto"), 
                                checkboxInput("add_sq_f",label = "Show status quo",value = FALSE),
@@ -472,7 +495,10 @@ ui <-
                              titlePanel("Configure Cluster Settings"),
                              
                     mainPanel(
-       
+                  
+                      
+                  
+                  
                         div(style = "text-align: left; font-size:150%; width: 100%;",
                                     "Would you like to limit the objective ranges prior to clustering?",
                               radioButtons("limra_clust", "", choices = c("Yes", "No"), selected = "No")),
