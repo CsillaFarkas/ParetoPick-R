@@ -17,16 +17,26 @@ ParetoPick-R also integrates an Analytical Hierarchy Process (AHP) allowing the 
 Please note that the Python code used in this app is part of another project and was written by [S. White](https://github.com/SydneyEWhite).
 
 # Folder Structure
-the project consists of six folders:
-1. app folder: contains all required scripts (ui.R, global.R, functions.R, server.R, convert_optain.R)
-2. output folder (empty in beginning)
-3. data folder (empty in beginning): folder the user input is written to
-4. input folder (containing nswrm_priorities.csv and config.ini): folder the datafiles are written/read to/from 
-5. data for container (containing config.ini and nswrm_priorities.csv for hard reset)
-6. python_files: contains python executables 
+the project consists of six folders
+$ tree -L 2
+.
+│
+├── app
+│   ├── ui.R
+│   ├── server.R
+│   ├── global.R
+│   └── convert_optain.R
+├── python_files
+│   ├── kmeans.exe
+│   ├── kmedoid.exe
+│   └── correlation_matrix.exe
+├── input
+│   └── config.ini
+├── data (folder the user input is written to)
+├── data for container
+│   └── config.ini (for hard reset)
+├── output
 
-### Files provided in the package
-* config.ini 
 
 
 ### Files created and used in the process
@@ -73,7 +83,6 @@ the project consists of six folders:
   * do the current default settings produce reasonable cluster outputs across all catchments? the default might need outlier testing 
   * stratified variables such as lowflow in the Schoeps do not work in the tool, the sliders cannot be moved
   * users should not produce optimisation outputs with values below 0 and if possible no values smaller than 1, the app allows a rescale to roughly balance the values between 1 and 100 but it is turned off
-  * removing minus signs everywhere possible?
   * cannot take percentage of 0 so those changes are not visible in Visualisation tab
   * share to GitLab
   * write a comprehensive Readme walking the user through the use of the tool including an explanation of the data format input requirements
@@ -93,7 +102,6 @@ the project consists of six folders:
   * add one plot of map with measure frequency, percentage of implemented across current selection
 
 * Configure tab
-  * provide the _internal folder and call exe instead??
   * outlier testing in default run?
   * check for missing files
   * automate widest range function to config writing for it to work in python
@@ -106,7 +114,6 @@ the project consists of six folders:
 
 ## Workflow
 * General
-  * restructure and put Data Prep tab before Visualisation clearly specifying which data inputs are needed for what
   * convert_optain requires some failsafe controls for empty values
 
 * Visualisation tab
@@ -118,7 +125,6 @@ Correlation tab
   * new button to jump to correlation tab
 
 * Analysis tab
-  * restructure table w/ cluster number, cluster size, outlier and then optimum - sorted according to cluster number
   * HTML download for individual measure implementation maps, not possible across all
 
 * AHP
