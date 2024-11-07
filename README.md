@@ -38,7 +38,46 @@ the project consists of six folders
 │   └── config.ini (for hard reset)
 ├── output
 ```
-### Files created and used in the process
+
+# Required input files and data structure (example data structures from the Schwarzer Schöps catchment)
+(app pulls these into the data folder)
+1. pareto_fitness.txt
+  * comma delineated, four columns representing the objectives that were maximised in optimisation
+```
+-6880.0, -0.052, 59069.165, 0.0
+-6875.0, -0.052, 59068.499, -477.81743
+-6850.0, -0.052, 59065.513, -14.7785
+-6749.0, -0.053, 59097.725, -28858.69644
+-6681.0, -0.054, 59125.122, -67853.89737
+-6765.0, -0.053, 59099.121, -25536.89511
+```
+2. pareto_genomes.txt
+  * comma separated list of 1 and 2, delineating activated (2) and non-activated (1) hydrological response units (hrus)
+```
+1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 
+1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+```
+
+3. hru.con
+4. measure_location.csv
+  * csv - comma separated table with four columns: id, name, nswrm, obj_id
+```
+id,	name,	nswrm,	obj_id
+1,	buffer_1,	buffer,	479
+2,	buffer_10,	buffer,	281
+3,	buffer_11,	buffer,	509, 511
+107,	lowtillcc_111,	lowtillcc,	513, 514
+108,	lowtillcc_112,	lowtillcc,	527
+294,	pond_1,	pond,	997
+```
+5. hru shapefile consisting of: hru.shp, hru.dbf, hru.prj, hru.shx
+6. basin shapefile consisting of: basin.shp, basin.dbf, basin.prj, basin.shx
+7. sq_fitness.txt
+8. rout_unit.con
+
+
+## Files created and used in the process
 (stored in input folder)
 * var_corr_par.csv (created in convert_optain.R, contains all variables considered in the clustering)
 * hru_in_optima.RDS (created in convert_optain.R based on measure_location.csv, connection between activated HRUs and optima)
@@ -49,16 +88,7 @@ the project consists of six folders
 * units.RDS
 
 
-### Required input files 
-(app pulls these into the data folder)
-1. pareto_genomes.txt
-2. pareto_fitness.txt
-3. hru.con
-4. measure_location.csv
-5. hru shapefile consisting of: hru.shp, hru.dbf, hru.prj, hru.shx
-6. basin shapefile consisting of: basin.shp, basin.dbf, basin.prj, basin.shx
-7. sq_fitness.txt
-8. rout_unit.con
+
 
 
 # Assumptions
