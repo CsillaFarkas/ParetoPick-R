@@ -60,6 +60,7 @@ the project consists of six folders
 ```
 
 3. hru.con
+  * connection file used in SWAT+ modelling containing details on HRU size and location
 4. measure_location.csv
   * csv - comma separated table with four columns: id, name, nswrm, obj_id
 ```
@@ -72,9 +73,14 @@ id,	name,	nswrm,	obj_id
 294,	pond_1,	pond,	997
 ```
 5. hru shapefile consisting of: hru.shp, hru.dbf, hru.prj, hru.shx
-6. basin shapefile consisting of: basin.shp, basin.dbf, basin.prj, basin.shx
-7. sq_fitness.txt
-8. rout_unit.con
+  * shapfile used in SWAT+ modelling allowing the matching of HRU location and activation
+6. sq_fitness.txt
+  * four comma separated values indicating the status quo of objectives, must have same order as pareto_fitness.txt
+```
+-6880, -0.052, 59069.165, 0
+```
+7. rout_unit.con
+  * connection file used in SWAT+ modelling delineating the transport of water between HRUs, channel and aquifer
 
 
 ## Files created and used in the process
