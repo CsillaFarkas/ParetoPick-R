@@ -64,7 +64,8 @@ server <- function(input, output, session) {
   #results table
   check_files<- reactiveVal(NULL)
   sols <- reactiveVal()
-  sols2 <- reactiveVal()
+  sols2 <- reactiveVal() #for boxplot
+  sols3 <- reactiveVal() #for objectives vs. cluster variables
   #catchment shapes
   cm <- reactiveVal()
   needs_buffer <- reactiveVal()
@@ -540,10 +541,6 @@ server <- function(input, output, session) {
         
         
       }
-    
-   
-   
-    
 
     
     ## update slider labels based on objectives
@@ -947,11 +944,11 @@ server <- function(input, output, session) {
       rom = which(apply(scat_abs, 1, function(row) all(row == er())))
       col = rep("grey",nrow(scat_abs))
       col[rom] = "#FF5666"
-      sizz = rep(2.5, nrow(scat_abs))
+      sizz = rep(2.8, nrow(scat_abs))
       sizz[rom] = 3
     }else{col = rep("grey",nrow(scat_abs))
     
-    sizz = rep(2.5, nrow(scat_abs))}
+    sizz = rep(2.8, nrow(scat_abs))}
     
     mima = get_mima(fit())
     
@@ -1554,6 +1551,9 @@ server <- function(input, output, session) {
     updateSelectInput(session, "col_var2", choices = choices, selected = rng_plt()[3])
     updateSelectInput(session, "size_var2",choices = choices, selected = rng_plt()[4])
     
+    updateSelectInput(session, "x_var_pcs_vs", choices = choices, selected = rng_plt()[1])
+    
+    
     observe({
       if(all(fit()[[input$x_var2]]<=0) && 
          all(fit()[[input$y_var2]]<=0)){shinyjs::show("rev_plot2")}else{shinyjs::hide("rev_plot2")}
@@ -1627,9 +1627,8 @@ server <- function(input, output, session) {
           all_py_out <- file.info(check_files())
 
           current_py_out <- rownames(all_py_out)[which.max(all_py_out$mtime)]
-          
-          sols_data = read.csv(current_py_out)
-          
+          sols_data = read.csv(current_py_out,check.names = F)
+
           new_col_sol = c("optimum", objectives(),"cluster size","cluster number","outlier")
           
           sols(sols_data %>% rownames_to_column("optimum") %>%
@@ -1646,8 +1645,20 @@ server <- function(input, output, session) {
           sols2(sols_data %>% rownames_to_column("optimum") %>%  #for boxplot the whole thing is needed
                   rename_with(~new_col_sol[1:5],1:5))
           
-     
+          sols3(sols_data %>% 
+                  dplyr::filter(!is.na(Representative_Solution)& Representative_Solution != "") %>%
+                  select(-Representative_Solution, -Cluster))
           
+          yoyo <<- sols3()
+          pcs_vs_vars = sols_data %>% #pull cluster variables 
+            dplyr::filter(!is.na(Representative_Solution)& Representative_Solution != "") %>%
+            select(-Representative_Solution, -Cluster,-objectives())%>%colnames()
+          
+          updateSelectInput(session, "y_var_pcs_vs", choices = pcs_vs_vars, selected = pcs_vs_vars[1])#drop down for cluster vs. objectives plot
+          updateSelectInput(session, "col_var_pcs_vs", choices = pcs_vs_vars, selected = pcs_vs_vars[2])#drop down for cluster vs. objectives plot
+          updateSelectInput(session, "size_var_pcs_vs", choices = pcs_vs_vars, selected = pcs_vs_vars[4])#drop down for cluster vs. objectives plot
+          
+
         }else{
           sols(data.frame(Message = "something went wrong - has the PCA run properly?"))
           # shinyjs::hide(id="plt_opti")
@@ -1660,8 +1671,7 @@ server <- function(input, output, session) {
           df <- sols() %>%
             mutate(across(where(is.numeric), round, digits = 2)) %>%
             mutate(across(where(is.numeric), ~as.numeric(gsub("-", "", as.character(.)))))
-          
-         
+
           df <- as.data.frame(df)
           colnames(df) <- names(sols())
           
@@ -1721,8 +1731,36 @@ server <- function(input, output, session) {
         ))
       }
     }
-    
-    #2 within-cluster
+    #2 objectives vs. decision space
+    clus_vs_var = function(){
+      req(objectives(),sols3(),input$x_var_pcs_vs,input$y_var_pcs_vs)
+      
+      if(is.null(check_files())) { #sol is only useful if python has run
+        return(sols(data.frame(Message = 
+                                 'something went wrong - has the PCA run properly? 
+                                  You can check the output folder for files with names containing "cluster" or
+                                 "representative solutions" or both ')))
+      }else{
+        req(objectives(),sols())
+        sol<<-sols()[,c(objectives(),"cluster number")]
+        
+        if(!is.null(input$antab_rows_selected)){
+          
+          selected_row <- input$antab_rows_selected
+          selected_data <- sols3()[selected_row,]
+          
+        }else{selected_data <- NULL}
+        
+        
+      return(pcs_vs_var(dat = sols3(),x_var = input$x_var_pcs_vs, y_var =input$y_var_pcs_vs, 
+                        col_var=input$col_var_pcs_vs, size_var=input$size_var_pcs_vs, 
+                        flip =input$flip,
+                        sel_tab = selected_data
+      ))
+
+    }
+    }
+    #3 within-cluster
     clus_dis_plt = function(){
       req(objectives(),sols(), sols2(), fit())
       
@@ -1744,7 +1782,7 @@ server <- function(input, output, session) {
       }else{selected_data <- NULL} 
     }
     
-    #3 - share_con per measure
+    #4 - share_con per measure
     clus_share_con_plt = function(){
       req(objectives(),sols(), sols2(), fit())
       
@@ -1765,10 +1803,23 @@ server <- function(input, output, session) {
     }
     
     #switch between plots/functions
+    observeEvent(input$show_pareto,{ #default
+      if (input$show_pareto) {
+        output$par_plot_optima <- renderPlot({clus_res_plt()})
+        updateCheckboxInput(session, "show_share_con", value = FALSE)
+        updateCheckboxInput(session, "show_boxplot", value = FALSE)
+        updateCheckboxInput(session, "show_pca_vs_var", value = FALSE)
+        
+      }
+    })
+    
+    
     observeEvent(input$show_boxplot,{
       if (input$show_boxplot) {
         output$par_plot_optima <- renderPlot({clus_dis_plt()})
         updateCheckboxInput(session, "show_share_con", value = FALSE)
+        updateCheckboxInput(session, "show_pca_vs_var", value = FALSE)
+        updateCheckboxInput(session, "show_pareto", value = FALSE)
         } 
     })
       
@@ -1776,11 +1827,17 @@ server <- function(input, output, session) {
       if (input$show_share_con) {
         output$par_plot_optima <- renderPlot({clus_share_con_plt()})
         updateCheckboxInput(session, "show_boxplot", value = FALSE)
+        updateCheckboxInput(session, "show_pca_vs_var", value = FALSE)
+        updateCheckboxInput(session, "show_pareto", value = FALSE)
       } 
     })
       
-    observe({if(!(input$show_boxplot) && !(input$show_share_con)){
-      output$par_plot_optima <- renderPlot({clus_res_plt()})
+    observeEvent(input$show_pca_vs_var,{
+      if(input$show_pca_vs_var){
+      output$par_plot_optima <- renderPlot({clus_vs_var()})#calling pcs_vs_var()
+      updateCheckboxInput(session, "show_boxplot", value = FALSE)
+      updateCheckboxInput(session, "show_share_con", value = FALSE)
+      updateCheckboxInput(session, "show_pareto", value = FALSE)
       
     }})
     

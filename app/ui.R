@@ -740,7 +740,8 @@ ui <-
                                       textOutput("analysis_no_clustering")), 
                          
                          mainPanel(
-                           id ="main_analysis", 
+                           id ="main_analysis",
+                           div(id="analysis_random", #the whole right side of plots and extra stuff under plot can be hidden
                            fluidRow(
                              column(6,
                                     div(id="table_an_title","Optima Representative for Clusters",style="text-align; center;font-size: 150%;"),
@@ -750,22 +751,45 @@ ui <-
                                     
                                     div(style = "overflow-x: auto;", DTOutput("antab"))),
                              column(6,
-                                    tags$div("The default plot shows the pareto front.",style = "text-align: center;font-size: 125%;"),
+                                    tags$div("Select among plots.",style = "text-align: center;font-size: 125%;"),
                                     fluidRow(
-                                      column(6,checkboxInput("show_boxplot",label="show the objectives' within-cluster distribution (select from table)",value=FALSE)),
-                                      column(6,checkboxInput("show_share_con",label="show the individual measures' share in total considered area (select from table)",value=FALSE))
-                                    ),
+                                      column(3,checkboxInput("show_pareto",label="Plot 1: Pareto solutions representative for the clusters.",value=TRUE)),
+                                      column(3,checkboxInput("show_pca_vs_var",label="Plot 2: Objectives (X-axis) versus cluster variables (Y-axis, colour, size) (select from drop down)",value=FALSE)),
+                                      column(3,checkboxInput("show_boxplot",label="Plot 3: The objectives' within-cluster distribution (select one from table)",value=FALSE)),
+                                      column(3,checkboxInput("show_share_con",label="Plot 4: The individual measures' share in total considered area (select several from table)",value=FALSE))
+                                     
+                            
+                                      ),
                                     plotOutput("par_plot_optima"),
-                                    checkboxInput("add_whole", label = "Show the whole Pareto front", value = FALSE),
+                                    
+                                    
+                                   conditionalPanel( # pareto plot drop down elements 
+                                     
+                                     condition = "input.show_pareto == true", 
+                                     
+                                                     checkboxInput("add_whole", label = "Show the whole Pareto front", value = FALSE),
                                     checkboxInput("add_sq",label = "Show status quo",value = FALSE),
                                     div(id="rev_plot2",checkboxInput("rev_box2",label="reverse x and y axes",value = FALSE))%>%hidden(),
-                                    div(id="analysis_random",
+                                    
                                         fluidRow(
                                           column(3,selectInput(inputId = "x_var2",label = "X-Axis", choices = NULL, multiple = F, selected=NULL)),
                                           column(3,selectInput(inputId = "y_var2",label = "Y-Axis", choices = NULL, multiple = F,selected=NULL)),
                                           column(3,selectInput(inputId = "col_var2",label = "Colour", choices = NULL, multiple = F,selected=NULL)),
                                           column(3,selectInput(inputId = "size_var2",label = "Size", choices = NULL, multiple = F,selected=NULL))
-                                        ),
+                                        )),
+                                   
+                                   
+                                   conditionalPanel( #decision vs. objective space drop down elements
+                                     condition = "input.show_pca_vs_var == true",
+                                     checkboxInput("flip",label = "flip x and y axes",value = FALSE),
+                                     
+                                     fluidRow(
+                                     column(3,selectInput(inputId = "x_var_pcs_vs", label = "X-Axis (Objective)", choices = NULL, multiple =F, selected = NULL)),
+                                     column(3,selectInput(inputId = "y_var_pcs_vs", label = "Y-Axis (Cluster variable)", choices = NULL, multiple =F, selected = NULL)),
+                                     column(3,selectInput(inputId = "col_var_pcs_vs", label = "Colour (Cluster variable)", choices = NULL, multiple =F, selected = NULL)),
+                                     column(3,selectInput(inputId = "size_var_pcs_vs", label = "Size (Cluster variable)", choices = NULL, multiple =F, selected = NULL))
+                                     
+                                   )),
                                         
                                         div(
                                           style = "display: inline-block; vertical-align: top; margin-right: 0px;",
