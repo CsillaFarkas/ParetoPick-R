@@ -285,12 +285,26 @@ ui <-
                                div(
                                  id = "obj_first",
                                  "The objective names should align with the first four columns of the pareto_fitness.txt file:",
-                                 style = "text-align: left; font-size:115%", 
+                                 style = "text-align: left; font-size:115%",
+                                 div("*Please note, you can change these names later but this will require a Hard Reset below.",
+                                     style="text-align: left; font-size:90%"),
                                  textInput("short1", "Objective 1\n (Column 1)"), 
                                  textInput("short2", "Objective 2\n (Column 2)"), 
                                  textInput("short3", "Objective 3\n (Column 3)"), 
                                  textInput("short4", "Objective 4\n (Column 4)"),
-                                 actionButton("save_par_fiti", "Save")), 
+                                 actionButton("save_par_fiti", "Save")),
+                               
+                               
+                               br(),
+                               
+                               div(id="units",
+                                   "If you want you can supply the objectives' units and save them for future use:",
+                                   style= "text-align: left; font-size:115%",
+                                   textInput("unit1","unit Objective 1", value = ""),
+                                   textInput("unit2","unit Objective 2", value = ""),
+                                   textInput("unit3","unit Objective 3", value = ""),
+                                   textInput("unit4","unit Objective 4", value = ""),
+                                   actionButton("save_unit","Save")),
                                
                                br(),
                                
@@ -366,19 +380,11 @@ ui <-
                          sidebarPanel( width = 3,
                                        
                                        
-                                       div(id="units",
-                                           "If you want you can supply the objectives' units and save them for future use:",
-                                           style= "text-align: left; font-size:115%",
-                                           textInput("unit1","unit Objective 1", value = ""),
-                                           textInput("unit2","unit Objective 2", value = ""),
-                                           textInput("unit3","unit Objective 3", value = ""),
-                                           textInput("unit4","unit Objective 4", value = ""),
-                                           actionButton("save_unit","Save")),
                                        
                                        textOutput("uploaded_pareto"),
                                        br(),
                                        br(),
-                                       div(
+                                       div(id="play_sidebar",
                                          column(10,
                                                 div("Objective Range", style = "text-align: left; font-size:150%; margin-top: 40px;"),
                                                 
@@ -499,7 +505,7 @@ ui <-
                              titlePanel("Configure Cluster Settings"),
                              
                     mainPanel(
-                  
+                  div(id="config_all",
                       
                   
                   
@@ -532,9 +538,10 @@ ui <-
                                         uiOutput("spinner_output"),
                                         type = 4  , color = "#F7A600"
                                       )
-                        )##################CONFIG MAIN PANEL END
-                                    
-                             ),
+                  )
+                  
+                    )##################CONFIG MAIN PANEL END
+                     ), 
                      
                      ## CORRELATION ANALYSIS PANEL ####
                 tabItem(tabName = "correlation_analysis",
@@ -800,7 +807,7 @@ ui <-
                                           downloadButton("download_clus_plot", "Download Plot")
                                         )))),
                            
-                           actionButton("plt_opti", "Plot Optimum"), textOutput("no_row") %>% hidden(), 
+                           actionButton("plt_opti", "Plot map of measure implementation under selected optima"), textOutput("no_row") %>% hidden(), 
                            div(id="meas_low",textOutput("meas_low")),
                            div(id="plot_spinner",
                                uiOutput("comp_map")%>% withSpinner(color = "#F7A600", hide.ui = TRUE)),
@@ -868,7 +875,7 @@ ui <-
                            
                           
                            
-                           
+                           div(id="all_ahp",
                            fluidRow(
                              div("2. Assign weights",style = "text-align: center; font-size: 150%;"),
                              
@@ -941,12 +948,12 @@ ui <-
                              br(),
                              br(),
                              div(style = "display: inline-block; vertical-align: top; margin-left: 0px;",
-                                 actionButton("plt_bo", "Plot Measure Implementation under best option"),
+                                 actionButton("plt_bo", "Plot map of measure implementation under best option"),
                              ),
                              div(id="ahp_spinner", 
                                  uiOutput("plt_bo_measure")
                                  %>% withSpinner(color = "#F7A600", hide.ui = TRUE))
-                             
+                           ) 
                            )
                            
                          )
