@@ -95,51 +95,35 @@ id,	name,	nswrm,	obj_id
 
 
 
-
-
 # Assumptions
 
-* General to do and open questions
+* General 
   * as "land use" measures currently only hedge, buffer and grassslope considered - if more needed global.R, functions.R (write_corr) and convert_optain require adapting
   * new nswrm_priorities() function currently considers: pond, constr_wetland, wetland, hedge, buffer, grassslope, lowtillcc, lowtill, droughtplt
   * do the current default settings produce reasonable cluster outputs across all catchments? the default might need outlier testing 
+  * in AHP, the initial state of the pairwise comparison as "Equal" amplifies the mathematical definition of inconsistency, therefore only when at least three sliders are NOT set to "Equal" is inconsistency considered at all
   * stratified variables such as lowflow in the Schoeps do not work in the tool, the sliders cannot be moved
-  * users should not produce optimisation outputs with values below 0 and if possible no values smaller than 1, the app allows a rescale to roughly balance the values between 1 and 100 but it is turned off
-  * share to GitLab
-  * write a comprehensive Readme walking the user through the use of the tool
+  * users should not produce optimisation outputs with values below 0 and if possible no values smaller than 1, the app's rescaling is (balance values to between 1 and 100) is turned off
+  * not yet shared to Gitlab
 
-
-* AHP
-  * the initial state of the pairwise comparison as "Equal" amplifies the mathematical definition of inconsistency, therefore only when at least three sliders are NOT set to "Equal" is inconsistency considered at all
-  * normalising the dataframe prior to weighting relies on scaling to between 0 and 1
+ 
 
 # To do
-## Content
-* Data Prep tab:
-  * explain the altered scale and minus removal
-  * allow user to change labels reflecting for altered scale
-
-* Visualising tab:
-  * add one plot of map with measure frequency, percentage of implemented across current selection
-
-* Configure tab
-  * outlier testing in default run?
-  * check for missing files
-
-## Workflow
-* General
+## Prio 1
+  * clicking within the Pareto plot to select solution and option to plot respective measure implementation (Visualisation)
+  * rename buttons to clarify which produce a map
+  * explain the minus removal (Data Prep)
+  * add one plot of map with measure frequency, percentage of implemented across current selection (Visualising)
+  * check for missing files (Configure)
   * convert_optain requires some failsafe controls for empty values
+  * square instead of rectangle maps 
+  * HTML or if possible .png download for individual measure implementation maps, not possible across all (Cluster Analysis)
 
-* Visualisation tab
-  * catch empty selection and replace "replacement has lenght zero" with "no optima fulfill these conditions", fix reload when selection changes
- 
-Correlation tab
-  * only strike through the variable that has been removed
-  * new button to jump to correlation tab
-
-* Analysis tab
-  * HTML download for individual measure implementation maps, not possible across all
-
-* AHP
-  * add checkbox to allow showing all cards at once
-  * show only one card at once, remove all others when one is clicked
+## Prio 2
+  * catch empty selection and replace "replacement has lenght zero" with "no optima fulfill these conditions", fix reload when selection changes (Visualisation)
+  * "whole front" plot in the back instead of the front (Cluster Analysis and AHP)
+  * only strike through the variable that has been removed (Correlation)
+  * new button to jump to cluster tab (Correlation)
+  * download button to select the proper function according to which plot is selected (Cluster Analysis)
+  * hide card when clicked again (AHP)
+  
