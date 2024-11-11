@@ -227,9 +227,9 @@ server <- function(input, output, session) {
     observeEvent(input$save_par_fiti, {
       short <<- c(input$short1, input$short2, input$short3, input$short4)
       objectives(short)
-      
+      shinyjs::hide("obj_first")
       saveRDS(short, file = "../input/object_names.RDS")
-      
+    
       updateTextInput(session,"col1", value = objectives()[1] )
       updateTextInput(session,"col2", value = objectives()[2] )
       updateTextInput(session,"col3", value = objectives()[3] )
@@ -239,6 +239,7 @@ server <- function(input, output, session) {
                     var1_lab="",var2_lab="",var3_lab="",var4_lab="")#save label for future use (pulled w/ read_config_plt in Data prep, pca and cluster)
       
       output$obj_conf <- renderTable({
+        if(file.exists(pareto_path)){
         rng = get_obj_range(colnames = short)
         bng = rng
         
@@ -248,7 +249,10 @@ server <- function(input, output, session) {
           }
         }
         bng
-        
+        }else{data.frame(objective = character(0),
+                                     min = numeric(0),
+                                     max = logical(0),
+                                     stringsAsFactors = FALSE)}  
       },rownames = T)
       
       
@@ -521,6 +525,8 @@ server <- function(input, output, session) {
       
       
       }else {
+        shinyjs::hide("obj_first")
+        
         short = readRDS("../input/object_names.RDS")
         objectives(short)
         
@@ -572,7 +578,8 @@ server <- function(input, output, session) {
        
         yo = fit() %>% mutate(across(everything(), ~ scales::rescale(.)))%>%mutate(id = row_number())
         f_scaled(yo)
-       
+        
+      
         yo2 <- pull_high_range(fit())
         rng_plt(yo2)
         
@@ -620,13 +627,22 @@ server <- function(input, output, session) {
           }
           default_vals(new_defaults)
           initial_update_done$initial = TRUE
-      }}
+          }}else{
+            output$uploaded_pareto <- renderText({"To be able to proceed, please provide pareto_fitness.txt in the previous tab."})
+        shinyjs::hide("main_analysis")
+            shinyjs::hide("all_ahp")
+            shinyjs::hide("ahp_analysis")
+            shinyjs::hide("config_all")
+            shinyjs::hide("play_sidebar")
+            shinyjs::hide("tab_play1")
+            shinyjs::hide("tab_play2")
+      }
     })
     
   
     
     ## get unit input 
-   if(file.exists("../input/units.RDS")){shinyjs::hide(id="units")
+   if(file.exists("../input/units.RDS")){#shinyjs::hide(id="units")
         uns <<-  readRDS("../input/units.RDS")
       }else{
         
@@ -1983,7 +1999,7 @@ server <- function(input, output, session) {
   ### AHP ####
   observeEvent(input$tabs == "ahp",{
     if(!file.exists("../data/pareto_fitness.txt")){ #check if fit() has been created yet
-      output$nothing_ran_ahp <- renderText({HTML("please provide the pareto_fitness.txt in either the Data Preparation or the Visualising the Pareto Front tab.")})
+      output$nothing_ran_ahp <- renderText({HTML("please provide the pareto_fitness.txt in the Data Preparation tab.")})
     }else{ shinyjs::hide("nothing_ran_ahp")
       shinyjs::runjs("toggleSidebar(false);")  # Hide sidebar
     }      
