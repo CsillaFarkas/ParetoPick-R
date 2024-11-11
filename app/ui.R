@@ -887,6 +887,7 @@ ui <-
                                actionButton("ahp_card6", "Show Card 6", 
                                             style="background-color: #f4f4f4; border-color: #2e6da4"),
                                  ),br(),
+                             checkboxInput("show_all_cards", "Show all comparisons", value = FALSE), 
                              br(),
                              div(id="sel_wgt","Selected Weights", style = "text-align: center; font-size: 150%;",
                                  div(tableOutput("weights_output"), style = "margin: 0 auto; width: fit-content;")),

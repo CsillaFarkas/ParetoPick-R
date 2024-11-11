@@ -91,7 +91,7 @@ server <- function(input, output, session) {
   coma = reactiveVal()
   range_controlled = reactiveVal(NULL)
   initial_update_done = reactiveValues(initial = FALSE)
-  card_shown <- reactiveValues(card1 = FALSE, card2 = FALSE, card3 = FALSE, card4 = FALSE, card5 = FALSE, card6 = FALSE)
+  card_shown <- reactiveValues(ahp_card1 = FALSE, ahp_card2 = FALSE, ahp_card3 = FALSE, ahp_card4 = FALSE, ahp_card5 = FALSE, ahp_card6 = FALSE)
   sliders <- reactiveValues()
   #figure in analysis rendering
   is_rendering <- reactiveVal(FALSE)
@@ -2396,49 +2396,60 @@ server <- function(input, output, session) {
   
 
   for (k in 1:6) {
-    
-    
     local({
-      i = k
+      i <- k
       ahp_card <- paste0("ahp_card", i)
-      card <- paste0("card",i)
-      plt = paste0("plot",i)
-      tabl = paste0("table",i)
-      cardui = paste0("card",i,"_ui")
+      plt <- paste0("plot", i)
+      tabl <- paste0("table", i)
+      cardui <- paste0("card", i, "_ui")
+      
+      
+      observeEvent(input$show_all_cards, {
+        if (input$show_all_cards) {
+          # Show all cards
+          for (j in 1:6) {
+            card_id <- paste0("card", j, "_ui")
+            shinyjs::show(card_id)
+            runjs(paste0('document.getElementById("ahp_card', j, '").style.backgroundColor = "#0487bf";'))
+          }
+        } else {
+         
+          for (j in 1:6) {
+            card_id <- paste0("card", j, "_ui")
+            shinyjs::hide(card_id)
+            runjs(paste0('document.getElementById("ahp_card', j, '").style.backgroundColor = "#f4f4f4";'))
+          }
+        }
+      })
       
       observeEvent(input[[ahp_card]], {
-
-        sliid <- isolate(sids()[i])  
-        slider_val <- slider_ahp[[sliid]] 
-        
-        card_shown[[card]] <- !card_shown[[card]]
-        
-        # observe({ slider_ahp[[sliid]] <- input[[sliid]]})
-       
-        if(card_shown[[card]]){
-          runjs(paste0('document.getElementById("', ahp_card, '").style.backgroundColor = "#F7A600";'))
-          
-          shinyjs::show(cardui)
-          output[[plt]] <- renderPlot({create_plot(i)})
-          
-          output[[tabl]] <-  renderTable({create_r2tab(i)}, rownames = F, colnames = F, sanitize.text.function = function(x) x)
-          
-          #title, sliid, plot, table, session, slider_val
-          output[[cardui]] <- renderUI({
-            create_card(ahp_combo()[i],sliid=sliid, plt,tabl,session,slider_val=slider_val,sliders )
-          })
-          
-         
-          
-          }else{
-            shinyjs::hide(paste0(cardui))
-            runjs(paste0('document.getElementById("', ahp_card, '").style.backgroundColor = "#0487bf";'))
-            
+        if (!input$show_all_cards) {
+          for (j in 1:6) {
+            current_cardui <- paste0("card", j, "_ui")
+            if (j != i) {
+              shinyjs::hide(current_cardui)
+              runjs(paste0('document.getElementById("ahp_card', j, '").style.backgroundColor = "#f4f4f4";'))
+            } else {
+              runjs(paste0('document.getElementById("ahp_card', j, '").style.backgroundColor = "#0487bf";'))
+              
+              shinyjs::show(current_cardui)
+            }
           }
+        }
+      })
+      
+      output[[plt]] <- renderPlot({ create_plot(i) })
+      output[[tabl]] <- renderTable({ create_r2tab(i) }, rownames = FALSE, colnames = FALSE, sanitize.text.function = function(x) x)
+      
+      output[[cardui]] <- renderUI({
+        create_card(ahp_combo()[i], sliid = sids()[i], plt, tabl, session, slider_val = slider_ahp[[sids()[i]]], sliders)
       })
     })
-    
   }
+  
+  
+  
+
   
   observe({
     lapply(sids(), function(sliid) {
