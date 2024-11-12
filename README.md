@@ -120,7 +120,7 @@ id,	name,	nswrm,	obj_id
   * add a brief glossary clarifying variable names and other abbreviations 
 
 ## Prio 2
-  * catch empty selection and replace "replacement has lenght zero" with "no optima fulfill these conditions", fix reload when selection changes (Visualisation)
+  * catch empty selection and replace "replacement has length zero" with "no optima fulfill these conditions", fix reload when selection changes (Visualisation)
   * "whole front" plot in the back instead of the front (Cluster Analysis and AHP)
   * only strike through the variable that has been removed (Correlation)
   * new button to jump to cluster tab (Correlation)
