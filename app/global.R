@@ -67,14 +67,3 @@ output_dir <- "../output/"
 pareto_path <- "../data/pareto_fitness.txt" #used too frequently..
 if(!dir.exists(save_dir)){  dir.create(save_dir)}
 if(!dir.exists(output_dir)){  dir.create(output_dir)}
-
-##descriptions of variables included in PCA and created in convert_optain.R
-
-optain_pca_content <- c(
-  
-  "share_con"= "Each measure's share in area considered for implementation (*).",
-  "moran"= "The median spatial autocorrelation between HRUs allocated to each implemented measure.",
-  "channel_frac"= "The median fraction of water under each implemented measure that is routed directly into the channel (*).",
-  "linE"= "The ratio between structural and management measures.",
-  "lu_share" = "The share of land use measures (hedge, buffer, grassslope) in catchment area considered for implementation."
-)

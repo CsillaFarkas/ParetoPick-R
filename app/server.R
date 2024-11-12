@@ -32,13 +32,14 @@ server <- function(input, output, session) {
   all_choices = reactiveVal()
   ahp_choices = reactiveVal()
   isElementVisible = reactiveVal(FALSE)
+  clickpoint_button <- reactiveVal(FALSE) #control click point button visibility
   
   #play around
   rv <-reactiveValues(sizes= NULL,colls = NULL) #color for parallel axes
   er <- reactiveVal(NULL) #position
-  
+  sel_tay = reactiveVal(NULL)
   best_option = reactiveVal(NULL)
-  
+  fit1 = reactiveVal()
   #control/limit range of objectives, works in combination with slider input$ran1 etc.
   default_vals = reactiveVal(list(ran1 = c(0,100),
                                   ran2 = c(0,100),
@@ -545,10 +546,7 @@ server <- function(input, output, session) {
             ahp_combo(c(ahp_combo(), new_label))  #identifier for ahp scatter plots
             k = k+1}}
         
-        
-        
       }
-
     
     ## update slider labels based on objectives
     observe({
@@ -609,7 +607,6 @@ server <- function(input, output, session) {
               range_value = append(range_value,(rownames(min_max[i, ])))
               
             }
-            
           
           if ((min_max$max[i] - min_max$min[i]) < 2) {
             min_max$max[i] = round(min_max$max[i],3)
@@ -627,9 +624,25 @@ server <- function(input, output, session) {
           }
           default_vals(new_defaults)
           initial_update_done$initial = TRUE
-          }}else{
+          }
+        
+        ## Configure tab and Analysis turned off (the latter would still work but with old data)
+        if(!file.exists("../input/var_corr_par.csv")){
+          shinyjs::hide("config_all")
+          shinyjs::hide("main_analysis")
+          
+          shinyjs::hide("show_extra_dat") #AHP hide option to show clusters
+          shinyjs::hide("random_ahp") #AHP hide option to show clusters
+          updateCheckboxInput(session, "show_extra_dat", value = FALSE)#turn it off (has default TRUE)
+          
+          output$config_needs_var = renderText({"Please click Run Prep in the Data Preparation tab before proceeding here!"})
+          output$analysis_needs_var = renderText({"Please click Run Prep in the Data Preparation tab before proceeding here!"})}
+      
+        
+      }else{#not even pareto_fitness available
+          output$config_needs_var = renderText({"Please provide pareto_fitness.txt and click Run Prep in the Data Preparation tab before proceeding here!"})
             output$uploaded_pareto <- renderText({"To be able to proceed, please provide pareto_fitness.txt in the previous tab."})
-        shinyjs::hide("main_analysis")
+            shinyjs::hide("main_analysis")
             shinyjs::hide("all_ahp")
             shinyjs::hide("ahp_analysis")
             shinyjs::hide("config_all")
@@ -638,8 +651,6 @@ server <- function(input, output, session) {
             shinyjs::hide("tab_play2")
       }
     })
-    
-  
     
     ## get unit input 
    if(file.exists("../input/units.RDS")){#shinyjs::hide(id="units")
@@ -692,12 +703,86 @@ server <- function(input, output, session) {
       return(plt_sc_optima(dat=dat,    x_var = input$x_var3,
                     y_var = input$y_var3,
                     col_var = input$col_var3,
-                    size_var = input$size_var3, status_q = input$add_sq_f,an_tab=T, rev = input$rev_box))
+                    size_var = input$size_var3, status_q = input$add_sq_f,an_tab=T, rev = input$rev_box,
+                    sel_tab = sel_tay()))
       
       
     }
     
     output$first_pareto <- renderPlot({ first_pareto_fun() })
+    observe({ 
+    # measure plot prep (same as in AHP)
+    if(file.exists("../data/hru.shp")) {
+      if (file.exists("../input/hru_in_optima.RDS")) {
+        if(!is.null(fit())){ 
+        eve = fit()%>% rownames_to_column("optimum")
+        cm(
+          pull_shp(
+            layername = "hru",
+            optims = eve,
+            hru_in_opt_path = "../input/hru_in_optima.RDS"
+          )
+        )
+          }
+        
+      }
+      needs_buffer(pull_buffer())
+    }
+    if(file.exists("../data/hru.con")){lalo <<- plt_latlon(conpath = "../data/hru.con")}
+    
+    })
+    observeEvent(input$clickpoint,{#selection for additional ring in point plot
+      clickpoint_button(TRUE)
+      req(f_scaled(),objectives(),fit(),input$obj1,input$x_var3)
+      #match scaled input with unscaled fit() to create dat
+      dat = scaled_abs_match(minval_s=c(input$obj1[1],input$obj2[1],input$obj3[1],input$obj4[1]),
+                             maxval_s=c(input$obj1[2],input$obj2[2],input$obj3[2],input$obj4[2]),
+                             abs_tab = fit(),scal_tab = f_scaled(),
+                             allobs = objectives(),smll=F)
+      #match clicked data point
+      xc <- input$clickpoint$x
+      yc <- input$clickpoint$y
+
+      x_to_match <- input$x_var3
+      y_to_match <- input$y_var3
+      
+      yo <- dat %>% slice(which.min((.[[x_to_match]] - xc)^2 + (.[[y_to_match]] - yc)^2))
+      sel_tay(yo)
+      
+      })
+    
+    output$clickpoint_map <- renderUI({
+      if(clickpoint_button()){
+        actionButton("map_sel", "Plot measure implementation map of selected optimum")
+        } 
+    })
+    
+    observeEvent(input$map_sel,{
+      req(fit(),sel_tay())
+      fit1(fit() %>% rownames_to_column("optimum"))
+      
+      cols = objectives()
+      values = sel_tay()
+
+      mv <- fit1() %>%
+        filter(across(all_of(cols), ~. %in% values))
+
+      single_meas_fun2 = function(){
+        req(mv,needs_buffer(),lalo,cm())
+        
+        hru_one = plt_sel(shp=cm(),opti_sel = mv$optimum)
+        mes = read.csv("../data/measure_location.csv")
+        
+        col_sel = names(hru_one)[grep("Optim",names(hru_one))] 
+        
+        m1 = plt_lf(data=hru_one,  mes = unique(mes$nswrm),la = lalo[1],lo =lalo[2],
+                    buff_els=needs_buffer(),col_sel=col_sel)
+        return(m1)
+        
+      }
+      output$plt_play_measure = renderUI({single_meas_fun2()})
+    })
+    
     
     output$download_fp_plot <- downloadHandler(
       filename = function() {
@@ -1045,7 +1130,7 @@ server <- function(input, output, session) {
       
       ##default correlation/cluster run
       observeEvent(input$run_defaults, {
-        req(rng_plt(),rng_plt_axes())
+        req(rng_plt())
         if(is.null(corr_file_check())){
         
         output$spinner_progress <- renderText({ "Clustering is running, please wait..." })
@@ -1070,7 +1155,7 @@ server <- function(input, output, session) {
         
         pca_content = all_var[-which(all_var %in% unique(high_corr$variable1))]
 
-        if(file.exists("../input/units.RDS")){axiselected(readRDS("../input/units.RDS"))}
+        if(file.exists("../input/units.RDS")){axiselected(readRDS("../input/units.RDS"))}else{axiselected(c("-","-","-","-"))}
         axis_high_range <- axiselected()[rng_plt_axes()]#reorder axis labels
         #prep pca
         write_corr(pca_content = pca_content,pca=T, cor_analysis = F)
@@ -1240,14 +1325,14 @@ server <- function(input, output, session) {
       find_high_corr(corr,threshold=input$thresh, tab=T, strike=NULL) }) #tab = T means this returns the full table, =F is for pulling variables
    
     # top table with selected elements
-    output$selements <- renderTable({
-      
-      sel_vars = input$selements
-      opt_pca <- optain_pca_content[sel_vars]
-      
-      data.frame(Variable = sel_vars,Description = opt_pca)
-      
-      },colnames = F)
+    # output$selements <- renderTable({
+    #   
+    #   sel_vars = input$selements
+    #   opt_pca <- optain_pca_content[sel_vars]
+    #   
+    #   data.frame(Variable = sel_vars,Description = opt_pca)
+    #   
+    #   },colnames = F)
   })
    # Drop Down Menu with subset of those with selected threshold
     observe({updateSelectInput(session, "excl",choices = find_high_corr(corr,threshold=input$thresh, tab=F))})
@@ -2277,7 +2362,6 @@ server <- function(input, output, session) {
   
   single_meas_fun = function(){
     req(bo,needs_buffer(),lalo,cm())
-    
     hru_one = plt_sel(shp=cm(),opti_sel = bo$optimum)
     mes = read.csv("../data/measure_location.csv")
     

@@ -272,14 +272,14 @@ ui <-
                                    
                                div("pareto_fitness.txt",style = "text-align: left; font-size:115%;",
                                    div(style = "margin-top: -15px;",fileInput("par_fit", "", accept = ".txt"),
-                                       div(style= "vertical-align: top; margin-top: -25px;",actionButton("save_paretofit","Save")))),
+                                       div(style= "vertical-align: top; margin-top: -15px;",actionButton("save_paretofit","Save")))),
                                
                                
                                
                                br(),
                                div("sq_fitness.txt (optional)",style = "text-align: left; font-size:115%;",
                                    div(style = "margin-top: -15px;",fileInput("sq_in", "", accept = ".txt"),
-                                   div(style= "vertical-align: top; margin-top: -25px;",actionButton("save_sq_in","Save")))),
+                                   div(style= "vertical-align: top; margin-top: -15px;",actionButton("save_sq_in","Save")))),
                              
                                br(),
                                div(
@@ -372,7 +372,7 @@ ui <-
                        titlePanel("Visualising the Optimisation Output"),
                        
                        wellPanel(    p("This tab lets you plot the pareto front in two different ways
-                              and lets you explore the effects of reduced objective ranges. You can select specific points on the pareto front by clicking on the line plot.")),
+                              and lets you explore the effects of reduced objective ranges. You can select specific points on the pareto front by clicking on them or by selecting them on the line plot.")),
                        
                        sidebarLayout(
                          
@@ -421,8 +421,12 @@ ui <-
                            tags$style(HTML(".js-irs-13 .irs-single, .js-irs-12 .irs-bar-edge, .js-irs-12 .irs-bar {background: #f28522 ;border-top: 1px solid #f28522 ;border-bottom: 1px solid #f28522;}.js-irs-12 .irs-from, .js-irs-12 .irs-to, .js-irs-12 .irs-single { font-size: 13px;background: #f28522 !important }")),
                            
                            
-                           div(id = "tab_play1",div("Pareto Plot", style = "text-align: left; font-size:150%"),
-                               plotOutput("first_pareto"), 
+                           div(id = "tab_play1",
+                               
+                               
+                               
+                               div("Pareto Plot", style = "text-align: left; font-size:150%"),
+                               plotOutput("first_pareto",click="clickpoint"), 
                                checkboxInput("add_sq_f",label = "Show status quo",value = FALSE),
                                div(id="rev_plot",checkboxInput("rev_box",label="reverse x and y axes",value = FALSE))%>%hidden(),
                                fluidRow(
@@ -431,14 +435,24 @@ ui <-
                                  column(3,selectInput(inputId = "col_var3", label = "Colour", choices = NULL, multiple = F, selected=NULL)),
                                  column(3,selectInput(inputId = "size_var3",label = "Size",   choices = NULL, multiple = F, selected=NULL))
                                ),
+                               uiOutput("clickpoint_map") ,
+                               br(),
                                div(
                                  style = "display: inline-block; vertical-align: top; margin-right: 0px;",
                                  textInput("fp_plot_savename", label = NULL, value = "pareto")
                                ),
                                div(
                                  style = "display: inline-block; vertical-align: top; margin-left: 0px;",
-                                 downloadButton("download_fp_plot", "Download Plot")),
+                                 downloadButton("download_fp_plot", "Download pareto plot")),
                                
+                               div(id="play_spinner", 
+                                   uiOutput("plt_play_measure")
+                                   %>% withSpinner(color = "#F7A600", hide.ui = TRUE)),
+                               
+                              br(),
+                               
+                               hr(style = "border-top: 2px solid #03597F;"), 
+                               br(),
                                fluidRow(
                                  column(12,
                                         fluidRow(column(6, div("Selected Objective Ranges (scaled)", style = "text-align: left; font-size:150%"),
@@ -504,12 +518,12 @@ ui <-
                              
                              titlePanel("Configure Cluster Settings"),
                              
-                    mainPanel(
-                  div(id="config_all",
-                      
-                  
-                  
-                        div(style = "text-align: left; font-size:150%; width: 100%;",
+                     mainPanel(
+                       textOutput("config_needs_var"), 
+                           
+                               
+              div(id = "config_all", 
+                    div(style = "text-align: left; font-size:150%; width: 100%;",
                                     "Would you like to limit the objective ranges prior to clustering?",
                               radioButtons("limra_clust", "", choices = c("Yes", "No"), selected = "No")),
                               
@@ -593,8 +607,8 @@ ui <-
                                mainPanel(div(id="corr_content", 
                                              
                                              # Display the selected elements from the checkbox group
-                                             div("Selected Variables", style = "text-align: left; font-size:150%"),
-                                             tableOutput("selements"),
+                                             # div("Selected Variables", style = "text-align: left; font-size:150%"),
+                                             # tableOutput("selements"),
                                              
                                              div("Correlation Analysis", style = "text-align: left; font-size:150%"),
                                              plotOutput("corrplot"),
@@ -628,6 +642,8 @@ ui <-
                                          p(HTML("The cluster outputs open in separate tabs and can be saved as images."))),
                              
                              sidebarLayout(sidebarPanel(
+                               
+                               
                                
                                textOutput("no_cluster"),
                                
@@ -747,6 +763,7 @@ ui <-
                                       textOutput("analysis_no_clustering")), 
                          
                          mainPanel(
+                           textOutput("analysis_needs_var"),
                            id ="main_analysis",
                            div(id="analysis_random", #the whole right side of plots and extra stuff under plot can be hidden
                            fluidRow(
