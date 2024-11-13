@@ -17,13 +17,12 @@ foo1 <- function(x){
 }
 ## check if any packages are missing (not only here but also for external convert_optain)
 foo1(c("corrplot", "dplyr","DT", "fs","fst", "geosphere", "ggplot2",  "ggtext", "gridExtra", 
-       "here",  "htmltools",   "ini",    "leaflet",  "leafsync",
+       "here",  "htmltools","htmlwidgets",   "ini",    "leaflet",  "leafsync",
        "mapview",  "plotly",  "processx",   "purrr",
         "quanteda",   "RColorBrewer",  "readr",  "reticulate",
        "scales",  "sf",  "shiny", "shinycssloaders","shinydashboard", 
        "shinyFiles", "shinyjs","shinythemes",  "shinyWidgets",  "sp", 
-       "spdep",  "tibble",  "tidyr",  "tidyverse",  "tmap",  "viridis"))
-
+       "spdep",  "tibble",  "tidyr",  "tidyverse",  "tmap",  "viridis", "webshot"))
 ## libraries required for app (not convert_optain)
 library(configr)#
 library(corrplot)#
@@ -34,7 +33,7 @@ library(fst)
 library(ggplot2)
 library(gridExtra) # or patchwork
 library(htmltools)
-# library(htmlwidgets) #save html files
+library(htmlwidgets) #save html files
 library(ini)#
 library(leaflet)#
 library(processx) # manage system processes from within shiny (e.g. for pulling R output into shiny)
@@ -57,7 +56,8 @@ library(tibble)
 library(tidyr)
 library(tidyverse)
 library(viridis)
-
+library(webshot)
+webshot::install_phantomjs()
 options(warn = -1)
 source("functions.R")
 
