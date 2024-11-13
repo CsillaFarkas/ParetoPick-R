@@ -110,7 +110,6 @@ id,	name,	nswrm,	obj_id
 
 # To do
 ## Prio 1
-  * clicking within the Pareto plot to select solution and option to plot map of respective measure implementation (Visualisation)
   * explain the minus removal (Data Prep)
   * add one plot of map with measure frequency, percentage of implemented across current selection (Visualising)
   * check for missing files (Configure)
