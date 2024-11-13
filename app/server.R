@@ -28,6 +28,7 @@ server <- function(input, output, session) {
   run_prep_possible = reactiveValues(files_avail = FALSE) #allow prep script to run when all required files available
   script_output <- reactiveVal("") # data prep R output
   dp_done = reactiveVal(FALSE) # checking if data prep R output is done
+  sel_tay = reactiveVal(NULL)
   
   all_choices = reactiveVal()
   ahp_choices = reactiveVal()
@@ -37,7 +38,6 @@ server <- function(input, output, session) {
   #play around
   rv <-reactiveValues(sizes= NULL,colls = NULL) #color for parallel axes
   er <- reactiveVal(NULL) #position
-  sel_tay = reactiveVal(NULL)
   best_option = reactiveVal(NULL)
   fit1 = reactiveVal()
   #control/limit range of objectives, works in combination with slider input$ran1 etc.
@@ -45,12 +45,14 @@ server <- function(input, output, session) {
                                   ran2 = c(0,100),
                                   ran3 = c(0,100),
                                   ran4 = c(0,100)))
-  
+  map_plotted <- reactiveVal(FALSE)
   settings_text= reactiveVal("") #printing pca settings
   update_settings <- function() {
     settings <- pca_settings(input)
     settings_text(settings)
   }
+  play_running <- reactiveVal(NULL)#spinner in visualisation/play around tab
+  
   pca_ini <- read_pca()
   pca_table <- reactiveVal(pca_ini)
   pca_in <- reactiveValues(data = read_pca()) #this only reads config$columns, NULL if opening for the first time
@@ -519,6 +521,8 @@ server <- function(input, output, session) {
   ##check if names of objectives have to be supplied or already present
   observeEvent(input$tabs=="play_around",{ 
     ## make or pull objectives()
+    map_plotted(FALSE)
+    
     if(!file.exists("../input/object_names.RDS")) {
       
       shinyjs::hide(id = "tab_play1")#do not show visualisation tab content 
@@ -710,27 +714,7 @@ server <- function(input, output, session) {
     }
     
     output$first_pareto <- renderPlot({ first_pareto_fun() })
-    observe({ 
-    # measure plot prep (same as in AHP)
-    if(file.exists("../data/hru.shp")) {
-      if (file.exists("../input/hru_in_optima.RDS")) {
-        if(!is.null(fit())){ 
-        eve = fit()%>% rownames_to_column("optimum")
-        cm(
-          pull_shp(
-            layername = "hru",
-            optims = eve,
-            hru_in_opt_path = "../input/hru_in_optima.RDS"
-          )
-        )
-          }
-        
-      }
-      needs_buffer(pull_buffer())
-    }
-    if(file.exists("../data/hru.con")){lalo <<- plt_latlon(conpath = "../data/hru.con")}
-    
-    })
+  
     observeEvent(input$clickpoint,{#selection for additional ring in point plot
       clickpoint_button(TRUE)
       req(f_scaled(),objectives(),fit(),input$obj1,input$x_var3)
@@ -756,32 +740,69 @@ server <- function(input, output, session) {
         actionButton("map_sel", "Plot measure implementation map of selected optimum")
         } 
     })
-    
+
     observeEvent(input$map_sel,{
-      req(fit(),sel_tay())
-      fit1(fit() %>% rownames_to_column("optimum"))
+      req(fit(),sel_tay(),objectives())
+      play_running(TRUE) #for spinner
       
-      cols = objectives()
-      values = sel_tay()
+      map_plotted(TRUE)
+      eve = fit()%>% rownames_to_column("optimum")
+      
+            # measure plot prep 
+          if (file.exists("../input/hru_in_optima.RDS")) {
+            
+              cm(
+                pull_shp(
+                  layername = "hru",
+                  optims = eve,
+                  hru_in_opt_path = "../input/hru_in_optima.RDS"
+                )
+              )
+           
+          }
+        
+        if(file.exists("../data/hru.con")){lalo <<- plt_latlon(conpath = "../data/hru.con")}
+         needs_buffer(pull_buffer())
+      
+     
 
-      mv <- fit1() %>%
-        filter(across(all_of(cols), ~. %in% values))
-
-      single_meas_fun2 = function(){
-        req(mv,needs_buffer(),lalo,cm())
-        
-        hru_one = plt_sel(shp=cm(),opti_sel = mv$optimum)
-        mes = read.csv("../data/measure_location.csv")
-        
-        col_sel = names(hru_one)[grep("Optim",names(hru_one))] 
-        
-        m1 = plt_lf(data=hru_one,  mes = unique(mes$nswrm),la = lalo[1],lo =lalo[2],
-                    buff_els=needs_buffer(),col_sel=col_sel)
-        return(m1)
-        
+         single_meas_fun2 = function() {
+           req(needs_buffer(), lalo, cm(), sel_tay(), objectives())
+           
+           fit1(fit() %>% rownames_to_column("optimum"))
+           
+           cols = objectives()
+           values = sel_tay()
+           
+           mv <- fit1() %>%  filter(across(all_of(cols), ~ . %in% values))
+           
+           hru_one = plt_sel(shp = cm(), opti_sel = mv$optimum)
+           mes = read.csv("../data/measure_location.csv")
+           
+           
+           col_sel = names(hru_one)[grep("Optim", names(hru_one))]
+           
+           m1 = plt_lf( data = hru_one, mes = unique(mes$nswrm),la = lalo[1],lo = lalo[2],buff_els = needs_buffer(), col_sel = col_sel)
+           return(m1)
+           play_running(FALSE) #for spinner
+         }
+         
+         output$plt_play_measure = renderUI({
+           req(map_plotted())
+           single_meas_fun2()})
+         })
+    
+      
+    output$spinner_play <- renderUI({
+      if(isTRUE(play_running())) {
+        return(NULL)  
+      } else if(isFALSE(play_running())) {
+        return("Process finished!") 
+      } else {
+        return(NULL) 
       }
-      output$plt_play_measure = renderUI({single_meas_fun2()})
     })
+  
     
     
     output$download_fp_plot <- downloadHandler(

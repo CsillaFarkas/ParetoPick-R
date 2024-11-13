@@ -435,7 +435,7 @@ ui <-
                                  column(3,selectInput(inputId = "col_var3", label = "Colour", choices = NULL, multiple = F, selected=NULL)),
                                  column(3,selectInput(inputId = "size_var3",label = "Size",   choices = NULL, multiple = F, selected=NULL))
                                ),
-                               uiOutput("clickpoint_map") ,
+                              
                                br(),
                                div(
                                  style = "display: inline-block; vertical-align: top; margin-right: 0px;",
@@ -444,11 +444,12 @@ ui <-
                                div(
                                  style = "display: inline-block; vertical-align: top; margin-left: 0px;",
                                  downloadButton("download_fp_plot", "Download pareto plot")),
-                               
-                               div(id="play_spinner", 
-                                   uiOutput("plt_play_measure")
-                                   %>% withSpinner(color = "#F7A600", hide.ui = TRUE)),
-                               
+                               uiOutput("clickpoint_map") ,
+                                   uiOutput("plt_play_measure"),
+                               withSpinner(
+                                 uiOutput("spinner_play"),
+                                 type = 4  , color = "#F7A600"
+                               ),
                               br(),
                                
                                hr(style = "border-top: 2px solid #03597F;"), 
