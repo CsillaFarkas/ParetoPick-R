@@ -604,18 +604,19 @@ server <- function(input, output, session) {
           for (i in 1:4) {#this should become obsolete with new function
             var_name <- paste0("steps", i)
             
-            if (abs(min_max$max[i]) <= 0.005) {
+            if (abs(min_max$min[i]) <= 0.0005) {
               min_max$max[i] = min_max$max[i] * 1000
               min_max$min[i] = min_max$min[i] * 1000
               
               range_value = append(range_value,(rownames(min_max[i, ])))
-              
+              print(i)
             }
           
-          if ((min_max$max[i] - min_max$min[i]) < 2) {
-            min_max$max[i] = round(min_max$max[i],3)
-            min_max$min[i] = round(min_max$min[i],3)
+          if (abs(min_max$min[i]) > 10000) {
+            min_max$max[i] = round(min_max$max[i],0)
+            min_max$min[i] = round(min_max$min[i],0)
           }
+            
           assign(var_name,(min_max$max[i]-min_max$min[i])/20)
             
                  
@@ -650,7 +651,7 @@ server <- function(input, output, session) {
             shinyjs::hide("all_ahp")
             shinyjs::hide("ahp_analysis")
             shinyjs::hide("config_all")
-            shinyjs::hide("play_sidebar")
+            # shinyjs::hide("play_sidebar")
             shinyjs::hide("tab_play1")
             shinyjs::hide("tab_play2")
       }
@@ -740,6 +741,7 @@ server <- function(input, output, session) {
         actionButton("map_sel", "Plot measure implementation map of selected optimum")
         } 
     })
+    observe({ if(clickpoint_button()){shinyjs::show("download_play_meas")}})
 
     observeEvent(input$map_sel,{
       req(fit(),sel_tay(),objectives())
@@ -765,33 +767,49 @@ server <- function(input, output, session) {
          needs_buffer(pull_buffer())
       
      
-
-         single_meas_fun2 = function() {
-           req(needs_buffer(), lalo, cm(), sel_tay(), objectives())
-           
-           fit1(fit() %>% rownames_to_column("optimum"))
-           
-           cols = objectives()
-           values = sel_tay()
-           
-           mv <- fit1() %>%  filter(across(all_of(cols), ~ . %in% values))
-           
-           hru_one = plt_sel(shp = cm(), opti_sel = mv$optimum)
-           mes = read.csv("../data/measure_location.csv")
-           
-           
-           col_sel = names(hru_one)[grep("Optim", names(hru_one))]
-           
-           m1 = plt_lf( data = hru_one, mes = unique(mes$nswrm),la = lalo[1],lo = lalo[2],buff_els = needs_buffer(), col_sel = col_sel)
-           return(m1)
-           play_running(FALSE) #for spinner
-         }
          
          output$plt_play_measure = renderUI({
            req(map_plotted())
            single_meas_fun2()})
          })
     
+    
+    single_meas_fun2 = function() {
+      req(needs_buffer(), lalo, cm(),fit(), sel_tay(), objectives())
+      
+      fit1(fit() %>% rownames_to_column("optimum"))
+      
+      cols = objectives()
+      values = sel_tay()
+      
+      mv <- fit1() %>%  filter(across(all_of(cols), ~ . %in% values))
+      
+      hru_one = plt_sel(shp = cm(), opti_sel = mv$optimum)
+      mes = read.csv("../data/measure_location.csv")
+      
+      
+      col_sel = names(hru_one)[grep("Optim", names(hru_one))]
+      
+      m1 = plt_lf( data = hru_one, mes = unique(mes$nswrm),la = lalo[1],lo = lalo[2],buff_els = needs_buffer(), col_sel = col_sel)
+      return(m1)
+      play_running(FALSE) #for spinner
+    }
+    
+    output$download_play_meas = downloadHandler(
+     
+        filename = function() {
+          curt = format(Sys.time(), "_%Y%m%d")
+
+          paste(input$meas_play_savename,curt, ".png", sep = "")
+        },
+        
+        content = function(file) {
+      
+          measmap <- single_meas_fun2()[[1]]
+
+          webshot::mapshot(measmap, file = file, vwidth = 800, vheight = 80)
+          }
+    )
       
     output$spinner_play <- renderUI({
       if(isTRUE(play_running())) {
@@ -1741,8 +1759,8 @@ server <- function(input, output, session) {
         n1clu=round((n1clu/length(unique(sols2()$Cluster)))*100,2)
         
         if(n1clu > 60){
-          paste0("There is a high share (",n1clu,"%) of clusters with only one optimum, you might want to 
-                    rerun the clustering with different settings.")
+          output$check_default <- renderText({ paste0("There is a high share (",n1clu,"%) of clusters with only one optimum, you might want to 
+                    rerun the clustering with different settings.") })
         }else if(crat>30){
           #if clause with OR if fulfilled, else NULL
           output$check_default <- renderText({paste0("A high share of points (",crat,"%) has been assigned to a single 
@@ -2234,7 +2252,6 @@ server <- function(input, output, session) {
     best_option_index <<- which.max(df$Score)
     df$Score <- NULL #drop Score column
     best_option(df[best_option_index, ])
-    
     bo = best_option()
   
     }
@@ -2362,9 +2379,11 @@ server <- function(input, output, session) {
   
   observeEvent(input$plt_bo,{
   req(best_option(),needs_buffer())
+    shinyjs::show("download_ahp_meas") #show download button
     is_rendering(TRUE) 
   bo = best_option() 
-  bo = bo %>% rownames_to_column("optimum")
+
+  bo = bo %>% rownames_to_column("optimum")%>%mutate(optimum = as.character(as.numeric(optimum)+1))#to match the proper optimum (sq flies around there line 1)
    
     ##shps for maps
     if (file.exists("../input/hru_in_optima.RDS")) {
@@ -2399,6 +2418,22 @@ server <- function(input, output, session) {
   })
   
   observe({ shinyjs::toggle("ahp_spinner", condition = is_rendering())})
+  
+  
+  output$download_ahp_meas = downloadHandler(
+    
+    filename = function() {
+      curt = format(Sys.time(), "_%Y%m%d")
+      
+      paste(input$meas_ahp_savename,curt, ".png", sep = "")
+    },
+    content = function(file) {
+      measmap <- single_meas_fun()[[1]]
+      
+     webshot::mapshot(measmap, file = file, vwidth = 800, vheight = 800)
+    }
+  )
+  
   
   ## AHP sliders
   # output$sliders_ui <- renderUI({
