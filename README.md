@@ -105,6 +105,7 @@ id,	name,	nswrm,	obj_id
   * stratified variables such as lowflow in the Schoeps do not work in the tool, the sliders cannot be moved
   * users should not produce optimisation outputs with values below 0 and if possible no values smaller than 1, the app's rescaling is (balance values to between 1 and 100) is turned off
   * not yet shared to Gitlab
+  * range_controlled() controls for the objectives min value being less than 0.0005 (*1000) or over 10000 (--> rounding), this might not be applicable for all 
 
  
 
@@ -116,8 +117,7 @@ id,	name,	nswrm,	obj_id
   * convert_optain requires some failsafe controls for empty values
   * square instead of rectangle maps 
   * HTML or if possible .png download for individual measure implementation maps, not possible across all (Cluster Analysis)
-  * add a brief glossary clarifying variable names and other abbreviations 
-
+  
 ## Prio 2
   * catch empty selection and replace "replacement has length zero" with "no optima fulfill these conditions", fix reload when selection changes (Visualisation)
   * "whole front" plot in the back instead of the front (Cluster Analysis and AHP)
