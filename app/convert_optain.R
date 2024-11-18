@@ -1,11 +1,11 @@
 ####################  Convert OPTAIN ###############################################
+# Project: Clustering Pareto solutions/Multi-objective visualisation
 # creates a .csv to be used in the Correlation and PCA
 # comment: new variables for the pca require adapted functions.R and ui.R
 # each row one Pareto-optimal solution
 # 1.- 4. = objectives to be maximised
 # 5 - end = variables to be considered in the clustering (=all_var provided separately)
 # used files: pareto_genomes.txt, hru.con, measure_location.csv
-# Project: Clustering of pareto front to reduce objective space
 ####################################################################################
 print(paste0("loading required packages..."),quote=F)
 suppressPackageStartupMessages({

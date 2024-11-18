@@ -1,6 +1,6 @@
 ######################## FUNCTIONS #################################
 # comments: foo1 function loaded straight into global.R
-# Project: Clustering Pareto Solutions/Multi-objective visualisation
+# Project: Clustering Pareto solutions/Multi-objective visualisation
 # author: cordula.wittekind@ufz.de
 ####################################################################
 

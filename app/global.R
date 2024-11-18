@@ -1,6 +1,6 @@
 ######################### GLOBAL ###################################
 # comments: we assume four variables delineating pareto front
-# Project: Clustering Pareto Solutions/Multi-objective visualisation
+# Project: Clustering Pareto solutions/Multi-objective visualisation
 # author: cordula.wittekind@ufz.de
 ####################################################################
 ## loading new packages
@@ -56,8 +56,9 @@ library(tibble)
 library(tidyr)
 library(tidyverse)
 library(viridis)
-# library(webshot)
-# webshot::install_phantomjs(force=T)
+library(webshot)
+if ("webshot2" %in% rownames(installed.packages())) {remove.packages("webshot2")} 
+webshot::install_phantomjs(force=T)
 options(warn = -1)
 source("functions.R")
 
