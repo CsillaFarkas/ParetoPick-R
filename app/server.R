@@ -383,26 +383,9 @@ server <- function(input, output, session) {
         })
       }
       
-      #basin shapefile
-      # bas_req = c(".shp",".shx", ".dbf", ".prj")
-      # basfile <- input$basfile
-      # basfile_names <- basfile$name
-      # basfile_paths <- basfile$datapath
-      # missing_basfile_components <- bas_req[!sapply(bas_req, function(ext) any(grepl(paste0(ext, "$"), basfile_names)))]
-      # 
-      # # copy basfile components if none are missing
-      # if (length(missing_basfile_components) == 0) {
-      #   lapply(seq_along(basfile_paths), function(i) {
-      #     save_path <- file.path(save_dir, basfile_names[i])
-      #     if (!file.exists(save_path)) {
-      #       file.copy(basfile_paths[i], save_path, overwrite = TRUE)
-      #     }
-      #   })
-      # }
-      
+  
       required_files <- c("../data/pareto_genomes.txt","../data/hru.con",   "../data/measure_location.csv",
                           "../data/hru.shp","../data/hru.shx", "../data/hru.dbf", "../data/hru.prj",
-                          # "../data/basin.shp","../data/basin.shx", "../data/basin.dbf", "../data/basin.prj",
                           "../data/rout_unit.con",
                           "../data/pareto_fitness.txt")
       
@@ -473,7 +456,6 @@ server <- function(input, output, session) {
       })
     })
     
-    
     output$script_output  <- renderUI({
       if(dp_done() & file.exists("../input/var_corr_par.csv")){
         tags$strong("The data preparation was successful. You can now continue with the Correlation and Principal Component Analysis. You will not need this tab again.")
@@ -493,7 +475,6 @@ server <- function(input, output, session) {
           HTML(paste("<p style='color: red;'> If you would like to restart the app if it crashes or behaves inconsistently, you can hard reset it here. Clicking this button
                    deletes all files you provided. The contents of the Output folder are also deleted, please move or copy those files you would like to keep. For all changes to take effect please restart the app after each Hard Reset. Please proceed with caution!</p>"))
         })
-        
         
         observeEvent(input$reset_btn, {
           if (dir.exists(save_dir) & dir.exists(input_dir)) {
@@ -524,17 +505,12 @@ server <- function(input, output, session) {
         
       } })
     
-    
-    
-    
   })
   
   if (!file.exists("../data/sq_fitness.txt")){
     shinyjs::disable("plt_sq")}else{shinyjs::enable("plt_sq")}
   
  
-  
-  
   ### Play Around Tab ####
   
   
@@ -678,23 +654,44 @@ server <- function(input, output, session) {
     })
     
     ## get unit input 
+    observeEvent(input$save_unit,{
+      
+      axiselected(c(input$unit1,input$unit2,input$unit3, input$unit4))
+      saveRDS(axiselected(), file="../input/units.RDS")
+      
+      updateTextInput(session, "axisx",  value  = axiselected()[1])
+      updateTextInput(session, "axisy", value = axiselected()[2])
+      updateTextInput(session, "colour", value = axiselected()[3])
+      updateTextInput(session, "size", value = axiselected()[4])
+      
+      updateTextInput(session, "unit1",  value  = axiselected()[1])
+      updateTextInput(session, "unit2", value = axiselected()[2])
+      updateTextInput(session, "unit3", value = axiselected()[3])
+      updateTextInput(session, "unit4", value = axiselected()[4])
+      
+      write_uns(var1_lab= input$unit1, var2_lab = input$unit2, var3_lab = input$unit3, var4_lab = input$unit4,inipath="../input/config.ini")
+    })
+    
+    
    if(file.exists("../input/units.RDS")){#shinyjs::hide(id="units")
-        uns <<-  readRDS("../input/units.RDS")
+        axiselected(readRDS("../input/units.RDS"))
+        updateTextInput(session, "unit1",  value  = axiselected()[1])
+        updateTextInput(session, "unit2", value = axiselected()[2])
+        updateTextInput(session, "unit3", value = axiselected()[3])
+        updateTextInput(session, "unit4", value = axiselected()[4])
       }else{
         
-        observeEvent(input$save_unit,{
-          uns <<- c(input$unit1,input$unit2,input$unit3,input$unit4)
-          
-          saveRDS(uns, file="../input/units.RDS")
-          isolate({axiselected(c(input$unit1,input$unit2,input$unit3, input$unit4))}) #for later use in clustering
-          
-          updateTextInput(session, "axisx",  value  = axiselected()[1])
-          updateTextInput(session, "axisy", value = axiselected()[2])
-          updateTextInput(session, "colour", value = axiselected()[3])
-          updateTextInput(session, "size", value = axiselected()[4])
-          
-          write_uns(var1_lab= input$unit1, var2_lab = input$unit2, var3_lab = input$unit3, var4_lab = input$unit4,inipath="../input/config.ini")
-          })
+        #delete from config just to be sure
+        if(!is.null(objectives())){write_pca_ini(var1 = objectives()[1], var2 = objectives()[2], 
+                                                 var3 = objectives()[3], var4 = objectives()[4],
+                                                 var1_lab= "", var2_lab = "", var3_lab = "", 
+                                                 var4_lab = "",inipath="../input/config.ini")
+        }else{write_pca_ini(var1 = "", var2 = "", 
+                            var3 = "", var4 = "",
+                            var1_lab= "", var2_lab = "", var3_lab = "", 
+                            var4_lab = "",inipath="../input/config.ini")}
+
+       
       }
     })
   
@@ -940,13 +937,16 @@ server <- function(input, output, session) {
  
     ## table of chosen line 
     output$click_info <- renderTable({
-      new_colnms <- mapply(function(col, unit) {
-        if (unit != "") {
-          paste(col, " (", unit, ")", sep = "")
-        } else {
-          col
-        }
-      }, col = colnms, unit = uns, SIMPLIFY = TRUE)
+      if(!is.null(axiselected())){
+        new_colnms <- mapply(function(col, unit) {
+          if (unit != "") {
+            paste(col, " (", unit, ")", sep = "")
+          } else {
+            col
+          }
+        }, col = colnms, unit = axiselected(), SIMPLIFY = TRUE)
+      }else{new_colnms = colnms}
+      
       
       lclick <<- as.data.frame(er())
       colnames(lclick) = new_colnms
@@ -1033,13 +1033,14 @@ server <- function(input, output, session) {
     
     
     #get unit input (this turns into matrix)
-    new_colnms <- mapply(function(col, unit) {
+    if(!is.null(axiselected())){ new_colnms <- mapply(function(col, unit) {
       if (unit != "") {
         paste(col, " (", unit, ")", sep = "")
       } else {
         col
       }
-    }, col = colnms, unit = uns, SIMPLIFY = TRUE)
+    }, col = colnms, unit = axiselected(), SIMPLIFY = TRUE)}else{new_colnms = colnms}
+   
     
     colnames(dn2) = new_colnms  
     
@@ -1066,13 +1067,14 @@ server <- function(input, output, session) {
   
 
   output$whole_range <- renderTable({
-    req(objectives(),uns)
-    new_colnms <- mapply(function(col, unit) {
-      if (unit != "") {
-        paste(col, " (", unit, ")", sep = "")
-      } else {col}
-      
-    }, col = objectives(), unit = uns, SIMPLIFY = TRUE)
+    req(objectives())
+    if(!is.null(axiselected())){
+      new_colnms <- mapply(function(col, unit) {
+        if (unit != "") {
+          paste(col, " (", unit, ")", sep = "")
+        } else {col}
+    }, col = objectives(), unit = axiselected(), SIMPLIFY = TRUE)}else{new_colnms = objectives()}
+
    df = mima_fun()
    df = df %>%mutate(across(where(is.numeric), ~as.numeric(gsub("-", "", as.character(.)))))
    
