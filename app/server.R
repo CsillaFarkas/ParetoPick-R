@@ -150,7 +150,17 @@ server <- function(input, output, session) {
       
       shinyjs::enable("plt_sq")
       
-      st_q = read.table("../data/sq_fitness.txt", header = FALSE, stringsAsFactors = FALSE, sep = ',')
+      which_del <- readLines("../data/sq_fitness.txt", n = 1)
+      
+      if (grepl(',', which_del)) {
+        deli = ','
+      } else if (grepl(' ', which_del)) {
+        deli = ' '
+      } else {
+        deli = ';' #this will break
+      }
+    
+      st_q = read.table('../data/sq_fitness.txt', header = FALSE, stringsAsFactors = FALSE, sep = deli)
       names(st_q) = objectives()
       stq(st_q)
     }else{
@@ -219,7 +229,17 @@ server <- function(input, output, session) {
       save_path_sq <- file.path(save_dir, save_sq)
       file.copy(sq_file()$path,save_path_sq,overwrite = TRUE) #copy sq_fitness.txt
       
-      st_q = read.table("../data/sq_fitness.txt", header = FALSE, stringsAsFactors = FALSE, sep = ',')
+      which_del <- readLines("../data/sq_fitness.txt", n = 1)
+      
+      if (grepl(',', which_del)) {
+        deli = ','
+      } else if (grepl(' ', which_del)) {
+        deli = ' '
+      } else {
+        deli = ';' #this will break
+      }
+      
+      st_q = read.table("../data/sq_fitness.txt", header = FALSE, stringsAsFactors = FALSE, sep = deli)
       st_q = as.numeric(st_q)
       
       names(st_q) = objectives()

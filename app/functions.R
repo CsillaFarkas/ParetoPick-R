@@ -860,7 +860,16 @@ plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NUL
   }
   
   if (status_q) {
-    st_q <- read.table(sq_path, header = FALSE, stringsAsFactors = FALSE, sep = ',',colClasses = rep("numeric",4))
+    which_del <- readLines(sq_path, n = 1)
+    
+    if (grepl(',', which_del)) {
+      deli = ','
+    } else if (grepl(' ', which_del)) {
+      deli = ' '
+    } else {
+      deli = ';' #this will break
+    }
+    st_q <- read.table(sq_path, header = FALSE, stringsAsFactors = FALSE, sep = deli,colClasses = rep("numeric",4))
     names(st_q) <- names(dat)
     st_q$set <- "Status Quo"
     all_extra_data <- rbind(all_extra_data,st_q)

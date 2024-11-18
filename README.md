@@ -75,9 +75,15 @@ id,	name,	nswrm,	obj_id
 5. hru shapefile consisting of: hru.shp, hru.dbf, hru.prj, hru.shx
   * shapfile used in SWAT+ modelling allowing the matching of HRU location and activation
 6. sq_fitness.txt
-  * four comma separated values indicating the status quo of objectives, must have same order as pareto_fitness.txt
+  * four values indicating the status quo of objectives, must have same order as pareto_fitness.txt
+  * can be either comma separated OR space separated
+  * EITHER
 ```
 -6880, -0.052, 59069.165, 0
+```
+  * OR
+```
+-6880 -0.052 59069.165 0
 ```
 7. rout_unit.con
   * connection file used in SWAT+ modelling delineating the transport of water between HRUs, channel and aquifer

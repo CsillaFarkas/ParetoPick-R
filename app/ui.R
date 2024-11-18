@@ -20,9 +20,36 @@ ui <-
                   ),
                   
                   menuItem("Cluster Analysis", icon = icon("th"),tabName = "analysis"),
-                  menuItem("AHP",icon=icon("sliders-h", lib="font-awesome"),tabName = "ahp")
-                  
-      )),
+                  menuItem("AHP",icon=icon("sliders-h", lib="font-awesome"),tabName = "ahp"),
+      dropdownButton(
+        inputId = "glossary_button",
+        label = "Glossary",
+        icon = icon("book"),
+        circle = FALSE,
+        status = "primary",
+        
+        tags$div(
+         
+          tags$ul(
+            tags$li(
+              tags$b("share_con:"), " Each measure's share in area considered for implementation."
+            ),
+            tags$li(
+              tags$b("moran:"), " The median spatial autocorrelation between HRUs allocated to each implemented measure."
+            ),
+            tags$li(
+              tags$b("channel_frac:"), " The median fraction of water under each implemented measure that is routed directly into the channel."
+            ),
+            tags$li(
+              tags$b("linE:"), " The ratio between structural and management measures."
+            ),
+            tags$li(
+              tags$b("lu_share:"), " The share of land use measures in catchment area considered for implementation."
+            )
+          )
+        )
+          )))
+    ,
     dashboardBody( tags$style(HTML('
                                   /* File status message font size adjustment */
                                   #fileStatusMessage {font-size: 150%;}
@@ -95,6 +122,21 @@ ui <-
                                     background-color: #83D0F5 !important;
                                   }
                                   
+                                  /*glossary text color of content */
+                                  .dropdown-menu {
+                                    color: #333;  /* Dark text color */
+                                    background-color: #f8f9fa;  /* Light background */
+                                  }
+                                   
+                                   ul {
+                                    padding-left: 10px;  
+                                    list-style-position: inside;  
+                                    }
+                                    ul li {
+                                    margin-left: 0;  
+                                    }
+                                    ul li::before { font-size: 8px;  /* glossary reduce bullet point size */
+                                    }
                                   
                                   /* AHP sidebar specific background color */
                                   .sidebar-menu li a[data-value="ahp"] {
@@ -450,6 +492,13 @@ ui <-
                                  uiOutput("spinner_play"),
                                  type = 4  , color = "#F7A600"
                                ),
+                               
+                               div(id="download_play_meas",
+                                 style = "display: inline-block; vertical-align: top; margin-right: 0px;",
+                                 textInput("meas_play_savename", label = NULL, value = "measure_implementation"),
+                                 downloadButton("download_play_meas", "Download map")
+                               )%>%hidden(),
+                               
                               br(),
                                
                                hr(style = "border-top: 2px solid #03597F;"), 
@@ -772,7 +821,7 @@ ui <-
                                     div(id="table_an_title","Optima Representative for Clusters",style="text-align; center;font-size: 150%;"),
                                     htmlOutput("tabtext"),
                                     
-                                    tags$div(textOutput("check_default"), style = "color: red;"),
+                                    tags$div(textOutput("check_default"), style = "color: #D10000;"),
                                     
                                     div(style = "overflow-x: auto;", DTOutput("antab"))),
                              column(6,
@@ -971,6 +1020,12 @@ ui <-
                              div(id="ahp_spinner", 
                                  uiOutput("plt_bo_measure")
                                  %>% withSpinner(color = "#F7A600", hide.ui = TRUE))
+                             ,
+                             div(id="download_ahp_meas",
+                                 style = "display: inline-block; vertical-align: top; margin-right: 0px;",
+                                 textInput("meas_ahp_savename", label = NULL, value = "ahp_measure_implementation"),
+                                 downloadButton("download_play_meas", "Download map")
+                             )%>%hidden(),
                            ) 
                            )
                            
