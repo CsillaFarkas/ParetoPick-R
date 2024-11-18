@@ -36,12 +36,12 @@ the project consists of six folders
 ├── data
 ├── data for container
 │   └── config.ini (for hard reset)
-├── output
+└── output
 ```
 
 # Required input files and data structure 
 (with example data structures from the Schwarzer Schöps catchment)
-1. pareto_fitness.txt
+1. __pareto_fitness.txt__
   * comma delineated, four columns representing the objectives that were maximised in optimisation
   * can be either comma separated OR space separated
   * EITHER
@@ -63,7 +63,7 @@ the project consists of six folders
 -6681.0, -0.054, 59125.122, -67853.89737
 -6765.0, -0.053, 59099.121, -25536.89511
 ```
-2. pareto_genomes.txt
+2. __pareto_genomes.txt__
   * list delineating activated (2) and non-activated (1) hydrological response units (hrus)
   * can be either comma separated OR space separated
   * EITHER
@@ -81,9 +81,9 @@ the project consists of six folders
 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 ```
 
-3. hru.con
+3. __hru.con__
   * connection file used in SWAT+ modelling containing details on HRU size and location
-4. measure_location.csv
+4. __measure_location.csv__
   * csv - comma separated table with four columns: id, name, nswrm, obj_id
 ```
 id,	name,	nswrm,	obj_id
@@ -94,9 +94,10 @@ id,	name,	nswrm,	obj_id
 108,	lowtillcc_112,	lowtillcc,	527
 294,	pond_1,	pond,	997
 ```
-5. hru shapefile consisting of: hru.shp, hru.dbf, hru.prj, hru.shx
+5. __hru shapefile__ consisting of: hru.shp, hru.dbf, hru.prj, hru.shx
   * shapfile used in SWAT+ modelling allowing the matching of HRU location and activation
-6. sq_fitness.txt
+6. __sq_fitness.txt__
+  * optional
   * four values indicating the status quo of objectives, must have same order as pareto_fitness.txt
   * can be either comma separated OR space separated
   * EITHER
@@ -107,7 +108,7 @@ id,	name,	nswrm,	obj_id
 ```
 -6880, -0.052, 59069.165, 0
 ```
-7. rout_unit.con
+7. __rout_unit.con__
   * connection file used in SWAT+ modelling delineating the transport of water between HRUs, channel and aquifer
 
 
