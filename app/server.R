@@ -1,6 +1,6 @@
 ######################## SERVER ####################################
 # comments: 
-# Project: Clustering Pareto Solutions/Multi-objective visualisation
+# Project: Clustering Pareto solutions/Multi-objective visualisation
 # author: cordula.wittekind@ufz.de
 ####################################################################
 server <- function(input, output, session) {
@@ -1090,18 +1090,7 @@ server <- function(input, output, session) {
         dev.off()
     }
   )
-  
-  # output$download_diff_plot <- downloadHandler(
-  #   filename = function() {
-  #     paste(input$diff_plot_savename, ".png", sep = "")
-  #   },
-  #   content = function(file) {
-  #     ggsave(file, plot = last_plot(), device = "png", width = 7, height = 5) #different approach, hard to turn into function
-  #   }
-  # )
-  
-  
-
+ 
   ### Configure ####
   
       output$next_step <- renderUI({
@@ -1113,7 +1102,7 @@ server <- function(input, output, session) {
       })
       
       observe({
-        req(fit(), input$ran1, range_controlled(),initial_update_done$initial)
+        req(fit(), input$ran1,initial_update_done$initial)
         df = match_abs(
                       minval = c(input$ran1[1], input$ran2[1], input$ran3[1], input$ran4[1]),
                       maxval = c(input$ran1[2], input$ran2[2], input$ran3[2], input$ran4[2]),
@@ -1174,10 +1163,13 @@ server <- function(input, output, session) {
         ##run clustering
          cmd = paste("../python_files/kmeans.exe")
          result = system(cmd,intern=TRUE)
-        
          default_running(FALSE) 
-        }else{output$corr_notthere_config <- renderText({corr_file_check()}) #default not run when there are files missing
+        }else{
+          
+          output$corr_notthere_config <- renderText({corr_file_check()}) #default not run when there are files missing
+          
         }
+        
         
       })
      
@@ -1222,7 +1214,7 @@ server <- function(input, output, session) {
               whatsmissing = "The following file(s) are missing and have to be provided in the Data Prep tab:<br/>"
               
               missing_files <- missing_files[missing_files != "../input/object_names.RDS"]
-              neednames = "To be able to proceed please also define the objective names in the previous tab."
+              neednames = "To be able to proceed please also define the objective names in the Data Prep tab."
               if ("../input/all_var.RDS" %in% missing_files){missing_files <- missing_files[! missing_files %in% "../input/all_var.RDS"]
               }
             } else if ("../input/object_names.RDS" %in% missing_files && length(missing_files) == 1){
@@ -1237,7 +1229,7 @@ server <- function(input, output, session) {
             }else if ("../input/all_var.RDS" %in% missing_files && length(missing_files) == 1){
               missing_files <- missing_files[missing_files != "../input/all_var.RDS"]
               
-              neednames = "Please (re)run the Data Preparation in the previous tab."
+              neednames = "Please (re)run the Data Preparation."
               
             }else{
               whatsmissing = "The following file(s) are missing and have to be provided in the Data Prep tab:<br/>"
@@ -1299,7 +1291,7 @@ server <- function(input, output, session) {
       observeEvent(input$run_corr,{
           shinyjs::show("show_conf") #show confirm selection button once correlation has run
         
-          req(input$selements,objectives(), range_controlled())
+          req(input$selements,objectives())
           all_var <<- readRDS("../input/all_var.RDS")
           
           write_corr(vars = input$selements,cor_analysis = T, pca = F)
@@ -1328,17 +1320,8 @@ server <- function(input, output, session) {
       
       find_high_corr(corr,threshold=input$thresh, tab=T, strike=NULL) }) #tab = T means this returns the full table, =F is for pulling variables
    
-    # top table with selected elements
-    # output$selements <- renderTable({
-    #   
-    #   sel_vars = input$selements
-    #   opt_pca <- optain_pca_content[sel_vars]
-    #   
-    #   data.frame(Variable = sel_vars,Description = opt_pca)
-    #   
-    #   },colnames = F)
   })
-   # Drop Down Menu with subset of those with selected threshold
+   # subset of those with selected threshold
     observe({updateSelectInput(session, "excl",choices = find_high_corr(corr,threshold=input$thresh, tab=F))})
   })
   
@@ -1374,7 +1357,6 @@ server <- function(input, output, session) {
    }else{conf_text =HTML(paste0("Removed variables: ","<b>", nonoval,"</b>")) }
    output$confirmed_selection <- renderText({conf_text})
   
-   
    
   ### PC Analysis ####
   # table with variables INCLUDED in PCA (renewed every time confirm selection is clicked in correlation tab)
@@ -1412,7 +1394,6 @@ server <- function(input, output, session) {
     max_pca(get_num_pca())
     updateNumericInput(session, "pca_max", value = max_pca(), max=max_pca()) #requires pca_content to exist
       
-    
     preselected = read_config_plt(obj = T, axis = F)
    
     choices = c("off", choices)
@@ -2169,7 +2150,7 @@ server <- function(input, output, session) {
   
     output$best_option_output <- renderTable({
       
-    req(sols(),range_controlled(),objectives())
+    req(sols(),objectives())
      
     if (input$best_cluster) {
       df = subset(sols(),select= -c(optimum,`cluster number`,`cluster size`,outlier )) #best option out of optima
@@ -2261,7 +2242,7 @@ server <- function(input, output, session) {
     })
     
     weight_plt_fun = function(){
-      req(objectives(),fit(),best_option(),input$x_var,sols(),range_controlled())
+      req(objectives(),fit(),best_option(),sols())
       sol<<-sols()[,objectives()]
       bo = best_option()
       df = match_abs(minval=c(input$obj1_ahp[1],input$obj2_ahp[1], input$obj3_ahp[1], input$obj4_ahp[1]),
@@ -2393,9 +2374,10 @@ server <- function(input, output, session) {
       paste(input$meas_ahp_savename,curt, ".png", sep = "")
     },
     content = function(file) {
-      measmap <- single_meas_fun()[[1]]
-      
-     webshot::mapshot(measmap, file = file, vwidth = 800, vheight = 800)
+    
+        measmap <- single_meas_fun()[[1]]
+        webshot::mapshot(measmap, file = file, vwidth = 800, vheight = 800)
+    
     }
   )
   
