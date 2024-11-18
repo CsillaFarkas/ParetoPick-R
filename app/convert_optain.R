@@ -95,7 +95,7 @@ nswrm_priorities <- function(lu){
 
 
 ## Genomes
-  gen = read.table("../data/pareto_genomes.txt", header=F,stringsAsFactors=FALSE,sep = ',')
+  gen = read.table("../data/pareto_genomes.txt", header=F,stringsAsFactors=FALSE,sep = deli("../data/pareto_genomes.txt"))
   gen=as.data.frame((t(gen))) #now the rownumber is the measures/AEP and the columns are the points on optima
   
   print("check: read pareto_genomes.txt...",quote=F)
@@ -363,7 +363,7 @@ for(op in paste0("V", 1:nopt)){ #instable looping, Cordi...
 
   
   ## merge with pareto fitness, # the first row is optimum V1
-  fit = read.table("../data/pareto_fitness.txt", header=F,stringsAsFactors=FALSE,sep = ',')
+  fit = read.table("../data/pareto_fitness.txt", header=F,stringsAsFactors=FALSE,sep = deli("../data/pareto_fitness.txt"))
   yolo = readRDS("../input/object_names.RDS")
   names(fit) = yolo
   fit$id = 1:nrow(fit)

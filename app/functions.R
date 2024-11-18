@@ -304,7 +304,7 @@ strike_through <- function(x) {
 get_obj_range = function(filepath = "../data/pareto_fitness.txt",colnames=paste0("objective", seq(1, 4))){
   stopifnot(file.exists(filepath))
   
-  pf = read.table(filepath,sep=",")
+  pf = read.table(filepath,sep=deli(filepath))
   colnames(pf) = colnames
   
   range_df <- data.frame(objective = character(), min = numeric(), max = numeric(), stringsAsFactors = FALSE)
@@ -316,7 +316,8 @@ get_obj_range = function(filepath = "../data/pareto_fitness.txt",colnames=paste0
   }
   
   if(file.exists("../data/pareto_fitness_original.txt")){
-    pf = read.table("../data/pareto_fitness_original.txt",sep=",")
+    
+    pf = read.table("../data/pareto_fitness_original.txt",sep=deli("../data/pareto_fitness_original.txt"))
     colnames(pf) = colnames
     
     range_df2 <- data.frame(objective = character(), min = numeric(), max = numeric(), stringsAsFactors = FALSE)
@@ -799,7 +800,7 @@ plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NUL
   if(!file.exists(pareto_path)){return(NULL)}
   
   #pull fit() establish range limits
-  whole <- read.table(pareto_path, header = FALSE, stringsAsFactors = FALSE, sep = ',' )
+  whole <- read.table(pareto_path, header = FALSE, stringsAsFactors = FALSE, sep = deli(pareto_path) )
   colnames(whole) <- colnames(dat)[1:4]
   
   xma = yma = NULL
@@ -860,16 +861,8 @@ plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NUL
   }
   
   if (status_q) {
-    which_del <- readLines(sq_path, n = 1)
-    
-    if (grepl(',', which_del)) {
-      deli = ','
-    } else if (grepl(' ', which_del)) {
-      deli = ' '
-    } else {
-      deli = ';' #this will break
-    }
-    st_q <- read.table(sq_path, header = FALSE, stringsAsFactors = FALSE, sep = deli,colClasses = rep("numeric",4))
+  
+    st_q <- read.table(sq_path, header = FALSE, stringsAsFactors = FALSE, sep = deli(sq_path),colClasses = rep("numeric",4))
     names(st_q) <- names(dat)
     st_q$set <- "Status Quo"
     all_extra_data <- rbind(all_extra_data,st_q)
@@ -1321,4 +1314,20 @@ pca_settings = function(input){
     settings <- paste(settings, outly,collapse = "<br>")}
   
   return(settings)
+}
+
+deli = function(path){
+
+which_del <- readLines(path, n = 1)
+
+if (grepl(',', which_del)) {
+  deliM = ','
+} else if (grepl(' ', which_del)) {
+  deliM = ' '
+} else {
+  deliM = ';' #this will break
+}
+
+return(deliM)
+
 }

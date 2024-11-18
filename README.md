@@ -43,6 +43,18 @@ the project consists of six folders
 (with example data structures from the Schwarzer Schöps catchment)
 1. pareto_fitness.txt
   * comma delineated, four columns representing the objectives that were maximised in optimisation
+  * can be either comma separated OR space separated
+  * EITHER
+```
+-6880.0 -0.052 59069.165 0.0
+-6875.0 -0.052 59068.499 -477.81743
+-6850.0 -0.052 59065.513 -14.7785
+-6749.0 -0.053 59097.725 -28858.69644
+-6681.0 -0.054 59125.122 -67853.89737
+-6765.0 -0.053 59099.121 -25536.89511
+``` 
+  * OR
+
 ```
 -6880.0, -0.052, 59069.165, 0.0
 -6875.0, -0.052, 59068.499, -477.81743
@@ -52,11 +64,21 @@ the project consists of six folders
 -6765.0, -0.053, 59099.121, -25536.89511
 ```
 2. pareto_genomes.txt
-  * comma separated list delineating activated (2) and non-activated (1) hydrological response units (hrus)
+  * list delineating activated (2) and non-activated (1) hydrological response units (hrus)
+  * can be either comma separated OR space separated
+  * EITHER
+```
+1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
+1 1 2 1 1 1 1 2 1 1 1 1 1 1 2 2 
+1 1 1 1 1 1 1 1 1 2 2 2 1 1 1 1
+```
+
+  * OR
+
 ```
 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 
 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 ```
 
 3. hru.con
@@ -79,11 +101,11 @@ id,	name,	nswrm,	obj_id
   * can be either comma separated OR space separated
   * EITHER
 ```
--6880, -0.052, 59069.165, 0
+-6880 -0.052 59069.165 0
 ```
   * OR
 ```
--6880 -0.052 59069.165 0
+-6880, -0.052, 59069.165, 0
 ```
 7. rout_unit.con
   * connection file used in SWAT+ modelling delineating the transport of water between HRUs, channel and aquifer

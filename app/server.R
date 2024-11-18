@@ -105,44 +105,7 @@ server <- function(input, output, session) {
     file.remove("../input/var_corr_par.csv")
     file.rename("../input/var_corr_par_bu.csv", "../input/var_corr_par.csv")
   }
-  
-  
-  ## UNCOMMENT for rescaling (also see get_scaler() and scale_data() in functions.R)
-#   observe({
-# 
-#   if (file.exists("../data/pareto_fitness_original.txt") ) {
-#      data <- read.table("../data/pareto_fitness_original.txt", header = FALSE, stringsAsFactors = FALSE,sep = ',')
-#      sf(get_scaler(data))
-#   
-#    } else if (!file.exists(pareto_path)) { #if user hasn't supplied it yet
-#       return()
-#       } else{
-#         data <- read.table(pareto_path, header = FALSE, stringsAsFactors = FALSE,sep = ',')
-#         file.rename(pareto_path,"../data/pareto_fitness_original.txt")
-#         sf(get_scaler(data))
-#         data = as.data.frame(scale_data(data))
-#         write.table(data,pareto_path,row.names = F,col.names = F, sep=",")
-#   }
-# 
-#   })
-#   
-#   observe({
-#   if (file.exists("../data/sq_fitness_original.txt") ) {
-#     return()
-#   } else if (!file.exists("../data/sq_fitness.txt")) { #if user hasn't supplied it yet
-#      return()
-#       } else if(is.null(sf())){return()
-#          }else{
-#            scale_vals = sf()
-#            val <- read.table("../data/sq_fitness.txt", header = FALSE, stringsAsFactors = FALSE,sep = ',')
-#            file.rename("../data/sq_fitness.txt","../data/sq_fitness_original.txt")
-#            data = as.data.frame(val*scale_vals)
-#            write.table(data,"../data/sq_fitness.txt",row.names = F,col.names = F, sep=",")
-#   } 
-#   
-# })
-  
-  
+ 
   #pull status quo
   observe({
     if (file.exists("../data/sq_fitness.txt")) {
@@ -150,17 +113,7 @@ server <- function(input, output, session) {
       
       shinyjs::enable("plt_sq")
       
-      which_del <- readLines("../data/sq_fitness.txt", n = 1)
-      
-      if (grepl(',', which_del)) {
-        deli = ','
-      } else if (grepl(' ', which_del)) {
-        deli = ' '
-      } else {
-        deli = ';' #this will break
-      }
-    
-      st_q = read.table('../data/sq_fitness.txt', header = FALSE, stringsAsFactors = FALSE, sep = deli)
+      st_q = read.table('../data/sq_fitness.txt', header = FALSE, stringsAsFactors = FALSE, sep = deli('../data/sq_fitness.txt'))
       names(st_q) = objectives()
       stq(st_q)
     }else{
@@ -206,7 +159,7 @@ server <- function(input, output, session) {
       save_path_par_fiti <- file.path(save_dir, save_par_fiti)
       file.copy(par_fiti()$path, save_path_par_fiti, overwrite = TRUE) #copy pareto_fitness.txt
       
-      data = read.table(pareto_path, header=F,stringsAsFactors=FALSE,sep = ',')
+      data = read.table(pareto_path, header=F,stringsAsFactors=FALSE,sep = deli(pareto_path))
       names(data) = objectives()
       fit(data)
       
@@ -229,17 +182,7 @@ server <- function(input, output, session) {
       save_path_sq <- file.path(save_dir, save_sq)
       file.copy(sq_file()$path,save_path_sq,overwrite = TRUE) #copy sq_fitness.txt
       
-      which_del <- readLines("../data/sq_fitness.txt", n = 1)
-      
-      if (grepl(',', which_del)) {
-        deli = ','
-      } else if (grepl(' ', which_del)) {
-        deli = ' '
-      } else {
-        deli = ';' #this will break
-      }
-      
-      st_q = read.table("../data/sq_fitness.txt", header = FALSE, stringsAsFactors = FALSE, sep = deli)
+      st_q = read.table("../data/sq_fitness.txt", header = FALSE, stringsAsFactors = FALSE, sep = deli("../data/sq_fitness.txt"))
       st_q = as.numeric(st_q)
       
       names(st_q) = objectives()
@@ -569,7 +512,7 @@ server <- function(input, output, session) {
         
         req(objectives())
         
-        data <- read.table(pareto_path, header = FALSE, stringsAsFactors = FALSE,sep = ',')
+        data <- read.table(pareto_path, header = FALSE, stringsAsFactors = FALSE,sep = deli(pareto_path))
         new_col_data <- objectives()
         colnames(data) = new_col_data
         fit(data)
