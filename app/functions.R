@@ -810,10 +810,16 @@ plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NUL
    dat2 = dat
    dat = dat[,1:4]
  }
-
-  #plot with main data
-  p = ggplot(dat, aes(x = .data[[x_var]], y = .data[[y_var]], fill = .data[[col_var]], size = .data[[size_var]])) +
-    geom_point(shape = 21, stroke = 0.5 ) +
+ 
+  #plot with main data and control if whole dataset shall be shown
+  p = ggplot(dat, aes(x = .data[[x_var]], y = .data[[y_var]],
+                      fill = .data[[col_var]], size = .data[[size_var]]), alpha = 0.5) 
+    
+  if(add_whole){
+    p=p+geom_point(data=whole,aes(x=.data[[x_var]], y = .data[[y_var]], size = .data[[size_var]]),fill="grey50",alpha=0.1)
+  }  
+    
+  p=p+geom_point(shape = 21, stroke = 0.5 ) +
     viridis::scale_fill_viridis(alpha = 0.8, name = col_var,labels = function(x) abs(as.numeric(x))) +  
     scale_size(range = c(1, 10), name = size_var,labels = function(x) abs(as.numeric(x))) +     
     theme_bw() + 
@@ -835,11 +841,7 @@ plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NUL
   
   all_extra_data = NULL
   
-  if (add_whole) {
-    whole$set <- "Whole front" #pulled above, only applied in analysis tab
-    all_extra_data <- rbind(all_extra_data,whole)
-    
-  }
+ 
   
   if (!is.null(extra_dat) && plt_extra) {
     extra_dat$set <- "cluster solutions"
@@ -874,9 +876,9 @@ plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NUL
       geom_point(data = all_extra_data, aes(x = .data[[x_var]], y = .data[[y_var]], shape = set, color = set, size = .data[[size_var]]), 
                   stroke = 1.8, show.legend = TRUE, alpha=0.7) +
       scale_shape_manual(labels = function(x) gsub("-", "", x),
-        values = c("Whole front" = 21,"cluster solutions" = 21, "AHP - best option" = 22, "Selection" =21, "Status Quo" = 17),name="") + 
+        values = c("cluster solutions" = 21, "AHP - best option" = 22, "Selection" =21, "Status Quo" = 17),name="") + 
       scale_color_manual(labels = function(x) gsub("-", "", x),
-        values = c( "Whole front" = "lightgrey","cluster solutions" = "cyan", "AHP - best option" = "#FF4D4D", "Selection" = "black", "Status Quo" = "#FF00FF"),name="") + 
+        values = c("cluster solutions" = "cyan", "AHP - best option" = "#FF4D4D", "Selection" = "black", "Status Quo" = "#FF00FF"),name="") + 
       guides(color = guide_legend(override.aes = list(size = 5)),shape = guide_legend(override.aes = list(size = 5)))
   }
   #control range limits with fit() as reference
