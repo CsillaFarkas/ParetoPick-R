@@ -1,6 +1,6 @@
 ############################### UI #################################
 # comments: 
-# Project: Clustering Pareto Solutions/Multi-objective visualisation
+# Project: Clustering Pareto solutions/Multi-objective visualisation
 # author: cordula.wittekind@ufz.de
 ####################################################################
 ui <- 
@@ -290,7 +290,10 @@ ui <-
                                p(HTML("The fourth tab <strong>Clustering Part 1 - Correlation Analysis</strong> allows to assess and alter variables considered in the subsequent clustering.")),
                                p(HTML("The fifth tab <strong>Clustering Part 2 - PCA & kmeans/kmedoids</strong> provides the possibility to adapt, modify and finally perform the clustering process.")),
                                p(HTML("The <strong>Cluster Analysis</strong> tab lets the user plot the optima remaining after the clustering. Each of these optima is representative for one cluster.")),
-                               p(HTML("The tab <strong>AHP - Analytical Hierarchy Process</strong> allows to determine priorities across the pareto front in a different way through assigning weights across the optima. It is possible to combine the clustering results with the AHP."))
+                               p(HTML("The tab <strong>AHP - Analytical Hierarchy Process</strong> allows to determine priorities across the pareto front in a different way through assigning weights across the optima. It is possible to combine the clustering results with the AHP.")),
+                               br(),br(),
+                               p(HTML("To ensure compatibility with algorithms (e.g. CoMOLA) designed for maximisation, some projects used negative numbers. Please note that this app omits the minus sign of these values. The interpretation however remains unchanged."))
+                               
                                
                              )
                              )),
@@ -301,8 +304,8 @@ ui <-
                              titlePanel("OPTAIN Data Preparation"),
                              
                              wellPanel(  p(HTML("This tab requires you to provide the optimisation outputs. 
-                                                 Please retain their names as given here and refer to the Readme for examples of their structure.
-                                                 You can provide a limited set of outputs to only analyse the Pareto Front in the next tab.
+                                                 Please refer to the Readme for examples of their structure.
+                                                 You can provide a limited set of outputs to only analyse the Pareto front in the next tab.
                                                  Alternatively, you can upload more data and prepare the variables for the subsequent correlation and cluster analysis
                                                  by clicking <strong>Check Files</strong> and
                                                 (if all files have been found) <strong>Run Prep</strong>. Please be aware that the preparation might take up to 5 minutes."))),
@@ -328,7 +331,7 @@ ui <-
                                  id = "obj_first",
                                  "The objective names should align with the first four columns of the pareto_fitness.txt file:",
                                  style = "text-align: left; font-size:115%",
-                                 div("*Please note, you can change these names later but this will require a Hard Reset below.",
+                                 div("*Please note, you can only change these names later if you perform a Hard Reset below.",
                                      style="text-align: left; font-size:90%"),
                                  textInput("short1", "Objective 1\n (Column 1)"), 
                                  textInput("short2", "Objective 2\n (Column 2)"), 
@@ -340,7 +343,7 @@ ui <-
                                br(),
                                
                                div(id="units",
-                                   "If you want you can supply the objectives' units and save them for future use:",
+                                   "If you want you can supply the objectives' units, you can change them anytime:",
                                    style= "text-align: left; font-size:115%",
                                    textInput("unit1","unit Objective 1", value = ""),
                                    textInput("unit2","unit Objective 2", value = ""),
