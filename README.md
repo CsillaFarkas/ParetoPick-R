@@ -140,9 +140,7 @@ id,	name,	nswrm,	obj_id
 
 # To do
 ## Prio 1
-  * explain the minus removal (Data Prep)
   * add one plot of map with measure frequency, percentage of implemented across current selection (Visualising)
-  * check for missing files (Configure)
   * convert_optain requires some failsafe controls for empty values
   * square instead of rectangle maps 
   * HTML or if possible .png download for individual measure implementation maps, not possible across all (Cluster Analysis)
