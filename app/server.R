@@ -62,7 +62,7 @@ server <- function(input, output, session) {
   
   pca_status <- reactiveVal("")
   pca_spin <- reactiveVal(NULL)#spinner in cluster tab
-  axiselected = reactiveVal(read_config_plt(obj=F,axis=T))
+  axiselected = reactiveVal(read_config_plt(obj=F,axis=T)) #can potentially remove this initialisation
   max_pca <- reactiveVal()# required for max pc field
   pca_available <- reactiveValues(button1_clicked = FALSE, button2_clicked = FALSE, button3_clicked = FALSE) #controls config.ini writing previous to clustering
   #results table
@@ -99,7 +99,7 @@ server <- function(input, output, session) {
   #figure in analysis rendering
   is_rendering <- reactiveVal(FALSE)
   default_running <- reactiveVal(NULL)#spinner in configure tab
-  
+  one_on <- reactiveValues(vari="") #to turn off single cards
   ### Startup ####
   if (file.exists("../input/var_corr_par_bu.csv")) { #if back up exists, the original needs replacing
     file.remove("../input/var_corr_par.csv")
@@ -1399,7 +1399,7 @@ server <- function(input, output, session) {
     choices = c("off", choices)
     all_choices(choices)
 
-    isolate({axiselected(read_config_plt(obj = F, axis = T))})
+    isolate({if(file.exists("../input/units.RDS")){axiselected(readRDS("../input/units.RDS"))}})
     
     #update other plots including "off"
     updateTextInput(session, "axisx",  value  = axiselected()[1])
@@ -2469,7 +2469,6 @@ server <- function(input, output, session) {
   }
   }
   
-
   
   #make sliders
   observe({
@@ -2512,14 +2511,15 @@ server <- function(input, output, session) {
       
       observeEvent(input$show_all_cards, {
         if (input$show_all_cards) {
-          # Show all cards
+          one_on$vari = NULL
+          # show all cards
           for (j in 1:6) {
             card_id <- paste0("card", j, "_ui")
             shinyjs::show(card_id)
             runjs(paste0('document.getElementById("ahp_card', j, '").style.backgroundColor = "#0487bf";'))
           }
         } else {
-         
+          one_on$vari = NULL
           for (j in 1:6) {
             card_id <- paste0("card", j, "_ui")
             shinyjs::hide(card_id)
@@ -2536,10 +2536,16 @@ server <- function(input, output, session) {
               shinyjs::hide(current_cardui)
               runjs(paste0('document.getElementById("ahp_card', j, '").style.backgroundColor = "#f4f4f4";'))
             } else {
-              runjs(paste0('document.getElementById("ahp_card', j, '").style.backgroundColor = "#0487bf";'))
               
-              shinyjs::show(current_cardui)
-            }
+              if(!is.null(one_on$vari) &&  one_on$vari == current_cardui){shinyjs::hide(current_cardui)
+                runjs(paste0('document.getElementById("ahp_card', j, '").style.backgroundColor = "#f4f4f4";'))
+              }else{
+                runjs(paste0('document.getElementById("ahp_card', j, '").style.backgroundColor = "#0487bf";'))
+                
+                shinyjs::show(current_cardui)
+                one_on$vari = current_cardui
+                }
+             } 
           }
         }
       })
@@ -2553,9 +2559,6 @@ server <- function(input, output, session) {
     })
   }
   
-  
-  
-
   
   observe({
     lapply(sids(), function(sliid) {
