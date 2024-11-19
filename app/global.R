@@ -22,7 +22,7 @@ foo1(c("corrplot", "dplyr","DT", "fs","fst", "geosphere", "ggplot2",  "ggtext", 
         "quanteda",   "RColorBrewer",  "readr",  "reticulate",
        "scales",  "sf",  "shiny", "shinycssloaders","shinydashboard", 
        "shinyFiles", "shinyjs","shinythemes",  "shinyWidgets",  "sp", 
-       "spdep",  "tibble",  "tidyr",  "tidyverse",  "tmap",  "viridis", "webshot"))
+       "spdep",  "tibble",  "tidyr",  "tidyverse",  "tmap",  "viridis", "webshot2"))
 ## libraries required for app (not convert_optain)
 library(configr)#
 library(corrplot)#
@@ -39,6 +39,7 @@ library(leaflet)#
 library(processx) # manage system processes from within shiny (e.g. for pulling R output into shiny)
 library(purrr)
 library(leafsync)
+library(mapview)
 library(quanteda)
 library(RColorBrewer)
 library(reticulate)
@@ -56,8 +57,8 @@ library(tibble)
 library(tidyr)
 library(tidyverse)
 library(viridis)
-library(webshot)
-if ("webshot2" %in% rownames(installed.packages())) {remove.packages("webshot2")} 
+library(webshot2)
+# if ("webshot2" %in% rownames(installed.packages())) {remove.packages("webshot2")} 
 # webshot::install_phantomjs(force=T)
 options(warn = -1)
 source("functions.R")

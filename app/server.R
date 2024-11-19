@@ -637,6 +637,30 @@ server <- function(input, output, session) {
        
       }
     })
+    #side bar plot
+   observe({
+     map_files = c(
+       "../data/hru.con",
+       "../input/nswrm_priorities.csv",
+       "../data/hru.shp",
+       "../data/hru.shx",
+       "../data/hru.dbf",
+       "../data/hru.prj"
+     )
+     
+     if (all(file.exists(map_files))) {
+       shinyjs::show("freq_map_play")
+       output$freq_map_play = renderUI({
+         leaflet() %>%
+           addTiles(group = "Streets") %>%
+           addProviderTiles(providers$Esri.WorldImagery, group = "Satellite") %>%
+           addLayersControl(
+             baseGroups = c("Streets", "Satellite"),
+             options = layersControlOptions(collapsed = FALSE)
+           )
+       })
+     }})
+  
   
     ## show rest of tab if all required data available
     observe({
@@ -753,23 +777,28 @@ server <- function(input, output, session) {
       m1 = plt_lf( data = hru_one, mes = unique(mes$nswrm),la = lalo[1],lo = lalo[2],buff_els = needs_buffer(), col_sel = col_sel)
       return(m1)
       play_running(FALSE) #for spinner
+      print(str(m1))
     }
     
-    output$download_play_meas = downloadHandler(
-     
-        filename = function() {
-          curt = format(Sys.time(), "_%Y%m%d")
-
-          paste(input$meas_play_savename,curt, ".png", sep = "")
-        },
-        
-        content = function(file) {
-      
-          measmap <- single_meas_fun2()[[1]]
-
-          webshot::mapshot(measmap, file = file, vwidth = 800, vheight = 80)
-          }
-    )
+    
+    # output$download_play_meas = downloadHandler(
+    #  
+    #     filename = function() {
+    #       curt = format(Sys.time(), "_%Y%m%d")
+    # 
+    #       full_filename=paste0(getwd(),"/output/",input$meas_play_savename,curt, ".png")
+    #       print(full_filename)  # Debug line
+    #       return(full_filename)
+    #     },
+    #     
+    #     
+    #     content = function(file) {
+    #       file = paste0(getwd(),"/output/","blbal", ".html")
+    #       # measmap <- single_meas_fun2()
+    #       measmap = leaflet() %>%addTiles() %>% setView(lng = 13.4, lat = 52.52, zoom = 12)
+    #       mapview::mapshot(measmap, url = file     )
+    #       }
+    # )
       
     output$spinner_play <- renderUI({
       if(isTRUE(play_running())) {
@@ -790,7 +819,7 @@ server <- function(input, output, session) {
         paste(input$fp_plot_savename,curt, ".png", sep = "")
       },
       content = function(file) {
-        png(file, width = 1500, height = 1000)
+        png(file, width = 1200, height = 800)
         
         plot <- first_pareto_fun()
         print(plot)
@@ -922,7 +951,7 @@ server <- function(input, output, session) {
       paste(input$line_plot_savename,curt, ".png", sep = "")
     },
     content = function(file) {
-      png(file, width = 1500, height = 1000)
+      png(file, width = 1200, height = 800)
       plot <- parplot_fun()
       print(plot)
       dev.off()
@@ -1084,7 +1113,7 @@ server <- function(input, output, session) {
       paste(input$scat_plot_savename,curt, ".png", sep = "")
     },
     content = function(file) {
-     png(file, width = 1500, height = 1000)
+     png(file, width = 1200, height = 800)
         plot <- scat_fun()
         print(plot)
         dev.off()
@@ -1279,7 +1308,7 @@ server <- function(input, output, session) {
           paste(input$corr_plot_savename,curt, ".png", sep = "")
         },
         content = function(file) {
-          png(file, width = 1500, height=1000)
+          png(file, width = 1200, height=800)
           plot <- plt_corr(corr)
           print(plot)
           dev.off()
@@ -1933,6 +1962,18 @@ server <- function(input, output, session) {
       
     }})
     
+    fun_fun <- reactive({
+      if (isTruthy(input$show_pca_vs_var)) {
+        clus_vs_var()
+      } else if (isTruthy(input$show_share_con)) {
+        clus_share_con_plt()
+      } else if (isTruthy(input$show_boxplot)) {
+        clus_dis_plt()
+      } else {
+        clus_res_plt() # default plot
+      }
+    })
+    
     output$download_clus_plot <- downloadHandler(
       filename = function() {
         curt = format(Sys.time(), "_%Y%m%d")
@@ -1940,8 +1981,8 @@ server <- function(input, output, session) {
         paste(input$par_plot_savename,curt, ".png", sep = "")
       },
       content = function(file) {
-        png(file, width = 1500, height = 1000)
-        plot <- clus_res_plt()
+        png(file, width = 1200, height = 800)
+        plot <- fun_fun()
         print(plot)
         dev.off()
      
@@ -2369,20 +2410,21 @@ server <- function(input, output, session) {
   observe({ shinyjs::toggle("ahp_spinner", condition = is_rendering())})
   
   
-  output$download_ahp_meas = downloadHandler(
-    
-    filename = function() {
-      curt = format(Sys.time(), "_%Y%m%d")
-      
-      paste(input$meas_ahp_savename,curt, ".png", sep = "")
-    },
-    content = function(file) {
-    
-        measmap <- single_meas_fun()[[1]]
-        webshot::mapshot(measmap, file = file, vwidth = 800, vheight = 800)
-    
-    }
-  )
+  # output$download_ahp_meas = downloadHandler(
+  #   
+  #   filename = function() {
+  #     curt = format(Sys.time(), "_%Y%m%d")
+  #     
+  #     paste(input$meas_ahp_savename,curt, ".png", sep = "")
+  #   },
+  #   content = function(file) {
+  #   
+  #       # measmap <- single_meas_fun()[[1]]
+  #       measmap = leaflet() %>%addTiles() %>% setView(lng = 13.4, lat = 52.52, zoom = 12)
+  #       mapview::mapshot(measmap, url = file     )
+  #   
+  #   }
+  # )
   
   
   ## AHP sliders
