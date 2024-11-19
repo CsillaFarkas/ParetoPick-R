@@ -58,7 +58,7 @@ library(tidyverse)
 library(viridis)
 library(webshot)
 if ("webshot2" %in% rownames(installed.packages())) {remove.packages("webshot2")} 
-webshot::install_phantomjs(force=T)
+# webshot::install_phantomjs(force=T)
 options(warn = -1)
 source("functions.R")
 
