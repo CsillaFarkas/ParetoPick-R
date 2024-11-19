@@ -142,7 +142,6 @@ id,	name,	nswrm,	obj_id
 ## Prio 1
   * add one plot of map with measure frequency, percentage of implemented across current selection (Visualising)
   * convert_optain requires some failsafe controls for empty values
-  * square instead of rectangle maps 
   * HTML or if possible .png download for individual measure implementation maps, not possible across all (Cluster Analysis)
   
 ## Prio 2
@@ -150,6 +149,6 @@ id,	name,	nswrm,	obj_id
   * "whole front" plot in the back instead of the front (Cluster Analysis and AHP)
   * only strike through the variable that has been removed (Correlation)
   * new button to jump to cluster tab (Correlation)
-  * download button to select the proper function according to which plot is selected (Cluster Analysis)
+  * download plot button to select the proper function according to which plot is selected (Cluster Analysis)
   * hide card when clicked again (AHP)
   
