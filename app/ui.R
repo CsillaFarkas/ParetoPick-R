@@ -229,8 +229,8 @@ ui <-
                                    /* datatable in Analysis tab with vertical lines */
                                   .dataTable td.border-column {
                                    border-right: 1px solid #03597F; 
-                                     }
-                                  
+                                  }
+                                    
                                       ')),
  
                      useShinyjs(),
@@ -464,7 +464,8 @@ ui <-
                            tags$style(HTML(".js-irs-10 .irs-single, .js-irs-10 .irs-bar-edge, .js-irs-10 .irs-bar {background: #009ade ;border-top: 1px solid #009ade ;border-bottom: 1px solid #009ade;}.js-irs-10 .irs-from, .js-irs-10 .irs-to, .js-irs-10 .irs-single { font-size: 13px;background: #009ade !important }")),
                            tags$style(HTML(".js-irs-12 .irs-single, .js-irs-11 .irs-bar-edge, .js-irs-11 .irs-bar {background: #aF58ba ;border-top: 1px solid #aF58ba ;border-bottom: 1px solid #aF58ba;}.js-irs-11 .irs-from, .js-irs-11 .irs-to, .js-irs-11 .irs-single { font-size: 13px;background: #aF58ba !important }")),
                            tags$style(HTML(".js-irs-13 .irs-single, .js-irs-12 .irs-bar-edge, .js-irs-12 .irs-bar {background: #f28522 ;border-top: 1px solid #f28522 ;border-bottom: 1px solid #f28522;}.js-irs-12 .irs-from, .js-irs-12 .irs-to, .js-irs-12 .irs-single { font-size: 13px;background: #f28522 !important }")),
-                           
+                           tags$style(HTML("#actual_plt_play_measure {width: 450px;height: 550px;margin-bottom: -150px; } "))
+                           ,
                            
                            div(id = "tab_play1",
                                
@@ -490,17 +491,21 @@ ui <-
                                  style = "display: inline-block; vertical-align: top; margin-left: 0px;",
                                  downloadButton("download_fp_plot", "Download pareto plot")),
                                uiOutput("clickpoint_map") ,#button
-                                   uiOutput("plt_play_measure"),#map
+                                   uiOutput("plt_play_measure"),#map placeholder
                                withSpinner(
                                  uiOutput("spinner_play"),
                                  type = 4  , color = "#F7A600"
                                ),
                                
                                div(id="download_play_meas",
-                                 style = "display: inline-block; vertical-align: top; margin-right: 0px;",
-                                 textInput("meas_play_savename", label = NULL, value = "measure_implementation"),
-                                 downloadButton("download_play_meas", "Download map")
-                               )%>%hidden(),
+                                   div(
+                                     style = "display: inline-block; vertical-align: top; margin-right: 0px; margin-top: 5px;",
+                                     textInput("meas_play_savename", label = NULL, value = "measure_implementation")
+                                   ),
+                                   div(
+                                 style = "display: inline-block; vertical-align: top; margin-left: 0px; margin-top: 5px;",
+                                       downloadButton("download_play_meas", "Download map")
+                               ))%>%hidden(),
                                
                               br(),
                                
@@ -942,6 +947,7 @@ ui <-
                          ),
                          
                          mainPanel(
+                           tags$style(HTML("#plt_bo_measure {width: 450px;height: 550px;margin-bottom: -150px; } ")),
                            
                           
                            
@@ -1025,10 +1031,15 @@ ui <-
                                  %>% withSpinner(color = "#F7A600", hide.ui = TRUE))
                              ,
                              div(id="download_ahp_meas",
-                                 style = "display: inline-block; vertical-align: top; margin-right: 0px;",
-                                 textInput("meas_ahp_savename", label = NULL, value = "ahp_measure_implementation"),
+                                 div(
+                                  style = "display: inline-block; vertical-align: top; margin-right: 0px; margin-top: 5px;",
+                                 textInput("meas_ahp_savename", label = NULL, value = "ahp_measure_implementation")
+                                    ),
+                                 div(
+                                   style = "display: inline-block; vertical-align: top; margin-left: 0px; margin-top: 5px;",
                                  downloadButton("download_play_meas", "Download map")
-                             )%>%hidden(),
+                                    )
+                                 )%>%hidden(),
                            ) 
                            )
                            

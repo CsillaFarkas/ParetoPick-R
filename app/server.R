@@ -726,10 +726,10 @@ server <- function(input, output, session) {
         if(file.exists("../data/hru.con")){lalo <<- plt_latlon(conpath = "../data/hru.con")}
          needs_buffer(pull_buffer())
       
-     
+         output$plt_play_measure = renderUI({ uiOutput("actual_plt_play_measure")#map
+         })#slightly verbose set up, all for square map/css styling to work
          
-         output$plt_play_measure = renderUI({
-           req(map_plotted())
+         output$actual_plt_play_measure <- renderUI({req(map_plotted())
            single_meas_fun2()})
          })
     
