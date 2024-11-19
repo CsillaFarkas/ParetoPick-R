@@ -2324,12 +2324,15 @@ server <- function(input, output, session) {
   })
   
   observeEvent(input$plt_bo,{
-  req(best_option(),needs_buffer())
+  req(best_option(),needs_buffer(),fit(),objectives())
     shinyjs::show("download_ahp_meas") #show download button
     is_rendering(TRUE) 
-  bo = best_option() 
+ 
+  fit1(fit() %>% rownames_to_column("optimum"))
 
-  bo = bo %>% rownames_to_column("optimum")%>%mutate(optimum = as.character(as.numeric(optimum)+1))#to match the proper optimum (sq flies around there line 1)
+  bo = best_option() 
+  cols = objectives()
+  bo = fit1() %>% filter(across(all_of(cols), ~ . %in% bo))
    
     ##shps for maps
     if (file.exists("../input/hru_in_optima.RDS")) {

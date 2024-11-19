@@ -489,8 +489,8 @@ ui <-
                                div(
                                  style = "display: inline-block; vertical-align: top; margin-left: 0px;",
                                  downloadButton("download_fp_plot", "Download pareto plot")),
-                               uiOutput("clickpoint_map") ,
-                                   uiOutput("plt_play_measure"),
+                               uiOutput("clickpoint_map") ,#button
+                                   uiOutput("plt_play_measure"),#map
                                withSpinner(
                                  uiOutput("spinner_play"),
                                  type = 4  , color = "#F7A600"
