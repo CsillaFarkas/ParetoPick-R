@@ -416,8 +416,11 @@ ui <-
                tabItem(tabName = "play_around",
                        titlePanel("Visualising the Optimisation Output"),
                        
-                       wellPanel(    p("This tab lets you plot the pareto front in two different ways
-                              and lets you explore the effects of reduced objective ranges. You can select specific points on the pareto front by clicking on them or by selecting them on the line plot.")),
+                       wellPanel(    p("This tab plots the pareto front in a few different ways
+                              and lets you explore the effects of reduced objective ranges. 
+                                       You can select specific points/optima on the pareto front by clicking on them, 
+                                       then you can plot the map of the respective NSWRM plan."),
+                              p("You can also select optima in the line plot and analyse their location in the objective space.")),
                        
                        sidebarLayout(
                          
@@ -442,7 +445,8 @@ ui <-
                                                   "For some of the visualisations and analyses in this tool, the objectives have been scaled to between 0 and 1.
                                              1 aligns with the best achievable outcome while 0 aligns with the worst."
                                                 )
-                                         )
+                                         ),
+                                         uiOutput("freq_map_play")%>%hidden(),
                                          
                                        ), br(), 
                                        
