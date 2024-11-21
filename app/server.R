@@ -516,11 +516,10 @@ server <- function(input, output, session) {
         new_col_data <- objectives()
         colnames(data) = new_col_data
         fit(data)
-       
+
         yo = fit() %>% mutate(across(everything(), ~ scales::rescale(.)))%>%mutate(id = row_number())
         f_scaled(yo)
-        
-      
+
         yo2 <- pull_high_range(fit())
         rng_plt(yo2)
         
@@ -725,7 +724,7 @@ server <- function(input, output, session) {
         actionButton("map_sel", "Plot measure implementation map of selected optimum")
         } 
     })
-    observe({ if(clickpoint_button()){shinyjs::show("download_play_meas")}})
+    observe({ if(clickpoint_button()){shinyjs::show("download_play_id")}})
 
     observeEvent(input$map_sel,{
       req(fit(),sel_tay(),objectives())
@@ -779,26 +778,22 @@ server <- function(input, output, session) {
       play_running(FALSE) #for spinner
       print(str(m1))
     }
+ # observe({print(paste0(getwd(),"/output/",input$meas_play_savename))})
     
+    output$download_pm <- downloadHandler(
+
+        filename = function(){
+          curt = format(Sys.time(), "_%Y%m%d")
+          paste0(input$meas_play_savename,curt, ".png")
+        },
+
+        content = function(file) {
+          measmap <- single_meas_fun2()[[1]]
+          saveWidget(measmap, "temp.html", selfcontained = FALSE)
+          webshot::webshot("temp.html", file = file, cliprect = "viewport")
+          }
+    )
     
-    # output$download_play_meas = downloadHandler(
-    #  
-    #     filename = function() {
-    #       curt = format(Sys.time(), "_%Y%m%d")
-    # 
-    #       full_filename=paste0(getwd(),"/output/",input$meas_play_savename,curt, ".png")
-    #       print(full_filename)  # Debug line
-    #       return(full_filename)
-    #     },
-    #     
-    #     
-    #     content = function(file) {
-    #       file = paste0(getwd(),"/output/","blbal", ".html")
-    #       # measmap <- single_meas_fun2()
-    #       measmap = leaflet() %>%addTiles() %>% setView(lng = 13.4, lat = 52.52, zoom = 12)
-    #       mapview::mapshot(measmap, url = file     )
-    #       }
-    # )
       
     output$spinner_play <- renderUI({
       if(isTRUE(play_running())) {
@@ -2366,7 +2361,7 @@ server <- function(input, output, session) {
   
   observeEvent(input$plt_bo,{
   req(best_option(),needs_buffer(),fit(),objectives())
-    shinyjs::show("download_ahp_meas") #show download button
+    shinyjs::show("download_ahp_id") #show download button
     is_rendering(TRUE) 
  
   fit1(fit() %>% rownames_to_column("optimum"))
@@ -2401,7 +2396,8 @@ server <- function(input, output, session) {
                 buff_els=needs_buffer(),col_sel=col_sel)
     return(m1)
 
-    }
+  }
+  
     output$plt_bo_measure = renderUI({single_meas_fun()})
     
     output$plot_ready <- renderText({is_rendering(FALSE)})#blind output required for spinner
@@ -2410,21 +2406,19 @@ server <- function(input, output, session) {
   observe({ shinyjs::toggle("ahp_spinner", condition = is_rendering())})
   
   
-  # output$download_ahp_meas = downloadHandler(
-  #   
-  #   filename = function() {
-  #     curt = format(Sys.time(), "_%Y%m%d")
-  #     
-  #     paste(input$meas_ahp_savename,curt, ".png", sep = "")
-  #   },
-  #   content = function(file) {
-  #   
-  #       # measmap <- single_meas_fun()[[1]]
-  #       measmap = leaflet() %>%addTiles() %>% setView(lng = 13.4, lat = 52.52, zoom = 12)
-  #       mapview::mapshot(measmap, url = file     )
-  #   
-  #   }
-  # )
+  output$download_am = downloadHandler(
+    filename = function() {
+      curt = format(Sys.time(), "_%Y%m%d")
+      
+      paste(input$meas_ahp_savename, curt, ".png", sep = "")
+    },
+    content = function(file) {
+      measma = single_meas_fun()[[1]]
+      saveWidget(measma, "temp2.html", selfcontained = FALSE)
+      webshot::webshot("temp2.html", file = file, cliprect = "viewport")
+
+    }
+  )
   
   
   ## AHP sliders
