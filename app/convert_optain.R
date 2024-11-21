@@ -182,6 +182,7 @@ for(op in paste0("V", 1:nopt)){ #instable looping, Cordi...
 }
   ## hru represents the connection between the optima and plot
   hru <- hru%>%mutate(id = as.integer(id))
+  hru = hru %>% mutate(across(starts_with("V"),as.character))
   saveRDS(hru,file= "../input/hru_in_optima.RDS")
   print(paste0("check: made hru land use available for future plotting..."),quote=F)
   
