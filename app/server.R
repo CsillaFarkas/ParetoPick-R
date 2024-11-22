@@ -56,7 +56,7 @@ server <- function(input, output, session) {
   pca_ini <- read_pca()
   pca_table <- reactiveVal(pca_ini)
   pca_in <- reactiveValues(data = read_pca()) #this only reads config$columns, NULL if opening for the first time
-  
+  lalo <- reactiveVal()
   #empty pca table
   output$pca_incl <- renderTable({pca_table()}, rownames = T, colnames = F)
   
@@ -70,6 +70,8 @@ server <- function(input, output, session) {
   sols <- reactiveVal()
   sols2 <- reactiveVal() #for boxplot
   sols3 <- reactiveVal() #for objectives vs. cluster variables
+  #figure in analysis rendering
+  is_rendering <- reactiveVal(FALSE)
   #catchment shapes
   cm <- reactiveVal()
   needs_buffer <- reactiveVal()
@@ -96,10 +98,11 @@ server <- function(input, output, session) {
   initial_update_done = reactiveValues(initial = FALSE)
   card_shown <- reactiveValues(ahp_card1 = FALSE, ahp_card2 = FALSE, ahp_card3 = FALSE, ahp_card4 = FALSE, ahp_card5 = FALSE, ahp_card6 = FALSE)
   sliders <- reactiveValues()
-  #figure in analysis rendering
-  is_rendering <- reactiveVal(FALSE)
+  boo <- reactiveVal() #best option optimum
+  
   default_running <- reactiveVal(NULL)#spinner in configure tab
   one_on <- reactiveValues(vari="") #to turn off single cards
+  meas_running <- reactiveVal(FALSE) #spinner in ahp tab
   ### Startup ####
   if (file.exists("../input/var_corr_par_bu.csv")) { #if back up exists, the original needs replacing
     file.remove("../input/var_corr_par.csv")
@@ -746,7 +749,7 @@ server <- function(input, output, session) {
            
           }
         
-        if(file.exists("../data/hru.con")){lalo <<- plt_latlon(conpath = "../data/hru.con")}
+        if(file.exists("../data/hru.con")){lalo(plt_latlon(conpath = "../data/hru.con"))}
          needs_buffer(pull_buffer())
       
          output$plt_play_measure = renderUI({ uiOutput("actual_plt_play_measure")#map
@@ -758,7 +761,7 @@ server <- function(input, output, session) {
     
     
     single_meas_fun2 = function() {
-      req(needs_buffer(), lalo, cm(),fit(), sel_tay(), objectives())
+      req(needs_buffer(), lalo(), cm(),fit(), sel_tay(), objectives())
       
       fit1(fit() %>% rownames_to_column("optimum"))
       
@@ -773,10 +776,9 @@ server <- function(input, output, session) {
       
       col_sel = names(hru_one)[grep("Optim", names(hru_one))]
       
-      m1 = plt_lf( data = hru_one, mes = unique(mes$nswrm),la = lalo[1],lo = lalo[2],buff_els = needs_buffer(), col_sel = col_sel)
+      m1 = plt_lf( data = hru_one, mes = unique(mes$nswrm),la = lalo()[1],lo =lalo()[2],buff_els = needs_buffer(), col_sel = col_sel)
       return(m1)
       play_running(FALSE) #for spinner
-      print(str(m1))
     }
  # observe({print(paste0(getwd(),"/output/",input$meas_play_savename))})
     
@@ -2001,7 +2003,7 @@ server <- function(input, output, session) {
       }
       needs_buffer(pull_buffer())
     }
-    if(file.exists("../data/hru.con")){lalo <<- plt_latlon(conpath = "../data/hru.con")}
+    if(file.exists("../data/hru.con")){lalo(plt_latlon(conpath = "../data/hru.con"))}
    
   })
   
@@ -2021,7 +2023,7 @@ server <- function(input, output, session) {
     col_sel = names(hru_sel)[grep("Optim",names(hru_sel))]  #variable length of columns selected
     
     nplots = length(col_sel)#+1
-    m1 = plt_lf(data=hru_sel, col_sel = col_sel, mes = unique(mes$nswrm),la = lalo[1],lo =lalo[2], buff_els=buffs)
+    m1 = plt_lf(data=hru_sel, col_sel = col_sel, mes = unique(mes$nswrm),la = lalo()[1],lo =lalo()[2], buff_els=buffs)
     
     # cm2 = plt_cm_pure(data=cm_clean(), la = lalo[1],lo =lalo[2])
     # m <- c(list(cm2), m1)
@@ -2360,15 +2362,16 @@ server <- function(input, output, session) {
   })
   
   observeEvent(input$plt_bo,{
-  req(best_option(),needs_buffer(),fit(),objectives())
-    shinyjs::show("download_ahp_id") #show download button
-    is_rendering(TRUE) 
+    meas_running(TRUE) 
+
+    req(best_option(),needs_buffer(),fit(),objectives())
+ 
  
   fit1(fit() %>% rownames_to_column("optimum"))
 
   bo = best_option() 
   cols = objectives()
-  bo = fit1() %>% filter(across(all_of(cols), ~ . %in% bo))
+  bo <- fit1() %>% filter(across(all_of(cols), ~ . %in% bo))
    
     ##shps for maps
     if (file.exists("../input/hru_in_optima.RDS")) {
@@ -2380,46 +2383,53 @@ server <- function(input, output, session) {
         )
       )
     }
-
-    if(file.exists("../data/hru.con")){lalo <<- plt_latlon(conpath = "../data/hru.con")}
+    boo(bo$optimum) #for single_meas_fun
+    
+    if(file.exists("../data/hru.con")){lalo(plt_latlon(conpath = "../data/hru.con"))}
      needs_buffer(pull_buffer())
-  
-  
-  single_meas_fun = function(){
-    req(bo,needs_buffer(),lalo,cm())
-    hru_one = plt_sel(shp=cm(),opti_sel = bo$optimum)
-    mes = read.csv("../data/measure_location.csv")
-    
-    col_sel = names(hru_one)[grep("Optim",names(hru_one))] 
+     single_meas_fun()
+     
+     
+     output$plt_bo_measure = renderUI({single_meas_fun()})
+     
+     shinyjs::show("download_ahp_id") #show download button
 
-    m1 = plt_lf(data=hru_one,  mes = unique(mes$nswrm),la = lalo[1],lo =lalo[2],
-                buff_els=needs_buffer(),col_sel=col_sel)
-    return(m1)
-
-  }
-  
-    output$plt_bo_measure = renderUI({single_meas_fun()})
-    
-    output$plot_ready <- renderText({is_rendering(FALSE)})#blind output required for spinner
   })
   
-  observe({ shinyjs::toggle("ahp_spinner", condition = is_rendering())})
+    
+
+  single_meas_fun = function(){
+    if(!file.exists("../data/measure_location.csv")){return(NULL)}else{
+    req(boo(),needs_buffer(),lalo(),cm())
+      
+    hru_one = plt_sel(shp=cm(),opti_sel = boo())
+    mes = read.csv("../data/measure_location.csv")
+    col_sel = names(hru_one)[grep("Optim",names(hru_one))] 
+    
+    m1 = plt_lf(data=hru_one,  mes = unique(mes$nswrm),la = lalo()[1],lo =lalo()[2],
+                buff_els=needs_buffer(),col_sel=col_sel)
+    return(m1)
+    meas_running(FALSE)
+    }
+  }
   
+  output$spinner_meas <- renderUI({if(isTRUE(meas_running())){return(NULL)}else{return("")}})
   
+
   output$download_am = downloadHandler(
     filename = function() {
       curt = format(Sys.time(), "_%Y%m%d")
-      
+      shinyjs::toggle("ahp_spinner", condition = is_rendering())
       paste(input$meas_ahp_savename, curt, ".png", sep = "")
     },
     content = function(file) {
-      measma = single_meas_fun()[[1]]
-      saveWidget(measma, "temp2.html", selfcontained = FALSE)
+      mp =single_meas_fun()[[1]]
+      saveWidget(mp, "temp2.html", selfcontained = FALSE)
       webshot::webshot("temp2.html", file = file, cliprect = "viewport")
 
     }
   )
-  
+ 
   
   ## AHP sliders
   # output$sliders_ui <- renderUI({

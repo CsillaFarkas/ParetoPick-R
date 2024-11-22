@@ -501,14 +501,14 @@ ui <-
                                  type = 4  , color = "#F7A600"
                                ),
                                
-                               div(id="download_play_meas",
+                               div(id="download_play_id",
                                    div(
                                      style = "display: inline-block; vertical-align: top; margin-right: 0px; margin-top: 5px;",
                                      textInput("meas_play_savename", label = NULL, value = "measure_implementation")
                                    ),
                                    div(
                                  style = "display: inline-block; vertical-align: top; margin-left: 0px; margin-top: 5px;",
-                                       downloadButton("download_play_meas", "Download map")
+                                       downloadButton("download_pm", "Download map")
                                ))%>%hidden(),
                                
                               br(),
@@ -1030,20 +1030,21 @@ ui <-
                              div(style = "display: inline-block; vertical-align: top; margin-left: 0px;",
                                  actionButton("plt_bo", "Plot map of measure implementation under best option"),
                              ),
-                             div(id="ahp_spinner", 
-                                 uiOutput("plt_bo_measure")
-                                 %>% withSpinner(color = "#F7A600", hide.ui = TRUE))
-                             ,
-                             div(id="download_ahp_meas",
+                           
+                             uiOutput("plt_bo_measure"),
+                             withSpinner(uiOutput("spinner_meas"),
+                                         type=4, color ="#F7A600"),
+                             
+                             div(id="download_ahp_id",
                                  div(
                                   style = "display: inline-block; vertical-align: top; margin-right: 0px; margin-top: 5px;",
                                  textInput("meas_ahp_savename", label = NULL, value = "ahp_measure_implementation")
                                     ),
                                  div(
                                    style = "display: inline-block; vertical-align: top; margin-left: 0px; margin-top: 5px;",
-                                 downloadButton("download_play_meas", "Download map")
+                                 downloadButton(outputId="download_am", label ="Download best option map")
                                     )
-                                 )%>%hidden(),
+                                 )%>%hidden()
                            ) 
                            )
                            
