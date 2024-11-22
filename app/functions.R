@@ -537,7 +537,7 @@ plt_lf <- function(data, mes, lo, la, buff_els, col_sel) {
     buffered_data <- st_buffer(relevant_data, dist = 80)
     
     m[[i]] =  leaflet(data = data) %>%
-      setView(lng = lo, lat = la, zoom = 11) %>%
+      setView(lng = lo, lat = la, zoom = 12) %>%
       addProviderTiles(providers$CartoDB.Positron) %>%#poviders$Esri.NatGeoWorldMap, $Stadia.StamenToner, $OpenTopoMap
       addPolygons(
         fillColor = ~ dispal(data[[col]]),
