@@ -139,10 +139,10 @@ server <- function(input, output, session) {
   ### Data Prep ####
   
   # limit input size of objective names
-  shinyjs::runjs("$('#short1').attr('maxlength', 17)")
-  shinyjs::runjs("$('#short2').attr('maxlength', 17)")
-  shinyjs::runjs("$('#short3').attr('maxlength', 17)")
-  shinyjs::runjs("$('#short4').attr('maxlength', 17)")
+  shinyjs::runjs("$('#short1').attr('maxlength', 19)")
+  shinyjs::runjs("$('#short2').attr('maxlength', 19)")
+  shinyjs::runjs("$('#short3').attr('maxlength', 19)")
+  shinyjs::runjs("$('#short4').attr('maxlength', 19)")
   
   
   observeEvent(input$tabs == "data_prep",{
@@ -356,12 +356,20 @@ server <- function(input, output, session) {
       
     })
     #cannot run if already exists, has to be deleted manually
-    if (!file.exists("../input/var_corr_par.csv") | !file.exists("../input/hru_in_optima.RDS") | !file.exists("../input/all_var.RDS")) {
+    
+    observe({
+        if (!file.exists("../input/var_corr_par.csv") | !file.exists("../input/hru_in_optima.RDS") | 
+        !file.exists("../input/all_var.RDS")) {
       shinyjs::show(id = "runprep_show")
-      observe({     if (run_prep_possible$files_avail) {  shinyjs::enable("runprep")} else{  shinyjs::disable("runprep")
-      } })
+      
+     
       
     }
+      
+    })
+    observe({     if (run_prep_possible$files_avail) {  shinyjs::enable("runprep")} else{  shinyjs::disable("runprep")
+    } })
+  
     
     ## run external script that produces variables considered in the clustering
     
@@ -472,7 +480,7 @@ server <- function(input, output, session) {
       
       
       }else {
-        shinyjs::hide("obj_first")
+        # shinyjs::hide("obj_first")
         
         short = readRDS("../input/object_names.RDS")
         objectives(short)
@@ -545,7 +553,7 @@ server <- function(input, output, session) {
           for (i in 1:4) {#this should become obsolete with new function
             var_name <- paste0("steps", i)
             
-            if (abs(min_max$min[i]) <= 0.0005) {
+            if (abs(min_max$min[i]) <= 0.5) {
               min_max$max[i] = min_max$max[i] * 1000
               min_max$min[i] = min_max$min[i] * 1000
               
@@ -654,6 +662,11 @@ server <- function(input, output, session) {
        shinyjs::show("freq_map_play")
        output$freq_map_play = renderUI({
          leaflet() %>%
+           addControl(
+             html = paste("Placeholder for frequency map - ignore me", "</b>"),
+             position = "topright",
+             className = "map-title"
+           )%>%
            addTiles(group = "Streets") %>%
            addProviderTiles(providers$Esri.WorldImagery, group = "Satellite") %>%
            addLayersControl(
@@ -735,8 +748,8 @@ server <- function(input, output, session) {
       
       map_plotted(TRUE)
       eve = fit()%>% rownames_to_column("optimum")
-      
-            # measure plot prep 
+
+        # measure plot prep 
           if (file.exists("../input/hru_in_optima.RDS")) {
             
               cm(
@@ -1992,8 +2005,6 @@ server <- function(input, output, session) {
     output$tabtext = renderText({HTML("You can select up to 12 optima and compare the implementation of measures in the catchment.")})
     
     if(file.exists("../data/hru.shp")) {
-      ##shp for location plot
-      # cm_clean(pull_shp_pure(layername = "basin"))
       ##shps for maps
       if (file.exists("../input/hru_in_optima.RDS")) {
         cm(
@@ -2028,8 +2039,6 @@ server <- function(input, output, session) {
     nplots = length(col_sel)#+1
     m1 = plt_lf(data=hru_sel, col_sel = col_sel, mes = unique(mes$nswrm),la = lalo()[1],lo =lalo()[2], buff_els=buffs)
     
-    # cm2 = plt_cm_pure(data=cm_clean(), la = lalo[1],lo =lalo[2])
-    # m <- c(list(cm2), m1)
     m = m1
     
     sync(m,sync = list(1:nplots),sync.cursor = F) #list(2:nplots) when cm_clean() used
@@ -2053,43 +2062,7 @@ server <- function(input, output, session) {
       })
       }
      
-      # observe({
-      #   print(names(input))
-      # })
-      # observe({
-      #   all_ids <- names(input)
-      #   bounds_id <- grep("^htmlwidget-[0-9]+_bounds$", all_ids, value = TRUE)
-      #  
-      #   numb <- bounds_id[1] #this is  "htmlwidget-1168_bounds"
-      #  #UNSURE IF THIS CAN BE USED TO EXTRACT BOUNDS W/ NORTH AND WEST?
-      #   output$mymap <- renderLeaflet({
-      #     isolate({
-      #       if ("mymap_center" %in% names(input)) {
-      #         mapparams <- list(center = input$mymap_center,
-      #                           zoom = input$mymap_zoom)
-      #       } else {
-      #         mapparams <- list(center = list(lng=0, lat=30),
-      #                           zoom = 4) #setting the view over ~ center of North America
-      #       }
-      #     })
-      #     leaflet() %>%
-      #       setView(lng = mapparams$center$lng, lat = mapparams$center$lat, zoom = mapparams$zoom)  %>% 
-      #       addTiles(options = providerTileOptions(noWrap = TRUE)) 
-      #   })
-      #   
-      #   if (!is.null(bounds)) {
-      #     leafletProxy("map2") %>%
-      #       clearShapes() %>%
-      #       addRectangles(
-      #         lng1 = bounds$west, lat1 = bounds$south,
-      #         lng2 = bounds$east, lat2 = bounds$north,
-      #         fillOpacity = 0.2, color = "red", weight = 2
-      #       )
-      #   }
-      #   
-      # })
-   
- 
+     
   })
   
   observe({

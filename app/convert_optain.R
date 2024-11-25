@@ -17,13 +17,8 @@ suppressPackageStartupMessages({
   library(readr)
   library(ggtext)
   library(viridis)
-  # library(patchwork)
   library(here)
   library(purrr)
-  # library(rnaturalearthdata)
-  library(mapview)
-  library(leafsync)
-  library(leaflet)
   library(tmap)
   library(sf)
   library(ggplot2)
@@ -41,10 +36,6 @@ suppressPackageStartupMessages({
   library(ggplot2)
   library(gridExtra) # or patchwork
   library(htmltools)
-  # library(htmlwidgets) #save html files
-  library(ini)#
-  library(leaflet)#
-  # library(processx) # manage system processes from within shiny (e.g. for pulling R output into shiny)
   library(purrr)
   library(leafsync)
   library(quanteda)
@@ -52,19 +43,13 @@ suppressPackageStartupMessages({
   library(reticulate)
   library(scales)
   library(sf)#
-  library(shiny)#
-  options(shiny.maxRequestSize = 1000*1024^2)
-  # library(shinycssloaders) # for withSpinner()
-  library(shinydashboard)#
-  library(shinyFiles) #drag and drop
-  library(shinyjs) # for hiding parts of the app
-  library(shinyWidgets)#
   library(tibble)
   library(tidyr)
   library(tidyverse)
   library(viridis)
 })
-## Function to check, assign and write priorities
+source("functions.R")
+# Function to check, assign and write priorities
 nswrm_priorities <- function(lu){
   
   prio <- data.frame(nswrm = character(), priority = integer(), mngmt=integer(), stringsAsFactors = FALSE)
@@ -95,8 +80,8 @@ nswrm_priorities <- function(lu){
 
 
 ## Genomes
-  gen = read.table("../data/pareto_genomes.txt", header=F,stringsAsFactors=FALSE,sep = deli("../data/pareto_genomes.txt"))
-  gen=as.data.frame((t(gen))) #now the rownumber is the measures/AEP and the columns are the points on optima
+  gen = read.table("../data/pareto_genomes.txt", header=F,stringsAsFactors=FALSE,sep = deli("../data/pareto_genomes.txt"),encoding = "UTF-8")
+  
   
   print("check: read pareto_genomes.txt...",quote=F)
 

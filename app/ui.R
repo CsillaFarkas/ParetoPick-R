@@ -320,7 +320,6 @@ ui <-
                                        div(style= "vertical-align: top; margin-top: -15px;",actionButton("save_paretofit","Save")))),
                                
                                
-                               
                                br(),
                                div("sq_fitness.txt (optional)",style = "text-align: left; font-size:115%;",
                                    div(style = "margin-top: -15px;",fileInput("sq_in", "", accept = ".txt"),
@@ -384,13 +383,7 @@ ui <-
                                div(style = "margin-top: -15px;",fileInput("shapefile", "", multiple = TRUE, 
                                                                           accept = c(".shp", ".shx", ".dbf", ".prj"))),
                                
-                               # div("6. shapefile called \"basin\" with four components (.shp .dbf .prj and .shx)",style = "text-align: left; font-size:115%"),
-                               # div(style = "margin-top: -15px;",fileInput("basfile", "", multiple = TRUE, 
-                               #                                            accept = c(".shp", ".shx", ".dbf", ".prj"))),
-                               # 
-                             
-                               
-                               
+                      
                                actionButton("files_avail", "Check Files"),
                                uiOutput("fileStatusMessage"),
                                
@@ -468,12 +461,20 @@ ui <-
                            tags$style(HTML(".js-irs-10 .irs-single, .js-irs-10 .irs-bar-edge, .js-irs-10 .irs-bar {background: #009ade ;border-top: 1px solid #009ade ;border-bottom: 1px solid #009ade;}.js-irs-10 .irs-from, .js-irs-10 .irs-to, .js-irs-10 .irs-single { font-size: 13px;background: #009ade !important }")),
                            tags$style(HTML(".js-irs-12 .irs-single, .js-irs-11 .irs-bar-edge, .js-irs-11 .irs-bar {background: #aF58ba ;border-top: 1px solid #aF58ba ;border-bottom: 1px solid #aF58ba;}.js-irs-11 .irs-from, .js-irs-11 .irs-to, .js-irs-11 .irs-single { font-size: 13px;background: #aF58ba !important }")),
                            tags$style(HTML(".js-irs-13 .irs-single, .js-irs-12 .irs-bar-edge, .js-irs-12 .irs-bar {background: #f28522 ;border-top: 1px solid #f28522 ;border-bottom: 1px solid #f28522;}.js-irs-12 .irs-from, .js-irs-12 .irs-to, .js-irs-12 .irs-single { font-size: 13px;background: #f28522 !important }")),
-                           tags$style(HTML("#actual_plt_play_measure {width: 450px;height: 550px;margin-bottom: -150px; } "))
-                           ,
+                           tags$style(HTML("#actual_plt_play_measure {width: 450px;height: 550px;margin-bottom: -150px; } ")),
+                           tags$style(HTML(".spinspin { display: inline-block;
+                                                        width: 20px;
+                                                        height: 20px;
+                                                        border: 2px solid rgba(0, 0, 0, 0.1);
+                                                        border-radius: 50%;
+                                                        border-top-color: #F7A600;
+                                                        animation: spin 0.6s linear infinite;
+                                                        }
+                                                      @keyframes spin {to { transform: rotate(360deg);}}
+                                   
+                                                  ")) ,
                            
                            div(id = "tab_play1",
-                               
-                               
                                
                                div("Pareto Plot", style = "text-align: left; font-size:150%"),
                                plotOutput("first_pareto",click="clickpoint"), 
@@ -505,11 +506,17 @@ ui <-
                                    div(
                                      style = "display: inline-block; vertical-align: top; margin-right: 0px; margin-top: 5px;",
                                      textInput("meas_play_savename", label = NULL, value = "measure_implementation")
-                                   ),
+                                   )
+                                   ,
                                    div(
                                  style = "display: inline-block; vertical-align: top; margin-left: 0px; margin-top: 5px;",
-                                       downloadButton("download_pm", "Download map")
-                               ))%>%hidden(),
+                                       downloadButton("download_pm", "Download map"),
+                                 div(
+                                   id = "spinner_download_play",style = "display: none;",
+                                   style = "display: none; vertical-align: top; margin-left: 0px; margin-top: 5px;",
+                                   div(class = "spinspin")
+                                  ) )
+                               )%>%hidden(),
                                
                               br(),
                                
@@ -1042,8 +1049,12 @@ ui <-
                                     ),
                                  div(
                                    style = "display: inline-block; vertical-align: top; margin-left: 0px; margin-top: 5px;",
-                                 downloadButton(outputId="download_am", label ="Download best option map")
-                                    )
+                                 downloadButton(outputId="download_am", label ="Download best option map"),
+                                 div(
+                                   id = "spinner_download_ahp",style = "display: none;",
+                                   style = "display: none; vertical-align: top; margin-left: 0px; margin-top: 5px;",
+                                   div(class = "spinspin")
+                                 )  )
                                  )%>%hidden()
                            ) 
                            )
