@@ -74,9 +74,12 @@ server <- function(input, output, session) {
   is_rendering <- reactiveVal(FALSE)
   #catchment shapes
   cm <- reactiveVal()
+  cmf <- reactiveVal()
   needs_buffer <- reactiveVal()
   cm_clean <- reactiveVal()
   
+  hru_100 <-  reactiveVal(NULL)
+  hru_matcher <-  reactiveVal(NULL)
   #ahp
   previous_vals = reactiveValues(
     x_var = NULL,
@@ -467,6 +470,7 @@ server <- function(input, output, session) {
  
   ### Play Around Tab ####
   
+
   
   ##check if names of objectives have to be supplied or already present
   observeEvent(input$tabs=="play_around",{ 
@@ -501,6 +505,59 @@ server <- function(input, output, session) {
             k = k+1}}
         
       }
+    
+    #prep for frequency mapping
+    
+    observe({
+      if (file.exists("../input/hru_in_optima.RDS") && file.exists("../input/nswrm_priorities.csv")) {
+        
+        hru = readRDS("../input/hru_in_optima.RDS")
+        prio = read.csv("../input/nswrm_priorities.csv")
+        
+        yoy <-  hru %>%      #consider only dominant lu and delete never-activated rows
+          pivot_longer(cols = starts_with("V"), names_to = "Variable", values_to = "Value") %>%
+          group_by(id) %>%
+          mutate(
+            priority = prio$priority[match(Value, prio$nswrm)],
+            min_priority = min(priority, na.rm = TRUE), 
+            Value = ifelse(priority == min_priority, Value, NA) 
+          ) %>%
+          ungroup() %>%
+          select(-priority, -min_priority) %>% 
+          pivot_wider(names_from = "Variable", values_from = "Value") %>% 
+          mutate(measure = apply(across(starts_with("V")), 1, function(x) {
+            unique_values <- unique(na.omit(x))
+            if (length(unique_values) == 1) { #first unique value otherwise NA
+              return(unique_values[1])
+            } else {
+              return(NA)
+            }
+          }))
+        
+        pollo = yoy%>%
+          mutate( non_na_count = rowSums(!is.na(select(., starts_with("V"))))
+          ) %>% select(id, non_na_count, measure)
+                
+         #for comparison   
+        hru_100(pollo)    
+        
+        #for matching
+        colnames(yoy) = gsub("^V", "", colnames(yoy))
+        hru_matcher(yoy)
+      
+      }
+    })
+    
+    observe({
+     if(all(sapply(c(  "../data/hru.shp",
+                            "../data/hru.shx",
+                            "../data/hru.dbf",
+                            "../data/hru.prj"),file.exists))){
+       req(hru_100())
+       hio = hru_100()
+       cmf(pull_fr_shp(hio=hio))
+     }
+    })
     
     ## update slider labels based on objectives
     observe({
@@ -558,7 +615,7 @@ server <- function(input, output, session) {
               min_max$min[i] = min_max$min[i] * 1000
               
               range_value = append(range_value,(rownames(min_max[i, ])))
-              print(i)
+              
             }
           
           if (abs(min_max$min[i]) > 10000) {
@@ -656,26 +713,46 @@ server <- function(input, output, session) {
        "../data/hru.shx",
        "../data/hru.dbf",
        "../data/hru.prj"
-     )
+       )
      
      if (all(file.exists(map_files))) {
        shinyjs::show("freq_map_play")
+       needs_buffer(pull_buffer()) #needs nswrm_priorities.csv
+       if(file.exists("../data/hru.con")){lalo(plt_latlon(conpath = "../data/hru.con"))}
+       
        output$freq_map_play = renderUI({
-         leaflet() %>%
-           addControl(
-             html = paste("Placeholder for frequency map - ignore me", "</b>"),
-             position = "topright",
-             className = "map-title"
-           )%>%
-           addTiles(group = "Streets") %>%
-           addProviderTiles(providers$Esri.WorldImagery, group = "Satellite") %>%
-           addLayersControl(
-             baseGroups = c("Streets", "Satellite"),
-             options = layersControlOptions(collapsed = FALSE)
-           )
+         play_freq()
        })
+       
+       
      }})
-  
+ 
+   play_freq = function(){
+     req(hru_matcher(), fit(),f_scaled(),cmf(),hru_100(),objectives(),needs_buffer(),lalo())
+     
+     dat = scaled_abs_match(minval_s=c(input$obj1[1],input$obj2[1],input$obj3[1],input$obj4[1]),
+                            maxval_s=c(input$obj1[2],input$obj2[2],input$obj3[2],input$obj4[2]),
+                            abs_tab = fit(),scal_tab = f_scaled(),
+                            allobs = objectives(),smll=F)
+     
+     optima <-unique( match(do.call(paste, dat), do.call(paste, fit())))
+     hruu <- hru_matcher()#hruu is a helper variable
+    
+     hru_subset_freq = hruu[,c("id",as.character(optima))]     #subset to only those optima in selection
+
+     hru_freq = hru_subset_freq %>%rowwise() %>%mutate(
+       non_na_count = sum(!is.na(c_across(setdiff(names(hru_subset_freq), "id")))  )
+     ) %>% select(id, non_na_count)
+
+     
+     #actual frequency value to plot
+     hruu = hru_100()
+     hru_share = hru_freq%>%left_join(hruu,by="id")%>%mutate(freq=non_na_count.x/non_na_count.y)%>%select(id,measure,freq)
+     
+    m = plt_freq(data=cmf(), remaining=hru_share, la = lalo()[1],lo =lalo()[2],buff_els = needs_buffer(), mes = unique(hru_share$measure))
+    return(m)
+   }
+     
   
     ## show rest of tab if all required data available
     observe({
