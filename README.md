@@ -140,10 +140,9 @@ id,	name,	nswrm,	obj_id
 
 # To do
 ## Prio 1
-  * add one plot of map with measure frequency, percentage of implemented across current selection, also as table  (Visualising)
+  * add a table with measure frequency (Visualising)
   * convert_optain requires some failsafe controls for empty values
-  * HTML or if possible .png download for individual measure implementation maps, not possible across all (Cluster Analysis)
-  * observe(pareto_fitness) each tab
+  * observe(pareto_fitness) each tab, currently needs a reload sometimes
 
 ## Prio 2
   * catch empty selection and replace "replacement has length zero" with "no optima fulfill these conditions", fix reload when selection changes (Visualisation)
