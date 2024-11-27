@@ -1,8 +1,6 @@
-﻿nswrm,priority,mngmt
-lowtillcc,5,1
-lowtill,5,1
-grassslope,4,0
-buffer,3,0
-hedge,2,0
-pond,1,0
-droughtplt,5,1
+"nswrm","priority","mngmt"
+"pond",1,0
+"hedge",2,0
+"grassslope",3,0
+"buffer",4,0
+"lowtillcc",5,1

@@ -49,7 +49,8 @@ suppressPackageStartupMessages({
   library(viridis)
 })
 source("functions.R")
-# Function to check, assign and write priorities
+
+# Function to check, assign and write priorities, hardcodes everything that has been used in CoMOLA
 nswrm_priorities <- function(lu){
   
   prio <- data.frame(nswrm = character(), priority = integer(), mngmt=integer(), stringsAsFactors = FALSE)
@@ -78,10 +79,8 @@ nswrm_priorities <- function(lu){
   return(prio)
 }
 
-
 ## Genomes
   gen = read.table("../data/pareto_genomes.txt", header=F,stringsAsFactors=FALSE,sep = deli("../data/pareto_genomes.txt"),encoding = "UTF-8")
-  
   
   print("check: read pareto_genomes.txt...",quote=F)
 
@@ -90,20 +89,27 @@ nswrm_priorities <- function(lu){
   gen <- gen %>%
     mutate(id = c(1:nrow(gen)), .before = V1) #id is number of AEP
 
-# genome_hru matches AEP with hrus, several hrus for each AEP 
+# genome_hru matches AEP with hrus, several hrus for each AEP (hru = obj_id)
   genome_hru <- read.csv('../data/measure_location.csv')
 
   print("check: read measure_location.csv...",quote=F)
+  
+  #count the number of extra columns required
+ mc=  genome_hru %>%
+    mutate(num_count = str_count(obj_id, ",") + 1) %>%
+    summarize(max_numbers = max(num_count)) %>%
+    pull(max_numbers)
+  
 #Separate values in obj_id/every hru its own column
   genome_hru_separate <- genome_hru %>%
-     separate(obj_id, paste0("hru_sep_", 1:35), sep = ',', remove = FALSE)#hru = obj_id in separate columns
+     separate(obj_id, paste0("hru_sep_", 1:mc), sep = ',', remove = FALSE)#hru = obj_id in separate columns
 
   gen_act_hru <- genome_hru_separate %>%
      left_join(gen, by = "id") #id = individual AEPs
 
 # Pivot 
   gen_act <- gen_act_hru %>%
-   pivot_longer(cols = paste0("hru_sep_", 1:35), names_to = "code", values_to = "name_new") %>% #name_new = hru separated
+   pivot_longer(cols = paste0("hru_sep_", 1:mc), names_to = "code", values_to = "name_new") %>% #name_new = hru separated
    relocate(name_new, .after = obj_id)%>%drop_na(name_new)
 
 # Eliminate space before some "name_new"
@@ -114,7 +120,7 @@ nswrm_priorities <- function(lu){
   mesrs = unique(meloc$nswrm) #only these have to be allocated
   prios <- nswrm_priorities(mesrs)
 
-  gen_act_prio= gen_act %>%
+  gen_act_prio= gen_act %>% #main df to work with, activation, measure, priority, location/hru
     left_join(prios, by = c("nswrm" = "nswrm")) %>%
     relocate(priority, .after = nswrm)%>%arrange(priority)
   
@@ -124,7 +130,7 @@ nswrm_priorities <- function(lu){
 #### Land use Cover of HRUs ####
  ## 1. create a dataframe defining all land uses of hru across pareto optima
  # empty hru dataframe
-  hru = data.frame(id=unique(gen_act_prio$name_new)) 
+  hru = data.frame(id=unique(gen_act_prio$name_new)) #name_new is hru
   hru[paste0("V",1:nopt)]=NA
   
   # reduce the df size for efficiency
