@@ -16,9 +16,9 @@ foo1 <- function(x){
   }
 }
 ## check if any packages are missing (not only here but also for external convert_optain)
-foo1(c("corrplot", "dplyr","DT", "fs","fst", "geosphere", "ggplot2",  "ggtext", "gridExtra", 
+foo1(c("corrplot","cowplot", "dplyr","DT", "fs","fst","geosphere", "ggplot2",  "ggtext", "gridExtra", 
        "here",  "htmltools","htmlwidgets",   "ini",    "leaflet",  "leafsync",
-       "mapview",  "plotly",  "processx",   "purrr",
+       "mapview",  "plotly",  "processx", "purrr",
         "quanteda",   "RColorBrewer",  "readr",  "reticulate",
        "scales",  "sf",  "shiny", "shinycssloaders","shinydashboard", 
        "shinyFiles", "shinyjs","shinythemes",  "shinyWidgets",  "sp", 
@@ -43,6 +43,7 @@ library(leafsync)
 library(mapview)
 library(quanteda)
 library(RColorBrewer)
+# library(reactlog)
 library(reticulate)
 library(scales)
 library(sf)#
@@ -58,7 +59,7 @@ library(tidyr)
 library(tidyverse)
 library(viridis)
 library(webshot)
-
+# reactlog_enable()
 options(warn = -1)
 source("functions.R")
 

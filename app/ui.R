@@ -421,7 +421,6 @@ ui <-
                          sidebarPanel( width = 3,
                                        
                                        
-                                       
                                        textOutput("uploaded_pareto"),
                                        br(),
                                        br(),
@@ -668,7 +667,7 @@ ui <-
                                    selectInput(inputId = "excl",label = "variables to exclude", choices = NULL, multiple = TRUE),
                                    
                                    div(id="show_conf","5. Please confirm your choice before proceeding to the next tab.",style = "text-align: left; font-size:150%"
-                                       ,actionButton("confirm_selection", "Confirm Selection"))%>%hidden,
+                                       ,actionButton("confirm_selection", "Confirm Selection and go to next tab"))%>%hidden,
                                    # print confirmed selection
                                    uiOutput(outputId = "confirmed_selection")
                                    

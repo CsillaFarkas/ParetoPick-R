@@ -500,7 +500,7 @@ plt_freq = function(data,lo, la, buffers , remaining, dispal = pal, mes=mes) {
 ## pull clean cm for frequency plotting and buffer generation
 pull_shp_clean = function(layername = "hru",all_ids){
   if(file.exists(paste0("../data/",layername,".shp"))){
-    req(all_ids) #ensure hru_100 has been created
+    # req(hru_100()) #ensure hru_100 has been created
     
     cm =  read_sf(dsn = "../data/", layer = layername)#adapt path
     cm = cm %>% filter(id %in% all_ids)#remove all hrus that are never activated 

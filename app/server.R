@@ -40,6 +40,10 @@ server <- function(input, output, session) {
   er <- reactiveVal(NULL) #position
   best_option = reactiveVal(NULL)
   fit1 = reactiveVal()
+  dat_matched = reactiveVal()
+  buffers = reactiveVal(NULL)
+  cmf = reactiveVal(NULL)
+  
   #control/limit range of objectives, works in combination with slider input$ran1 etc.
   default_vals = reactiveVal(list(ran1 = c(0,100),
                                   ran2 = c(0,100),
@@ -76,10 +80,11 @@ server <- function(input, output, session) {
   cm <- reactiveVal()
   cmf <- reactiveVal()
   needs_buffer <- reactiveVal()
+  hru_matcher <- reactiveVal()
   cm_clean <- reactiveVal()
   
   hru_100 <-  reactiveVal(NULL)
-  hru_matcher <-  reactiveVal(NULL)
+  prio <- reactiveVal(NULL)
   #ahp
   previous_vals = reactiveValues(
     x_var = NULL,
@@ -469,14 +474,13 @@ server <- function(input, output, session) {
   
  
   ### Play Around Tab ####
-  
 
-  
   ##check if names of objectives have to be supplied or already present
   observeEvent(input$tabs=="play_around",{ 
     ## make or pull objectives()
     map_plotted(FALSE)
     
+  
     if(!file.exists("../input/object_names.RDS")) {
       
       shinyjs::hide(id = "tab_play1")#do not show visualisation tab content 
@@ -506,58 +510,7 @@ server <- function(input, output, session) {
         
       }
     
-    #prep for frequency mapping
-    
-    observe({
-      if (file.exists("../input/hru_in_optima.RDS") && file.exists("../input/nswrm_priorities.csv")) {
-        
-        hru = readRDS("../input/hru_in_optima.RDS")
-        prio = read.csv("../input/nswrm_priorities.csv")
-        
-        yoy <-  hru %>%      #consider only dominant lu and delete never-activated rows
-          pivot_longer(cols = starts_with("V"), names_to = "Variable", values_to = "Value") %>%
-          group_by(id) %>%
-          mutate(
-            priority = prio$priority[match(Value, prio$nswrm)],
-            min_priority = min(priority, na.rm = TRUE), 
-            Value = ifelse(priority == min_priority, Value, NA) 
-          ) %>%
-          ungroup() %>%
-          select(-priority, -min_priority) %>% 
-          pivot_wider(names_from = "Variable", values_from = "Value") %>% 
-          mutate(measure = apply(across(starts_with("V")), 1, function(x) {
-            unique_values <- unique(na.omit(x))
-            if (length(unique_values) == 1) { #first unique value otherwise NA
-              return(unique_values[1])
-            } else {
-              return(NA)
-            }
-          }))
-        
-        pollo = yoy%>%
-          mutate( non_na_count = rowSums(!is.na(select(., starts_with("V"))))
-          ) %>% select(id, non_na_count, measure)
-                
-         #for comparison   
-        hru_100(pollo)    
-        
-        #for matching
-        colnames(yoy) = gsub("^V", "", colnames(yoy))
-        hru_matcher(yoy)
-      
-      }
-    })
-    
-    observe({
-     if(all(sapply(c(  "../data/hru.shp",
-                            "../data/hru.shx",
-                            "../data/hru.dbf",
-                            "../data/hru.prj"),file.exists))){
-       req(hru_100())
-       hio = hru_100()
-       cmf(pull_fr_shp(hio=hio))
-     }
-    })
+ 
     
     ## update slider labels based on objectives
     observe({
@@ -704,56 +657,22 @@ server <- function(input, output, session) {
        
       }
     })
-    #side bar plot
-   observe({
-     map_files = c(
-       "../data/hru.con",
-       "../input/nswrm_priorities.csv",
-       "../data/hru.shp",
-       "../data/hru.shx",
-       "../data/hru.dbf",
-       "../data/hru.prj"
-       )
+
+   
+   
+   observe({#for first_pareto, play_freq and scatter
+     req(f_scaled(),objectives(),fit(),input$obj1,input$obj2,input$obj3,input$obj4)
      
-     if (all(file.exists(map_files))) {
-       shinyjs::show("freq_map_play")
-       needs_buffer(pull_buffer()) #needs nswrm_priorities.csv
-       if(file.exists("../data/hru.con")){lalo(plt_latlon(conpath = "../data/hru.con"))}
-       
-       output$freq_map_play = renderUI({
-         play_freq()
-       })
-       
-       
-     }})
+     objs = objectives()
+     fit_data = fit()
+     f_scaled_data = f_scaled()
+     dat_matched(scaled_abs_match(minval_s=c(input$obj1[1],input$obj2[1],input$obj3[1],input$obj4[1]),
+                                  maxval_s=c(input$obj1[2],input$obj2[2],input$obj3[2],input$obj4[2]),
+                                  abs_tab = fit_data,scal_tab =f_scaled_data,
+                                  allobs = objs,smll=F))
+   })
  
-   play_freq = function(){
-     req(hru_matcher(), fit(),f_scaled(),cmf(),hru_100(),objectives(),needs_buffer(),lalo())
-     
-     dat = scaled_abs_match(minval_s=c(input$obj1[1],input$obj2[1],input$obj3[1],input$obj4[1]),
-                            maxval_s=c(input$obj1[2],input$obj2[2],input$obj3[2],input$obj4[2]),
-                            abs_tab = fit(),scal_tab = f_scaled(),
-                            allobs = objectives(),smll=F)
-     
-     optima <-unique( match(do.call(paste, dat), do.call(paste, fit())))
-     hruu <- hru_matcher()#hruu is a helper variable
-    
-     hru_subset_freq = hruu[,c("id",as.character(optima))]     #subset to only those optima in selection
-
-     hru_freq = hru_subset_freq %>%rowwise() %>%mutate(
-       non_na_count = sum(!is.na(c_across(setdiff(names(hru_subset_freq), "id")))  )
-     ) %>% select(id, non_na_count)
-
-     
-     #actual frequency value to plot
-     hruu = hru_100()
-     hru_share = hru_freq%>%left_join(hruu,by="id")%>%mutate(freq=non_na_count.x/non_na_count.y)%>%select(id,measure,freq)
-     
-    m = plt_freq(data=cmf(), remaining=hru_share, la = lalo()[1],lo =lalo()[2],buff_els = needs_buffer(), mes = unique(hru_share$measure))
-    return(m)
-   }
-     
-  
+ 
     ## show rest of tab if all required data available
     observe({
       
@@ -773,13 +692,11 @@ server <- function(input, output, session) {
          all(fit()[[input$y_var3]]<=0)){shinyjs::show("rev_plot")}else{shinyjs::hide("rev_plot")}
     })
     
+  
     first_pareto_fun = function(){
-      req(f_scaled(),objectives(),fit(),input$obj1,input$x_var3)
+      req(input$x_var3,dat_matched())
       #match scaled input with unscaled fit() to create dat
-      dat = scaled_abs_match(minval_s=c(input$obj1[1],input$obj2[1],input$obj3[1],input$obj4[1]),
-                       maxval_s=c(input$obj1[2],input$obj2[2],input$obj3[2],input$obj4[2]),
-                       abs_tab = fit(),scal_tab = f_scaled(),
-                       allobs = objectives(),smll=F)
+      dat=dat_matched()
       #run plt_sc_optima with sq but no other options
       return(plt_sc_optima(dat=dat,    x_var = input$x_var3,
                     y_var = input$y_var3,
@@ -790,7 +707,7 @@ server <- function(input, output, session) {
       
     }
     
-    output$first_pareto <- renderPlot({ first_pareto_fun() })
+    output$first_pareto <- renderPlot({ first_pareto_fun() },outputArgs = list(deferUntilFlush = FALSE))
   
     observeEvent(input$clickpoint,{#selection for additional ring in point plot
       clickpoint_button(TRUE)
@@ -996,7 +913,6 @@ server <- function(input, output, session) {
     
     colnms = objectives()
     
- 
     ## table of chosen line 
     output$click_info <- renderTable({
       if(!is.null(axiselected())){
@@ -1011,7 +927,7 @@ server <- function(input, output, session) {
       
       
       lclick <<- as.data.frame(er())
-      colnames(lclick) = new_colnms
+      colnames(lclick) <- new_colnms
       lclick
         }, include.rownames = F)
     
@@ -1028,8 +944,7 @@ server <- function(input, output, session) {
       
     }else{lclick <- cbind(optimum = rownames(lclick), lclick)
            write.csv(lclick,file=paste0(output_dir,"selected_optima.csv"),row.names = F)
-      
-      write.table()
+    
     }}
   })
   
@@ -1093,7 +1008,6 @@ server <- function(input, output, session) {
     dn2 = add_perc(df1=dn, df2= wr)
     dn2 = dn2 %>%as.data.frame() %>%mutate(across(where(is.numeric), ~as.numeric(gsub("-", "", as.character(.))))) #remove minus
     
-    
     #get unit input (this turns into matrix)
     if(!is.null(axiselected())){ new_colnms <- mapply(function(col, unit) {
       if (unit != "") {
@@ -1144,29 +1058,121 @@ server <- function(input, output, session) {
    df
   }, rownames = T)
   
-  ## barplot
-  # output$sliders_plot <- renderPlot({
-  #  req(fit(),f_scaled(),objectives(),input$obj1,input$obj2,input$obj3,input$obj4)
-  #  
-  #   matchi =  reactive({scaled_abs_match(
-  #     minval_s = c(input$obj1[1], input$obj2[1], input$obj3[1], input$obj4[1]),
-  #     maxval_s = c(input$obj1[2], input$obj2[2], input$obj3[2], input$obj4[2]),
-  #     abs_tab = fit(),allobs = objectives(),scal_tab = f_scaled(),
-  #     smll = F)})
-  #   
-  #   pldat<- prep_diff_bar(abs_tab=fit(),red_tab=matchi(),allobs= objectives(), neg_var=input$sel_neg)
+  # observe( {print(paste0("cmf da",is.null(cmf()),"\n","hru_1000 is da",is.null(hru_100()),"\n","lalo is da",is.null(lalo()),
+                         # "\n","prio is da",is.null(prio()),"\n","dat_matched is da;",is.null(dat_matched()),"\n","buffers is da",is.null(buffers())))})
+  
+  #frequency plot
+  observe({
+    map_files = c(
+      "../data/hru.con",
+      "../input/nswrm_priorities.csv",
+      "../data/hru.shp",
+      "../data/hru.shx",
+      "../data/hru.dbf",
+      "../data/hru.prj",
+      "../input/hru_in_optima.RDS"
+    )
+
+    if (all(file.exists(map_files))) {
+      shinyjs::show("freq_map_play")
+      needs_buffer(pull_buffer()) #needs nswrm_priorities.csv
+
+      hru= readRDS("../input/hru_in_optima.RDS")
+      prio(read.csv("../input/nswrm_priorities.csv"))
+
+      hru <-  hru %>%
+        pivot_longer(cols = starts_with("V"), names_to = "Variable", values_to = "Value") %>%
+        group_by(id) %>%
+        mutate(
+          priority = prio()$priority[match(Value, prio()$nswrm)],
+          min_priority = min(priority, na.rm = TRUE),
+          Value = ifelse(priority == min_priority, Value, NA)
+        ) %>%
+        ungroup() %>%
+        select(-priority, -min_priority) %>%
+        pivot_wider(names_from = "Variable", values_from = "Value") %>%
+        mutate(measure = apply(across(starts_with("V")), 1, function(x) {
+          unique_values <- unique(na.omit(x))
+          if (length(unique_values) == 1) { #first unique value otherwise NA
+            return(unique_values[1])
+          } else {
+            return(NA)
+          }
+        }))
+      
+   
+      # comparison dataset (also pull straight away)
+      hru_100(hru %>%
+        mutate(
+          non_na_count = rowSums(!is.na(select(., starts_with("V"))))
+        ) %>%
+        select(id, non_na_count, measure))
+
+
+      #for matching
+      colnames(hru) = gsub("^V", "", colnames(hru))
+      hru_matcher(hru)
+
+      cmf(pull_shp_clean(all_ids=hru_100()$id))
+
+      #buffers forever
+      bc = left_join(cmf(),hru_100(), by = c("id"))%>%st_make_valid() #only those with highest priority
+      buff_els = needs_buffer()
+      relda <- bc[bc[["measure"]] %in% buff_els, ]%>%select(-non_na_count)
+      relda_utm <-  st_transform(relevant_data, crs = 32633) # UTM zone 33N
+      buffy <-st_buffer(relda_utm, dist = 80)
+      buffers(st_transform(buffy, crs = st_crs(relda))) #all buffers ever required
+
+
+      if(file.exists("../data/hru.con")){lalo(plt_latlon(conpath = "../data/hru.con"))}
+      # 
+      ###test data
+      # cmf= pull_shp_clean(all_ids=hru_100$id)
+      # bc = left_join(cmf,hru_100, by = c("id"))%>%st_make_valid() #only those with highest priority
+      # buff_els = pull_buffer()
+      # relevant_data <- bc[bc[["measure"]] %in% buff_els, ]%>%select(-non_na_count)
+      
+      ###end test data
+    }})
   # 
-  #   plot_diff_bar(pldat,obj_choices=objectives())
   # 
-  # })
+  # 
+  play_freq = function(){ #excessive function
+    req(cmf(),hru_100(),lalo(),prio(), dat_matched(),buffers(),hru_matcher(),fit())
+
+    dat = dat_matched()
+  
+    optima <-unique( match(do.call(paste, dat), do.call(paste, fit())))
+
+    hru_subset_freq = hru_matcher()[,c("id",as.character(optima))]     #subset to only those optima in selection
+  
+    hru_freq = hru_subset_freq %>%rowwise() %>%mutate(
+      non_na_count = sum(!is.na(c_across(setdiff(names(hru_subset_freq), "id")))  )
+    ) %>% select(id, non_na_count)
+
+    #actual frequency value to plot
+    hru_share = hru_freq%>%left_join(hru_100(),by="id")%>%mutate(freq=non_na_count.x/non_na_count.y)%>%select(id,measure,freq)
+  
+    #make unique measures outside
+    mes = unique(hru_share$measure)
+
+  #make palette outside and pass to it
+    man_col = c("#66C2A5", "#4db818", "#965c1d", "#F7A600", "#03597F", "#83D0F5",  "#FFEF2C",   "#a84632",  "#b82aa5",  "#246643" )
+    man_col = man_col[1:length(unique(mes))]
+    pal = colorFactor(palette = man_col, domain = unique(mes), na.color = "lightgrey")
+
+    m = plt_freq(data=cmf(),lo=lalo()[2], la=lalo()[1], buffers=buffers(), remaining=hru_share,dispal=pal, mes = mes)
+    return(m)
+  }
+
+   output$freq_map_play = renderUI({ play_freq()  },outputArgs = list(deferUntilFlush = FALSE))
+  
   
   ## scatter plot
   scat_fun = function(){
-    req(fit(), objectives(),f_scaled())
-    scat_abs = scaled_abs_match(minval_s=c(input$obj1[1],input$obj2[1],input$obj3[1],input$obj4[1]),
-                                maxval_s=c(input$obj1[2],input$obj2[2],input$obj3[2],input$obj4[2]),
-                                abs_tab = fit(),scal_tab = f_scaled(),
-                                allobs = objectives(),smll=F)
+    req(fit(), objectives(),f_scaled(),dat_matched())
+   
+    scat_abs = dat_matched()
     
     if(!is.null(er())){
       rom = which(apply(scat_abs, 1, function(row) all(row == er())))
@@ -1189,8 +1195,9 @@ server <- function(input, output, session) {
       plot_scatter = plt_sc(dat = scat_abs, ranges = mima,col = col,size = sizz)
     }
 
-    
-    grid.arrange(grobs = plot_scatter, nrow = 3, ncol = 2)}
+    plot_grid(plot_scatter, ncol = 2)
+    # grid.arrange(grobs = plot_scatter, nrow = 3, ncol = 2)
+    }
   
   
     output$scatter_plot <- renderPlot({ scat_fun()})
@@ -1447,6 +1454,9 @@ server <- function(input, output, session) {
   ## on clicking confirm selection the config ini is updated
   observeEvent(input$confirm_selection,{
     pca_remove(input$excl)
+    
+    shinydashboard::updateTabItems(session, "tabs", "pca")
+    
    
     output$corrtable <- renderDT({
       datatable(find_high_corr(corr,threshold = input$thresh,tab = T,strike = input$excl),escape = FALSE)}) #tab = T means this returns the full table, =F is for pulling variables
@@ -2670,5 +2680,5 @@ server <- function(input, output, session) {
     })
 
   })
- 
+
 }
