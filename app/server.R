@@ -188,7 +188,7 @@ server <- function(input, output, session) {
     })
     
     observeEvent(input$save_sq_in, {
-      req(sq_file(), req(objectives))
+      req(sq_file(),objectives())
       save_sq <- sq_file()$name
       save_path_sq <- file.path(save_dir, save_sq)
       file.copy(sq_file()$path,save_path_sq,overwrite = TRUE) #copy sq_fitness.txt
@@ -787,8 +787,7 @@ server <- function(input, output, session) {
       return(m1)
       play_running(FALSE) #for spinner
     }
- # observe({print(paste0(getwd(),"/output/",input$meas_play_savename))})
-    
+
     output$download_pm <- downloadHandler(
 
         filename = function(){
