@@ -435,6 +435,83 @@ pull_fr_shp = function(layername = "hru", hio){
 
 }
 
+## plot frequency
+plt_freq = function(data,lo, la, buffers , remaining, dispal = pal, mes=mes) {
+  
+  data = left_join(data,remaining, by = c("id"))%>%st_make_valid() #only those with highest priority
+  
+  buffered_data <- buffers %>%filter(id %in% remaining$id)
+  buffered_data <- buffered_data %>%
+    inner_join(remaining %>% select(-measure), by = "id") %>%
+    st_make_valid()
+  
+  
+  m =  leaflet(data=data) %>%
+    setView(lng = lo, lat = la, zoom = 12) %>%
+    addProviderTiles(providers$CartoDB.Positron) %>%
+    addPolygons(
+      fillColor = ~ dispal(measure),
+      fillOpacity = ~ freq,
+      color = "lightgrey",
+      weight = 1,
+      popup = ~ paste0("Value: ", mes),
+      highlightOptions = highlightOptions(
+        color = "white",
+        weight = 2,
+        bringToFront = TRUE
+      ),
+      label = ~ measure
+    ) %>%
+    addPolygons(
+      data = buffered_data,
+      fillColor = NA,
+      color = ~ dispal(measure),
+      weight = 1,
+      dashArray = "3",
+      fillOpacity = ~ freq,
+      highlightOptions = highlightOptions(
+        color = ~ dispal(measure),
+        weight = 2,
+        bringToFront = TRUE
+      )
+    )
+  
+  color_swatches <- lapply(mes, function(mess) {
+    base_color <- dispal(mess)
+    sapply(c(0.2, 0.5, 1), function(opacity) {
+      rgb(t(col2rgb(base_color) / 255), alpha = opacity, maxColorValue = 1)
+    })
+  })
+  
+  
+  m = m %>%
+    addLegend(
+      position = "bottomright",
+      colors = unlist(color_swatches),
+      labels = rep(c("Low", "Medium", "High"), length(mes)),
+      title = "Measure Frequency",
+      opacity = 1
+    )
+  
+  
+  return(m)
+}
+
+## pull clean cm for frequency plotting and buffer generation
+pull_shp_clean = function(layername = "hru",all_ids){
+  if(file.exists(paste0("../data/",layername,".shp"))){
+    req(all_ids) #ensure hru_100 has been created
+    
+    cm =  read_sf(dsn = "../data/", layer = layername)#adapt path
+    cm = cm %>% filter(id %in% all_ids)#remove all hrus that are never activated 
+    
+    cm = st_buffer(cm, 0.0) #clean geometry
+    cm = cm %>%select(id,geometry)%>% st_transform(., 4326)
+    
+    return(cm)}else{return(NULL)} 
+}
+
+
 ## make large dataset
 pull_shp = function(layername = "hru", optims, hru_in_opt_path){
   if(file.exists(paste0("../data/",layername,".shp"))){
@@ -577,66 +654,7 @@ plt_lf <- function(data, mes, lo, la, buff_els, col_sel) {
 
 ## frequency of measure implementation
 
-plt_freq = function(data,lo, la, buff_els, remaining,mes) {
-  
-  data = left_join(data, remaining, by = c("id")) %>% select(id, freq, geometry, measure)%>%st_make_valid() #only those with highest priority
-  
-  man_col = c("#66C2A5", "#4db818", "#965c1d", "#F7A600", "#03597F", "#83D0F5",  "#FFEF2C",   "#a84632",  "#b82aa5",  "#246643" )
-  man_col = man_col[1:length(unique(mes))]
-  dispal = colorFactor(palette = man_col, domain = unique(mes), na.color = "lightgrey")
-  
-  #buffer
-  relevant_data <- data[data[["measure"]] %in% buff_els, ] 
-  buffered_data <- st_buffer(relevant_data, dist = 80)
-  
-  m =  leaflet(data=data) %>%
-    setView(lng = lo, lat = la, zoom = 12) %>%
-    addProviderTiles(providers$CartoDB.Positron) %>%
-    addPolygons(
-      fillColor = ~ dispal(measure),
-      fillOpacity = ~ freq,
-      color = "lightgrey",
-      weight = 1,
-      popup = ~ paste0("Value: ", mes),
-      highlightOptions = highlightOptions(
-        color = "white",
-        weight = 2,
-        bringToFront = TRUE
-      ),
-      label = ~ measure
-    ) %>%
-    addPolygons(
-      data = buffered_data,
-      fillColor = NA,
-      color = ~ dispal(relevant_data[["measure"]]),
-      weight = 1,
-      dashArray = "3",
-      fillOpacity = ~ freq,
-      highlightOptions = highlightOptions(
-        color = ~ dispal(relevant_data[["measure"]]),
-        weight = 2,
-        bringToFront = TRUE
-      )
-    )
-  
-  mes_unique = unique(data[["measure"]])
-  
-  for(mess in mes_unique){
-    base_color <- dispal(mess)
-    color_swatches <- sapply(c(0.2, 0.5, 1), function(opacity) {
-      rgb(t(col2rgb(base_color) / 255), alpha = opacity, maxColorValue = 1)})
-    
-    m = m %>%
-      addLegend(
-        "bottomright",
-        colors = color_swatches,
-        labels = c("Low", "Medium", "High"),
-        title = paste(mess)
-      ) 
-  }
-  
-  return(m)
-}
+
 
 ## cm for location
 plt_cm_pure = function(data = cm,
