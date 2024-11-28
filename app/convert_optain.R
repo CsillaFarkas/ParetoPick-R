@@ -120,7 +120,7 @@ nswrm_priorities <- function(lu){
   mesrs = unique(meloc$nswrm) #only these have to be allocated
   prios <- nswrm_priorities(mesrs)
 
-  gen_act_prio= gen_act %>% #main df to work with, activation, measure, priority, location/hru
+  gen_act_prio= gen_act %>% 
     left_join(prios, by = c("nswrm" = "nswrm")) %>%
     relocate(priority, .after = nswrm)%>%arrange(priority)
   
@@ -130,16 +130,19 @@ nswrm_priorities <- function(lu){
 #### Land use Cover of HRUs ####
  ## 1. create a dataframe defining all land uses of hru across pareto optima
  # empty hru dataframe
-  hru = data.frame(id=unique(gen_act_prio$name_new)) #name_new is hru
+  
+  print(paste0("Allocating to ", length(unique(gen_act_prio$name_new))," different hrus."))
+  
+  hru = data.frame(id=unique(gen_act_prio$name_new)) #name_new is hru, id switches from AEP to hru here!
   hru[paste0("V",1:nopt)]=NA
   
-  # reduce the df size for efficiency
+  # reduce the df size for efficiency ===> create main df to work with, activation, measure, priority, involved hru
   gen_check = gen_act_prio %>% select(-c(id,name,obj_id))
 
   print("calculating: land use allocation in optima under priorities...",quote=F)
   
 # loop through optima
-for(op in paste0("V", 1:nopt)){ #instable looping, Cordi...
+for(op in paste0("V", 1:nopt)){ 
   
   # only consider activated hrus
   all_act = gen_check %>%select(c(all_of(op),name_new, nswrm,priority))%>%filter(.data[[op]]==2)%>%group_by(name_new)
@@ -155,19 +158,18 @@ for(op in paste0("V", 1:nopt)){ #instable looping, Cordi...
       select(-nswrm)
   }
   
-  
+  if(nrow(all_act)!=nrow(no_confl)){
   # With conflicting use (no ungroup and regroup needed)
-  confl_use <- all_act %>% filter(n() > 1) %>% 
+  confl_use <- all_act %>% filter(n() > 1) %>% #confl_use is then distinct solution
     filter(priority == min(priority)) %>% 
     distinct(name_new, nswrm)
-  
-  
+ 
   if(nrow(confl_use) > 0) {
     hru <- hru %>%
       left_join(confl_use%>% select(name_new, nswrm), by = c("id" = "name_new")) %>%
       mutate(!!op := ifelse(!is.na(nswrm), nswrm, !!sym(op))) %>%
       select(-nswrm)
-  }
+  }}
   print(paste0("check: calculated land use allocation in optima ",op,"..."),quote=F)
   
 }
