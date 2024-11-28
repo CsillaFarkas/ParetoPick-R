@@ -547,8 +547,8 @@ server <- function(input, output, session) {
         yo2 <- pull_high_range(fit(),num_order=T)
         rng_plt_axes(yo2)
         
-        output$uploaded_pareto <- renderText({"All Files found. 
-                                               You can now examine the Pareto front. 
+        output$uploaded_pareto <- renderText({"All Files found.
+                                               You can now examine the Pareto front.
                                                How does it change when the objective ranges are modified?"})
         
         
@@ -1119,7 +1119,7 @@ server <- function(input, output, session) {
       bc = left_join(cmf(),hru_100(), by = c("id"))%>%st_make_valid() #only those with highest priority
       buff_els = needs_buffer()
       relda <- bc[bc[["measure"]] %in% buff_els, ]%>%select(-non_na_count)
-      relda_utm <-  st_transform(relevant_data, crs = 32633) # UTM zone 33N
+      relda_utm <-  st_transform(relda, crs = 32633) # UTM zone 33N
       buffy <-st_buffer(relda_utm, dist = 80)
       buffers(st_transform(buffy, crs = st_crs(relda))) #all buffers ever required
 

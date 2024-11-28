@@ -418,15 +418,14 @@ ui <-
                        sidebarLayout(
                          
                          
-                         sidebarPanel( width = 3,
+                         sidebarPanel( width = 4,
                                        
                                        
                                        textOutput("uploaded_pareto"),
-                                       br(),
-                                       br(),
+                                      
                                        div(id="play_sidebar",
                                          column(10,
-                                                div("Objective Range", style = "text-align: left; font-size:150%; margin-top: 40px;"),
+                                                div("Objective Range", style = "text-align: left; font-size:150%; margin-top: 10px;"),
                                                 
                                                 sliderInput(inputId = "obj1", label=  "Objective 1:", min = 0, max = 1, value = c(0,1), step = 0.01,width = "110%"),
                                                 sliderInput(inputId = "obj2", label = "Objective 2:", min = 0, max = 1, value = c(0,1), step = 0.01,width = "110%"),
@@ -461,6 +460,8 @@ ui <-
                            tags$style(HTML(".js-irs-12 .irs-single, .js-irs-11 .irs-bar-edge, .js-irs-11 .irs-bar {background: #aF58ba ;border-top: 1px solid #aF58ba ;border-bottom: 1px solid #aF58ba;}.js-irs-11 .irs-from, .js-irs-11 .irs-to, .js-irs-11 .irs-single { font-size: 13px;background: #aF58ba !important }")),
                            tags$style(HTML(".js-irs-13 .irs-single, .js-irs-12 .irs-bar-edge, .js-irs-12 .irs-bar {background: #f28522 ;border-top: 1px solid #f28522 ;border-bottom: 1px solid #f28522;}.js-irs-12 .irs-from, .js-irs-12 .irs-to, .js-irs-12 .irs-single { font-size: 13px;background: #f28522 !important }")),
                            tags$style(HTML("#actual_plt_play_measure {width: 450px;height: 550px;margin-bottom: -150px; } ")),
+                           tags$style(HTML("#freq_map_play {width: 450px;height: 550px;margin-bottom: -150px; } ")),
+                           
                            tags$style(HTML(".spinspin { display: inline-block;
                                                         width: 20px;
                                                         height: 20px;

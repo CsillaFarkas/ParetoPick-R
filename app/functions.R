@@ -483,14 +483,40 @@ plt_freq = function(data,lo, la, buffers , remaining, dispal = pal, mes=mes) {
     })
   })
   
+  custom_legend <- HTML(
+    paste0(
+      "<div style='background: rgba(255, 255, 255, 0.8); padding: 4px; border-radius: 2px; font-size: 12px; line-height: 1;'>", # Compact line height
+      "<strong>Measure<br>Frequency</strong><br>",
+      paste(
+        sapply(seq_along(mes), function(i) {
+          paste0(
+            "<div style='margin-bottom: 1px;'><strong style='margin: 0; padding: 0;'>", mes[i], "</strong></div>", # Tight margin for subheadings
+            paste0(
+              "<div style='margin-left: 4px; margin-bottom: 0;'>",
+              paste(
+                sprintf(
+                  "<span style='display: inline-block; width: 11px; height: 11px; background-color: %s;'></span> %s",
+                  color_swatches[[i]], c("Low", "Medium", "High")
+                ),
+                collapse = "<br>"
+              ),
+              "</div>"
+            )
+          )
+        }),
+        collapse = "<br>"
+      ),
+      "</div>"
+    )
+  )
   
-  m = m %>%
-    addLegend(
+ 
+  
+  # Add the custom legend to the map
+  m <- m %>%
+    addControl(
       position = "bottomright",
-      colors = unlist(color_swatches),
-      labels = rep(c("Low", "Medium", "High"), length(mes)),
-      title = "Measure Frequency",
-      opacity = 1
+      html = custom_legend
     )
   
   
