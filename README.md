@@ -147,5 +147,4 @@ id,	name,	nswrm,	obj_id
 ## Prio 2
   * catch empty selection and replace "replacement has length zero" with "no optima fulfill these conditions", fix reload when selection changes (Visualisation)
   * only strike through the variable that has been removed (Correlation)
-  * new button to jump to cluster tab (Correlation)
   
