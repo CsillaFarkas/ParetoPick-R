@@ -1121,7 +1121,7 @@ server <- function(input, output, session) {
       relda_utm <-  st_transform(relda, crs = 32633) # UTM zone 33N
       buffy <-st_buffer(relda_utm, dist = 80)
       buffers(st_transform(buffy, crs = st_crs(relda))) #all buffers ever required
-
+     fml <<- buffers()
 
       if(file.exists("../data/hru.con")){lalo(plt_latlon(conpath = "../data/hru.con"))}
       # 
@@ -2110,12 +2110,12 @@ server <- function(input, output, session) {
   comp_fun = function(){
     # if(!file.exists("../data/measure_location.csv")){return(NULL)}else{
     
-    req(sols(),cm()) 
+    req(sols(),cm(),buffers(),needs_buffer()) 
     selected_row <- isolate(input$antab_rows_selected)
     
     selected_data <- sols()[selected_row,]
     
-    buffs = needs_buffer()
+    
     
     hru_sel = plt_sel(shp=cm(),opti_sel = selected_data$optimum)
     mes = read.csv("../data/measure_location.csv")
@@ -2123,7 +2123,8 @@ server <- function(input, output, session) {
     col_sel = names(hru_sel)[grep("Optim",names(hru_sel))]  #variable length of columns selected
     
     nplots = length(col_sel)#+1
-    m1 = plt_lf(data=hru_sel, col_sel = col_sel, mes = unique(mes$nswrm),la = lalo()[1],lo =lalo()[2], buff_els=buffs)
+
+    m1 = plt_lf(data=hru_sel, col_sel = col_sel, mes = unique(mes$nswrm),la = lalo()[1],lo =lalo()[2], buff_els=needs_buffer(), buffers=buffers())
     
     m = m1
     

@@ -625,7 +625,7 @@ plt_boxpl_clus = function(dat, sel, all_obs,mima){
 
 
 ## plot leaflet w/ specific column
-plt_lf <- function(data, mes, lo, la, buff_els, col_sel) {
+plt_lf <- function(data, mes, lo, la, buff_els, col_sel, buffers) {
   man_col = c("#66C2A5" ,"#4db818","#965c1d", "#F7A600", "#03597F" ,"#83D0F5","#FFEF2C","#a84632","#b82aa5","#246643")
   man_col = man_col[1:length(unique(mes))]
   dispal = colorFactor(palette = man_col, domain = unique(mes), na.color = "lightgrey")
@@ -635,10 +635,12 @@ plt_lf <- function(data, mes, lo, la, buff_els, col_sel) {
   for (i in seq_along(col_sel)) {
     col = col_sel[i]
     
-    #buffer
     relevant_data <- data[data[[col]] %in% buff_els, ]
-    buffered_data <- st_buffer(relevant_data, dist = 80)
     
+    buffered_data <- buffers %>%filter(id %in% relevant_data$id)%>%
+        rename(!!col := measure)%>%
+        st_make_valid()
+
     m[[i]] =  leaflet(data = data) %>%
       setView(lng = lo, lat = la, zoom = 12) %>%
       addProviderTiles(providers$CartoDB.Positron) %>%#poviders$Esri.NatGeoWorldMap, $Stadia.StamenToner, $OpenTopoMap
