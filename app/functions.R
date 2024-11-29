@@ -439,10 +439,12 @@ pull_fr_shp = function(layername = "hru", hio){
 plt_freq = function(data,lo, la, buffers , remaining, dispal = pal, mes=mes) {
   
   data = left_join(data,remaining, by = c("id"))%>%st_make_valid() #only those with highest priority
+  data = data %>% filter(freq>0.01)
   
-  buffered_data <- buffers %>%filter(id %in% remaining$id)
+  rem_fil = remaining %>% filter(freq>0.01) %>% filter(measure %in% unique(buffers$measure))
+  buffered_data <- buffers %>%filter(id %in% rem_fil$id)
   buffered_data <- buffered_data %>%
-    inner_join(remaining %>% select(-measure), by = "id") %>%
+    inner_join(rem_fil %>% select(-measure), by = "id") %>%
     st_make_valid()
   
   
@@ -461,8 +463,7 @@ plt_freq = function(data,lo, la, buffers , remaining, dispal = pal, mes=mes) {
         bringToFront = TRUE
       ),
       label = ~ measure
-    ) %>%
-    addPolygons(
+    )    %>% addPolygons(
       data = buffered_data,
       fillColor = NA,
       color = ~ dispal(measure),
@@ -510,15 +511,11 @@ plt_freq = function(data,lo, la, buffers , remaining, dispal = pal, mes=mes) {
     )
   )
   
- 
-  
-  # Add the custom legend to the map
   m <- m %>%
     addControl(
       position = "bottomright",
       html = custom_legend
     )
-  
   
   return(m)
 }
