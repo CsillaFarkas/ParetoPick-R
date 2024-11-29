@@ -78,10 +78,9 @@ server <- function(input, output, session) {
   is_rendering <- reactiveVal(FALSE)
   #catchment shapes
   cm <- reactiveVal()
-  cmf <- reactiveVal()
+ 
   needs_buffer <- reactiveVal()
   hru_matcher <- reactiveVal()
-  cm_clean <- reactiveVal()
   
   hru_100 <-  reactiveVal(NULL)
   prio <- reactiveVal(NULL)
@@ -772,13 +771,15 @@ server <- function(input, output, session) {
         # measure plot prep 
           if (file.exists("../input/hru_in_optima.RDS")) {
             
-              cm(
-                pull_shp(
-                  layername = "hru",
-                  optims = eve,
-                  hru_in_opt_path = "../input/hru_in_optima.RDS"
-                )
-              )
+              # cm(
+              #   pull_shp(
+              #     layername = "hru",
+              #     optims = eve,
+              #     hru_in_opt_path = "../input/hru_in_optima.RDS"
+              #   )
+              # )
+            req(cm())
+            cmf(fit_optims(cm=cm(),optims=eve,hru_in_opt_path = "../input/hru_in_optima.RDS"))
            
           }
         
@@ -794,7 +795,7 @@ server <- function(input, output, session) {
     
     
     single_meas_fun2 = function() {
-      req(needs_buffer(), lalo(), cm(),fit(), sel_tay(), objectives(),buffers())
+      req(needs_buffer(), lalo(), cmf(),fit(), sel_tay(), objectives(),buffers())
       
       fit1(fit() %>% rownames_to_column("optimum"))
       
@@ -803,13 +804,16 @@ server <- function(input, output, session) {
       
       mv <- fit1() %>%  filter(across(all_of(cols), ~ . %in% values))
       
-      hru_one = plt_sel(shp = cm(), opti_sel = mv$optimum)
+      hru_one = plt_sel(shp = cmf(), opti_sel = mv$optimum)
       mes = read.csv("../data/measure_location.csv")
       
       
       col_sel = names(hru_one)[grep("Optim", names(hru_one))]
+      man_col = c("#66C2A5" ,"#4db818","#965c1d", "#F7A600", "#03597F" ,"#83D0F5","#FFEF2C","#a84632","#b82aa5","#246643")
+      man_col = man_col[1:length(unique(mes$nswrm))]
+      pal = colorFactor(palette = man_col, domain = unique(mes$nswrm), na.color = "lightgrey")
       
-      m1 = plt_lf( data = hru_one, mes = unique(mes$nswrm),la = lalo()[1],lo =lalo()[2],buff_els = needs_buffer(), col_sel = col_sel,buffers=buffers())
+      m1 = plt_lf( data = hru_one, dispal = pal,la = lalo()[1],lo =lalo()[2],buff_els = needs_buffer(), col_sel = col_sel,buffers=buffers())
       return(m1)
       play_running(FALSE) #for spinner
     }
@@ -1083,8 +1087,6 @@ server <- function(input, output, session) {
    df
   }, rownames = T)
   
-  # observe( {print(paste0("cmf da",is.null(cmf()),"\n","hru_1000 is da",is.null(hru_100()),"\n","lalo is da",is.null(lalo()),
-                         # "\n","prio is da",is.null(prio()),"\n","dat_matched is da;",is.null(dat_matched()),"\n","buffers is da",is.null(buffers())))})
   
   #frequency plot
   observe({
@@ -1138,30 +1140,23 @@ server <- function(input, output, session) {
       colnames(hru) = gsub("^V", "", colnames(hru))
       hru_matcher(hru)
 
-      cmf(pull_shp_clean(all_ids=hru_100()$id))
+      #catchment forever
+      cm(pull_shp_new())
 
       #buffers forever
-      bc = left_join(cmf(),hru_100(), by = c("id"))%>%st_make_valid() #only those with highest priority
+      bc = left_join(cm(),hru_100(), by = c("id"))%>%st_make_valid() #only those with highest priority
+
       buff_els = needs_buffer()
+
       relda <- bc[bc[["measure"]] %in% buff_els, ]%>%select(-non_na_count)
       relda_utm <-  st_transform(relda, crs = 32633) # UTM zone 33N
       buffy <-st_buffer(relda_utm, dist = 80)
       buffers(st_transform(buffy, crs = st_crs(relda))) #all buffers ever required
-     fml <<- buffers()
 
       if(file.exists("../data/hru.con")){lalo(plt_latlon(conpath = "../data/hru.con"))}
-      # 
-      ###test data
-      # cmf= pull_shp_clean(all_ids=hru_100$id)
-      # bc = left_join(cmf,hru_100, by = c("id"))%>%st_make_valid() #only those with highest priority
-      # buff_els = pull_buffer()
-      # relevant_data <- bc[bc[["measure"]] %in% buff_els, ]%>%select(-non_na_count)
-      
-      ###end test data
+   
     }})
-  # 
-  # 
-  # 
+ 
   play_freq = function(){ #excessive function
     req(cmf(),hru_100(),lalo(),prio(), dat_matched(),buffers(),hru_matcher(),fit())
 
@@ -1895,7 +1890,6 @@ server <- function(input, output, session) {
                   dplyr::filter(!is.na(Representative_Solution)& Representative_Solution != "") %>%
                   select(-Representative_Solution, -Cluster))
           
-          yoyo <<- sols3()
           pcs_vs_vars = sols_data %>% #pull cluster variables 
             dplyr::filter(!is.na(Representative_Solution)& Representative_Solution != "") %>%
             select(-Representative_Solution, -Cluster,-objectives())%>%colnames()
@@ -2119,13 +2113,16 @@ server <- function(input, output, session) {
     if(file.exists("../data/hru.shp")) {
       ##shps for maps
       if (file.exists("../input/hru_in_optima.RDS")) {
-        cm(
-          pull_shp(
-            layername = "hru",
-            optims = sols(),
-            hru_in_opt_path = "../input/hru_in_optima.RDS"
-          )
-        )
+        # cm(
+        #   pull_shp(
+        #     layername = "hru",
+        #     optims = sols(),
+        #     hru_in_opt_path = "../input/hru_in_optima.RDS"
+        #   )
+        # )
+        req(cm())
+        cmf(fit_optims(cm=cm(),optims=sols(),hru_in_opt_path = "../input/hru_in_optima.RDS"))
+
       }
       needs_buffer(pull_buffer())
     }
@@ -2136,21 +2133,26 @@ server <- function(input, output, session) {
   comp_fun = function(){
     # if(!file.exists("../data/measure_location.csv")){return(NULL)}else{
     
-    req(sols(),cm(),buffers(),needs_buffer()) 
+    req(sols(),cmf(),buffers(),needs_buffer()) 
     selected_row <- isolate(input$antab_rows_selected)
     
     selected_data <- sols()[selected_row,]
     
     
     
-    hru_sel = plt_sel(shp=cm(),opti_sel = selected_data$optimum)
+    hru_sel = plt_sel(shp=cmf(),opti_sel = selected_data$optimum)
     mes = read.csv("../data/measure_location.csv")
     
     col_sel = names(hru_sel)[grep("Optim",names(hru_sel))]  #variable length of columns selected
     
     nplots = length(col_sel)#+1
 
-    m1 = plt_lf(data=hru_sel, col_sel = col_sel, mes = unique(mes$nswrm),la = lalo()[1],lo =lalo()[2], buff_els=needs_buffer(), buffers=buffers())
+    man_col = c("#66C2A5" ,"#4db818","#965c1d", "#F7A600", "#03597F" ,"#83D0F5","#FFEF2C","#a84632","#b82aa5","#246643")
+    man_col = man_col[1:length(unique(me$nswrm))]
+    pal = colorFactor(palette = man_col, domain = unique(mes$nswrm), na.color = "lightgrey")
+    
+    m1 = plt_lf(data=hru_sel, col_sel = col_sel ,dispal=pal,
+                la = lalo()[1],lo =lalo()[2], buff_els=needs_buffer(), buffers=buffers())
     
     m = m1
     
@@ -2464,13 +2466,15 @@ server <- function(input, output, session) {
    
     ##shps for maps
     if (file.exists("../input/hru_in_optima.RDS")) {
-      cm(
-        pull_shp(
-          layername = "hru",
-          optims = bo,
-          hru_in_opt_path = "../input/hru_in_optima.RDS"
-        )
-      )
+      # cm(
+      #   pull_shp(
+      #     layername = "hru",
+      #     optims = bo,
+      #     hru_in_opt_path = "../input/hru_in_optima.RDS"
+      #   )
+      # )
+      req(cm())
+      cmf(fit_optims(cm=cm(),hru_in_opt_path = "../input/hru_in_optima.RDS",optims=bo))
     }
     boo(bo$optimum) #for single_meas_fun
     
@@ -2489,14 +2493,19 @@ server <- function(input, output, session) {
 
   single_meas_fun = function(){
     if(!file.exists("../data/measure_location.csv")){return(NULL)}else{
-    req(boo(),needs_buffer(),lalo(),cm())
+    req(boo(),needs_buffer(),lalo(),cmf(),buffers())
       
-    hru_one = plt_sel(shp=cm(),opti_sel = boo())
+    hru_one = plt_sel(shp=cmf(),opti_sel = boo())
     mes = read.csv("../data/measure_location.csv")
     col_sel = names(hru_one)[grep("Optim",names(hru_one))] 
     
-    m1 = plt_lf(data=hru_one,  mes = unique(mes$nswrm),la = lalo()[1],lo =lalo()[2],
-                buff_els=needs_buffer(),col_sel=col_sel)
+    man_col = c("#66C2A5" ,"#4db818","#965c1d", "#F7A600", "#03597F" ,"#83D0F5","#FFEF2C","#a84632","#b82aa5","#246643")
+    man_col = man_col[1:length(unique(mes$nswrm))]
+    pal = colorFactor(palette = man_col, domain = unique(mes$nswrm), na.color = "lightgrey")
+    
+    
+    m1 = plt_lf(data=hru_one, dispal = pal,la = lalo()[1],lo =lalo()[2],
+                buff_els=needs_buffer(),col_sel=col_sel,buffers=buffers())
     return(m1)
     meas_running(FALSE)
     }
