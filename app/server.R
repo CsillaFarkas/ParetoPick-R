@@ -794,7 +794,7 @@ server <- function(input, output, session) {
     
     
     single_meas_fun2 = function() {
-      req(needs_buffer(), lalo(), cm(),fit(), sel_tay(), objectives())
+      req(needs_buffer(), lalo(), cm(),fit(), sel_tay(), objectives(),buffers())
       
       fit1(fit() %>% rownames_to_column("optimum"))
       
@@ -809,7 +809,7 @@ server <- function(input, output, session) {
       
       col_sel = names(hru_one)[grep("Optim", names(hru_one))]
       
-      m1 = plt_lf( data = hru_one, mes = unique(mes$nswrm),la = lalo()[1],lo =lalo()[2],buff_els = needs_buffer(), col_sel = col_sel)
+      m1 = plt_lf( data = hru_one, mes = unique(mes$nswrm),la = lalo()[1],lo =lalo()[2],buff_els = needs_buffer(), col_sel = col_sel,buffers=buffers())
       return(m1)
       play_running(FALSE) #for spinner
     }
