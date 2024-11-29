@@ -204,9 +204,19 @@ server <- function(input, output, session) {
     observeEvent(input$save_par_fiti, {
       short <<- c(input$short1, input$short2, input$short3, input$short4)
       objectives(short)
-      shinyjs::hide("obj_first")
       saveRDS(short, file = "../input/object_names.RDS")
-    
+      
+      updateTextInput(session,"short1", value = objectives()[1] )
+      updateTextInput(session,"short2", value = objectives()[2] )
+      updateTextInput(session,"short3", value = objectives()[3] )
+      updateTextInput(session,"short4", value = objectives()[4] )
+      
+      shinyjs::disable("short1")
+      shinyjs::disable("short2")
+      shinyjs::disable("short3")
+      shinyjs::disable("short4")
+      
+      
       updateTextInput(session,"col1", value = objectives()[1] )
       updateTextInput(session,"col2", value = objectives()[2] )
       updateTextInput(session,"col3", value = objectives()[3] )
@@ -234,6 +244,23 @@ server <- function(input, output, session) {
       
       
     })
+    
+    observe({if(file.exists("../input/object_names.RDS")){
+      
+      short = readRDS("../input/object_names.RDS")
+      objectives(short)
+      
+      updateTextInput(session,"short1", value = objectives()[1] )
+      updateTextInput(session,"short2", value = objectives()[2] )
+      updateTextInput(session,"short3", value = objectives()[3] )
+      updateTextInput(session,"short4", value = objectives()[4] )
+      
+      shinyjs::disable("short1")
+      shinyjs::disable("short2")
+      shinyjs::disable("short3")
+      shinyjs::disable("short4")
+    }})
+    
     
     observe({
       req(input$short1, input$short2, input$short3, input$short4,rng_plt())
@@ -488,8 +515,7 @@ server <- function(input, output, session) {
       
       
       }else {
-        # shinyjs::hide("obj_first")
-        
+       
         short = readRDS("../input/object_names.RDS")
         objectives(short)
         

@@ -326,9 +326,7 @@ ui <-
                                    div(style= "vertical-align: top; margin-top: -15px;",actionButton("save_sq_in","Save")))),
                              
                                br(),
-                               div(
-                                 id = "obj_first",
-                                 "The objective names should align with the first four columns of the pareto_fitness.txt file:",
+                               div( "The objective names should align with the first four columns of the pareto_fitness.txt file:",
                                  style = "text-align: left; font-size:115%",
                                  div("*Please note, you can only change these names later if you perform a Hard Reset below.",
                                      style="text-align: left; font-size:90%"),
