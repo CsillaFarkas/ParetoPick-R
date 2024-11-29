@@ -422,18 +422,6 @@ plt_latlon = function(conpath){
   return(c(lat_map,lon_map))
 }
 
-## whole basin for location plot
-pull_fr_shp = function(layername = "hru", hio){
-  if(file.exists(paste0("../data/",layername,".shp"))){
-    
-  cm =  read_sf(dsn = "../data/", layer =layername)#adapt path
-  cm = cm %>% filter(id %in% hio[["id"]])#remove all hrus that are never activated 
-  
-  cm = st_buffer(cm, 0.0) #clean geometry
-  cm = cm %>%select(id,geometry)%>% st_transform(., 4326)
-  return(cm)}else{return(NULL)}
-
-}
 
 ## plot frequency
 plt_freq = function(data,lo, la, buffers , remaining, dispal = pal, mes=mes) {
@@ -520,34 +508,39 @@ plt_freq = function(data,lo, la, buffers , remaining, dispal = pal, mes=mes) {
   return(m)
 }
 
-## pull clean cm for frequency plotting and buffer generation
-pull_shp_clean = function(layername = "hru",all_ids){
-  if(file.exists(paste0("../data/",layername,".shp"))){
-    # req(hru_100()) #ensure hru_100 has been created
+## pull cm clean
+pull_shp_new = function(layername = "hru", hru_in_opt_path="../input/hru_in_optima.RDS"){
+  if(file.exists(paste0("../data/",layername,".shp")) && file.exists(hru_in_opt_path)){
+    hio= readRDS(hru_in_opt_path)
     
-    cm =  read_sf(dsn = "../data/", layer = layername)#adapt path
-    cm = cm %>% filter(id %in% all_ids)#remove all hrus that are never activated 
+    hru = hio %>% filter(rowSums(!is.na(select(., starts_with("V")))) > 0) #only those hru that are used
     
-    cm = st_buffer(cm, 0.0) #clean geometry
-    cm = cm %>%select(id,geometry)%>% st_transform(., 4326)
+    cm = read_sf(dsn = "../data/", layer = layername) #adapt path
+    cm = cm %>% filter(id %in% hru$id) %>% select(id, name, geometry) %>%st_make_valid()
     
-    return(cm)}else{return(NULL)} 
+    cm_utm <-  st_transform(cm, crs = 32633) # UTM zone 33N
+    cuffy <-st_buffer(cm_utm,0.0)
+    cm = st_transform(cuffy, crs = st_crs(cm))
+    
+    cm = cm %>%select(id,geometry)%>%st_transform(., 4326)
+    
+    return(cm)}else{return(NULL)}
+  
 }
 
-
-## make large dataset
-pull_shp = function(layername = "hru", optims, hru_in_opt_path){
-  if(file.exists(paste0("../data/",layername,".shp"))){
-    
+## fill cm with optima
+fit_optims = function(cm,hru_in_opt_path="../input/hru_in_optima.RDS",optims){
+  if(file.exists(hru_in_opt_path)){
     hio = readRDS(hru_in_opt_path)
     hio = hio %>% rename_with( ~ str_remove(., "^V"), starts_with("V"))
     hio = hio %>% select(optims[["optimum"]], id)#subset to only optima remaining after clustering
     
+    cm = cm %>% filter(id %in% hio$id)%>%st_make_valid()#remove all hrus that are never activated in this pareto front
     
-    cm = read_sf(dsn = "../data/", layer = layername) #adapt path
-    cm = cm %>% filter(id %in% hio$id)#remove all hrus that are never activated in this pareto front
+    # cm_utm <-  st_transform(cm, crs = 32633) # UTM zone 33N
+    # cuffy <-st_buffer(cm_utm,0.0)
+    # cm = st_transform(cuffy, crs = st_crs(cm))
     
-    cm = st_buffer(cm, 0.0) #clean geometry
     cm = cm %>%select(id,geometry)
     
     cm = left_join(cm, hio, by = c("id")) %>% st_transform(., 4326)
@@ -622,11 +615,8 @@ plt_boxpl_clus = function(dat, sel, all_obs,mima){
 
 
 ## plot leaflet w/ specific column
-plt_lf <- function(data, mes, lo, la, buff_els, col_sel, buffers) {
-  man_col = c("#66C2A5" ,"#4db818","#965c1d", "#F7A600", "#03597F" ,"#83D0F5","#FFEF2C","#a84632","#b82aa5","#246643")
-  man_col = man_col[1:length(unique(mes))]
-  dispal = colorFactor(palette = man_col, domain = unique(mes), na.color = "lightgrey")
-  
+plt_lf <- function(data, lo, la, buff_els, col_sel, buffers, dispal = pal) {
+
   m <- vector("list", length = length(col_sel))
   
   for (i in seq_along(col_sel)) {
