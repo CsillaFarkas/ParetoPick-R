@@ -1166,13 +1166,19 @@ server <- function(input, output, session) {
 
     hru_subset_freq = hru_matcher()[,c("id",as.character(optima))]     #subset to only those optima in selection
   
-    hru_freq = hru_subset_freq %>%rowwise() %>%mutate(
-      non_na_count = sum(!is.na(c_across(setdiff(names(hru_subset_freq), "id")))  )
-    ) %>% select(id, non_na_count)
-
-    #actual frequency value to plot
-    hru_share = hru_freq%>%left_join(hru_100(),by="id")%>%mutate(freq=non_na_count.x/non_na_count.y)%>%select(id,measure,freq)
-  
+    #EITHER - frequency of remaining activated in all possible
+    # hru_freq = hru_subset_freq %>%rowwise() %>%mutate(
+    #   non_na_count = sum(!is.na(c_across(setdiff(names(hru_subset_freq), "id")))  )
+    # ) %>% select(id, non_na_count)
+    # 
+    # #actual frequency value to plot
+    # hru_share = hru_freq%>%left_join(hru_100(),by="id")%>%mutate(freq=non_na_count.x/non_na_count.y)%>%select(id,measure,freq)
+     
+    #OR - frequency of activated in remaining
+    hru_freq = hru_subset_freq
+    hru_freq$freq = rowSums(!is.na(hru_freq[ , -which(names(hru_freq) == "id")])) / (ncol(hru_freq) - 1)
+    hru_share = hru_freq%>%left_join(hru_100(),by="id") %>%select(id,measure,freq)
+    
     #make unique measures outside
     mes = unique(hru_share$measure)
 
