@@ -2154,7 +2154,7 @@ server <- function(input, output, session) {
     nplots = length(col_sel)#+1
 
     man_col = c("#66C2A5" ,"#4db818","#965c1d", "#F7A600", "#03597F" ,"#83D0F5","#FFEF2C","#a84632","#b82aa5","#246643")
-    man_col = man_col[1:length(unique(me$nswrm))]
+    man_col = man_col[1:length(unique(mes$nswrm))]
     pal = colorFactor(palette = man_col, domain = unique(mes$nswrm), na.color = "lightgrey")
     
     m1 = plt_lf(data=hru_sel, col_sel = col_sel ,dispal=pal,
@@ -2660,7 +2660,7 @@ server <- function(input, output, session) {
       plt <- paste0("plot", i)
       tabl <- paste0("table", i)
       cardui <- paste0("card", i, "_ui")
-      
+
       
       observeEvent(input$show_all_cards, {
         if (input$show_all_cards) {

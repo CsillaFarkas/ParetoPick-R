@@ -16,7 +16,7 @@ foo1 <- function(x){
   }
 }
 ## check if any packages are missing (not only here but also for external convert_optain)
-foo1(c("corrplot","cowplot", "dplyr","DT", "fs","fst","geosphere", "ggplot2",  "ggtext", "gridExtra", 
+foo1(c("configr","corrplot","cowplot", "dplyr","DT", "fs","fst","geosphere", "ggplot2",  "ggtext", "gridExtra", 
        "here",  "htmltools","htmlwidgets",   "ini",    "leaflet",  "leafsync",
        "mapview",  "plotly",  "processx", "purrr",
         "quanteda",   "RColorBrewer",  "readr",  "reticulate",
