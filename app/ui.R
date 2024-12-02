@@ -435,6 +435,7 @@ ui <-
                                              1 aligns with the best achievable outcome while 0 aligns with the worst."
                                                 )
                                          ),
+                                         div("Frequency of area implemented", style = "text-align: left; font-size:120%; margin-top: 10px;"),
                                          uiOutput("freq_map_play")%>%hidden(),
                                          
                                        ), br(), 
@@ -978,7 +979,8 @@ ui <-
                                             style="background-color: #f4f4f4; border-color: #2e6da4"),
                                actionButton("ahp_card6", "Show Card 6", 
                                             style="background-color: #f4f4f4; border-color: #2e6da4"),
-                                 ),br(),
+                                 ),
+                             br(),br(),br(),
                              checkboxInput("show_all_cards", "Show all comparisons", value = FALSE), 
                              br(),
                              div(id="sel_wgt","Selected Weights", style = "text-align: center; font-size: 150%;",
