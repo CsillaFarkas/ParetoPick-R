@@ -63,7 +63,7 @@ nswrm_priorities <- function(lu){
     priority <- priority + 1
   }}
   
-  lu_match <- rev(mesrs[mesrs %in% c("hedge","buffer","grassslope")])  # land use and their order (2nd prio) ADAPTING THIS WILL REQUIRE ADAPTING lu_share too!!
+  lu_match <- rev(mesrs[mesrs %in% c("hedge","buffer","grassslope","terrace")])  # land use and their order (2nd prio) ADAPTING THIS WILL REQUIRE ADAPTING lu_share too!!
   for(lus in lu_match) {if(lus %in% lu) {
     prio <- rbind(prio, data.frame(nswrm = lus, priority = priority,mngmt= 0 ))
     priority <- priority + 1
@@ -183,7 +183,7 @@ for(op in paste0("V", 1:nopt)){
   con = read.table("../data/hru.con",header=T,skip=1)
   
   # could also use id as is the same as obj_id in con
-  hru_donde <- con %>% select(obj_id,area,lat,lon)%>% inner_join(hru, by = c("obj_id"="id")) # Pareto front in columns
+  hru_donde <- con %>% select(id,area,lat,lon)%>% inner_join(hru, by = "id")%>%mutate(obj_id = "id") # Pareto front in columns
    
   # empty measures dataframe
   meas = unique(gen_act_prio$nswrm)
@@ -196,9 +196,9 @@ for(op in paste0("V", 1:nopt)){
   # Create spatial weights matrix using inverse distances
     inv_dist_matrix <- 1 / dist_matrix
     diag(inv_dist_matrix) <- 0  # Set the diagonal to zero to avoid infinity
-  
+    dist_matrix_sparse <- Matrix::Matrix(inv_dist_matrix, sparse = TRUE)
   # Convert to a listw object for spatial analysis
-   weights_listw <- mat2listw(inv_dist_matrix, style = "B")
+   weights_listw <- mat2listw(dist_matrix_sparse, style = "B",zero.policy = TRUE)
    print("check: produced spatial weights object...",quote=F)
   # this weight object is used to calculate spatial autocorrelation across different measures, using the area they cover as input value
 
@@ -344,8 +344,8 @@ for(op in paste0("V", 1:nopt)){
      rename_at(vars(meas),~paste0(., "_share_con"))%>%mutate(id = row_number())
   
    ## land use share in considered/implemented catchment area
-   if(any(meas %in% c("hedge","buffer","grassslope"))){
-     lu = meas[which(meas %in% c("hedge","buffer","grassslope"))]
+   if(any(meas %in% c("hedge","buffer","grassslope","terrace"))){
+     lu = meas[which(meas %in% c("hedge","buffer","grassslope","terrace"))]
    
      # new column with combined area share
      lu_share = arre %>%
