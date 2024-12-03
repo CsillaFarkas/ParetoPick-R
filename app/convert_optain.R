@@ -69,7 +69,7 @@ nswrm_priorities <- function(lu){
     priority <- priority + 1
   }}
   
-  mn_match = rev(mesrs[mesrs %in% c("lowtillcc","lowtill","droughtplt")])  # management and their order (3rd prio)
+  mn_match = rev(mesrs[mesrs %in% c("lowtillcc","lowtill","droughtplt","notill")])  # management and their order (3rd prio)
   for(lus in mn_match){if(lus %in% lu) {
     prio <- rbind(prio, data.frame(nswrm = lus, priority = priority,mngmt= 1 ))
     priority <- priority + 1
