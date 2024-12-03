@@ -1170,27 +1170,20 @@ server <- function(input, output, session) {
       buffers(st_transform(buffy, crs = st_crs(relda))) #all buffers ever required
 
       if(file.exists("../data/hru.con")){lalo(plt_latlon(conpath = "../data/hru.con"))}
-   
-    }})
+      
+      
+      output$freq_map_play = renderUI({ play_freq()  })
+      
+    }else{shinyjs::hide("freq_map_play")}})
  
   play_freq = function(){ #excessive function
     req(cmf(),hru_100(),lalo(),prio(), dat_matched(),buffers(),hru_matcher(),fit())
 
     dat = dat_matched()
-  
     optima <-unique( match(do.call(paste, dat), do.call(paste, fit())))
 
     hru_subset_freq = hru_matcher()[,c("id",as.character(optima))]     #subset to only those optima in selection
-  
-    #EITHER - frequency of remaining activated in all possible
-    # hru_freq = hru_subset_freq %>%rowwise() %>%mutate(
-    #   non_na_count = sum(!is.na(c_across(setdiff(names(hru_subset_freq), "id")))  )
-    # ) %>% select(id, non_na_count)
-    # 
-    # #actual frequency value to plot
-    # hru_share = hru_freq%>%left_join(hru_100(),by="id")%>%mutate(freq=non_na_count.x/non_na_count.y)%>%select(id,measure,freq)
-     
-    #OR - frequency of activated in remaining
+      
     hru_freq = hru_subset_freq
     hru_freq$freq = rowSums(!is.na(hru_freq[ , -which(names(hru_freq) == "id")])) / (ncol(hru_freq) - 1)
     hru_share = hru_freq%>%left_join(hru_100(),by="id") %>%select(id,measure,freq)
@@ -1206,8 +1199,9 @@ server <- function(input, output, session) {
     m = plt_freq(data=cmf(),lo=lalo()[2], la=lalo()[1], buffers=buffers(), remaining=hru_share,dispal=pal, mes = mes)
     return(m)
   }
+  
+  
 
-   output$freq_map_play = renderUI({ play_freq()  },outputArgs = list(deferUntilFlush = FALSE))
   
   
   ## scatter plot
