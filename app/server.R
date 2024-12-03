@@ -465,6 +465,22 @@ server <- function(input, output, session) {
         })
         
         observeEvent(input$reset_btn, {
+          updateTextInput(session,"short1", value = "" )
+          updateTextInput(session,"short2", value = "" )
+          updateTextInput(session,"short3", value = "" )
+          updateTextInput(session,"short4", value = "" )
+          
+          #enable objective names again
+          shinyjs::enable("short1")
+          shinyjs::enable("short2")
+          shinyjs::enable("short3")
+          shinyjs::enable("short4")
+          
+          updateTextInput(session,"unit1", value = "")
+          updateTextInput(session,"unit2", value = "")
+          updateTextInput(session,"unit3", value = "")
+          updateTextInput(session,"unit4", value = "")
+          
           if (dir.exists(save_dir) & dir.exists(input_dir)) {
             files1 <- list.files(save_dir, full.names = TRUE)
             files2 <- list.files(input_dir, full.names = TRUE)
