@@ -140,7 +140,6 @@ id,	name,	nswrm,	obj_id
 
 # To do
 ## Prio 1
-  * add a table with measure frequency/aep not hru (Visualising)
   * convert_optain requires some failsafe controls for empty values
   * observe(pareto_fitness) each tab, currently needs a reload sometimes
 
