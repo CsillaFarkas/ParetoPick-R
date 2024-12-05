@@ -485,7 +485,8 @@ ui <-
                                  column(3,selectInput(inputId = "col_var3", label = "Colour", choices = NULL, multiple = F, selected=NULL)),
                                  column(3,selectInput(inputId = "size_var3",label = "Size",   choices = NULL, multiple = F, selected=NULL))
                                ),
-                              
+                               tags$div(textOutput("ensure_sel"), style = "color: red;"),
+                               
                                br(),
                                div(
                                  style = "display: inline-block; vertical-align: top; margin-right: 0px;",
@@ -517,6 +518,23 @@ ui <-
                                   ) )
                                )%>%hidden(),
                                
+                              br(),
+                              br(),
+                              div("Number of individual measures implemented in selection compared to full front",
+                                  style = "display: flex; justify-content: center; font-size:150%"),
+
+                              div(style="display: flex; flex-direction: column; align-items: center;",
+                                  tags$h4("Selected range"),
+                                     tableOutput("aep_tab_full"),
+                                  conditionalPanel(
+                                    condition = "output.selectionmade",
+                                    div(
+                                      style = "display: flex; flex-direction: column; align-items: center;",
+                                    tags$h4("Selected optimum"),
+                                    tableOutput("aep_tab_one")
+                                    ))),
+                                     
+                              br(),
                               br(),
                                
                                hr(style = "border-top: 2px solid #03597F;"), 
