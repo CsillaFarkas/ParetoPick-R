@@ -1102,11 +1102,11 @@ scaled_abs_match = function(minval_s=c(0,0,0,0),
 
   }
 
-  
-  # retain only min and max
   cw = as.data.frame(array(NA,dim=c(2,length(allobs))),row.names = c("max","min"))
   colnames(cw) = allobs
   
+  if(nrow(ch)!=0){
+  # retain only min and max
   
   for (l in seq_along(allobs)) {
     if(length(ch %>% slice_max(.data[[allobs[l]]]) %>% select(allobs[[l]]) %>% slice(1)) > 1 ||
@@ -1119,10 +1119,11 @@ scaled_abs_match = function(minval_s=c(0,0,0,0),
       cw["min", allobs[l]] = ch %>% slice_min(.data[[allobs[l]]]) %>% select(allobs[[l]]) %>% slice(1)
     }
     
-    
   }
+    
   
-  if(at){rownames(cw) = c("best","worst")}
+  
+  if(at){rownames(cw) = c("best","worst")}}else{ch=NULL}
   
   #when smll is set to false the table with all absolute values is returned
   if(smll){return(cw)}else{return(ch)} 
