@@ -81,6 +81,10 @@ server <- function(input, output, session) {
  
   needs_buffer <- reactiveVal()
   hru_matcher <- reactiveVal()
+  aep_100 <- reactiveVal()
+  aep_100_con <- reactiveVal()
+  sel_opti <- reactiveVal()
+  fan_tab <- reactiveVal() #matching nswrm order
   
   hru_100 <-  reactiveVal(NULL)
   prio <- reactiveVal(NULL)
@@ -819,7 +823,6 @@ server <- function(input, output, session) {
       values = sel_tay()
       
       mv <- fit1() %>%  filter(across(all_of(cols), ~ . %in% values))
-      
       hru_one = plt_sel(shp = cmf(), opti_sel = mv$optimum)
       mes = read.csv("../data/measure_location.csv")
       
@@ -1036,7 +1039,7 @@ server <- function(input, output, session) {
                            allobs = objectives(),at=T)
   
     
-    #add percentage change
+   #add percentage change
     wr <- mima_fun()
     
     # varying number of decimals, but min and max the same number of dec
@@ -1113,7 +1116,8 @@ server <- function(input, output, session) {
       "../data/hru.shx",
       "../data/hru.dbf",
       "../data/hru.prj",
-      "../input/hru_in_optima.RDS"
+      "../input/hru_in_optima.RDS",
+      "../data/measure_location.csv"
     )
 
     if (all(file.exists(map_files))) {
@@ -1156,6 +1160,26 @@ server <- function(input, output, session) {
       colnames(hru) = gsub("^V", "", colnames(hru))
       hru_matcher(hru)
 
+      #aep for table
+      genome_hru <- read.csv('../data/measure_location.csv')#connection aep, hru
+      
+      mc=  genome_hru %>%# number of extra columns required
+        mutate(num_count = str_count(obj_id, ",") + 1) %>%
+        summarize(max_numbers = max(num_count)) %>%
+        pull(max_numbers)
+      
+      aep_100 <- genome_hru %>%
+        separate(obj_id, paste0("hru_sep_", 1:mc), sep = ',', remove = FALSE)%>%
+        pivot_longer(cols = paste0("hru_sep_", 1:mc), names_to = "code", values_to = "hru") %>% #name_new = hru separated
+        relocate(hru, .after = obj_id)%>%drop_na(hru)%>%select(name,nswrm, hru)#hru = obj_id in separate columns
+      
+      aep_100$hru <- as.numeric(str_remove(aep_100$hru, " ") )#name = AEP, hru = hru
+      hru_everact = hru_matcher() %>%pivot_longer(cols = -id, names_to = "optims", values_to = "measure") %>%
+        group_by(id)%>%filter(!is.na(measure))
+      
+      
+      aep_100_con(aep_100 %>% filter(hru %in% unique(hru_everact$id)))
+      aep_100(aep_100)
       #catchment forever
       cm(pull_shp_new())
 
@@ -1180,8 +1204,8 @@ server <- function(input, output, session) {
     req(cmf(),hru_100(),lalo(),prio(), dat_matched(),buffers(),hru_matcher(),fit())
 
     dat = dat_matched()
+    
     optima <-unique( match(do.call(paste, dat), do.call(paste, fit())))
-
     hru_subset_freq = hru_matcher()[,c("id",as.character(optima))]     #subset to only those optima in selection
       
     hru_freq = hru_subset_freq
@@ -1200,7 +1224,85 @@ server <- function(input, output, session) {
     return(m)
   }
   
+
   
+     output$aep_tab_one <- renderTable({
+       req(hru_matcher(),aep_100(),fan_tab(),sel_tay(),objectives())
+       
+       cols = objectives()
+       values = sel_tay()
+       
+       fit = fit() %>% rownames_to_column("optimum")
+       mv <- fit %>%  filter(across(all_of(cols), ~ . %in% values))
+       one_opti = gsub("V","",mv$optimum)
+         
+       hru_one_act = hru_matcher() %>%pivot_longer(cols = -id, names_to = "optims", values_to = "measure") %>%
+         group_by(id)%>%filter(!is.na(measure))%>%filter(optims == one_opti)
+       
+       aep_one = aep_100() %>% filter(hru %in% unique(hru_one_act$id))
+       aep_one = aep_one %>%select(-hru) %>% group_by(nswrm) %>%summarise(nom = n_distinct(name))
+       allmes = unique(aep_100()$nswrm)
+       missmes = setdiff(allmes,aep_one$nswrm)
+       
+       if(length(missmes)>=1){
+         
+         missing_rows <- data.frame(
+           nswrm = missmes,
+           nom = 0,
+           stringsAsFactors = FALSE
+         )
+         
+         aep_one <- rbind(aep_one, missing_rows)
+       }
+       tab = aep_one[match(fan_tab(),aep_one$nswrm),]#order like table above
+       tab = as.data.frame(t(tab))
+       names(tab) = tab[1,]
+       tab=tab[-1,]
+       tab
+       }, align = "c")
+     
+     output$selectionmade <- reactive({ #conditional showing of second table (especially title cannot be removed otherwise)
+       !is.null(sel_tay()) 
+     })
+     outputOptions(output, "selectionmade", suspendWhenHidden = FALSE)
+     
+     
+
+    output$aep_tab_full <-renderTable({
+      req(aep_100_con(),hru_matcher(),aep_100(),dat_matched(),fit())
+      if(nrow(dat_matched())>= 1){
+        shinyjs::hide("ensure_sel")
+        
+        
+        optima <-unique(match(do.call(paste, dat_matched()), do.call(paste, fit())))
+        hru_spec_act = hru_matcher() %>%pivot_longer(cols = -id, names_to = "optims", values_to = "measure") %>%
+          group_by(id)%>%filter(!is.na(measure))%>%filter(optims %in% optima)
+        
+        aep_sel = aep_100() %>% filter(hru %in% unique(hru_spec_act$id))
+
+        aep_100_con2 =aep_100_con() %>%select(-hru) %>% group_by(nswrm) %>%summarise(nom = n_distinct(name))
+        aep_sel =aep_sel %>%select(-hru) %>% group_by(nswrm) %>%summarise(nom = n_distinct(name))
+        yo1<<- aep_sel
+        yo2<<- aep_100_con2
+        tab= aep_100_con2 %>% left_join(aep_sel, by = "nswrm")%>%replace(is.na(.), 0)%>%
+          mutate(implemented = paste0(nom.y," / ",nom.x)) %>%select(nswrm,implemented)
+        fan_tab(tab$nswrm)
+        tab = as.data.frame(t(tab))
+        names(tab) = tab[1,]
+        tab=tab[-1,]
+        tab}
+    }, align = "c")
+    
+   
+    #   output$ensure_sel <- renderText({
+    #     req(dat_matched())
+    #     if(nrow(dat_matched())<= 1){
+    #       
+    #     paste("None of the points fulfill these criteria. Please select different data ranges!")  }
+    #     
+    # })
+      
+
 
   
   
