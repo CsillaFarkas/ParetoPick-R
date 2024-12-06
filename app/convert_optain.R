@@ -81,11 +81,14 @@ nswrm_priorities <- function(lu){
 
 ## Genomes
   gen = read.table("../data/pareto_genomes.txt", header=F,stringsAsFactors=FALSE,sep = deli("../data/pareto_genomes.txt"),encoding = "UTF-8")
-  
-  print("check: read pareto_genomes.txt...",quote=F)
-
+  fit = read.table("../data/pareto_fitness.txt", header=F,stringsAsFactors=FALSE,sep = deli("../data/pareto_fitness.txt"))
   #get number of optima
-  nopt = length(gen)
+  nopt = nrow(fit)
+  
+  if(nopt != ncol(gen)){gen = as.data.frame(t(gen))}#genome is reversed sometimes
+  
+  print("check: read pareto_fitness.txt and pareto_genomes.txt...",quote=F)
+
   gen <- gen %>%
     mutate(id = c(1:nrow(gen)), .before = V1) #id is number of AEP
 
@@ -176,7 +179,8 @@ for(op in paste0("V", 1:nopt)){
   ## hru represents the connection between the optima and plot
   hru <- hru%>%mutate(id = as.integer(id))
   hru = hru %>% mutate(across(starts_with("V"),as.character))
-  hru = hru %>% filter(!rowSums(is.na(across(starts_with("V")))) == ncol(across(starts_with("V"))))
+  
+  hru = hru %>% filter(!rowSums(is.na(across(starts_with("V")))) == ncol(across(starts_with("V"))))#remove hrus that are never activated
   saveRDS(hru,file= "../input/hru_in_optima.RDS")
   print(paste0("check: made hru land use available for future plotting..."),quote=F)
   
@@ -358,11 +362,10 @@ for(op in paste0("V", 1:nopt)){
 
   
   ## merge with pareto fitness, # the first row is optimum V1
-  fit = read.table("../data/pareto_fitness.txt", header=F,stringsAsFactors=FALSE,sep = deli("../data/pareto_fitness.txt"))
   yolo = readRDS("../input/object_names.RDS")
   names(fit) = yolo
   fit$id = 1:nrow(fit)
-  print("check: read pareto_fitness.txt, assigned names...",quote=F)
+  print("check: assigned names to pareto_finess.txt...",quote=F)
   
   test_clu = fit %>% 
     left_join(lin, by = "id") %>%
