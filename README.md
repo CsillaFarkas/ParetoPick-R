@@ -81,6 +81,8 @@ the project consists of six folders
 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 ```
 
+** Please make sure that the two files align. If there are x rows (=optima) in pareto_fitness.txt there should be x columns (or rows, the app understands both) in pareto_genomes.txt **
+
 3. __hru.con__
   * connection file used in SWAT+ modelling containing details on HRU size and location
 4. __measure_location.csv__
