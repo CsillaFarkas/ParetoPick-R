@@ -708,13 +708,24 @@ server <- function(input, output, session) {
    observe({#for first_pareto, play_freq and scatter
      req(f_scaled(),objectives(),fit(),input$obj1,input$obj2,input$obj3,input$obj4)
      
-     objs = objectives()
-     fit_data = fit()
-     f_scaled_data = f_scaled()
+     objs <- objectives()
+     fit_data <- fit()
+     f_scaled_data <- f_scaled()
      dat_matched(scaled_abs_match(minval_s=c(input$obj1[1],input$obj2[1],input$obj3[1],input$obj4[1]),
                                   maxval_s=c(input$obj1[2],input$obj2[2],input$obj3[2],input$obj4[2]),
                                   abs_tab = fit_data,scal_tab =f_scaled_data,
                                   allobs = objs,smll=F))
+     
+       df <- dat_matched()
+       
+       
+       if(nrow(df) == 0 || ncol(df) == 0){
+         output$ensure_sel <- renderText({
+           paste("None of the optima fall within the specified ranges. Please select different data ranges!")
+         })
+       }else{output$ensure_sel <- renderText({paste("")})}
+     
+     
    })
  
  
@@ -828,7 +839,7 @@ server <- function(input, output, session) {
       
       
       col_sel = names(hru_one)[grep("Optim", names(hru_one))]
-      man_col = c("#66C2A5" ,"#4db818","#965c1d", "#F7A600", "#03597F" ,"#83D0F5","#FFEF2C","#a84632","#b82aa5","#246643")
+      man_col = c("#66C2A5" ,"#4db818","#663e13", "#F7A600", "#03597F" ,"#83D0F5","#FFEF2C","#a84632","#b82aa5","#246643")
       man_col = man_col[1:length(unique(mes$nswrm))]
       pal = colorFactor(palette = man_col, domain = unique(mes$nswrm), na.color = "lightgrey")
       
@@ -889,6 +900,7 @@ server <- function(input, output, session) {
       sk= match_scaled(minval_s=c(input$obj1[1],input$obj2[1],input$obj3[1],input$obj4[1]),
                        maxval_s=c(input$obj1[2],input$obj2[2],input$obj3[2],input$obj4[2]),scal_tab = f_scaled(),allobs = objectives())
       
+      if(is.null(sk)){return(NULL)}else{
       ko= sk%>% mutate(id = factor(row_number()))%>%pivot_longer(.,cols=-id)%>%
         mutate(name=factor(name))%>%mutate(name=forcats::fct_relevel(name,objectives()))
       
@@ -915,7 +927,7 @@ server <- function(input, output, session) {
         return(plot_parline(datt = ko,colols = rv$colls, sizz = rv$sizes, sq= NULL))
       }
       
-    }
+    }}
     
     output$linePlot <- renderPlot({ parplot_fun() })
     
@@ -1205,6 +1217,7 @@ server <- function(input, output, session) {
 
     dat = dat_matched()
     
+    if(nrow(dat)== 0 || ncol(dat)== 0){return(NULL)}else{
     optima <-unique( match(do.call(paste, dat), do.call(paste, fit())))
     hru_subset_freq = hru_matcher()[,c("id",as.character(optima))]     #subset to only those optima in selection
       
@@ -1216,12 +1229,12 @@ server <- function(input, output, session) {
     mes = unique(hru_share$measure)
 
   #make palette outside and pass to it
-    man_col = c("#66C2A5", "#4db818", "#965c1d", "#F7A600", "#03597F", "#83D0F5",  "#FFEF2C",   "#a84632",  "#b82aa5",  "#246643" )
+    man_col = c("#66C2A5", "#4db818", "#663e13", "#F7A600", "#03597F", "#83D0F5",  "#FFEF2C",   "#a84632",  "#b82aa5",  "#246643" )
     man_col = man_col[1:length(unique(mes))]
     pal = colorFactor(palette = man_col, domain = unique(mes), na.color = "lightgrey")
 
     m = plt_freq(data=cmf(),lo=lalo()[2], la=lalo()[1], buffers=buffers(), remaining=hru_share,dispal=pal, mes = mes)
-    return(m)
+    return(m)}
   }
   
 
@@ -1271,9 +1284,7 @@ server <- function(input, output, session) {
     output$aep_tab_full <-renderTable({
       req(aep_100_con(),hru_matcher(),aep_100(),dat_matched(),fit())
       if(nrow(dat_matched())>= 1){
-        shinyjs::hide("ensure_sel")
-        
-        
+
         optima <-unique(match(do.call(paste, dat_matched()), do.call(paste, fit())))
         hru_spec_act = hru_matcher() %>%pivot_longer(cols = -id, names_to = "optims", values_to = "measure") %>%
           group_by(id)%>%filter(!is.na(measure))%>%filter(optims %in% optima)
@@ -1293,25 +1304,15 @@ server <- function(input, output, session) {
         tab}
     }, align = "c")
     
-   
-    #   output$ensure_sel <- renderText({
-    #     req(dat_matched())
-    #     if(nrow(dat_matched())<= 1){
-    #       
-    #     paste("None of the points fulfill these criteria. Please select different data ranges!")  }
-    #     
-    # })
-      
 
-
-  
-  
   ## scatter plot
   scat_fun = function(){
-    req(fit(), objectives(),f_scaled(),dat_matched())
+    req(fit(),objectives(),f_scaled(),dat_matched())
    
     scat_abs = dat_matched()
     
+    if(nrow(scat_abs)==0 || ncol(scat_abs)==0)return(NULL)else{
+  
     if(!is.null(er())){
       rom = which(apply(scat_abs, 1, function(row) all(row == er())))
       col = rep("grey",nrow(scat_abs))
@@ -1321,22 +1322,21 @@ server <- function(input, output, session) {
     }else{col = rep("grey",nrow(scat_abs))
     
     sizz = rep(2.8, nrow(scat_abs))}
-    
+
     mima = get_mima(fit())
-    
+
     if (input$plt_sq) {
       req(stq())
       
       plot_scatter = plt_sc(dat = scat_abs, ranges = mima,col = col,size = sizz,sq=stq())
       
-    } else{
-      plot_scatter = plt_sc(dat = scat_abs, ranges = mima,col = col,size = sizz)
+    }else{
+      plot_scatter <<- plt_sc(dat = scat_abs, ranges = mima,col = col,size = sizz)
     }
 
-    plot_grid(plot_scatter, ncol = 2)
-    # grid.arrange(grobs = plot_scatter, nrow = 3, ncol = 2)
-    }
-  
+    grid.arrange(grobs = plot_scatter, nrow = 3, ncol = 2)
+    }    
+  }
   
     output$scatter_plot <- renderPlot({ scat_fun()})
   
@@ -2265,7 +2265,7 @@ server <- function(input, output, session) {
     
     nplots = length(col_sel)#+1
 
-    man_col = c("#66C2A5" ,"#4db818","#965c1d", "#F7A600", "#03597F" ,"#83D0F5","#FFEF2C","#a84632","#b82aa5","#246643")
+    man_col = c("#66C2A5" ,"#4db818","#663e13", "#F7A600", "#03597F" ,"#83D0F5","#FFEF2C","#a84632","#b82aa5","#246643")
     man_col = man_col[1:length(unique(mes$nswrm))]
     pal = colorFactor(palette = man_col, domain = unique(mes$nswrm), na.color = "lightgrey")
     
@@ -2617,7 +2617,7 @@ server <- function(input, output, session) {
     mes = read.csv("../data/measure_location.csv")
     col_sel = names(hru_one)[grep("Optim",names(hru_one))] 
     
-    man_col = c("#66C2A5" ,"#4db818","#965c1d", "#F7A600", "#03597F" ,"#83D0F5","#FFEF2C","#a84632","#b82aa5","#246643")
+    man_col = c("#66C2A5" ,"#4db818","#663e13", "#F7A600", "#03597F" ,"#83D0F5","#FFEF2C","#a84632","#b82aa5","#246643")
     man_col = man_col[1:length(unique(mes$nswrm))]
     pal = colorFactor(palette = man_col, domain = unique(mes$nswrm), na.color = "lightgrey")
     
