@@ -1123,7 +1123,7 @@ scaled_abs_match = function(minval_s=c(0,0,0,0),
     
   
   
-  if(at){rownames(cw) = c("best","worst")}}else{ch=NULL}
+  if(at){rownames(cw) = c("best","worst")}}else{ch=ch[0, , drop = FALSE]}
   
   #when smll is set to false the table with all absolute values is returned
   if(smll){return(cw)}else{return(ch)} 
@@ -1159,7 +1159,7 @@ match_scaled = function(minval_s=c(0,0,0,0),
     ch =  ch %>% filter(.data[[allobs[k]]]<=valma & .data[[allobs[k]]]>=valmi)
   }
 
-  if(dim(ch)[1]==0){stop("no optima fulfill these conditions")}else{return(ch)}
+  if(dim(ch)[1]==0){return(ch[0, , drop = FALSE])}else{return(ch)}
   
 }
 
