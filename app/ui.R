@@ -388,7 +388,7 @@ ui <-
                                 
                                hr(),
                                
-                               div(id="runprep_show",p("Run Preparation Script when ready (this should take no more than five minutes)",style =  "text-align: left; font-size:150%"),
+                               div(id="runprep_show",p("Run Preparation Script when ready (depending on the size of the shapefiles this can take up to 10 minutes)",style =  "text-align: left; font-size:150%"),
                                    actionButton("runprep", "Run Prep"))%>%hidden,
                                uiOutput("script_output"),
                                br(),br(),
@@ -429,6 +429,8 @@ ui <-
                                                 sliderInput(inputId = "obj2", label = "Objective 2:", min = 0, max = 1, value = c(0,1), step = 0.01,width = "110%"),
                                                 sliderInput(inputId = "obj3", label = "Objective 3:", min = 0, max = 1, value = c(0,1), step = 0.01, width = "110%"),
                                                 sliderInput(inputId = "obj4", label = "Objective 4:", min = 0, max = 1, value = c(0,1), step = 0.01,width = "110%"),
+                                                tags$div(textOutput("ensure_sel"), style = "color: red;"),
+                                                
                                                 tags$p(
                                                   tags$strong("Please Note:"),
                                                   "For some of the visualisations and analyses in this tool, the objectives have been scaled to between 0 and 1.
@@ -485,7 +487,6 @@ ui <-
                                  column(3,selectInput(inputId = "col_var3", label = "Colour", choices = NULL, multiple = F, selected=NULL)),
                                  column(3,selectInput(inputId = "size_var3",label = "Size",   choices = NULL, multiple = F, selected=NULL))
                                ),
-                               tags$div(textOutput("ensure_sel"), style = "color: red;"),
                                
                                br(),
                                div(
