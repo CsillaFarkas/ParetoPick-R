@@ -707,8 +707,8 @@ server <- function(input, output, session) {
    
    observe({#for first_pareto, play_freq and scatter
      req(f_scaled(),objectives(),fit(),input$obj1,input$obj2,input$obj3,input$obj4)
-     
-     objs <- objectives()
+     if(file.exists("../input/object_names.RDS")){
+       objs <- objectives()
      fit_data <- fit()
      f_scaled_data <- f_scaled()
      dat_matched(scaled_abs_match(minval_s=c(input$obj1[1],input$obj2[1],input$obj3[1],input$obj4[1]),
@@ -717,13 +717,16 @@ server <- function(input, output, session) {
                                   allobs = objs,smll=F))
      
        df <- dat_matched()
-       
-       
        if(nrow(df) == 0 || ncol(df) == 0){
          output$ensure_sel <- renderText({
            paste("None of the optima fall within the specified ranges. Please select different data ranges!")
          })
        }else{output$ensure_sel <- renderText({paste("")})}
+     }
+     
+       
+       
+      
      
      
    })
