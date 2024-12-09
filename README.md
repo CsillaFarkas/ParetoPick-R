@@ -143,9 +143,10 @@ id,	name,	nswrm,	obj_id
 # To do
 ## Prio 1
   * convert_optain requires some failsafe controls for empty values
-  * observe(pareto_fitness) each tab, currently needs a reload sometimes
+  * observe(pareto_fitness) better, currently needs a reload sometimes
 
 ## Prio 2
   * catch empty selection and replace "replacement has length zero" with "no optima fulfill these conditions", fix reload when selection changes (Visualisation)
   * only strike through the variable that has been removed (Correlation)
+  * dynamic buffer size depending on catchment, like in other project
   
