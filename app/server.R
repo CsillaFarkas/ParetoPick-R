@@ -489,10 +489,12 @@ server <- function(input, output, session) {
             files1 <- list.files(save_dir, full.names = TRUE)
             files2 <- list.files(input_dir, full.names = TRUE)
             files3 <- list.files(output_dir, full.names = TRUE)
+            files4 <- list.files(pattern = "\\.html$")
             
             sapply(files1, file.remove)
             sapply(files2, file.remove)
             sapply(files3, file.remove)
+            sapply(files4, file.remove)
             
             remaining_files <- list.files(save_dir, full.names = TRUE)
             if (length(remaining_files) == 0) {
