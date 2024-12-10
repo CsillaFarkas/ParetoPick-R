@@ -427,7 +427,7 @@ plt_latlon = function(conpath){
 plt_freq = function(data,lo, la, buffers , remaining, dispal = pal, mes=mes) {
   
   data = left_join(data,remaining, by = c("id"))%>%st_make_valid() #only those with highest priority
-  data = data %>% filter(freq>0.01)
+  data = data %>% filter(freq>0.01) %>%subset(!st_is_empty(geometry))
   
   rem_fil = remaining %>% filter(freq>0.01) %>% filter(measure %in% unique(buffers$measure))
   buffered_data <- buffers %>%filter(id %in% rem_fil$id)
@@ -516,6 +516,14 @@ pull_shp_new = function(layername = "hru", hru_in_opt_path="../input/hru_in_opti
     hru = hio %>% filter(rowSums(!is.na(select(., starts_with("V")))) > 0) #only those hru that are used
     
     cm = read_sf(dsn = "../data/", layer = layername) #adapt path
+    if(class(cm)[1]=="sfg" || class(cm$geometry)[2]=="sfc"){
+      sfc_mixed <- st_as_sfc(cm, crs = 4326)
+      
+      sfc_mixed <- st_cast(sfc_mixed, "POLYGON")#if there are other elements like points
+      
+      cm <- st_sf(cm, geometry = sfc_mixed)
+
+    }
     cm = cm %>% filter(id %in% hru$id) %>% select(id, name, geometry) %>%st_make_valid()
     
     cm_utm <-  st_transform(cm, crs = 32633) # UTM zone 33N
@@ -540,7 +548,7 @@ fit_optims = function(cm,hru_in_opt_path="../input/hru_in_optima.RDS",optims){
     # cm_utm <-  st_transform(cm, crs = 32633) # UTM zone 33N
     # cuffy <-st_buffer(cm_utm,0.0)
     # cm = st_transform(cuffy, crs = st_crs(cm))
-    
+   
     cm = cm %>%select(id,geometry)
     
     cm = left_join(cm, hio, by = c("id")) %>% st_transform(., 4326)
@@ -616,7 +624,7 @@ plt_boxpl_clus = function(dat, sel, all_obs,mima){
 
 ## plot leaflet w/ specific column
 plt_lf <- function(data, lo, la, buff_els, col_sel, buffers, dispal = pal) {
-
+  data = data %>%subset(!st_is_empty(geometry))
   m <- vector("list", length = length(col_sel))
   
   for (i in seq_along(col_sel)) {
@@ -665,22 +673,6 @@ plt_lf <- function(data, lo, la, buff_els, col_sel, buffers, dispal = pal) {
       addLegend("bottomright", pal = dispal, values = data[[col]], na.label = "no change")
   }
   return(m)
-}
-
-## frequency of measure implementation
-
-
-
-## cm for location
-plt_cm_pure = function(data = cm,
-                       la = lalo[1],
-                       lo = lalo[2]) {
-  p = leaflet(data) %>%
-    addProviderTiles(providers$CartoDB.Positron) %>% #poviders$Esri.NatGeoWorldMap, $Stadia.StamenToner, $OpenTopoMap
-    setView(lng = lo, lat = la, zoom = 10) %>%
-    addPolygons(fillColor = "white",color = "black",weight=0.7)
-  
-  return(p)
 }
 
 
