@@ -553,6 +553,8 @@ server <- function(input, output, session) {
           
           # Update the status text output
           output$reset_status <- renderText(status)
+          
+          shinyjs::refresh()
         })
         
       } })
@@ -1253,7 +1255,7 @@ server <- function(input, output, session) {
       if(!is.null(buff_els)){
         relda <- bc[bc[["measure"]] %in% buff_els, ]%>%select(-non_na_count)
         relda_utm <-  st_transform(relda, crs = 32633) # UTM zone 33N
-        buffy <-st_buffer(relda_utm, dist = 80)
+        buffy <-st_buffer(relda_utm, dist = 60)
         buffers(st_transform(buffy, crs = st_crs(relda))) #all buffers ever required
       }else{buffers(NULL)}
       
