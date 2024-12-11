@@ -484,7 +484,7 @@ ui <-
                            tags$style(HTML(".js-irs-12 .irs-single, .js-irs-11 .irs-bar-edge, .js-irs-11 .irs-bar {background: #aF58ba ;border-top: 1px solid #aF58ba ;border-bottom: 1px solid #aF58ba;}.js-irs-11 .irs-from, .js-irs-11 .irs-to, .js-irs-11 .irs-single { font-size: 13px;background: #aF58ba !important }")),
                            tags$style(HTML(".js-irs-13 .irs-single, .js-irs-12 .irs-bar-edge, .js-irs-12 .irs-bar {background: #f28522 ;border-top: 1px solid #f28522 ;border-bottom: 1px solid #f28522;}.js-irs-12 .irs-from, .js-irs-12 .irs-to, .js-irs-12 .irs-single { font-size: 13px;background: #f28522 !important }")),
                            tags$style(HTML("#actual_plt_play_measure {width: 450px;height: 550px;margin-bottom: -150px; } ")),
-                           tags$style(HTML("#freq_map_play {width: 450px;height: 550px;margin-bottom: -150px; } ")),
+                           tags$style(HTML("#freq_map_play {width: 300px;height: 550px;margin-bottom: -150px; } ")),
                            
                            tags$style(HTML(".spinspin { display: inline-block;
                                                         width: 20px;
