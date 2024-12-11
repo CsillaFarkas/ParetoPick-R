@@ -1964,6 +1964,15 @@ server <- function(input, output, session) {
     
     updateSelectInput(session, "x_var_pcs_vs", choices = choices, selected = rng_plt()[1])
     
+  observe({  if(file.exists("../data/hru.shp")) {
+    ##shps for maps
+    if (file.exists("../input/hru_in_optima.RDS")) {
+      
+      req(cm())
+      cmf(fit_optims(cm=cm(),optims=sols(),hru_in_opt_path = "../input/hru_in_optima.RDS"))
+    }
+    needs_buffer(pull_buffer())
+  }})
     
     observe({
       if(all(fit()[[input$x_var2]]<=0) && 
@@ -2280,15 +2289,7 @@ server <- function(input, output, session) {
     
     output$tabtext = renderText({HTML("You can select up to 12 optima and compare the implementation of measures in the catchment.")})
     
-    if(file.exists("../data/hru.shp")) {
-      ##shps for maps
-      if (file.exists("../input/hru_in_optima.RDS")) {
-      
-        req(cm())
-        cmf(fit_optims(cm=cm(),optims=sols(),hru_in_opt_path = "../input/hru_in_optima.RDS"))
-      }
-      needs_buffer(pull_buffer())
-    }
+   
     if(file.exists("../data/hru.con")){lalo(plt_latlon(conpath = "../data/hru.con"))}
    
   })
@@ -2866,7 +2867,7 @@ server <- function(input, output, session) {
   observe({
     lapply(sids(), function(sliid) {
       observeEvent(input[[sliid]], {
-        slider_ahp[[sliid]] <- input[[sliid]]
+        slider_ahp[[sliid]] <- isolate({input[[sliid]]})
       })
     })
 
