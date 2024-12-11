@@ -196,14 +196,28 @@ for(op in paste0("V", 1:nopt)){
   ## Local Moran's i
     mit_i = hru_donde %>% select(obj_id, lat, lon)
   # Calculate pairwise distances using the Haversine formula
+  
    dist_matrix <- distm(mit_i[, c('lon', 'lat')], fun = distHaversine)
   
   # Create spatial weights matrix using inverse distances
     inv_dist_matrix <- 1 / dist_matrix
     diag(inv_dist_matrix) <- 0  # Set the diagonal to zero to avoid infinity
-    dist_matrix_sparse <- Matrix::Matrix(inv_dist_matrix, sparse = TRUE)
+    
+    total_elements <- length(inv_dist_matrix)
+    
+    non_zero_count <- sum(inv_dist_matrix != 0)
+    
+    pnz <- non_zero_count / total_elements #proportion on zero
+    
+    #work with sparse matrix if over 100Mb or high share of zeroes
+    # if(as.numeric(object.size(inv_dist_matrix)) / (1024^2) > 100 || pnz < -0.1){
+      inv_dist_matrix <- Matrix::Matrix(inv_dist_matrix, sparse = TRUE)
+      # }
+    
   # Convert to a listw object for spatial analysis
-   weights_listw <- mat2listw(dist_matrix_sparse, style = "B",zero.policy = TRUE)
+  print(paste0("calculating spatial weights object, this may take a while..."),quote=F)
+      
+   weights_listw <- mat2listw(inv_dist_matrix, style = "B",zero.policy = TRUE)
    print("check: produced spatial weights object...",quote=F)
   # this weight object is used to calculate spatial autocorrelation across different measures, using the area they cover as input value
 
@@ -228,8 +242,12 @@ for(op in paste0("V", 1:nopt)){
           moran_area =  opti %>% mutate(mor = ifelse(.data[[op]] == m, area, 0)) %>%
             replace(is.na(.), 0)
           
-          mesur[op, m] = median(localmoran(moran_area$mor, weights_listw)[, "Ii"])#median or mean?
+          mor_clean <- na.omit(moran_area$mor) #can be used as NAs are random
+          local_mr <- localmoran(mor_clean, weights_listw, zero.policy = TRUE)
+          vr <- local_mr[!is.na(local_mr[, "Ii"]), ]
+          mesur[op, m] <- median(vr[, "Ii"])
           
+
         }else{mesur[op, m] = 0}
       }
       print(paste0("check: calculated Moran's I for Optimum ", op,"..."),quote=F)
