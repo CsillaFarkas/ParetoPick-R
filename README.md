@@ -123,6 +123,7 @@ id,	name,	nswrm,	obj_id
 * pca_content.RDS
 * all_var.RDS
 * units.RDS
+* buffers.RDS
 
 
 
@@ -135,7 +136,6 @@ id,	name,	nswrm,	obj_id
   * in AHP, the initial state of the pairwise comparison as "Equal" amplifies the mathematical definition of inconsistency, therefore only when at least three sliders are NOT set to "Equal" is inconsistency considered at all
   * stratified variables such as lowflow in the Schoeps do not work in the tool, the sliders cannot be moved
   * users should not produce optimisation outputs with values below 0 and if possible no values smaller than 1, the app's rescaling is (balance values to between 1 and 100) is turned off
-  * not yet shared to Gitlab
   * range_controlled() controls for the objectives min value being less than 0.0005 (*1000) or over 10000 (--> rounding), this might not be applicable for all case studies 
 
  
@@ -148,7 +148,6 @@ id,	name,	nswrm,	obj_id
 ## Prio 2
   * catch empty selection and replace "replacement has length zero" with "no optima fulfill these conditions", fix reload when selection changes (Visualisation)
   * only strike through the variable that has been removed (Correlation)
-  * dynamic buffer size depending on catchment, like in other project
   * add a small spinner to the Check Data button to clarify that it takes a while
   * output of convert_optain is printed twice, would look better with single-line output
   
