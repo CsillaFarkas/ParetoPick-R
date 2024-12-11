@@ -143,6 +143,7 @@ ui <-
                                     background-color: #FFEF2C !important;
                                   }
                                   
+
                                   
                                   /* Active selected tab in the sidebar menu */
                                   .skin-blue .main-sidebar .sidebar .sidebar-menu .active a {
@@ -154,6 +155,8 @@ ui <-
                                     background-color: #7a7785;
                                     color: #000000;
                                   }
+                                  
+         
 
                                   /* Hover effect for other links in the sidebar menu */
                                   .skin-blue .main-sidebar .sidebar .sidebar-menu a:hover {
@@ -169,7 +172,10 @@ ui <-
                                   .content-wrapper, .right-side {
                                     background-color: #9eb1cf;
                                     font-family: "Montserrat", sans-serif;
+
                                   }
+                                  
+
 
                                   /* Styling for .well elements */
                                   .well {
@@ -185,7 +191,7 @@ ui <-
                                   }
 
                                   /* Ensuring content height covers the full view */
-                                  .content {min-height: 300vh;}
+                                  .content {min-height: 1000vh;}
 
                                   /* Slider element styling */
                                   .irs-grid-text {
@@ -200,7 +206,7 @@ ui <-
 
                                 /* Main panel size relative to sidebar width */
                                   .main-panel {
-                                   margin-left: 250px; /* adjust sidebar width */
+                                   margin-left: 250px; 
                                    width: calc(100% - 250px); /* adjust sidebar width */
                                   }
 
@@ -311,6 +317,9 @@ ui <-
                                                 (if all files have been found) <strong>Run Prep</strong>. Please be aware that the preparation might take up to 5 minutes."))),
                              
                              mainPanel(
+                              
+
+                              
                                div(p("For being able to plot and analyse the Pareto front, please provide pareto_fitness.txt as well as the objective names. 
                                      If you would like to plot the status quo, sq_fitness.txt is also required:"),style = "text-align: left; font-size:140%"),
                                # div(id="fitness_avail",
@@ -381,17 +390,31 @@ ui <-
                                div(style = "margin-top: -15px;",fileInput("shapefile", "", multiple = TRUE, 
                                                                           accept = c(".shp", ".shx", ".dbf", ".prj"))),
                                
-                      
+                               
                                actionButton("files_avail", "Check Files"),
+                  
+                               
                                uiOutput("fileStatusMessage"),
                                
-                                
+                               
                                hr(),
                                
                                div(id="runprep_show",p("Run Preparation Script when ready (depending on the size of the shapefiles this can take up to 10 minutes)",style =  "text-align: left; font-size:150%"),
                                    actionButton("runprep", "Run Prep"))%>%hidden,
                                uiOutput("script_output"),
                                br(),br(),
+                               div("Please select those measures that are small and require a buffer to enhance their visibility in maps.", style = "text-align: left; font-size:120%; margin-top: 10px;"),
+                               
+                               div(
+                                 style = "display: inline-block; vertical-align: top; margin-right: 0px; margin-top: 5px",
+                               selectInput("buffies",label  = "select measures",choices=NULL,selected=NULL,multiple = T)),
+                               div(
+                                 style = "display: inline-block; vertical-align: top; margin-left: 0px; margin-top: 30px",
+                               actionButton("save_buff","Save buffers"))
+                               ,
+                               br(),br(),
+                               
+                               
                                div(id="range_title","Range of objective values given in pareto_fitness.txt and as used in this app",style = "text-align: left; font-size:120%"),
                                tableOutput("obj_conf"),
                                
@@ -949,33 +972,33 @@ ui <-
                        tabName = "ahp",
                        titlePanel("Analytical Hierarchy Process"),
                        
-                       wellPanel( p("This tab allows you to run a different approach (AHP) to selecting those pareto optima best matching your preferences.
-                     AHP is a decision making tool that helps you prioritise different objectives by comparing them in pairs.
-                                    If you want you can limit the objective ranges under 1."),
-                                  p("Under 2. you can compare objectives two at a time and and decide which objective is more important and by how much. 
-                     ParetoPick-R will assign weights to each objective based on your inputs and check its consistency. 
-                     The respective best choice is plotted below and you can decide whether 
-                     it should be selected from the whole pareto front or from the subset of cluster results.")),
-                       
+                     #   wellPanel( p("This tab allows you to run a different approach (AHP) to selecting those pareto optima best matching your preferences.
+                     # AHP is a decision making tool that helps you prioritise different objectives by comparing them in pairs.
+                     #                If you want you can limit the objective ranges under 1."),
+                     #              p("Under 2. you can compare objectives two at a time and and decide which objective is more important and by how much. 
+                     # ParetoPick-R will assign weights to each objective based on your inputs and check its consistency. 
+                     # The respective best choice is plotted below and you can decide whether 
+                     # it should be selected from the whole pareto front or from the subset of cluster results.")),
+                     #   
                        sidebarLayout(
-                         sidebarPanel(
+                         sidebarPanel(width=3,
                            
                            textOutput("nothing_ran_ahp"),
                            div(id = "ahp_analysis",
                             
                                fluidRow(
                                  
-                                 column(10,
+                                 column(12,
                                         div("1. Limiting the objective space (optional)",style = "text-align: center; font-size: 120%;"),
-                                        sliderInput(inputId = "obj1_ahp", label = "Objective 1:", min = 0, max = 100, value = c(0, 100), width = "110%"),
-                                        sliderInput(inputId = "obj2_ahp", label = "Objective 2:", min = 0, max = 100, value = c(0, 100), width = "110%"),
-                                        sliderInput(inputId = "obj3_ahp", label = "Objective 3:", min = 0, max = 100, value = c(0, 100), width = "110%"),
-                                        sliderInput(inputId = "obj4_ahp", label = "Objective 4:", min = 0, max = 100, value = c(0, 100), width = "110%"))
+                                        sliderInput(inputId = "obj1_ahp", label = "Objective 1:", min = 0, max = 100, value = c(0, 100), width = "120%"),
+                                        sliderInput(inputId = "obj2_ahp", label = "Objective 2:", min = 0, max = 100, value = c(0, 100), width = "120%"),
+                                        sliderInput(inputId = "obj3_ahp", label = "Objective 3:", min = 0, max = 100, value = c(0, 100), width = "120%"),
+                                        sliderInput(inputId = "obj4_ahp", label = "Objective 4:", min = 0, max = 100, value = c(0, 100), width = "120%"))
                                )),
                           
                          ),
                          
-                         mainPanel(
+                         mainPanel(width=9,
                            tags$style(HTML("#plt_bo_measure {width: 450px;height: 550px;margin-bottom: -150px; } ")),
                            
                           
@@ -999,6 +1022,7 @@ ui <-
                                actionButton("ahp_card6", "Show Card 6", 
                                             style="background-color: #f4f4f4; border-color: #2e6da4"),
                                  ),
+                             br(),br(),br(),
                              br(),br(),br(),
                              checkboxInput("show_all_cards", "Show all comparisons", value = FALSE), 
                              br(),

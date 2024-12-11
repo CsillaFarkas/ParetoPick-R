@@ -158,6 +158,23 @@ server <- function(input, output, session) {
   
   observeEvent(input$tabs == "data_prep",{
     
+    #buffer selection
+    observe({
+      if(file.exists("../data/measure_location.csv")){
+        mes = read.csv("../data/measure_location.csv")
+        buffs = unique(mes$nswrm)
+        updateSelectInput(session,inputId = "buffies", choices = buffs)
+        
+        if(file.exists("../input/buffers.RDS")){
+          sel_buff = readRDS("../input/buffers.RDS")
+          updateSelectInput(session,inputId = "buffies", choices = buffs,selected=sel_buff)
+          
+        }
+      }
+        
+
+      
+    })
     ## make fit() based on user input
     observeEvent(input$par_fit, {     
       req(input$par_fit)
@@ -168,17 +185,12 @@ server <- function(input, output, session) {
     
     #get pareto_fitness.txt and make fit()
     observeEvent(input$save_paretofit,{
-      req(par_fiti(),objectives())
+      req(par_fiti())
       save_par_fiti <- par_fiti()$name
       save_path_par_fiti <- file.path(save_dir, save_par_fiti)
       file.copy(par_fiti()$path, save_path_par_fiti, overwrite = TRUE) #copy pareto_fitness.txt
       
-      data = read.table(pareto_path, header=F,stringsAsFactors=FALSE,sep = deli(pareto_path))
-      names(data) = objectives()
-      fit(data)
-      
-      yo = fit() %>% mutate(across(everything(), ~ scales::rescale(.)))%>%mutate(id = row_number())
-      f_scaled(yo)
+     
     })
     
     #make status quo based on user input
@@ -203,7 +215,7 @@ server <- function(input, output, session) {
       stq(st_q)
     })
     
-    ##get new objective names
+    ##get new objective names, make fit() and objectives() and f_scaled
     observeEvent(input$save_par_fiti, {
       short <<- c(input$short1, input$short2, input$short3, input$short4)
       objectives(short)
@@ -227,6 +239,16 @@ server <- function(input, output, session) {
       
       write_pca_ini(var1=input$short1,var2=input$short2,var3=input$short3,var4=input$short4,
                     var1_lab="",var2_lab="",var3_lab="",var4_lab="")#save label for future use (pulled w/ read_config_plt in Data prep, pca and cluster)
+      
+      if(file.exists(pareto_path)){
+        
+      data = read.table(pareto_path, header=F,stringsAsFactors=FALSE,sep = deli(pareto_path))
+      names(data) = objectives()
+      fit(data)
+      
+      yo = fit() %>% mutate(across(everything(), ~ scales::rescale(.)))%>%mutate(id = row_number())
+      f_scaled(yo)}
+      
       
       output$obj_conf <- renderTable({
         if(file.exists(pareto_path)){
@@ -333,12 +355,11 @@ server <- function(input, output, session) {
     
     
     observeEvent(input$files_avail,{
-      
       save_filename1 <- file_data1()$name
       save_filename2 <- file_data2()$name
       save_filename3 <- file_data3()$name
       save_filename6 <- file_data6()$name
-      
+
       save_path1 <- file.path(save_dir, save_filename1)
       save_path2 <- file.path(save_dir, save_filename2)
       save_path3 <- file.path(save_dir, save_filename3)
@@ -375,8 +396,9 @@ server <- function(input, output, session) {
       
       checkFiles <- sapply(required_files, function(file) file.exists(file))
       
-      if(all(checkFiles)& file.exists("../input/object_names.RDS")){run_prep_possible$files_avail = T}
-      
+      if(all(checkFiles)& file.exists("../input/object_names.RDS")){run_prep_possible$files_avail = T
+      }
+
       output$fileStatusMessage <- renderText({
         if (all(checkFiles) & file.exists("../input/object_names.RDS")) {
           HTML("All Files found.")
@@ -390,8 +412,8 @@ server <- function(input, output, session) {
           HTML(paste("The following file(s) are missing:<br/>", paste(sub('../data/', '', missing_files), collapse = "<br/> ")))
         }
       })
-      
-      
+
+
     })
     #cannot run if already exists, has to be deleted manually
     
@@ -411,52 +433,70 @@ server <- function(input, output, session) {
     
     ## run external script that produces variables considered in the clustering
     
-    observeEvent(input$runprep,{
-      
+    optain <- NULL 
+    output_handled <- reactiveVal(FALSE)
+    
+    observeEvent(input$runprep, {
       dp_done(FALSE)
-      script_output(character()) #clear old output
+      script_output(character()) # Clear old output
       
-      optain <- process$new("Rscript",c("convert_optain.R"),stdout = "|", stderr = NULL) #stdout | ---> pipe output, stderr ---> ignore
-      autoInvalidate <- reactiveTimer(100)
-      
-      observe({autoInvalidate()
-        if (optain$is_alive()) {
-          new_output <- optain$read_output_lines()
-          if (length(new_output) > 0) {
-            current_output <- script_output()
-            
-            # append new output lines and limit to last 10 lines
-            updated_output <- c(current_output, new_output)
-            if (length(updated_output) > 10) {
-              updated_output <- tail(updated_output, 10)
-            }
-            # update the reactive value
-            script_output(updated_output)
-          }
-        }else{
-          final_output <- optain$read_output_lines()
-          if (length(final_output) > 0) {
-            current_output <- script_output()
-            updated_output <- c(current_output, final_output)
-            if (length(updated_output) > 10) {
-              updated_output <- tail(updated_output, 10)
-            }
-            script_output(updated_output)
-          }
-          dp_done(TRUE)
-        }
-      })
+      # start the process
+      optain <<- process$new(
+        "Rscript",
+        c("convert_optain.R"),
+        stdout = "|",
+        stderr = NULL
+      )
     })
     
-    output$script_output  <- renderUI({
-      if(dp_done() & file.exists("../input/var_corr_par.csv")){
-        tags$strong("The data preparation was successful. You can now continue with the Correlation and Principal Component Analysis. You will not need this tab again.")
-      }else{verbatimTextOutput("rscriptcmd")}
+    autoInvalidate <- reactiveTimer(100)
+    observe({
+      autoInvalidate()
       
+      # Check if the process is running
+      if (!is.null(optain) && optain$is_alive()) {
+        new_output <- optain$read_output_lines()
+        if (length(new_output) > 0) {
+          current_output <- script_output()
+          updated_output <- c(current_output, new_output)
+          if (length(updated_output) > 10) {
+            updated_output <- tail(isolate(updated_output), 10)
+          }
+          script_output(updated_output)
+          output_handled(TRUE) 
+        }
+      } else if (!is.null(optain) && !output_handled()) {
+
+        final_output <- optain$read_output_lines()
+        if (length(final_output) > 0) {
+          current_output <- script_output()
+          updated_output <- c(current_output, final_output)
+          if (length(updated_output) > 10) {
+            updated_output <- tail(updated_output, 10)
+          }
+          script_output(updated_output)
+        }
+        dp_done(TRUE)
+        optain <- NULL # clear
+        output_handled(TRUE) 
+      }
     })
+    
+    # Render UI output
+    output$script_output <- renderUI({
+      if (dp_done() && file.exists("../input/var_corr_par.csv")) {
+        tags$strong("The data preparation was successful. You can now continue with the Correlation and Principal Component Analysis. You will not need this tab again.")
+      } else {
+        verbatimTextOutput("rscriptcmd")
+      }
+    })
+    
+    # Render process output
     output$rscriptcmd <- renderText({
       paste(script_output(), collapse = "\n")
     })
+  
+    
     
     observe({ 
       if(length(list.files(c(save_dir,output_dir), full.names = TRUE))==0){ #do not show reset option if there haven't been files uploaded
@@ -490,11 +530,13 @@ server <- function(input, output, session) {
             files2 <- list.files(input_dir, full.names = TRUE)
             files3 <- list.files(output_dir, full.names = TRUE)
             files4 <- list.files(pattern = "\\.html$")
+            files5 <- list.files(pattern = "\\.Rhistory$")
             
             sapply(files1, file.remove)
             sapply(files2, file.remove)
             sapply(files3, file.remove)
             sapply(files4, file.remove)
+            sapply(files5, file.remove)
             
             remaining_files <- list.files(save_dir, full.names = TRUE)
             if (length(remaining_files) == 0) {
@@ -514,7 +556,12 @@ server <- function(input, output, session) {
         })
         
       } })
+  
+    observeEvent(input$save_buff,{
+      saveRDS(input$buffies,file = "../input/buffers.RDS")
+    })  
     
+  
   })
   
   if (!file.exists("../data/sq_fitness.txt")){
@@ -831,7 +878,7 @@ server <- function(input, output, session) {
     
     
     single_meas_fun2 = function() {
-      req(needs_buffer(), lalo(), cmf(),fit(), sel_tay(), objectives(),buffers())
+      req(lalo(), cmf(),fit(), sel_tay(), objectives())
       
       fit1(fit() %>% rownames_to_column("optimum"))
       
@@ -1198,16 +1245,18 @@ server <- function(input, output, session) {
       aep_100(aep_100)
       #catchment forever
       cm(pull_shp_new())
-
       #buffers forever
       bc = left_join(cm(),hru_100(), by = c("id"))%>%st_make_valid() #only those with highest priority
 
       buff_els = needs_buffer()
 
-      relda <- bc[bc[["measure"]] %in% buff_els, ]%>%select(-non_na_count)
-      relda_utm <-  st_transform(relda, crs = 32633) # UTM zone 33N
-      buffy <-st_buffer(relda_utm, dist = 80)
-      buffers(st_transform(buffy, crs = st_crs(relda))) #all buffers ever required
+      if(!is.null(buff_els)){
+        relda <- bc[bc[["measure"]] %in% buff_els, ]%>%select(-non_na_count)
+        relda_utm <-  st_transform(relda, crs = 32633) # UTM zone 33N
+        buffy <-st_buffer(relda_utm, dist = 80)
+        buffers(st_transform(buffy, crs = st_crs(relda))) #all buffers ever required
+      }else{buffers(NULL)}
+      
 
       if(file.exists("../data/hru.con")){lalo(plt_latlon(conpath = "../data/hru.con"))}
       
@@ -1217,7 +1266,7 @@ server <- function(input, output, session) {
     }else{shinyjs::hide("freq_map_play")}})
  
   play_freq = function(){ #excessive function
-    req(cmf(),hru_100(),lalo(),prio(), dat_matched(),buffers(),hru_matcher(),fit())
+    req(cmf(),hru_100(),lalo(),prio(), dat_matched(),hru_matcher(),fit())
 
     dat = dat_matched()
     
@@ -1297,8 +1346,7 @@ server <- function(input, output, session) {
 
         aep_100_con2 =aep_100_con() %>%select(-hru) %>% group_by(nswrm) %>%summarise(nom = n_distinct(name))
         aep_sel =aep_sel %>%select(-hru) %>% group_by(nswrm) %>%summarise(nom = n_distinct(name))
-        yo1<<- aep_sel
-        yo2<<- aep_100_con2
+       
         tab= aep_100_con2 %>% left_join(aep_sel, by = "nswrm")%>%replace(is.na(.), 0)%>%
           mutate(implemented = paste0(nom.y," / ",nom.x)) %>%select(nswrm,implemented)
         fan_tab(tab$nswrm)
@@ -1335,7 +1383,7 @@ server <- function(input, output, session) {
       plot_scatter = plt_sc(dat = scat_abs, ranges = mima,col = col,size = sizz,sq=stq())
       
     }else{
-      plot_scatter <<- plt_sc(dat = scat_abs, ranges = mima,col = col,size = sizz)
+      plot_scatter = plt_sc(dat = scat_abs, ranges = mima,col = col,size = sizz)
     }
 
     grid.arrange(grobs = plot_scatter, nrow = 3, ncol = 2)
@@ -2235,16 +2283,9 @@ server <- function(input, output, session) {
     if(file.exists("../data/hru.shp")) {
       ##shps for maps
       if (file.exists("../input/hru_in_optima.RDS")) {
-        # cm(
-        #   pull_shp(
-        #     layername = "hru",
-        #     optims = sols(),
-        #     hru_in_opt_path = "../input/hru_in_optima.RDS"
-        #   )
-        # )
+      
         req(cm())
         cmf(fit_optims(cm=cm(),optims=sols(),hru_in_opt_path = "../input/hru_in_optima.RDS"))
-
       }
       needs_buffer(pull_buffer())
     }
@@ -2255,13 +2296,12 @@ server <- function(input, output, session) {
   comp_fun = function(){
     # if(!file.exists("../data/measure_location.csv")){return(NULL)}else{
     
-    req(sols(),cmf(),buffers(),needs_buffer()) 
+    req(sols(),cmf()) 
     selected_row <- isolate(input$antab_rows_selected)
     
     selected_data <- sols()[selected_row,]
     
-    
-    
+   
     hru_sel = plt_sel(shp=cmf(),opti_sel = selected_data$optimum)
     mes = read.csv("../data/measure_location.csv")
     
@@ -2577,7 +2617,7 @@ server <- function(input, output, session) {
   observeEvent(input$plt_bo,{
     meas_running(TRUE) 
 
-    req(best_option(),needs_buffer(),fit(),objectives())
+    req(best_option(),fit(),objectives())
  
  
   fit1(fit() %>% rownames_to_column("optimum"))
@@ -2588,13 +2628,7 @@ server <- function(input, output, session) {
    
     ##shps for maps
     if (file.exists("../input/hru_in_optima.RDS")) {
-      # cm(
-      #   pull_shp(
-      #     layername = "hru",
-      #     optims = bo,
-      #     hru_in_opt_path = "../input/hru_in_optima.RDS"
-      #   )
-      # )
+   
       req(cm())
       cmf(fit_optims(cm=cm(),hru_in_opt_path = "../input/hru_in_optima.RDS",optims=bo))
     }
@@ -2615,7 +2649,7 @@ server <- function(input, output, session) {
 
   single_meas_fun = function(){
     if(!file.exists("../data/measure_location.csv")){return(NULL)}else{
-    req(boo(),needs_buffer(),lalo(),cmf(),buffers())
+    req(boo(),lalo(),cmf())
       
     hru_one = plt_sel(shp=cmf(),opti_sel = boo())
     mes = read.csv("../data/measure_location.csv")
@@ -2730,7 +2764,7 @@ server <- function(input, output, session) {
         grid = TRUE,
         hide_min_max = FALSE,
         animate = FALSE,
-        width = "100%",
+        width = "110%",
         force_edges = T
         
       )
