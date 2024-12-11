@@ -2858,7 +2858,7 @@ server <- function(input, output, session) {
       output[[tabl]] <- renderTable({ create_r2tab(i) }, rownames = FALSE, colnames = FALSE, sanitize.text.function = function(x) x)
       
       output[[cardui]] <- renderUI({
-        create_card(ahp_combo()[i], sliid = sids()[i], plt, tabl, session, slider_val = slider_ahp[[sids()[i]]], sliders)
+        create_card(ahp_combo()[i], sliid = sids()[i], plt, tabl, session, slider_val = isolate({slider_ahp[[sids()[i]]]}), sliders)
       })
     })
   }
@@ -2872,5 +2872,8 @@ server <- function(input, output, session) {
     })
 
   })
+  
+
+  
 
 }
