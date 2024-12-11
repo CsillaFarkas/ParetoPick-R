@@ -1,0 +1,18 @@
+new buffer calc, unclear where to put or how to calculate, needs area and geometry
+
+subset relda 1207 with only those in another reactive value, maybe all or never or smaller buffer??
+
+#buffer needed? those with area <=0.01% of total cm
+  hru_sel$area = st_area(hru_sel)
+  cm_tot = sum(hru_sel$area)
+  hru_sel$area_share = (hru_sel$area/cm_tot)*100
+  
+  
+  boundaries <- st_cast(hru_sel$geometry, "MULTILINESTRING")
+  hru_sel$perimeter = st_length(boundaries)
+  hru_sel$perimeter = rm_units(hru_sel$perimeter);hru_sel$area = rm_units(hru_sel$area_share);hru_sel$area_share = rm_units(hru_sel$area_share)
+  
+  hru_sel = hru_sel %>% mutate(needs_buff = case_when(perimeter/sqrt(area) > 4.5 & area_share <= 0.05 ~ "yes",
+                                                      area_share <= 0.01 ~ "yes",
+                                                      TRUE ~ "no"))
+  
