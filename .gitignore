@@ -5,3 +5,11 @@
 other/
 output/appendix sydney paper/
 python_files/
+data/hru.con
+data/hru.shp
+data/hru.shx
+data/hru.prj
+data/hru.dbf
+data/rou_unit.con
+data/paret_fitness.txt
+data/pareto_genomex.txt
