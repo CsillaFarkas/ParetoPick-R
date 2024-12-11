@@ -2853,7 +2853,7 @@ server <- function(input, output, session) {
           }
         }
       })
-      
+      #
       output[[plt]] <- renderPlot({ create_plot(i) })
       output[[tabl]] <- renderTable({ create_r2tab(i) }, rownames = FALSE, colnames = FALSE, sanitize.text.function = function(x) x)
       
