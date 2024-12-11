@@ -905,7 +905,13 @@ plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NUL
                           ) {
   
   if(!file.exists(pareto_path)){return(NULL)}
-  
+  names(dat)[1:4]=c("P load at outlet \n [kg/year]",	" Annual minimum \n discharge [cm3/s]",#REMOVE
+                    " Crop production \n [grain units/year]",	"NSWRM costs \n [€/year]"
+)
+  x_var=names(dat)[4]
+  y_var = names(dat)[1]
+  col_var = names(dat)[3]
+  size_var = names(dat)[2]
   #pull fit() establish range limits
   whole <- read.table(pareto_path, header = FALSE, stringsAsFactors = FALSE, sep = deli(pareto_path) )
   colnames(whole) <- colnames(dat)[1:4]
@@ -918,6 +924,7 @@ plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NUL
    dat = dat[,1:4]
  }
  
+  
   #plot with main data and control if whole dataset shall be shown
   p = ggplot(dat, aes(x = .data[[x_var]], y = .data[[y_var]],
                       fill = .data[[col_var]], size = .data[[size_var]]), alpha = 0.5) 
@@ -978,7 +985,7 @@ plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NUL
   }
 
   if (!is.null(all_extra_data)) {
-    
+    names(all_extra_data)[1:4]=names(dat) #REMOVE
     p <- p +
       geom_point(data = all_extra_data, aes(x = .data[[x_var]], y = .data[[y_var]], shape = set, color = set, size = .data[[size_var]]), 
                   stroke = 1.8, show.legend = TRUE, alpha=0.7) +
