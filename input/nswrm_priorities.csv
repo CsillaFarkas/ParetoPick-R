@@ -1,6 +1,5 @@
 "nswrm","priority","mngmt"
-"pond",1,0
-"hedge",2,0
-"grassslope",3,0
-"buffer",4,0
-"lowtillcc",5,1
+"wetland",1,0
+"grassslope",2,0
+"buffer",3,0
+"notill",4,1
