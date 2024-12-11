@@ -405,14 +405,20 @@ run_python_script <- function(path_script="",pca_status) {
 
 #### Plotting the optima ####
 ## get linear elements requiring a buffer
-pull_buffer = function(prios= "../input/nswrm_priorities.csv"){
-  if (!file.exists(prios)) {
-    return(NULL)  
-  }
-  priodf = read.csv(prios)
-  strct_obj = priodf%>%filter(mngmt ==0)%>%select(nswrm)%>%pull()#structural measures
-  return(strct_obj)
+pull_buffer = function(){
+  if(file.exists("../input/buffers.RDS")){
+    return(readRDS("../input/buffers.RDS"))
+  }else{return(NULL)}
 }
+
+# pull_buffer = function(prios= "../input/nswrm_priorities.csv"){
+#   if (!file.exists(prios)) {
+#     return(NULL)  
+#   }
+#   priodf = read.csv(prios)
+#   strct_obj = priodf%>%filter(mngmt ==0)%>%select(nswrm)%>%pull()#structural measures
+#   return(strct_obj)
+# }
 
 ## get map extent
 plt_latlon = function(conpath){
@@ -430,10 +436,6 @@ plt_freq = function(data,lo, la, buffers , remaining, dispal = pal, mes=mes) {
   data = data %>% filter(freq>0.01) %>%subset(!st_is_empty(geometry))
   
   rem_fil = remaining %>% filter(freq>0.01) %>% filter(measure %in% unique(buffers$measure))
-  buffered_data <- buffers %>%filter(id %in% rem_fil$id)
-  buffered_data <- buffered_data %>%
-    inner_join(rem_fil %>% select(-measure), by = "id") %>%
-    st_make_valid()
   
   
   m =  leaflet(data=data) %>%
@@ -451,7 +453,16 @@ plt_freq = function(data,lo, la, buffers , remaining, dispal = pal, mes=mes) {
         bringToFront = TRUE
       ),
       label = ~ measure
-    )    %>% addPolygons(
+    ) 
+  
+  
+  if(!is.null(buffers)){
+    buffered_data <- buffers %>%filter(id %in% rem_fil$id)
+    buffered_data <- buffered_data %>%
+      inner_join(rem_fil %>% select(-measure), by = "id") %>%
+      st_make_valid() 
+ 
+  m = m %>% addPolygons(
       data = buffered_data,
       fillColor = NA,
       color = ~ dispal(measure),
@@ -464,6 +475,7 @@ plt_freq = function(data,lo, la, buffers , remaining, dispal = pal, mes=mes) {
         bringToFront = TRUE
       )
     )
+  }
   
   color_swatches <- lapply(mes, function(mess) {
     base_color <- dispal(mess)
@@ -630,13 +642,8 @@ plt_lf <- function(data, lo, la, buff_els, col_sel, buffers, dispal = pal) {
   for (i in seq_along(col_sel)) {
     col = col_sel[i]
     
-    relevant_data <- data[data[[col]] %in% buff_els, ]
     
-    buffered_data <- buffers %>%filter(id %in% relevant_data$id)%>%
-        rename(!!col := measure)%>%
-        st_make_valid()
-
-    m[[i]] =  leaflet(data = data) %>%
+    p=   leaflet(data = data) %>%
       setView(lng = lo, lat = la, zoom = 12) %>%
       addProviderTiles(providers$CartoDB.Positron) %>%#poviders$Esri.NatGeoWorldMap, $Stadia.StamenToner, $OpenTopoMap
       addPolygons(
@@ -656,7 +663,16 @@ plt_lf <- function(data, lo, la, buff_els, col_sel, buffers, dispal = pal) {
         html = paste(col, "</b>"),
         position = "topright",
         className = "map-title"
-      ) %>%
+      ) 
+    
+    if(!is.null(buffers)){
+      relevant_data <- data[data[[col]] %in% buff_els, ]
+      
+      buffered_data <- buffers %>%filter(id %in% relevant_data$id)%>%
+        rename(!!col := measure)%>%
+        st_make_valid()
+      
+    p = p%>%
       addPolygons(
         data = buffered_data,
         fillColor = NA,
@@ -669,8 +685,12 @@ plt_lf <- function(data, lo, la, buff_els, col_sel, buffers, dispal = pal) {
           weight = 2,
           bringToFront = TRUE
         )
-      ) %>% 
+      ) 
+  }
+    p = p %>% 
       addLegend("bottomright", pal = dispal, values = data[[col]], na.label = "no change")
+    
+    m[[i]] = p
   }
   return(m)
 }
