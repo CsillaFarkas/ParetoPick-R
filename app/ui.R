@@ -439,26 +439,26 @@ ui <-
                        sidebarLayout(
                          
                          
-                         sidebarPanel( width = 4,
+                         sidebarPanel( width = 3,
                                        
                                        
                                        textOutput("uploaded_pareto"),
                                       
                                        div(id="play_sidebar",
-                                         column(10,
+                                         column(12,
                                                 div("Objective Range", style = "text-align: left; font-size:150%; margin-top: 10px;"),
                                                 
-                                                sliderInput(inputId = "obj1", label=  "Objective 1:", min = 0, max = 1, value = c(0,1), step = 0.01,width = "110%"),
-                                                sliderInput(inputId = "obj2", label = "Objective 2:", min = 0, max = 1, value = c(0,1), step = 0.01,width = "110%"),
-                                                sliderInput(inputId = "obj3", label = "Objective 3:", min = 0, max = 1, value = c(0,1), step = 0.01, width = "110%"),
-                                                sliderInput(inputId = "obj4", label = "Objective 4:", min = 0, max = 1, value = c(0,1), step = 0.01,width = "110%"),
+                                                sliderInput(inputId = "obj1", label=  "Objective 1:", min = 0, max = 1, value = c(0,1), step = 0.01,width = "120%"),
+                                                sliderInput(inputId = "obj2", label = "Objective 2:", min = 0, max = 1, value = c(0,1), step = 0.01,width = "120%"),
+                                                sliderInput(inputId = "obj3", label = "Objective 3:", min = 0, max = 1, value = c(0,1), step = 0.01, width = "120%"),
+                                                sliderInput(inputId = "obj4", label = "Objective 4:", min = 0, max = 1, value = c(0,1), step = 0.01,width = "120%"),
                                                 tags$div(textOutput("ensure_sel"), style = "color: red;"),
                                                 
                                                 tags$p(
                                                   tags$strong("Please Note:"),
-                                                  "For some of the visualisations and analyses in this tool, the objectives have been scaled to between 0 and 1.
+                                                  "For some of the visualisations and analyses in this tool, the objectives have been scaled to between 0 and 1 for easier comparison.
                                              1 aligns with the best achievable outcome while 0 aligns with the worst."
-                                                )
+                                                ),tags$p("The app does not display negative values, where an objective range covers both negative and positive values, a sign is added.")
                                          ),
                                          div("Frequency of area implemented", style = "text-align: left; font-size:120%; margin-top: 10px;"),
                                          uiOutput("freq_map_play")%>%hidden(),
@@ -468,7 +468,7 @@ ui <-
                                        
                                        
                          ),
-                         mainPanel(
+                         mainPanel(width=9,
                            tags$style(HTML(".js-irs-1 .irs-single, .js-irs-1 .irs-bar-edge, .js-irs-1 .irs-bar {background: #ffc61e ;border-top: 1px solid #ffc61e ;border-bottom: 1px solid #ffc61e;}.js-irs-1 .irs-from, .js-irs-1 .irs-to, .js-irs-1 .irs-single { font-size: 13px;background: #ffc61e !important }")),
                            tags$style(HTML(".js-irs-2 .irs-single, .js-irs-2 .irs-bar-edge, .js-irs-2 .irs-bar {background: #009ade ;border-top: 1px solid #009ade ;border-bottom: 1px solid #009ade;}.js-irs-2 .irs-from, .js-irs-2 .irs-to, .js-irs-2 .irs-single { font-size: 13px;background: #009ade !important }")),
                            tags$style(HTML(".js-irs-3 .irs-single, .js-irs-3 .irs-bar-edge, .js-irs-3 .irs-bar {background: #aF58ba ;border-top: 1px solid #aF58ba ;border-bottom: 1px solid #aF58ba;}.js-irs-3 .irs-from, .js-irs-3 .irs-to, .js-irs-3 .irs-single { font-size: 13px;background: #aF58ba !important }")),
@@ -484,7 +484,7 @@ ui <-
                            tags$style(HTML(".js-irs-12 .irs-single, .js-irs-11 .irs-bar-edge, .js-irs-11 .irs-bar {background: #aF58ba ;border-top: 1px solid #aF58ba ;border-bottom: 1px solid #aF58ba;}.js-irs-11 .irs-from, .js-irs-11 .irs-to, .js-irs-11 .irs-single { font-size: 13px;background: #aF58ba !important }")),
                            tags$style(HTML(".js-irs-13 .irs-single, .js-irs-12 .irs-bar-edge, .js-irs-12 .irs-bar {background: #f28522 ;border-top: 1px solid #f28522 ;border-bottom: 1px solid #f28522;}.js-irs-12 .irs-from, .js-irs-12 .irs-to, .js-irs-12 .irs-single { font-size: 13px;background: #f28522 !important }")),
                            tags$style(HTML("#actual_plt_play_measure {width: 450px;height: 550px;margin-bottom: -150px; } ")),
-                           tags$style(HTML("#freq_map_play {width: 300px;height: 550px;margin-bottom: -150px; } ")),
+                           tags$style(HTML("#freq_map_play {width: 100%; max-width: 100%; height: 550px; margin-bottom: -150px; } ")),
                            
                            tags$style(HTML(".spinspin { display: inline-block;
                                                         width: 20px;
@@ -554,7 +554,7 @@ ui <-
                                     condition = "output.selectionmade",
                                     div(
                                       style = "display: flex; flex-direction: column; align-items: center;",
-                                    tags$h4("Selected optimum"),
+                                    tags$h4("Optiumum (Selected in Pareto plot)"),
                                     tableOutput("aep_tab_one")
                                     ))),
                                      
@@ -571,13 +571,13 @@ ui <-
                                                         tableOutput("sliders_abs"),
                                                         div("*the percentage values signify the difference between the full range and the current max and min selection.", style = "text-align: left; font-size:100%"))),
                                         fluidRow(column(6,
-                                                        div("Selected Optimum (select in line plot)", style = "text-align: left; font-size:150%"),
+                                                        div("Optimum (selected in line plot)", style = "text-align: left; font-size:150%"),
                                                         tableOutput("click_info"),
                                                         checkboxInput("save_click_line",label = "Click here to save the selected optimum to the output folder (selected_optima.csv)",value=F)%>%hidden()),
                                                  
-                                                 column(6,div("Maximum Objective Ranges (absolute)",style = "text-align: left; font-size:150%"),
+                                                 column(6,
+                                                        div("Maximum Objective Ranges (absolute)",style = "text-align: left; font-size:150%"),
                                                         tableOutput("whole_range"))
-                                                 
                                         ))),
                                
                                
@@ -972,14 +972,14 @@ ui <-
                        tabName = "ahp",
                        titlePanel("Analytical Hierarchy Process"),
                        
-                     #   wellPanel( p("This tab allows you to run a different approach (AHP) to selecting those pareto optima best matching your preferences.
-                     # AHP is a decision making tool that helps you prioritise different objectives by comparing them in pairs.
-                     #                If you want you can limit the objective ranges under 1."),
-                     #              p("Under 2. you can compare objectives two at a time and and decide which objective is more important and by how much. 
-                     # ParetoPick-R will assign weights to each objective based on your inputs and check its consistency. 
-                     # The respective best choice is plotted below and you can decide whether 
-                     # it should be selected from the whole pareto front or from the subset of cluster results.")),
-                     #   
+                       wellPanel( p("This tab allows you to run a different approach (AHP) to selecting those pareto optima best matching your preferences.
+                     AHP is a decision making tool that helps you prioritise different objectives by comparing them in pairs.
+                                    If you want you can limit the objective ranges under 1."),
+                                  p("Under 2. you can compare objectives two at a time and and decide which objective is more important and by how much.
+                     ParetoPick-R will assign weights to each objective based on your inputs and check its consistency.
+                     The respective best choice is plotted below and you can decide whether
+                     it should be selected from the whole pareto front or from the subset of cluster results.")),
+
                        sidebarLayout(
                          sidebarPanel(width=3,
                            

@@ -43,7 +43,7 @@ server <- function(input, output, session) {
   dat_matched = reactiveVal()
   buffers = reactiveVal(NULL)
   cmf = reactiveVal(NULL)
-  
+
   #control/limit range of objectives, works in combination with slider input$ran1 etc.
   default_vals = reactiveVal(list(ran1 = c(0,100),
                                   ran2 = c(0,100),
@@ -1120,8 +1120,7 @@ server <- function(input, output, session) {
       }}
     
     dn2 = add_perc(df1=dn, df2= wr)
-    dn2 = dn2 %>%as.data.frame() %>%mutate(across(where(is.numeric), ~as.numeric(gsub("-", "", as.character(.))))) #remove minus
-    
+
     #get unit input (this turns into matrix)
     if(!is.null(axiselected())){ new_colnms <- mapply(function(col, unit) {
       if (unit != "") {
@@ -1168,7 +1167,6 @@ server <- function(input, output, session) {
     }, col = objectives(), unit = axiselected(), SIMPLIFY = TRUE)}else{new_colnms = objectives()}
 
    df = mima_fun()
-   ff <<- df
    # df = df %>%mutate(across(where(is.numeric), ~as.numeric(gsub("-", "", as.character(.)))))
    
    df = df %>%mutate(across(all_of(cols), 
