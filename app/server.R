@@ -1158,6 +1158,8 @@ server <- function(input, output, session) {
 
   output$whole_range <- renderTable({
     req(objectives())
+    cols = objectives()
+    
     if(!is.null(axiselected())){
       new_colnms <- mapply(function(col, unit) {
         if (unit != "") {
@@ -1166,7 +1168,19 @@ server <- function(input, output, session) {
     }, col = objectives(), unit = axiselected(), SIMPLIFY = TRUE)}else{new_colnms = objectives()}
 
    df = mima_fun()
-   df = df %>%mutate(across(where(is.numeric), ~as.numeric(gsub("-", "", as.character(.)))))
+   ff <<- df
+   # df = df %>%mutate(across(where(is.numeric), ~as.numeric(gsub("-", "", as.character(.)))))
+   
+   df = df %>%mutate(across(all_of(cols), 
+                   ~ { has_positive <- any(. > 0)
+                       has_negative <- any(. < 0)
+                     
+                     if (has_positive && has_negative) {
+                       ifelse(. > 0, paste0("+", abs(.)), abs(.)) 
+                     } else { abs(.) 
+                     }}))
+   
+   
    
    colnames(df) = new_colnms
    df
