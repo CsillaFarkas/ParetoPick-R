@@ -351,31 +351,64 @@ word_splitter <- function(words, segment_length = 6) {
   })
 }
 
+## add percentage in brackets and remove minus/add plus (where signs are mixed)
 add_perc <- function(df1, df2) {
-  
   df1 = as.matrix(df1)
   df2 = as.matrix(df2)
   
   df1_new <- df1
- 
-  for (i in seq_len(nrow(df1))) {
-    for (j in seq_len(ncol(df1))) {
-     
-      pd = (df1[i,j] - df2[i,j])/df2[i,j]
+  
+  for (j in seq_len(ncol(df1))) {
+    col_range <- max(df2[, j]) - min(df2[, j])
+    mixed_signs <- (max(df2[, j]) > 0 & min(df2[, j]) < 0)
+    
+    for (i in seq_len(nrow(df1))) {
+      if (col_range != 0) {
+        pd = (df1[i, j] - df2[i, j]) / col_range * 100
+      } else {
+        pd = NA  # no change
+      }
       
-      if(round(pd * 100, 2) !=0 & !is.na(pd) & !is.nan(pd) & !is.infinite(pd) ){
-        if(df2[i,j] < 0){pd = pd*(-1)}
+      if (!is.na(pd) & !is.nan(pd) & !is.infinite(pd) & round(pd, 2) != 0) {
+        # get sign for percentage change
+        direction_sign <- if (pd > 0) "+" else "-"
+        dumb_bracket <- paste0(" (", direction_sign)
         
-        if(pd <= 0){dumb_bracket = " ("}else{dumb_bracket = " (+"}
+        # value formatting
+        if (mixed_signs) {
+          if (df1[i, j] > 0 && df2[i, j] < 0) {
+            value <- paste0("-", abs(df1[i, j]))
+          } else if (df1[i, j] < 0 && df2[i, j] > 0) {
+            value <- paste0("-", abs(df1[i, j]))
+          } else {
+            value <- if (df1[i, j] > 0) paste0("+", abs(df1[i, j])) else as.character(abs(df1[i, j]))
+          }
+        } else {
+          value <- as.character(abs(df1[i, j]))
+        }
         
-        df1_new[i, j] <- paste0(abs(df1[i, j]), dumb_bracket, round(pd * 100, 2), "%)")
-        
-      }else{df1_new[i, j] = abs(df1[i, j])}
+        df1_new[i, j] <- paste0(value, dumb_bracket, round(abs(pd), 2), "%)")
+      } else {
+        # unchanged values
+        if (mixed_signs) {
+          if (df1[i, j] > 0 && df2[i, j] < 0) {
+            df1_new[i, j] <- paste0("-", abs(df1[i, j]))
+          } else if (df1[i, j] < 0 && df2[i, j] > 0) {
+            df1_new[i, j] <- paste0("-", abs(df1[i, j]))
+          } else {
+            df1_new[i, j] <- if (df1[i, j] > 0) paste0("+", abs(df1[i, j])) else as.character(abs(df1[i, j]))
+          }
+        } else {
+          df1_new[i, j] <- as.character(abs(df1[i, j]))
+        }
+      }
     }
   }
   
   return(df1_new)
 }
+
+
 
 #### Python Caller ####
 
