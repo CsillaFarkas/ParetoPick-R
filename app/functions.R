@@ -368,8 +368,9 @@ add_perc <- function(df1, df2) {
         
         if(pd <= 0){dumb_bracket = " ("}else{dumb_bracket = " (+"}
         
-        df1_new[i, j] <- paste0(df1[i, j], dumb_bracket, round(pd * 100, 2), "%)")
-      }
+        df1_new[i, j] <- paste0(abs(df1[i, j]), dumb_bracket, round(pd * 100, 2), "%)")
+        
+      }else{df1_new[i, j] = abs(df1[i, j])}
     }
   }
   
