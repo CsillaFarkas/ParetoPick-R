@@ -50,7 +50,7 @@ server <- function(input, output, session) {
                                   ran3 = c(0,100),
                                   ran4 = c(0,100)))
   map_plotted <- reactiveVal(FALSE)
-  settings_text= reactiveVal("") #printing pca settings
+  settings_text <- reactiveVal("") #printing pca settings
   update_settings <- function() {
     settings <- pca_settings(input)
     settings_text(settings)
@@ -538,7 +538,10 @@ server <- function(input, output, session) {
             sapply(files4, file.remove)
             sapply(files5, file.remove)
             
-            remaining_files <- list.files(save_dir, full.names = TRUE)
+            remaining_files <- unlist(lapply(c(save_dir,input_dir,output_dir), function(dir) {
+              list.files(path = dir, full.names = TRUE)
+            }))
+            
             if (length(remaining_files) == 0) {
               status <- "All files have been deleted."
               
