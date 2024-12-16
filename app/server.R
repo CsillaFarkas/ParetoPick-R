@@ -186,8 +186,8 @@ server <- function(input, output, session) {
     #get pareto_fitness.txt and make fit()
     observeEvent(input$save_paretofit,{
       req(par_fiti())
-      save_par_fiti <- par_fiti()$name
-      save_path_par_fiti <- file.path(save_dir, save_par_fiti)
+      save_pareto_name_besser <- par_fiti()$name
+      save_path_par_fiti <- file.path(save_dir, save_pareto_name_besser)
       file.copy(par_fiti()$path, save_path_par_fiti, overwrite = TRUE) #copy pareto_fitness.txt
       
      
