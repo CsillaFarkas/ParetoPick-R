@@ -526,6 +526,10 @@ server <- function(input, output, session) {
           updateTextInput(session,"unit4", value = "")
           
           if (dir.exists(save_dir) & dir.exists(input_dir)) {
+            
+            file.copy("../data for container/config.ini", input_dir, overwrite = TRUE)
+            
+            
             files1 <- list.files(save_dir, full.names = TRUE)
             files2 <- list.files(input_dir, full.names = TRUE)
             files3 <- list.files(output_dir, full.names = TRUE)
@@ -542,10 +546,10 @@ server <- function(input, output, session) {
               list.files(path = dir, full.names = TRUE)
             }))
             
+            
+            
             if (length(remaining_files) == 0) {
               status <- "All files have been deleted."
-              
-              file.copy("../data for container/config.ini", input_dir, overwrite = TRUE)
               
             } else {
               status <- "Some files could not be deleted."
