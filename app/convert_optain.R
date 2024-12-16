@@ -1,13 +1,13 @@
-####################  Convert OPTAIN ###############################################
+####################  Convert OPTAIN ###########################################
 # Project: Clustering Pareto solutions/Multi-objective visualisation
 # creates a .csv to be used in the Correlation and PCA
 # comment: new variables for the pca require adapted functions.R and ui.R
 # each row one Pareto-optimal solution
 # 1.- 4. = objectives to be maximised
-# 5 - end = variables to be considered in the clustering (=all_var provided separately)
+# 5 - end = variables considered in clustering (=all_var provided separately)
 # used files: pareto_genomes.txt, hru.con, measure_location.csv
-####################################################################################
-print(paste0("loading required packages..."),quote=F)
+################################################################################
+print(paste0("loading required packages..."), quote=F)
 suppressPackageStartupMessages({
   library(shiny)
   library(shinyWidgets)
@@ -50,8 +50,8 @@ suppressPackageStartupMessages({
 })
 source("functions.R")
 
-# Function to check, assign and write priorities, hardcodes everything that has been used in CoMOLA
-nswrm_priorities <- function(lu){
+## check, assign and write priorities, hardcodes what has been used in CoMOLA
+nswrm_priorities <- function(lu) {
   
   prio <- data.frame(nswrm = character(), priority = integer(), mngmt=integer(), stringsAsFactors = FALSE)
   priority <- 1
@@ -63,13 +63,13 @@ nswrm_priorities <- function(lu){
     priority <- priority + 1
   }}
   
-  lu_match <- rev(mesrs[mesrs %in% c("hedge","buffer","grassslope","terrace")])  # land use and their order (2nd prio) ADAPTING THIS WILL REQUIRE ADAPTING lu_share too!!
+  lu_match <- rev(mesrs[mesrs %in% c("hedge", "buffer", "grassslope", "terrace")])  # land use and their order (2nd prio) ADAPTING THIS WILL REQUIRE ADAPTING lu_share too!!
   for(lus in lu_match) {if(lus %in% lu) {
     prio <- rbind(prio, data.frame(nswrm = lus, priority = priority,mngmt= 0 ))
     priority <- priority + 1
   }}
   
-  mn_match = rev(mesrs[mesrs %in% c("lowtillcc","lowtill","droughtplt","notill")])  # management and their order (3rd prio)
+  mn_match = rev(mesrs[mesrs %in% c("lowtillcc", "lowtill", "droughtplt", "notill")])  # management and their order (3rd prio)
   for(lus in mn_match){if(lus %in% lu) {
     prio <- rbind(prio, data.frame(nswrm = lus, priority = priority,mngmt= 1 ))
     priority <- priority + 1
@@ -80,8 +80,8 @@ nswrm_priorities <- function(lu){
 }
 
 ## Genomes
-  gen = read.table("../data/pareto_genomes.txt", header=F,stringsAsFactors=FALSE,sep = deli("../data/pareto_genomes.txt"),encoding = "UTF-8")
-  fit = read.table("../data/pareto_fitness.txt", header=F,stringsAsFactors=FALSE,sep = deli("../data/pareto_fitness.txt"))
+  gen = read.table("../data/pareto_genomes.txt", header = FALSE, stringsAsFactors = FALSE, sep = deli("../data/pareto_genomes.txt"), encoding = "UTF-8")
+  fit = read.table("../data/pareto_fitness.txt", header = FALSE, stringsAsFactors = FALSE, sep = deli("../data/pareto_fitness.txt"))
   #get number of optima
   nopt = nrow(fit)
   
@@ -90,15 +90,15 @@ nswrm_priorities <- function(lu){
   print("check: read pareto_fitness.txt and pareto_genomes.txt...",quote=F)
 
   gen <- gen %>%
-    mutate(id = c(1:nrow(gen)), .before = V1) #id is number of AEP
+    mutate(id = seq_len(nrow(gen)), .before = V1) #id is number of AEP
 
 # genome_hru matches AEP with hrus, several hrus for each AEP (hru = obj_id)
-  genome_hru <- read.csv('../data/measure_location.csv')
+  genome_hru <- read.csv("../data/measure_location.csv")
 
-  print("check: read measure_location.csv...",quote=F)
+  print("check: read measure_location.csv...", quote = FALSE)
   
   #count the number of extra columns required
- mc=  genome_hru %>%
+ mc =  genome_hru %>%
     mutate(num_count = str_count(obj_id, ",") + 1) %>%
     summarize(max_numbers = max(num_count)) %>%
     pull(max_numbers)
@@ -358,7 +358,8 @@ for(op in paste0("V", 1:nopt)){
         arre[op, m] = 0
       }
     }
-    print(paste0("caculated area share of measures across Optimum ",op,"..."),quote=F)
+    print(paste0("caculated area share of measures across Optimum ",op,"..."),
+          quote = FALSE)
     
   }
    
@@ -375,15 +376,16 @@ for(op in paste0("V", 1:nopt)){
        mutate(lu_share = (rowSums(across(all_of(lu)))/rowSums(across(all_of(meas))))*100)%>%
        mutate(lu_share = ifelse(is.nan(lu_share), 0, lu_share))%>%mutate(id=row_number())%>%select(id,lu_share)
      
-     share_con = share_con %>%left_join(lu_share,by="id") #we chuck it here, otherwise too much testing needed
+     share_con = share_con %>%left_join(lu_share, by = "id") #we chuck it here, 
+     #otherwise too much testing needed
    }
 
   
   ## merge with pareto fitness, # the first row is optimum V1
   yolo = readRDS("../input/object_names.RDS")
   names(fit) = yolo
-  fit$id = 1:nrow(fit)
-  print("check: assigned names to pareto_finess.txt...",quote=F)
+  fit$id = seq_len(nrow(fit))
+  print("check: assigned names to pareto_finess.txt...",quote = FALSE)
   
   test_clu = fit %>% 
     left_join(lin, by = "id") %>%
@@ -394,10 +396,8 @@ for(op in paste0("V", 1:nopt)){
 
   
   write.csv(test_clu, "../input/var_corr_par.csv",  row.names = FALSE, fileEncoding = "UTF8")  
-  print("check: printed output ---> /input/var_corr_par...",quote=F)
+  print("check: printed output ---> /input/var_corr_par...",quote = FALSE)
 
-  all_var = colnames(test_clu)[5:ncol(test_clu)]  ##assuming four variables here
+  all_var = colnames(test_clu)[5:ncol(test_clu)]  #assuming four variables here
   saveRDS(all_var,file = "../input/all_var.RDS") #required for PCA
-  print("check: provided variable names ---> /input/all_var...",quote=F)
-  
-  
+  print("check: provided variable names ---> /input/all_var...", quote = FALSE)
