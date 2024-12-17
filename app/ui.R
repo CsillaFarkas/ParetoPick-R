@@ -50,7 +50,9 @@ ui <-
         )
           )))
     ,
-    dashboardBody(tags$style(HTML('
+    dashboardBody(  
+
+    tags$style(HTML('
                                   /* File status message font size adjustment */
                                   #fileStatusMessage {font-size: 150%;}
 
@@ -322,6 +324,7 @@ ui <-
                      ## DATA PREP PANEL #####
 
                tabItem(tabName = "data_prep",
+                       
                              titlePanel("OPTAIN Data Preparation"),
 
                              wellPanel(  p(HTML("This tab requires you to provide the optimisation outputs.
@@ -332,7 +335,8 @@ ui <-
                                                 (if all files have been found) <strong>Run Prep</strong>. Please be aware that the preparation might take up to 5 minutes."))),
 
                              mainPanel(
-
+                               
+                               
 
 
                                div(p("For being able to plot and analyse the Pareto front, please provide pareto_fitness.txt as well as the objective names.

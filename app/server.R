@@ -157,7 +157,7 @@ server <- function(input, output, session) {
   
   
   observeEvent(input$tabs == "data_prep",{
-    
+   
     #buffer selection
     observe({
       if(file.exists("../data/measure_location.csv")){
@@ -496,17 +496,18 @@ server <- function(input, output, session) {
       paste(script_output(), collapse = "\n")
     })
   
-    
+
     
     observe({ 
       if(length(list.files(c(save_dir,output_dir), full.names = TRUE))==0){ #do not show reset option if there haven't been files uploaded
         shinyjs::hide(id="reset")
-        
       }else{
         output$reset_prompt <- renderText({
           HTML(paste("<p style='color: red;'> If you would like to restart the app if it crashes or behaves inconsistently, you can hard reset it here. Clicking this button
                    deletes all files you provided. The contents of the Output folder are also deleted, please move or copy those files you would like to keep. For all changes to take effect please restart the app after each Hard Reset. Please proceed with caution!</p>"))
         })
+        
+       
         
         observeEvent(input$reset_btn, {
           
@@ -567,6 +568,8 @@ server <- function(input, output, session) {
         })
         
       } })
+    
+
   
     observeEvent(input$save_buff,{
       saveRDS(input$buffies,file = "../input/buffers.RDS")
@@ -676,7 +679,7 @@ server <- function(input, output, session) {
               
             }
           
-          if (abs(min_max$min[i]) > 10000) {
+          if (abs(min_max$min[i]) > 100) {
             min_max$max[i] = round(min_max$max[i],0)
             min_max$min[i] = round(min_max$min[i],0)
           }
@@ -2589,7 +2592,6 @@ server <- function(input, output, session) {
   observe({
     
     req(coma(), calculate_weights())
-# print(slider_ahp$c1_c2)
     ## consistency checks
     ci = consistency_index(coma())
 
@@ -2616,7 +2618,6 @@ server <- function(input, output, session) {
       } else{
         if (tab == T) {
           inconsistencies = check_inconsistencies(coma(), weights = calculate_weights())
-          
         } else if (tab == F &  is.null(check_inconsistencies(coma(), weights = calculate_weights()))) {
           inconsistencies = paste("Potential inconsistencies, the inconsistency ratio is:",
                                   round(cr, 3))
