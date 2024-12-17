@@ -172,11 +172,17 @@ ui <-
                                   .content-wrapper, .right-side {
                                     background-color: unset;
                                     font-family: "Montserrat", sans-serif;
-                                    min-height: 100% !important;
-
                                   }
 
+                                  .content-wrapper {
+                                    min-height: 500px !important;
+                                    height: auto !important;
+                                  }
 
+                                  body, .wrapper{
+                                    min-height: auto !important;
+                                    height: auto !important;
+                                  }
 
                                   /* Styling for .well elements */
                                   .well {
