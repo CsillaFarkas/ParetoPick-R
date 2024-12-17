@@ -1088,34 +1088,31 @@ consistency_index <- function(m) {
 ## find main inconsistencies
 check_inconsistencies <- function(comparison_matrix, weights) {
   n <- nrow(comparison_matrix)
-  inconsistencies <- data.frame(
-    Level = numeric(),
-    weight = numeric(),
-    stringsAsFactors = FALSE
-  )
-  
-  
+  inconsistencies <- c() 
   for (i in 1:n) {
     for (j in 1:n) {
       for (k in 1:n) {
         if (i != j && j != k && i != k) {
-          if (comparison_matrix[i, j] > 1 && comparison_matrix[j, k] > 1 && comparison_matrix[i, k] <= 1) {
-            inconsistencies <- rbind(inconsistencies, data.frame(
-              Level = comparison_matrix[i, j] * comparison_matrix[j, k],  
-              weight = weights[i],
-              stringsAsFactors = FALSE
-            ))
+          if (comparison_matrix[i, j] > 1 &&
+              comparison_matrix[j, k] > 1 &&
+              comparison_matrix[i, k] <= 1) {
+            
+            inconsistencies <- c(
+              inconsistencies,
+              rownames(comparison_matrix)[i],
+              rownames(comparison_matrix)[j],
+              rownames(comparison_matrix)[k]
+            )
           }
         }
       }
     }
-    inconsistencies <- unique(inconsistencies)
   }
-  inconsistencies <- inconsistencies %>% distinct(Level, weight, .keep_all = TRUE)
   
-  ordered_i <- inconsistencies[order(-inconsistencies$Level), ]
-  return(rownames(ordered_i))
+  return(unique(inconsistencies))
 }
+
+
 
 #### Rescaling and matching Functions ####
 ## return the original value and the position of scaled value in the original dataset
