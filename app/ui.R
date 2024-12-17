@@ -170,7 +170,7 @@ ui <-
 
                                   /* General body background color and font family (Montserrat) */
                                   .content-wrapper, .right-side {
-                                    background-color: unset;
+                                    background-color: #9eb1cf;
                                     font-family: "Montserrat", sans-serif;
                                   }
 
@@ -254,7 +254,8 @@ ui <-
                                       ')),
 
                      useShinyjs(),
-                   tags$script(src = "iframeResizer.contentWindow.min.js"),
+                   # tags$script(src = "iframeResizer.contentWindow.min.js"),
+                  
                    tags$script(HTML("
                                     $(document).on('shiny:value', function(event) {
                                       function removeMinusSigns() {

@@ -186,8 +186,8 @@ server <- function(input, output, session) {
     #get pareto_fitness.txt and make fit()
     observeEvent(input$save_paretofit,{
       req(par_fiti())
-      save_pareto_name_besser <- par_fiti()$name
-      save_path_par_fiti <- file.path(save_dir, save_pareto_name_besser)
+      save_par_fiti <- par_fiti()$name
+      save_path_par_fiti <- file.path(save_dir, save_par_fiti)
       file.copy(par_fiti()$path, save_path_par_fiti, overwrite = TRUE) #copy pareto_fitness.txt
       
      
@@ -509,6 +509,8 @@ server <- function(input, output, session) {
         })
         
         observeEvent(input$reset_btn, {
+          
+          
           updateTextInput(session,"short1", value = "" )
           updateTextInput(session,"short2", value = "" )
           updateTextInput(session,"short3", value = "" )
@@ -525,9 +527,8 @@ server <- function(input, output, session) {
           updateTextInput(session,"unit3", value = "")
           updateTextInput(session,"unit4", value = "")
           
-          if (dir.exists(save_dir) & dir.exists(input_dir)) {
+          if (dir.exists(save_dir) && dir.exists(input_dir)) {
             
-            file.copy("../data for container/config.ini", input_dir, overwrite = TRUE)
             
             
             files1 <- list.files(save_dir, full.names = TRUE)
@@ -546,6 +547,7 @@ server <- function(input, output, session) {
               list.files(path = dir, full.names = TRUE)
             }))
             
+            file.copy("../data for container/config.ini", input_dir, overwrite = TRUE)
             
             
             if (length(remaining_files) == 0) {
