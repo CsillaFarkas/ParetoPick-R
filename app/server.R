@@ -440,7 +440,7 @@ server <- function(input, output, session) {
       dp_done(FALSE)
       script_output(character()) # Clear old output
       
-      # start the process
+      # Start the process
       optain <<- process$new(
         "Rscript",
         c("convert_optain.R"),
@@ -450,40 +450,49 @@ server <- function(input, output, session) {
     })
     
     autoInvalidate <- reactiveTimer(100)
+    
     observe({
       autoInvalidate()
       
       # Check if the process is running
       if (!is.null(optain) && optain$is_alive()) {
         new_output <- optain$read_output_lines()
+        
         if (length(new_output) > 0) {
           current_output <- script_output()
           updated_output <- c(current_output, new_output)
-          if (length(updated_output) > 10) {
-            updated_output <- tail(isolate(updated_output), 10)
-          }
-          script_output(updated_output)
-          output_handled(TRUE) 
-        }
-      } else if (!is.null(optain) && !output_handled()) {
-
-        final_output <- optain$read_output_lines()
-        if (length(final_output) > 0) {
-          current_output <- script_output()
-          updated_output <- c(current_output, final_output)
+          
           if (length(updated_output) > 10) {
             updated_output <- tail(updated_output, 10)
           }
+          
+          script_output(updated_output)
+          output_handled(TRUE) 
+        }
+        
+      } else if (!is.null(optain)) {
+        final_output <- optain$read_output_lines()
+        
+        if (length(final_output) > 0 && !output_handled()) {
+          current_output <- script_output()
+          updated_output <- c(current_output, final_output)
+          
+          if (length(updated_output) > 10) {
+            updated_output <- tail(updated_output, 10)
+          }
+          
           script_output(updated_output)
         }
+        
         dp_done(TRUE)
-        optain <- NULL # clear
+        optain <<- NULL # clear
         output_handled(TRUE) 
       }
     })
     
+    
     # Render UI output
-    output$script_output <- renderUI({
+    output$scriptdp <- renderUI({
       if (dp_done() && file.exists("../input/var_corr_par.csv")) {
         tags$strong("The data preparation was successful. You can now continue with the Correlation and Principal Component Analysis. You will not need this tab again.")
       } else {
