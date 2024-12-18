@@ -420,7 +420,7 @@ ui <-
 
                                div(id="runprep_show",p("Run Preparation Script when ready (depending on the size of the shapefiles this can take up to 10 minutes)",style =  "text-align: left; font-size:150%"),
                                    actionButton("runprep", "Run Prep"))%>%hidden,
-                               uiOutput("script_output"),
+                               uiOutput("scriptdp"),
                                br(),br(),
                                div("Please select those measures that are small and require a buffer to enhance their visibility in maps.", style = "text-align: left; font-size:120%; margin-top: 10px;"),
 
