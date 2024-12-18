@@ -63,7 +63,7 @@ nswrm_priorities <- function(lu) {
     priority <- priority + 1
   }}
   
-  lu_match <- rev(mesrs[mesrs %in% c("hedge", "buffer", "grassslope", "terrace")])  # land use and their order (2nd prio) ADAPTING THIS WILL REQUIRE ADAPTING lu_share too!!
+  lu_match <- rev(mesrs[mesrs %in% c("hedge", "buffer", "grassslope", "terrace","floodres","rip_forest","afforest")])  # land use and their order (2nd prio) ADAPTING THIS WILL REQUIRE ADAPTING lu_share too!!
   for(lus in lu_match) {if(lus %in% lu) {
     prio <- rbind(prio, data.frame(nswrm = lus, priority = priority,mngmt= 0 ))
     priority <- priority + 1
@@ -368,8 +368,8 @@ for(op in paste0("V", 1:nopt)){
      rename_at(vars(meas),~paste0(., "_share_con"))%>%mutate(id = row_number())
   
    ## land use share in considered/implemented catchment area
-   if(any(meas %in% c("hedge","buffer","grassslope","terrace"))){
-     lu = meas[which(meas %in% c("hedge","buffer","grassslope","terrace"))]
+   if(any(meas %in% c("hedge","buffer","grassslope","terrace","floodres","rip_forest","afforest"))){
+     lu = meas[which(meas %in% c("hedge","buffer","grassslope","terrace","floodres","rip_forest","afforest"))]
    
      # new column with combined area share
      lu_share = arre %>%
