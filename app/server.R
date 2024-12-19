@@ -158,6 +158,7 @@ server <- function(input, output, session) {
   
   observeEvent(input$tabs == "data_prep",{
    
+
     #buffer selection
     observe({
       if(file.exists("../data/measure_location.csv")){
@@ -306,6 +307,35 @@ server <- function(input, output, session) {
           k = k+1}}
       
     })
+    
+    ## get unit input 
+    observeEvent(input$save_unit,{
+      
+      if(file.exists("../input/units.RDS")){enouvea = TRUE}else{enouvea = FALSE}
+      
+      axiselected(c(input$unit1,input$unit2,input$unit3, input$unit4))
+      saveRDS(axiselected(), file="../input/units.RDS")
+      
+      updateTextInput(session, "axisx",  value  = axiselected()[1])
+      updateTextInput(session, "axisy", value = axiselected()[2])
+      updateTextInput(session, "colour", value = axiselected()[3])
+      updateTextInput(session, "size", value = axiselected()[4])
+      
+      updateTextInput(session, "unit1",  value  = axiselected()[1])
+      updateTextInput(session, "unit2", value = axiselected()[2])
+      updateTextInput(session, "unit3", value = axiselected()[3])
+      updateTextInput(session, "unit4", value = axiselected()[4])
+      
+      write_uns(var1_lab= input$unit1, var2_lab = input$unit2, var3_lab = input$unit3, var4_lab = input$unit4,inipath="../input/config.ini")
+      
+      if(enouvea){
+        shinyjs::refresh()
+
+      }
+    })
+    
+    
+    
     
     output$obj_conf <- renderTable({
       req(fit(),objectives()) #fit() is proxy for file connection
@@ -733,24 +763,7 @@ server <- function(input, output, session) {
       }
     })
     
-    ## get unit input 
-    observeEvent(input$save_unit,{
-      
-      axiselected(c(input$unit1,input$unit2,input$unit3, input$unit4))
-      saveRDS(axiselected(), file="../input/units.RDS")
-      
-      updateTextInput(session, "axisx",  value  = axiselected()[1])
-      updateTextInput(session, "axisy", value = axiselected()[2])
-      updateTextInput(session, "colour", value = axiselected()[3])
-      updateTextInput(session, "size", value = axiselected()[4])
-      
-      updateTextInput(session, "unit1",  value  = axiselected()[1])
-      updateTextInput(session, "unit2", value = axiselected()[2])
-      updateTextInput(session, "unit3", value = axiselected()[3])
-      updateTextInput(session, "unit4", value = axiselected()[4])
-      
-      write_uns(var1_lab= input$unit1, var2_lab = input$unit2, var3_lab = input$unit3, var4_lab = input$unit4,inipath="../input/config.ini")
-    })
+   
     
     
    if(file.exists("../input/units.RDS")){#shinyjs::hide(id="units")
