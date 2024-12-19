@@ -144,6 +144,7 @@ id,	name,	nswrm,	obj_id
 ## Prio 1
   * convert_optain requires some failsafe controls for empty values
   * observe(pareto_fitness) better, currently needs a reload sometimes
+  * allow user to set additional measures instead of hard coding them
 
 ## Prio 2
   * catch empty selection and replace "replacement has length zero" with "no optima fulfill these conditions", fix reload when selection changes (Visualisation)
