@@ -522,6 +522,7 @@ ui <-
                                div("Pareto Plot", style = "text-align: left; font-size:150%"),
                                plotOutput("first_pareto",click="clickpoint"),
                                checkboxInput("add_sq_f",label = "Show status quo",value = FALSE),
+                               checkboxInput("unit_add1",label = "Show units",value = TRUE),
                                div(id="rev_plot",checkboxInput("rev_box",label="reverse x and y axes",value = FALSE))%>%hidden(),
                                fluidRow(
                                  column(3,selectInput(inputId = "x_var3",   label = "X-Axis", choices = NULL, multiple = F, selected=NULL)),
@@ -922,6 +923,7 @@ ui <-
 
                                                      checkboxInput("add_whole", label = "Show the whole Pareto front", value = FALSE),
                                     checkboxInput("add_sq",label = "Show status quo",value = FALSE),
+                                    checkboxInput("unit_add2",label = "Show units",value = TRUE),
                                     div(id="rev_plot2",checkboxInput("rev_box2",label="reverse x and y axes",value = FALSE))%>%hidden(),
 
                                         fluidRow(
@@ -1083,6 +1085,8 @@ ui <-
 
                              checkboxInput("show_extra_dat", label = "Show cluster solutions", value = T),
                              checkboxInput("show_status_quo", label = "Show Status Quo", value = FALSE),
+                             checkboxInput("unit_add3",label = "Show units",value = TRUE),
+                             
                              div(id="rev_plot3",checkboxInput("rev_box3",label="reverse x and y axes",value = FALSE))%>%hidden(),
 
                              div(

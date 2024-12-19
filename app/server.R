@@ -797,10 +797,6 @@ server <- function(input, output, session) {
      }
      
        
-       
-      
-     
-     
    })
  
  
@@ -828,12 +824,13 @@ server <- function(input, output, session) {
       req(input$x_var3,dat_matched())
       #match scaled input with unscaled fit() to create dat
       dat=dat_matched()
-      #run plt_sc_optima with sq but no other options
+      
+      #run plt_sc_optima with sq
       return(plt_sc_optima(dat=dat,    x_var = input$x_var3,
                     y_var = input$y_var3,
                     col_var = input$col_var3,
                     size_var = input$size_var3, status_q = input$add_sq_f,an_tab=T, rev = input$rev_box,
-                    sel_tab = sel_tay()))
+                    sel_tab = sel_tay(),unit=input$unit_add1))
       
       
     }
@@ -2167,8 +2164,10 @@ server <- function(input, output, session) {
         if(!is.null(input$antab_rows_selected)){
           
           selected_row <- input$antab_rows_selected
-          selected_data <- sols()[selected_row,]
-       
+          selected_data <- sols()[selected_row,objectives()]  
+          
+          fml2 <<- selected_data
+          
         }else{selected_data <- NULL}
         
       return(plt_sc_optima(
@@ -2181,7 +2180,8 @@ server <- function(input, output, session) {
           add_whole = input$add_whole,
           an_tab = T,
           status_q = input$add_sq,
-          rev = input$rev_box2
+          rev = input$rev_box2,
+          unit=input$unit_add2
         ))
       }
     }
@@ -2578,7 +2578,9 @@ server <- function(input, output, session) {
       
       return(plt_sc_optima(dat=df,x_var=input$x_var,y_var=input$y_var,
                     col_var=input$col_var,size_var=input$size_var,high_point=bo,extra_dat = sol,
-                    plt_extra = input$show_extra_dat, status_q = input$show_status_quo,an_tab = F,rev = input$rev_box3))
+                    plt_extra = input$show_extra_dat, status_q = input$show_status_quo,an_tab = F,rev = input$rev_box3,
+                    unit=input$unit_add3
+      ))
     }
     
   output$weights_plot <- renderPlot({  weight_plt_fun() })
