@@ -935,10 +935,36 @@ plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NUL
                           sel_tab = NULL, #highlight table selection Analysis tab and point selection in Visualisation tab
                           add_whole = F, #add the whole pareto front Analysis tab
                           status_q = FALSE,
-                          rev = FALSE
+                          rev = FALSE,
+                          unit = FALSE
                           ) {
   
   if(!file.exists(pareto_path)){return(NULL)}
+  
+  if(file.exists("../input/units.RDS")){units = readRDS("../input/units.RDS")}
+  
+  
+ if(unit && file.exists("../input/units.RDS")){
+   current_obj_order = c(x_var, y_var,
+                         col_var, size_var)
+
+   original_order = names(dat)#=objectives()
+   # 
+   reorder_current = match(original_order, current_obj_order)
+   reorder_original = match(current_obj_order,original_order)
+   # 
+   units[which(is.na(units) | units %in% c(" ", "","unitless","no unit"))] <- "-"
+   # 
+   colnames(dat) = paste(original_order, " [",units,"]", sep = "") #needs old order
+    
+   new_order = paste(original_order, " [",units,"]", sep = "")[reorder_original]
+    
+   x_var =new_order[1]
+     y_var =new_order[2]
+     col_var=new_order[3]
+     size_var =new_order[4]
+     
+ }
   
 
   #pull fit() establish range limits
@@ -960,53 +986,54 @@ plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NUL
     
   if(add_whole){
     p=p+geom_point(data=whole,aes(x=.data[[x_var]], y = .data[[y_var]], size = .data[[size_var]]),fill="grey50",alpha=0.1)
-  }  
-    
+  }
+  #   
   p=p+geom_point(shape = 21, stroke = 0.5 ) +
-    viridis::scale_fill_viridis(alpha = 0.8, name = col_var,labels = function(x) abs(as.numeric(x))) +  
-    scale_size(range = c(1, 10), name = size_var,labels = function(x) abs(as.numeric(x))) +     
-    theme_bw() + 
+    viridis::scale_fill_viridis(alpha = 0.8, name = col_var,labels = function(x) abs(as.numeric(x))) +
+    scale_size(range = c(1, 10), name = size_var,labels = function(x) abs(as.numeric(x))) +
+    theme_bw() +
     theme(panel.background = element_blank(),
           panel.grid.major = element_line(color = "lightgray", size = 0.3),
           panel.grid.minor = element_blank(),
           panel.border = element_blank(),
           axis.text = element_text(size = 12),
           axis.title = element_text(size = 16),
-          legend.position = "right", 
+          legend.position = "right",
           legend.text = element_text(size=13.5),
           legend.title = element_text(size=15))
   
   if(an_tab && "cluster number" %in% colnames(dat2)){
     p= p +
-     geom_text(data = dat2, aes(x = .data[[x_var]]+(0.03*diff(range(.data[[x_var]]))), y = .data[[y_var]], label = `cluster number`), 
+     geom_text(data = dat2, aes(x = .data[[x_var]]+(0.03*diff(range(.data[[x_var]]))), y = .data[[y_var]], label = `cluster number`),
               position = position_dodge(width = 0.85), hjust = 0,size=6)
   }
-  
+   
   all_extra_data = NULL
   
- 
-  
   if (!is.null(extra_dat) && plt_extra) {
+    names(extra_dat) = names(dat)
     extra_dat$set <- "cluster solutions"
     all_extra_data <- rbind(all_extra_data,extra_dat)
-    
-  }
-  
-  if (!is.null(high_point)) {
-    high_point$set <- "AHP - best option"
-    all_extra_data <- rbind(all_extra_data,high_point)
-    
+
   }
 
+  if (!is.null(high_point)) {
+     names(high_point) = names(dat)
+     high_point$set <- "AHP - best option"
+     all_extra_data <- rbind(all_extra_data,high_point)
+  }
+  
   if (!is.null(sel_tab)) {
-    sel_tab$set <- "Selection"
-   
-    if(!is.null(all_extra_data)){all_extra_data <- rbind(all_extra_data,sel_tab)}else{all_extra_data = sel_tab}
+    names(sel_tab) = names(dat)
     
+    sel_tab$set <- "Selection"
+
+    if(!is.null(all_extra_data)){all_extra_data <- rbind(all_extra_data,sel_tab)}else{all_extra_data = sel_tab}
+
   }
   
   if (status_q) {
-  
+
     st_q <- read.table(sq_path, header = FALSE, stringsAsFactors = FALSE, sep = deli(sq_path),colClasses = rep("numeric",4))
     names(st_q) <- names(dat)
     st_q$set <- "Status Quo"
@@ -1014,24 +1041,25 @@ plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NUL
   }
 
   if (!is.null(all_extra_data)) {
+
     p <- p +
-      geom_point(data = all_extra_data, aes(x = .data[[x_var]], y = .data[[y_var]], shape = set, color = set, size = .data[[size_var]]), 
+      geom_point(data = all_extra_data, aes(x = .data[[x_var]], y = .data[[y_var]], shape = set, color = set, size = .data[[size_var]]),
                   stroke = 1.8, show.legend = TRUE, alpha=0.7) +
       scale_shape_manual(labels = function(x) gsub("-", "", x),
-        values = c("cluster solutions" = 21, "AHP - best option" = 22, "Selection" =21, "Status Quo" = 17),name="") + 
+        values = c("cluster solutions" = 21, "AHP - best option" = 22, "Selection" =21, "Status Quo" = 17),name="") +
       scale_color_manual(labels = function(x) gsub("-", "", x),
-        values = c("cluster solutions" = "cyan", "AHP - best option" = "#FF4D4D", "Selection" = "black", "Status Quo" = "#FF00FF"),name="") + 
+        values = c("cluster solutions" = "cyan", "AHP - best option" = "#FF4D4D", "Selection" = "black", "Status Quo" = "#FF00FF"),name="") +
       guides(color = guide_legend(override.aes = list(size = 5)),shape = guide_legend(override.aes = list(size = 5)))
   }
-  #control range limits with fit() as reference
-    p <- p + scale_x_continuous(limits= c(range(whole[[x_var]])[1],range(whole[[x_var]])[2]),labels = function(x) {rem_min(x)})+
-      scale_y_continuous(limits= c(range(whole[[y_var]])[1],range(whole[[y_var]])[2]),labels = function(x) {rem_min(x)})
-    
-
   
+  #control range limits with fit() as reference
+  p <- p + scale_x_continuous(limits= range(whole[[x_var]], na.rm = TRUE),labels = function(x) {rem_min(x)})+
+      scale_y_continuous(limits= range(whole[[y_var]], na.rm = TRUE),labels = function(x) {rem_min(x)})
+
   if(rev){
     p = p+scale_y_reverse(labels = function(y) {rem_min(y)})+scale_x_reverse(labels = function(x) {rem_min(x)})}
- 
+
+  
   return(p)
 }
 
