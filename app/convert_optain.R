@@ -9,75 +9,75 @@
 ################################################################################
 print(paste0("loading required packages..."), quote=F)
 suppressPackageStartupMessages({
-  library(shiny)
-  library(shinyWidgets)
-  library(shinythemes)
-  library(shinydashboard)
-  library(tidyverse)
-  library(readr)
-  library(ggtext)
-  library(viridis)
-  library(here)
-  library(purrr)
-  library(tmap)
-  library(sf)
-  library(ggplot2)
-  library(plotly)
-  library(sp)
-  library(spdep)
-  library(geosphere)
-  library(geohashTools)
   library(configr)#
   library(corrplot)#
   library(dplyr)#
   library(DT)#
   library(fs)
   library(fst)
+  library(geohashTools)
+  library(geosphere)
   library(ggplot2)
+  library(ggtext)
   library(gridExtra) # or patchwork
+  library(here)
   library(htmltools)
-  library(purrr)
   library(leafsync)
+  library(plotly)
+  library(purrr)
   library(quanteda)
   library(RColorBrewer)
+  library(readr)
   library(reticulate)
   library(scales)
   library(sf)#
+  library(shiny)
+  library(shinydashboard)
+  library(shinythemes)
+  library(shinyWidgets)
+  library(sp)
+  library(spdep)
   library(tibble)
   library(tidyr)
   library(tidyverse)
+  library(tmap)
   library(viridis)
+ 
 })
 source("functions.R")
 
 ## check, assign and write priorities, hardcodes what has been used in CoMOLA
 nswrm_priorities <- function(lu) {
+  prio_groups <- list(
+    structural = c("pond", "constr_wetland", "wetland"), # structural elements (1st prio)
+    land_use = c("hedge", "buffer", "grassslope", "terrace", "floodres", "rip_forest", "afforest"), #land use (2nd prio)
+    management = c("lowtillcc", "lowtill", "droughtplt", "notill") # management (3rd prio)
+  )
   
-  prio <- data.frame(nswrm = character(), priority = integer(), mngmt=integer(), stringsAsFactors = FALSE)
+  prio <- data.frame(nswrm = character(), priority = integer(), mngmt = integer(), stringsAsFactors = FALSE)
   priority <- 1
   
-  prio_mes <- c("pond","constr_wetland","wetland")  # structural elements (1st prio)
+  for (group_name in names(prio_groups)) {
+    group_measures <- prio_groups[[group_name]]
+    matching_indices <- which(lu %in% group_measures)
+    matching_measures <- lu[matching_indices]
+    
+    if (length(matching_measures) > 0) {
+      new_rows <- data.frame(
+        nswrm = matching_measures,
+        priority = seq(priority, length.out = length(matching_measures)),
+        mngmt = as.integer(group_name == "management")
+      )
+      prio <- rbind(prio, new_rows)
+      priority <- max(prio$priority) + 1
+    }
+  }
   
-  for(lus in prio_mes){if(lus %in% lu){
-    prio <- rbind(prio, data.frame(nswrm = lus, priority = priority,mngmt= 0 ))
-    priority <- priority + 1
-  }}
+  write.csv(prio, file = "../input/nswrm_priorities.csv", row.names = FALSE)
   
-  lu_match <- rev(mesrs[mesrs %in% c("hedge", "buffer", "grassslope", "terrace","floodres","rip_forest","afforest")])  # land use and their order (2nd prio) ADAPTING THIS WILL REQUIRE ADAPTING lu_share too!!
-  for(lus in lu_match) {if(lus %in% lu) {
-    prio <- rbind(prio, data.frame(nswrm = lus, priority = priority,mngmt= 0 ))
-    priority <- priority + 1
-  }}
-  
-  mn_match = rev(mesrs[mesrs %in% c("lowtillcc", "lowtill", "droughtplt", "notill")])  # management and their order (3rd prio)
-  for(lus in mn_match){if(lus %in% lu) {
-    prio <- rbind(prio, data.frame(nswrm = lus, priority = priority,mngmt= 1 ))
-    priority <- priority + 1
-  }}
-  
-  write.csv(prio,file = paste0("../input/nswrm_priorities.csv"),row.names = F)#okay to have this here, Oct 24 - only used for buffer plotting
   return(prio)
 }
+
 
 ## Genomes
   gen = read.table("../data/pareto_genomes.txt", header = FALSE, stringsAsFactors = FALSE, sep = deli("../data/pareto_genomes.txt"), encoding = "UTF-8")
