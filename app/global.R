@@ -4,25 +4,24 @@
 # author: cordula.wittekind@ufz.de
 ####################################################################
 ## loading new packages
-foo1 <- function(x){
-  for( i in x ){
-    #  require returns TRUE invisibly if it was able to load package
-    if( ! require( i , character.only = TRUE ) ){
-      #  If package was not able to be loaded then re-install
-      install.packages( i , dependencies = TRUE , quiet = T)
-      #  Load package after installing
-      require( i , character.only = TRUE )
+foo1 <- function(x) {
+  for (i in x) {
+    if (!requireNamespace(i, quietly = TRUE)) {
+      install.packages(i, dependencies = TRUE, quiet = TRUE)
     }
+    library(i, character.only = TRUE)
   }
 }
+
 ## check if any packages are missing (not only here but also for external convert_optain)
-foo1(c("configr","corrplot", "dplyr","DT", "fs","fst","geosphere", "ggplot2",  "ggtext", "gridExtra", 
-       "here",  "htmltools","htmlwidgets",   "ini",    "leaflet",  "leafsync",
-       "mapview",  "plotly",  "processx", "purrr",
-        "quanteda",   "RColorBrewer",  "readr",  "reticulate",
-       "scales",  "sf",  "shiny", "shinycssloaders","shinydashboard", 
-       "shinyFiles", "shinyjs","shinythemes",  "shinyWidgets",  "sp", 
-       "spdep",  "tibble",  "tidyr",  "tidyverse",  "tmap",  "viridis","webshot"))
+foo1(c("configr", "corrplot", "DT", "fs", "fst", 
+       "geosphere", "ggplot2",
+       "ini", "leaflet", "leafsync",
+       "mapview",  "plotly",  "processx", 
+       "quanteda",   "RColorBrewer",   "reticulate",
+       "scales", "sf", "shiny", "shinycssloaders", "shinydashboard",
+       "shinyFiles", "shinyjs","shinythemes",  "shinyWidgets",  "sp",
+       "spdep",    "tidyverse",  "tmap",  "viridis", "webshot"))
 
 
 options(shiny.maxRequestSize = 1000*1024^2)
