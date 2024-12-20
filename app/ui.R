@@ -310,12 +310,20 @@ ui <-
                                p(" The application is structured the following way:"),
                                p(HTML("The second tab <strong>Visualising the Pareto Front</strong> provides an overview over the optimisation results. The user can gain insights into the relationships between the objectives and the pareto front by selecting and plotting preferred objective ranges.")),
                                p(HTML("The third tab <b>Data Preparation</b> is needed to produce the data required for the subsequent analyses. Several files need to be provided so the variables considered in the clustering can be calculated.")),
-                               p(HTML("The fourth tab <strong>Clustering Part 1 - Correlation Analysis</strong> allows to assess and alter variables considered in the subsequent clustering.")),
-                               p(HTML("The fifth tab <strong>Clustering Part 2 - PCA & kmeans/kmedoids</strong> provides the possibility to adapt, modify and finally perform the clustering process.")),
+                               p(HTML("The fourth tab <strong>Configure Clustering</strong> allows to perform the clustering with default settings or to jump to the optional tabs for manual clustering.")),
+                               
+                               p(HTML("
+                               <ul>
+                                 <li>The tab <strong>Clustering Part 1 - Correlation Analysis</strong> can only be accessed if manual clustering is chosen in the Configure Clustering tab. It allows to assess and alter variables considered in the subsequent clustering.</li>
+                                 <li>The tab <strong>Clustering Part 2 - PCA & kmeans/kmedoids</strong> provides the possibility to adapt, modify and finally perform the clustering process.</li>
+  
+                               </ul>
+                                      ")),
+                               
                                p(HTML("The <strong>Cluster Analysis</strong> tab lets the user plot the optima remaining after the clustering. Each of these optima is representative for one cluster.")),
                                p(HTML("The tab <strong>AHP - Analytical Hierarchy Process</strong> allows to determine priorities across the pareto front in a different way through assigning weights across the optima. It is possible to combine the clustering results with the AHP.")),
                                br(),br(),
-                               p(HTML("To ensure compatibility with algorithms (e.g. CoMOLA) designed for maximisation, some projects used negative numbers. Please note that this app omits the minus sign of these values. The interpretation however remains unchanged."))
+                               p(HTML("To ensure compatibility with algorithms (e.g. CoMOLA) designed for maximisation, some projects used negative numbers. Please note that, unless an objective uses mixed signs, this app omits the minus sign of these values. The interpretation however remains unchanged."))
 
 
                              )
@@ -332,12 +340,10 @@ ui <-
                                                  You can provide a limited set of outputs to only analyse the Pareto front in the next tab.
                                                  Alternatively, you can upload more data and prepare the variables for the subsequent correlation and cluster analysis
                                                  by clicking <strong>Check Files</strong> and
-                                                (if all files have been found) <strong>Run Prep</strong>. Please be aware that the preparation might take up to 5 minutes."))),
+                                                (if all files have been found) <strong>Run Prep</strong>. Please be aware that the preparation might take up to 15 minutes."))),
 
                              mainPanel(
                                
-                               
-
 
                                div(p("For being able to plot and analyse the Pareto front, please provide pareto_fitness.txt as well as the objective names.
                                      If you would like to plot the status quo, sq_fitness.txt is also required:"),style = "text-align: left; font-size:140%"),

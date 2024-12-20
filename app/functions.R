@@ -1242,7 +1242,6 @@ match_abs <- function(minval, maxval, abs_tab, ranger = NULL) {
   if(!is.null(ranger)){#undo the scaling which was done for the slider visibility
     
     indices <- which(names(abs_tab) %in% ranger)
-
     maxval[indices] = maxval[indices] / 1000
     minval[indices] = minval[indices] / 1000
   }
