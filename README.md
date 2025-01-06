@@ -147,7 +147,7 @@ id,	name,	nswrm,	obj_id
   * allow user to set additional measures instead of hard coding them
 
 ## Prio 2
-  * catch empty selection and replace "replacement has length zero" with "no optima fulfill these conditions", fix reload when selection changes (Visualisation)
+  * catch empty selection and replace "replacement has length zero" with "no optima fulfill these conditions"
   * only strike through the variable that has been removed (Correlation)
   * add a small spinner to the Check Data button to clarify that it takes a while
   * output of convert_optain is printed twice, would look better with single-line output
