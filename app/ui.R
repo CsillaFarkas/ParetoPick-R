@@ -603,15 +603,17 @@ ui <-
 
                                                  column(6,
                                                         div("Maximum Objective Ranges (absolute)",style = "text-align: left; font-size:150%"),
-                                                        tableOutput("whole_range"))
+                                                        tableOutput("whole_range"),
+                                                        div("*objectives optimised across negative and positive ranges are shown with signs. All other objectives are given without signs.", style = "text-align: left; font-size:100%"))
                                         ))),
 
 
 
-                               checkboxInput("plt_sq", label = "Show status quo", value = FALSE)),
 
                            div(id = "tab_play2",div("Parallel Axis plot", style = "text-align: left; font-size:150%"),
                                plotOutput("linePlot",click="clickline"),
+                               checkboxInput("plt_sq", label = "Show status quo", value = FALSE)),
+                           
                                div(
                                  style = "display: inline-block; vertical-align: top; margin-right: 0px;",
                                  textInput("line_plot_savename", label = NULL, value = "parallel line")

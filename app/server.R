@@ -1205,7 +1205,7 @@ server <- function(input, output, session) {
                        has_negative <- any(. < 0)
                      
                      if (has_positive && has_negative) {
-                       ifelse(. > 0, paste0("+", abs(.)), abs(.)) 
+                       ifelse(. > 0, paste0("+", abs(.)), ifelse(. < 0, paste0("-", abs(.)), abs(.)))
                      } else { abs(.) 
                      }}))
    
