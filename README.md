@@ -145,6 +145,8 @@ id,	name,	nswrm,	obj_id
   * convert_optain requires some failsafe controls for empty values
   * observe(pareto_fitness) better, currently needs a reload sometimes
   * allow user to set additional measures instead of hard coding them
+  * remove zoom from downloaded plot
+  * check aep table, priority not properly considered?
 
 ## Prio 2
   * catch empty selection and replace "replacement has length zero" with "no optima fulfill these conditions"
