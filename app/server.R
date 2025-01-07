@@ -2077,7 +2077,7 @@ server <- function(input, output, session) {
         #calculate share of these small cluster in cluster number (make dynamic as we might change that)
         n1clu=round((n1clu/length(unique(sols2()$Cluster)))*100,2)
         
-        if(n1clu > 60){
+        if(n1clu > 30){
           output$check_default <- renderText({ paste0("There is a high share (",n1clu,"%) of clusters with only one optimum, you might want to 
                     rerun the clustering with different settings.") })
         }else if(crat>30){
