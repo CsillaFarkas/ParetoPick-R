@@ -84,7 +84,9 @@ the project consists of six folders
 ** Please make sure that the two files align. If there are x rows (=optima) in pareto_fitness.txt there should be x columns (or rows, the app understands both) in pareto_genomes.txt **
 
 3. __hru.con__
-  * connection file used in SWAT+ modelling containing details on HRU size and location
+  * connection file created with SWATmeasR containing details on HRU size and location
+  * this file has to contain the columns: id, area, lat, lon
+
 4. __measure_location.csv__
   * csv - comma separated table with four columns: id, name, nswrm, obj_id
 ```
@@ -111,7 +113,8 @@ id,	name,	nswrm,	obj_id
 -6880, -0.052, 59069.165, 0
 ```
 7. __rout_unit.con__
-  * connection file used in SWAT+ modelling delineating the transport of water between HRUs, channel and aquifer
+  * connection file created with SWATmeasR delineating the transport of water between HRUs, channel and aquifer
+  * this file has to contain the columns: obj_id, obj_typ_1, area, frac_1
 
 
 ## Files created and used in the process
