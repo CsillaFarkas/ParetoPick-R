@@ -170,10 +170,16 @@ ui <-
                                     background-color: #83D0F5;
                                   }
 
-                                  /* General body background color and font family (Montserrat) */
-                                  .content-wrapper, .right-side {
-                                    background-color: unset;
-                                    font-family: "Montserrat", sans-serif;
+                                  /* General body background color and font as Montserrat */
+                                  .content-wrapper, 
+                                  .right-side {
+                                   background-color: unset;
+                                   font-family: "Montserrat", sans-serif;
+                                  }
+                                  
+                                  .main-sidebar, .left-side {
+                                   font-family: "Montserrat", sans-serif;
+                                   font-size: 0.95em; 
                                   }
 
                                   .content-wrapper {
