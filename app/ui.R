@@ -399,7 +399,7 @@ ui <-
 
                                hr(style = "border-top: 2px solid #03597F;"),  # Horizontal line with custom styling
                                br(),
-                               p("If you also want to run the subsequent correlation and cluster analysis, please provide the following files:",style =  "text-align: left; font-size:140%"),
+                               p("If you also want to run the subsequent correlation and cluster analysis, please provide the following files. Their names have to align with what is given here:",style =  "text-align: left; font-size:140%"),
 
                                #file numbers are jumbled but just here
                                div("1. pareto_genomes.txt",style = "text-align: left; font-size:115%"),
@@ -446,7 +446,7 @@ ui <-
                                br(),br(),
 
 
-                               div(id="range_title","Range of objective values given in pareto_fitness.txt and as used in this app",style = "text-align: left; font-size:120%"),
+                               div(id="range_title","Range of objective values given in pareto_fitness.txt:",style = "text-align: left; font-size:120%"),
                                tableOutput("obj_conf"),
 
                                br(),br(),br(),
