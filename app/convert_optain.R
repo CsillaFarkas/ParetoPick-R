@@ -6,6 +6,7 @@
 # 1.- 4. = objectives to be maximised
 # 5 - end = variables considered in clustering (=all_var provided separately)
 # used files: pareto_genomes.txt, hru.con, measure_location.csv
+# author: cordula.wittekind@ufz.de
 ################################################################################
 print(paste0("loading required packages..."), quote=F)
 suppressPackageStartupMessages({
@@ -60,7 +61,7 @@ nswrm_priorities <- function(lu) {
   for (group_name in names(prio_groups)) {
     group_measures <- prio_groups[[group_name]]
     matching_indices <- which(lu %in% group_measures)
-    matching_measures <- lu[matching_indices]
+    matching_measures <- rev(lu[matching_indices]) #rev req because of COMOLA order
     
     if (length(matching_measures) > 0) {
       new_rows <- data.frame(
