@@ -394,6 +394,14 @@ for(op in paste0("V", 1:nopt)){
     left_join(channel_frac, by = "id") %>%
     select(-id) %>% replace(is.na(.), 0) %>% select_if( ~ !all(. == 0))
 
+  #scaling to between 0 and 1
+  test_clu[, 5:ncol(test_clu)] <- lapply(test_clu[, 5:ncol(test_clu)], function(x) {
+    if(is.numeric(x)) {
+      (x - min(x)) / (max(x) - min(x))
+    } else {
+      x
+    }
+  })
   
   write.csv(test_clu, "../input/var_corr_par.csv",  row.names = FALSE, fileEncoding = "UTF8")  
   print("check: printed output ---> /input/var_corr_par...",quote = FALSE)
