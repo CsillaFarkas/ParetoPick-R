@@ -14,7 +14,7 @@ The cluster algorithm relies on Principal Component Analysis (PCA) and kmeans/km
 the algorithm are fixed, several settings such as outlier treatment and the number of tested principal components, can be set by the user. 
 ParetoPick-R also integrates an Analytical Hierarchy Process (AHP) allowing the user to determine weights for the objectives based on pair-wise comparisons. The results of the clustering and the AHP can be combined and the app provides a range of methods for visualising the results.
 
-Please note that the Python code used in this app is part of another project and was written by [S. White](https://github.com/SydneyEWhite).
+Please note that the Python code used in this app was written by [S. White](https://github.com/SydneyEWhite).
 
 # Folder Structure
 the project consists of six folders
@@ -84,7 +84,7 @@ the project consists of six folders
 ** Please make sure that the two files align. If there are x rows (=optima) in pareto_fitness.txt there should be x columns (or rows, the app understands both) in pareto_genomes.txt **
 
 3. __hru.con__
-  * connection file created with SWATmeasR containing details on HRU size and location
+  * connection file created with SWAT+ Editor/SWATmeasR containing details on HRU size and location
   * this file has to contain the columns: id, area, lat, lon
 
 4. __measure_location.csv__
@@ -113,13 +113,27 @@ id,	name,	nswrm,	obj_id
 -6880, -0.052, 59069.165, 0
 ```
 7. __rout_unit.con__
-  * connection file created with SWATmeasR delineating the transport of water between HRUs, channel and aquifer
+  * connection file created with SWAT+ Editor/SWATmeasR delineating the transport of water between HRUs, channel and aquifer
   * this file has to contain the columns: obj_id, obj_typ_1, area, frac_1
 
+# Process
+### Data Preparation tab
+This tab allows you to either only provide pareto_fitness.txt (optionally also sq_fitness.txt) and the objective names or to provide all required datasets and perform the Data Preparation. The option to "Run Prep" becomes available when all files have been found after clicking "Check Files".
+"Run Prep" calls the convert_optain R script and writes var_corr_par.csv into the input folder. Var_corr_par.csv contains all variables considered in the clustering. Depending on the measures implemented, different variables are included. You can find their description in the glossary.
+The clustering is later run across these variables.
+
+If you want this tab lets you select those measures that require a buffer in maps to enhance their visibility (note that elements in the downloaded maps tend to be a bit smaller than shown in the app).
+
+Please note that it is not straightforward to change the objectives names at a later point without performing a hard reset and rerunning the data preparation first. 
+The non-straighforward way is to delete object_names.RDS from the input folder and to remove the old object names written for var_1, var_2, var_3 and var_4 in the config.ini and then to restart the app.
+
+
+
+ 
 
 ## Files created and used in the process
 (stored in input folder)
-* var_corr_par.csv (created in convert_optain.R, contains all variables considered in the clustering)
+* var_corr_par.csv (created in convert_optain.R)
 * hru_in_optima.RDS (created in convert_optain.R based on measure_location.csv, connection between activated HRUs and optima)
 * nswrm_priorities.csv (created in covert_optain.R based on measure_location.csv)
 * object_names.RDS
@@ -133,12 +147,11 @@ id,	name,	nswrm,	obj_id
 # Assumptions
 
 * General 
-  * as "land use" measures currently only hedge, buffer and grassslope considered - if more needed global.R, functions.R (write_corr) and convert_optain require adapting
-  * new nswrm_priorities() function currently considers: pond, constr_wetland, wetland, hedge, buffer, grassslope, lowtillcc, lowtill, droughtplt
-  * do the current default settings produce reasonable cluster outputs across all catchments? the default might need outlier testing 
+  * as "land use" measures currently only hedge, buffer and grassslope, terrace, floodres, rip_forest, afforest - if more needed global.R, functions.R (write_corr) and convert_optain require adapting
+  * nswrm_priorities() function currently considers: pond, constr_wetland, wetland, hedge, buffer, grassslope, lowtillcc, lowtill, notill, droughtplt, terrace, floodres, rip_forest, afforest
+  * do the current default settings produce reasonable cluster outputs across all catchments? the default currently does not perform outlier testing 
   * in AHP, the initial state of the pairwise comparison as "Equal" amplifies the mathematical definition of inconsistency, therefore only when at least three sliders are NOT set to "Equal" is inconsistency considered at all
   * stratified variables such as lowflow in the Schoeps do not work in the tool, the sliders cannot be moved
-  * users should not produce optimisation outputs with values below 0 and if possible no values smaller than 1, the app's rescaling is (balance values to between 1 and 100) is turned off
   * range_controlled() controls for the objectives min value being less than 0.0005 (*1000) or over 10000 (--> rounding), this might not be applicable for all case studies 
 
  
