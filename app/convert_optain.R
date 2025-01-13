@@ -279,9 +279,22 @@ for(op in paste0("V", 1:nopt)){
   lin = lin %>%mutate(id = row_number())
 
   ### fraction of water from individual measures that goes directly into channel (channel_frac)
-  # read rout_unit.con
-  ru = read.table("../data/rout_unit.con",header = T, fill = TRUE, stringsAsFactors = FALSE, skip = 1)
-  ru = ru %>% select(c(obj_id,obj_typ_1,area,frac_1))
+  # read rout_unit.con (ensure in this ugly way that those w/ missing col names look the same)
+  ru_names = readLines("../data/rout_unit.con", n=2 )[2]
+  ru_names = unlist(strsplit(ru_names," "))
+  ru_names = ru_names[ru_names != ""] 
+  if(!("frac_1" %in% ru_names)){
+    ru <- read.table("../data/rout_unit.con", header = FALSE, fill = TRUE,
+                     stringsAsFactors = FALSE, skip = 2)
+    ru = ru[,1:length(ru_names)]
+    colnames(ru) <- ru_names  
+    ru = ru %>% select(c(id, obj_typ, area, frac)) %>% filter(id != "aqu") %>% filter(obj_typ != "")
+    colnames(ru) = c("obj_id", "obj_typ_1", "area", "frac_1")#path dependent name
+    
+  }else{
+  ru = read.table("../data/rout_unit.con",header = T, fill = TRUE,
+                   stringsAsFactors = FALSE, skip = 1)
+  ru = ru %>% select(c(obj_id,obj_typ_1,area,frac_1))}
   
   channel_frac = as.data.frame(array(NA, dim =c(nopt,length(meas)))) # Pareto front in rows
   colnames(channel_frac) = meas  
@@ -292,7 +305,7 @@ for(op in paste0("V", 1:nopt)){
     
     for (m in meas) {
       if (m %in% opti[[op]]) {
-        #check if land use is part of optimum (pond sometimes is not in Schwarzer Schoeps)
+        #check if land use is part of optimum 
         hru_ac = opti %>% filter(.data[[op]] == m) %>% select(obj_id)
         
         if (nrow(hru_ac) != 0){
