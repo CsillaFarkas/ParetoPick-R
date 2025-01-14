@@ -474,7 +474,7 @@ plt_freq = function(data,lo, la, buffers , remaining, dispal = pal, mes=mes) {
   
   m =  leaflet(data=data) %>%
     setView(lng = lo, lat = la, zoom = 12) %>%
-    # addProviderTiles(providers$CartoDB.Positron) %>% #comment for anonymous location
+    addProviderTiles(providers$CartoDB.Positron) %>% #comment for anonymous location
     addPolygons(
       fillColor = ~ dispal(measure),
       fillOpacity = ~ freq,
@@ -679,7 +679,7 @@ plt_lf <- function(data, lo, la, buff_els, col_sel, buffers, dispal = pal) {
     
     p=   leaflet(data = data) %>%
       setView(lng = lo, lat = la, zoom = 12) %>%
-      # addProviderTiles(providers$CartoDB.Positron) %>%#poviders$Esri.NatGeoWorldMap, $Stadia.StamenToner, $OpenTopoMap
+      addProviderTiles(providers$CartoDB.Positron) %>%#poviders$Esri.NatGeoWorldMap, $Stadia.StamenToner, $OpenTopoMap
       addPolygons(
         fillColor = ~ dispal(data[[col]]),
         fillOpacity = 0.8,
