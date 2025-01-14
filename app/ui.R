@@ -580,13 +580,13 @@ ui <-
                                   style = "display: flex; justify-content: center; font-size:150%"),
 
                               div(style="display: flex; flex-direction: column; align-items: center;",
-                                  tags$h4("Selected range"),
+                                  tags$h4("Range (slider selection)"),
                                      tableOutput("aep_tab_full"),
                                   conditionalPanel(
                                     condition = "output.selectionmade",
                                     div(
                                       style = "display: flex; flex-direction: column; align-items: center;",
-                                    tags$h4("Optiumum (Selected in Pareto plot)"),
+                                    tags$h4("Optiumum (selected in Pareto plot)"),
                                     tableOutput("aep_tab_one")
                                     ))),
 
