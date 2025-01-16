@@ -586,7 +586,7 @@ ui <-
                                     condition = "output.selectionmade",
                                     div(
                                       style = "display: flex; flex-direction: column; align-items: center;",
-                                    tags$h4("Optiumum (selected in Pareto plot)"),
+                                    tags$h4("Optimum (selected in Pareto plot)"),
                                     tableOutput("aep_tab_one")
                                     ))),
 
