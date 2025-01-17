@@ -720,7 +720,7 @@ ui <-
                                      "1. Choose variables to be included in the Correlation Analysis:",
                                      style = "text-align: left; font-size:150%"
                                    ),div(
-                                     "(those marked with * have been calculated for each measure separately, details under Selected Variables)",
+                                     "(those marked with * have been calculated for each measure separately. For details see Glossary)",
                                      style = "text-align: left; font-size:80%"
                                    ),
                                    checkboxGroupInput("selements", "",
