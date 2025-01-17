@@ -301,16 +301,16 @@ for(op in paste0("V", 1:nopt)){
   rownames(channel_frac) = paste0("V", 1:nopt)
   
   for (op in paste0("V", 1:nopt)) {
-    opti = hru_donde %>% select(c(obj_id, all_of(op), area))
+    opti = hru_donde %>% select(c(id, all_of(op), area))
     
     for (m in meas) {
       if (m %in% opti[[op]]) {
         #check if land use is part of optimum 
-        hru_ac = opti %>% filter(.data[[op]] == m) %>% select(obj_id)
+        hru_ac = opti %>% filter(.data[[op]] == m) %>% select(id)
         
         if (nrow(hru_ac) != 0){
           #ru$name contains hrus called "rtuxxx", or use obj_id --> match with activated hrus in optimum
-          ru_ac = ru[which(ru$obj_id %in% hru_ac$obj_id), ] 
+          ru_ac = ru[which(ru$obj_id %in% hru_ac$id), ] 
           
           if (nrow(ru_ac) == 0 | !any(ru_ac$obj_typ_1 == "sdc")) {#check if none routs to channel
             channel_frac[op, m] = 0
@@ -326,10 +326,10 @@ for(op in paste0("V", 1:nopt)){
             ru_ch = ru_ac[which(ru_ac$obj_typ_1 == "sdc"), ]
             
             #subset to channel adjacent
-            cf = cf[which(cf$obj_id %in% ru_ch$obj_id), ]
+            cf = cf[which(cf$id %in% ru_ch$obj_id), ]
             
             #merge, multiply area share and fraction and pull value
-            channel_frac[op, m] = ru_ch %>% left_join(cf, by = "obj_id") %>%
+            channel_frac[op, m] = ru_ch %>% left_join(cf, by =c("obj_id"="id")) %>%
               mutate(cf_a = cf * area.y) %>% summarise(median(cf_a, na.rm = T)) %>% pull()
           } 
         } else{
@@ -345,7 +345,6 @@ for(op in paste0("V", 1:nopt)){
           quote = F)
     
   }
-  channel_frac = channel_frac *100
   colnames(channel_frac) = paste(colnames(channel_frac),"channel_frac",sep="_")
   channel_frac = channel_frac %>%mutate(id = row_number())
   
