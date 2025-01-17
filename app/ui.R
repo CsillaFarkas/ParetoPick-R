@@ -725,7 +725,7 @@ ui <-
                                    ),
                                    checkboxGroupInput("selements", "",
                                                       choiceNames = c("share_con (*)",
-                                                                      "Moran's I",
+                                                                      "Moran's I (*)",
                                                                       "channel_frac (*)",
                                                                       "linE",
                                                                       "lu_share"),
