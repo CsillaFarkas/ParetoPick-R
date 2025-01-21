@@ -2133,7 +2133,8 @@ server <- function(input, output, session) {
           req(sols(),objectives())
           
           df <- sols() %>%
-            mutate(across(where(is.numeric), round, digits = 2)) %>%
+            mutate(across(where(is.numeric), 
+                          ~if_else(abs(.) < 1, round(., digits = 4), round(., digits = 0)))) %>%
             mutate(across(where(is.numeric), ~as.numeric(gsub("-", "", as.character(.)))))
 
           df <- as.data.frame(df)
@@ -2141,7 +2142,7 @@ server <- function(input, output, session) {
           
           df = df %>% select(`cluster number`, `cluster size`,outlier,objectives(), optimum)
 
-          
+          kk <<- df
           datatable(df,
                     selection = list(mode = "multiple", target = 'row', max = 12),
                     rownames = FALSE,
