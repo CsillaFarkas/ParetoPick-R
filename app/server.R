@@ -2142,7 +2142,6 @@ server <- function(input, output, session) {
           
           df = df %>% select(`cluster number`, `cluster size`,outlier,objectives(), optimum)
 
-          kk <<- df
           datatable(df,
                     selection = list(mode = "multiple", target = 'row', max = 12),
                     rownames = FALSE,
