@@ -1231,6 +1231,7 @@ server <- function(input, output, session) {
 
     if (all(file.exists(map_files))) {
       shinyjs::show("freq_map_play")
+      shinyjs::show("download_freq_id")
       needs_buffer(pull_buffer()) #needs nswrm_priorities.csv
 
       hru= readRDS("../input/hru_in_optima.RDS")
@@ -1308,9 +1309,10 @@ server <- function(input, output, session) {
       
       output$freq_map_play = renderUI({ play_freq()  })
       
-    }else{shinyjs::hide("freq_map_play")}})
+    }else{shinyjs::hide("freq_map_play")
+      shinyjs::hide("download_freq_id")}})
  
-  play_freq = function(){ #excessive function
+  play_freq = function(leg=TRUE){ #excessive function
     req(cmf(),hru_100(),lalo(),prio(), dat_matched(),hru_matcher(),fit())
 
     dat = dat_matched()
@@ -1324,16 +1326,38 @@ server <- function(input, output, session) {
     hru_share = hru_freq%>%left_join(hru_100(),by="id") %>%select(id,measure,freq)
     
     #make unique measures outside
-    mes = unique(hru_share$measure)
+    mes <<- unique(hru_share$measure)
 
   #make palette outside and pass to it
     man_col = c("#66C2A5", "#4db818", "#663e13", "#F7A600", "#03597F", "#83D0F5",  "#FFEF2C",   "#a84632",  "#b82aa5",  "#246643" )
     man_col = man_col[1:length(unique(mes))]
-    pal = colorFactor(palette = man_col, domain = unique(mes), na.color = "lightgrey")
+    pal <<- colorFactor(palette = man_col, domain = unique(mes), na.color = "lightgrey")
 
-    m = plt_freq(data=cmf(),lo=lalo()[2], la=lalo()[1], buffers=buffers(), remaining=hru_share,dispal=pal, mes = mes)
+    m = plt_freq(data=cmf(),lo=lalo()[2], la=lalo()[1], buffers=buffers(), remaining=hru_share,dispal=pal, mes = mes, legend = leg)
     return(m)}
   }
+  
+  output$freq_map_play = renderUI({ play_freq()  })
+  
+  output$download_freq <- downloadHandler(
+    
+    filename = function(){
+      curt = format(Sys.time(), "_%Y%m%d")
+      paste0(input$freq_plot_savename,curt, ".png")
+    },
+    
+    
+    content = function(file) {
+      shinyjs::show("spinner_download_play2")
+      
+      freqmap <- play_freq(leg=FALSE)#exports global pal and mes
+      
+      saveWidget(freqmap, "temp.html", selfcontained = FALSE)
+      webshot::webshot("temp.html", file = file, cliprect = "viewport",vwidth = 900,
+                       vheight = 900)
+      shinyjs::hide("spinner_download_play2")
+    }
+  )
   
 
   

@@ -464,12 +464,12 @@ plt_latlon = function(conpath){
 
 
 ## plot frequency
-plt_freq = function(data,lo, la, buffers , remaining, dispal = pal, mes=mes) {
+plt_freq = function(data,lo, la, buffers , remaining, dispal = pal, mes=mes, legend = TRUE) {
   
   data = left_join(data,remaining, by = c("id"))%>%st_make_valid() #only those with highest priority
-  data = data %>% filter(freq>0.01) %>%subset(!st_is_empty(geometry))
+  data = data %>%subset(!st_is_empty(geometry))
   
-  rem_fil = remaining %>% filter(freq>0.01) %>% filter(measure %in% unique(buffers$measure))
+  rem_fil = remaining %>% filter(measure %in% unique(buffers$measure))
   
   
   m =  leaflet(data=data) %>%
@@ -511,13 +511,16 @@ plt_freq = function(data,lo, la, buffers , remaining, dispal = pal, mes=mes) {
     )
   }
   
+ 
   color_swatches <- lapply(mes, function(mess) {
     base_color <- dispal(mess)
-    sapply(c(0.2, 0.5, 1), function(opacity) {
+    sapply(c(0.15, 0.5, 1), function(opacity) {
       rgb(t(col2rgb(base_color) / 255), alpha = opacity, maxColorValue = 1)
     })
   })
   
+  
+  if(legend){
   custom_legend <- HTML(
     paste0(
       "<div style='background: rgba(255, 255, 255, 0.8); padding: 4px; border-radius: 2px; font-size: 12px; line-height: 1;'>", # Compact line height
@@ -543,12 +546,47 @@ plt_freq = function(data,lo, la, buffers , remaining, dispal = pal, mes=mes) {
       ),
       "</div>"
     )
+  )}else{custom_legend <- HTML(
+    paste0(
+      "<div style='background: rgba(255, 255, 255, 0.8); padding: 4px; border-radius: 2px; font-size: 12px; line-height: 1;'>",
+      "<strong>Measure<br>Frequency</strong><br>",
+      paste(
+        mapply(function(measure, colors) {
+          paste0(
+            "<div style='margin-bottom: 1px;'><strong style='margin: 0; padding: 0;'>", measure, "</strong></div>",
+            "<div style='margin-left: 4px; margin-bottom: 0;'>",
+            paste(
+              mapply(function(color, label) {
+                # Parse color if it's in rgba format
+                if(grepl("^rgba", color)) {
+                  col_values <- as.numeric(strsplit(gsub("rgba\\(|\\)", "", color), ",")[[1]])
+                  png_data <- png::writePNG(array(col_values/255, dim=c(1,1,4)))
+                } else {
+                  # If it's a named color or hex code
+                  col_rgb <- col2rgb(color, alpha=TRUE)
+                  png_data <- png::writePNG(array(col_rgb/255, dim=c(1,1,4)))
+                }
+                base64_color <- base64enc::base64encode(png_data)
+                sprintf(
+                  "<img src='data:image/png;base64,%s' style='width: 11px; height: 11px; vertical-align: middle;'> %s",
+                  base64_color, label
+                )
+              }, colors, c("Low", "Medium", "High"), SIMPLIFY = FALSE),
+              collapse = "<br>"
+            ),
+            "</div>"
+          )
+        }, mes, color_swatches, SIMPLIFY = FALSE),
+        collapse = "<br>"
+      ),
+      "</div>"
+    )
   )
+  }
   
   m <- m %>%
-    addControl(
-      position = "bottomright",
-      html = custom_legend
+    addControl(custom_legend,
+      position = "bottomright"
     )
   
   return(m)

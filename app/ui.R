@@ -493,7 +493,21 @@ ui <-
                                          ),
                                          div("Frequency of area implemented", style = "text-align: left; font-size:120%; margin-top: 10px;"),
                                          uiOutput("freq_map_play")%>%hidden(),
-
+                                         div(id="download_freq_id",
+                                             div(
+                                               style = "display: inline-block; vertical-align: top; margin-right: 0px; margin-top: 5px;",
+                                               textInput("freq_plot_savename", label = NULL, value = "frequency_plot")
+                                             )
+                                             ,
+                                             div(
+                                               style = "display: inline-block; vertical-align: top; margin-left: 0px; margin-top: 5px;",
+                                               downloadButton("download_freq", "Download map"),
+                                               div(
+                                                 id = "spinner_download_play2",style = "display: none;",
+                                                 style = "display: none; vertical-align: top; margin-left: 0px; margin-top: 5px;",
+                                                 div(class = "spinspin")
+                                               ) )
+                                         )%>%hidden(),
                                        ), br(),
 
 
