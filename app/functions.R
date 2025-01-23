@@ -281,12 +281,6 @@ read_config_plt = function(obj=T,axis=F,inipath="../input/config.ini"){
 
 #### Table/Output Formatting Functions ####
 
-## Micha's smartly rounding functions :)
-round_signif <- function(x) {
-   ifelse(abs(x) >= 100, round(x, 0),  signif(x, 2)) #alternatively round(x,num.decimals(x))
-}
-
-
 ## count number of decimals
 num.decimals <- function(x) {
   stopifnot(class(x)=="numeric")
@@ -369,37 +363,44 @@ add_perc <- function(df1, df2) {
         pd = NA  # no change
       }
       
+      # conditional rounding
+      main_value <- abs(df1[i, j])
+      if (main_value < 1) {
+        rounded_value <- round(main_value, 4)
+      } else if (main_value < 10) {
+        rounded_value <- round(main_value, 2)
+      } else {
+        rounded_value <- round(main_value, 0)
+      }
+      
       if (!is.na(pd) & !is.nan(pd) & !is.infinite(pd) & round(pd, 2) != 0) {
-        # get sign for percentage change
         direction_sign <- if (pd > 0) "+" else "-"
         dumb_bracket <- paste0(" (", direction_sign)
         
-        # value formatting
         if (mixed_signs) {
           if (df1[i, j] > 0 && df2[i, j] < 0) {
-            value <- paste0("-", abs(df1[i, j]))
+            value <- paste0("-", rounded_value)
           } else if (df1[i, j] < 0 && df2[i, j] > 0) {
-            value <- paste0("-", abs(df1[i, j]))
+            value <- paste0("-", rounded_value)
           } else {
-            value <- if (df1[i, j] > 0) paste0("+", abs(df1[i, j])) else as.character(abs(df1[i, j]))
+            value <- if (df1[i, j] > 0) paste0("+", rounded_value) else paste0("-", rounded_value)
           }
         } else {
-          value <- as.character(abs(df1[i, j]))
+          value <- as.character(rounded_value)
         }
         
         df1_new[i, j] <- paste0(value, dumb_bracket, round(abs(pd), 2), "%)")
       } else {
-        # unchanged values
         if (mixed_signs) {
           if (df1[i, j] > 0 && df2[i, j] < 0) {
-            df1_new[i, j] <- paste0("-", abs(df1[i, j]))
+            df1_new[i, j] <- paste0("-", rounded_value)
           } else if (df1[i, j] < 0 && df2[i, j] > 0) {
-            df1_new[i, j] <- paste0("-", abs(df1[i, j]))
+            df1_new[i, j] <- paste0("-", rounded_value)
           } else {
-            df1_new[i, j] <- if (df1[i, j] > 0) paste0("+", abs(df1[i, j])) else as.character(abs(df1[i, j]))
+            df1_new[i, j] <- if (df1[i, j] > 0) paste0("+", rounded_value) else paste0("-", rounded_value)
           }
         } else {
-          df1_new[i, j] <- as.character(abs(df1[i, j]))
+          df1_new[i, j] <- as.character(rounded_value)
         }
       }
     }
@@ -407,7 +408,6 @@ add_perc <- function(df1, df2) {
   
   return(df1_new)
 }
-
 
 
 #### Python Caller ####
