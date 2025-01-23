@@ -949,8 +949,6 @@ server <- function(input, output, session) {
           shinyjs::hide("spinner_download_play")
           file.remove("temp.html")
           unlink("temp_files", recursive = TRUE)
-          unlink("www", recursive = TRUE)
-          
           }
     )
     
@@ -1357,9 +1355,7 @@ server <- function(input, output, session) {
       shinyjs::hide("spinner_download_play2")
       file.remove("temp.html")
       unlink("temp_files", recursive = TRUE)
-      unlink("www", recursive = TRUE)
-      
-    }
+      }
   )
   
 
@@ -2762,9 +2758,7 @@ server <- function(input, output, session) {
       shinyjs::hide("spinner_download_ahp")  
       file.remove("temp.html")
       unlink("temp_files", recursive = TRUE)
-      unlink("www", recursive = TRUE)
-      
-    }
+      }
   )
  
   
