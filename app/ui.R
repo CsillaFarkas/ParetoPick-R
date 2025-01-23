@@ -457,7 +457,7 @@ ui <-
 
                              )# DATA PREP MAIN PANEL END
                      ),
-               ### PLAY AROUND TAB ####
+               ## PLAY AROUND TAB ####
                tabItem(tabName = "play_around",
                        titlePanel("Visualising the Optimisation Output"),
 
@@ -653,18 +653,9 @@ ui <-
                                div(
                                  style = "display: inline-block; vertical-align: top; margin-left: 0px;",
                                  downloadButton("download_scat_plot", "Download Plot")
-                               ),
+                               )
 
-                               # div("Difference between selection and the whole Pareto Front", style = "text-align: left; font-size:150%"),
-                               # plotOutput("sliders_plot"),
-                               # div(
-                               # style = "display: inline-block; vertical-align: top; margin-right: 0px;",
-                               # textInput("diff_plot_savename", label = NULL, value = "difference barplot")
-                               # ),
-                               # div(
-                               #   style = "display: inline-block; vertical-align: top; margin-left: 0px;",
-                               #   downloadButton("download_diff_plot", "Download Plot")
-                               # )
+                      
                            )
 
                          )## PLAY AROUND MAIN PANEL END
@@ -1091,7 +1082,7 @@ ui <-
                            div(id = "pareto_weighted", "Best Option under selected weighting", style = "text-align: center; font-size: 150%;"),
                                                    div(tableOutput("best_option_output"), style = "margin: 0 auto; width: fit-content; font-size: 150%;"),
 
-                         checkboxInput("save_ahp",label = "Click here to save the selected optimum to the output folder (selected_optima.csv)",value=F, width = "100%")%>%hidden(),
+                         checkboxInput("save_ahp",label = "Click here to save the selected optimum to the output folder (selected_optima.csv)",value=F, width = "100%"),
 
 
 
