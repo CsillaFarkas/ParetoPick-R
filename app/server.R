@@ -947,6 +947,10 @@ server <- function(input, output, session) {
           webshot::webshot("temp.html", file = file, cliprect = "viewport",vwidth = 900,
                            vheight = 900)
           shinyjs::hide("spinner_download_play")
+          file.remove("temp.html")
+          unlink("temp_files", recursive = TRUE)
+          unlink("www", recursive = TRUE)
+          
           }
     )
     
@@ -1050,10 +1054,7 @@ server <- function(input, output, session) {
     te = fml[yo$id,]   # te <- fit()[yo$id,] would not work!!
     
     ete <- te
-    # for (i in 1:4) {
-    #   ete[,i] <- round_signif(te[,i])
-    # }
-   
+ 
     er(ete)
     
     colnms = objectives()
@@ -1072,11 +1073,18 @@ server <- function(input, output, session) {
       
       
       lclick <<- as.data.frame(er())
+      
       colnames(lclick) <- new_colnms
+      lclick <- lclick %>%
+        mutate(across(where(is.numeric), ~ if_else(
+          abs(.) < 1, round(., digits = 4), ifelse(abs(.) < 10, round(., digits = 2), round(., digits = 0))
+        ))) %>%
+        mutate(across(where(is.numeric), ~ as.character(.)))
+      
       lclick
-        }, include.rownames = F)
+    }, include.rownames = F)
     
-    }, ignoreNULL = TRUE)
+  }, ignoreNULL = TRUE)
   
   observeEvent(input$save_click_line,{
     
@@ -1143,15 +1151,8 @@ server <- function(input, output, session) {
     dn = dt
     dn[] <- lapply(dn, function(x) as.numeric(as.character(x)))
     
-    for(j in 1:2){
-      for(i in 1:4){
-        
-        dn[j,i] = round_signif(dn[j,i])
-        
-      }}
-    
     dn2 = add_perc(df1=dn, df2= wr)
-
+    
     #get unit input (this turns into matrix)
     if(!is.null(axiselected())){ new_colnms <- mapply(function(col, unit) {
       if (unit != "") {
@@ -1164,6 +1165,7 @@ server <- function(input, output, session) {
     
     colnames(dn2) = new_colnms  
     
+    
     dn2},
     include.rownames = TRUE)
   
@@ -1173,14 +1175,6 @@ server <- function(input, output, session) {
     df = as.data.frame(t(get_mima(fit()))[-1,])
     df = df[nrow(df):1,]
     df[] = lapply(df, function(x) as.numeric(as.character(x)))
-    
-    for(j in 1:2){
-      for(i in 1:4){
-        
-        df[j,i] = round_signif(df[j,i])
-        # df[j,i] = formatC(df[j,i],digits =num.decimals(as.numeric(df[1,i])),drop0trailing = T,format = "f")
-      }}
-    
     
     return(df)
   }
@@ -1198,8 +1192,11 @@ server <- function(input, output, session) {
     }, col = objectives(), unit = axiselected(), SIMPLIFY = TRUE)}else{new_colnms = objectives()}
 
    df = mima_fun()
-   # df = df %>%mutate(across(where(is.numeric), ~as.numeric(gsub("-", "", as.character(.)))))
-   
+
+   df = df %>%
+     mutate(across(where(is.numeric), 
+                   ~if_else(abs(.) < 1, round(., digits = 4), ifelse(abs(.) < 10,round(., digits = 2), round(., digits = 0))))) 
+  
    df = df %>%mutate(across(all_of(cols), 
                    ~ { has_positive <- any(. > 0)
                        has_negative <- any(. < 0)
@@ -1208,6 +1205,8 @@ server <- function(input, output, session) {
                        ifelse(. > 0, paste0("+", abs(.)), ifelse(. < 0, paste0("-", abs(.)), abs(.)))
                      } else { abs(.) 
                      }}))
+   df = df %>%
+     mutate(across(where(is.numeric), ~ as.character(.)))
    
    
    
@@ -1356,6 +1355,10 @@ server <- function(input, output, session) {
       webshot::webshot("temp.html", file = file, cliprect = "viewport",vwidth = 900,
                        vheight = 900)
       shinyjs::hide("spinner_download_play2")
+      file.remove("temp.html")
+      unlink("temp_files", recursive = TRUE)
+      unlink("www", recursive = TRUE)
+      
     }
   )
   
@@ -2155,10 +2158,10 @@ server <- function(input, output, session) {
       
         output$antab <- renderDT({
           req(sols(),objectives())
-          
+
           df <- sols() %>%
             mutate(across(where(is.numeric), 
-                          ~if_else(abs(.) < 1, round(., digits = 4), round(., digits = 0)))) %>%
+                          ~if_else(abs(.) < 1, round(., digits = 4), ifelse(abs(.) < 10,round(., digits = 2), round(., digits = 0))))) %>%
             mutate(across(where(is.numeric), ~as.numeric(gsub("-", "", as.character(.)))))
 
           df <- as.data.frame(df)
@@ -2536,7 +2539,6 @@ server <- function(input, output, session) {
     }
       
       if (nrow(df) == 0 || ncol(df) == 0) {
-        shinyjs::hide("save_ahp")
         return(
           data.frame(Message = "None of the values match these criteria."))
       }
@@ -2565,12 +2567,14 @@ server <- function(input, output, session) {
     bo = best_option()
   
     }
-      bo = bo %>%mutate(across(where(is.numeric), ~as.numeric(gsub("-", "", as.character(.)))))
       
+      bo = bo %>%mutate(across(where(is.numeric), 
+                               ~if_else(abs(.) < 1, round(., digits = 4), ifelse(abs(.) < 10,round(., digits = 2), round(., digits = 0)))))%>%
+        mutate(across(where(is.numeric), ~gsub("-", "", as.character(.))))
       
       # datatable(bo,  colnames = names(bo), rownames = FALSE, escape = FALSE, options = list(dom = 't', paging = FALSE,bSort = FALSE))
       bo
-  },colnames = T )
+  },colnames = T)
     
     observe({
       req(sols(),range_controlled(),objectives())
@@ -2756,7 +2760,10 @@ server <- function(input, output, session) {
       webshot::webshot("temp2.html", file = file, cliprect = "viewport",vwidth = 900,
                        vheight = 900)
       shinyjs::hide("spinner_download_ahp")  
-
+      file.remove("temp.html")
+      unlink("temp_files", recursive = TRUE)
+      unlink("www", recursive = TRUE)
+      
     }
   )
  
