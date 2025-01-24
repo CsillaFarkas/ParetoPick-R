@@ -890,7 +890,7 @@ plt_share_con = function(dat){
   # find a nice/clear way to plot this
   grp = mesrs %>% mutate(Cluster = as.factor(Cluster))%>%
     pivot_longer(cols = -Cluster, names_to = "Variable", values_to = "Value")
-  
+  grp$Value = grp$Value*100
   p = ggplot(grp, aes(x = Variable, y = Value, fill = Cluster)) +
     geom_boxplot(position = position_dodge(width = 0.75)) +
     scale_y_continuous(expand = c(0.02, 0.02),limits=c(0,105))+
