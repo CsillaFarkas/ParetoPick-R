@@ -887,13 +887,6 @@ server <- function(input, output, session) {
         # measure plot prep 
           if (file.exists("../input/hru_in_optima.RDS")) {
             
-              # cm(
-              #   pull_shp(
-              #     layername = "hru",
-              #     optims = eve,
-              #     hru_in_opt_path = "../input/hru_in_optima.RDS"
-              #   )
-              # )
             req(cm())
             cmf(fit_optims(cm=cm(),optims=eve,hru_in_opt_path = "../input/hru_in_optima.RDS"))
            
@@ -919,7 +912,9 @@ server <- function(input, output, session) {
       values = sel_tay()
       
       mv <- fit1() %>%  filter(across(all_of(cols), ~ . %in% values))
+      
       hru_one = plt_sel(shp = cmf(), opti_sel = mv$optimum)
+      
       mes = read.csv("../data/measure_location.csv")
       
       
@@ -1052,8 +1047,8 @@ server <- function(input, output, session) {
     te = fml[yo$id,]   # te <- fit()[yo$id,] would not work!!
     
     ete <- te
- 
-    opt_sel_csv <<- dimnames(ete)[1] #optimum number for export
+    
+    m_opt <<- fit()%>% rownames_to_column("optimum") %>% filter(across(all_of(objectives()), ~ . %in% ete))
     
     er(ete)
     
@@ -1072,9 +1067,9 @@ server <- function(input, output, session) {
       }else{new_colnms = colnms}
       
       
-      lclick <<- as.data.frame(er())
+      lclick <<- cbind(m_opt$optimum,as.data.frame(er()))
       
-      colnames(lclick) <- new_colnms
+      colnames(lclick) <- c("optimum",new_colnms)
       lclick <- lclick %>%
         mutate(across(where(is.numeric), ~ if_else(
           abs(.) < 1, round(., digits = 4), ifelse(abs(.) < 10, round(., digits = 2), round(., digits = 0))
@@ -1089,14 +1084,13 @@ server <- function(input, output, session) {
   observeEvent(input$save_click_line,{
     
     if(input$save_click_line){
-      req(lclick)
+      req(m_opt)
       if(file.exists(paste0(output_dir,"selected_optima.csv"))){
-      lclick <- cbind(optimum = opt_sel_csv, lclick)
-      write.table(lclick, file = paste0(output_dir,"selected_optima.csv"), sep = ",",
+        
+      write.table(m_opt, file = paste0(output_dir,"selected_optima.csv"), sep = ",",
                   append = TRUE, col.names = FALSE, row.names = FALSE)
       
-    }else{lclick <- cbind(optimum = rownames(lclick), lclick)
-           write.csv(lclick,file=paste0(output_dir,"selected_optima.csv"),row.names = F)
+    }else{write.csv(m_opt,file=paste0(output_dir,"selected_optima.csv"),row.names = F)
     
     }}
   })
