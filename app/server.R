@@ -1053,6 +1053,8 @@ server <- function(input, output, session) {
     
     ete <- te
  
+    opt_sel_csv <<- dimnames(ete)[1] #optimum number for export
+    
     er(ete)
     
     colnms = objectives()
@@ -1089,7 +1091,7 @@ server <- function(input, output, session) {
     if(input$save_click_line){
       req(lclick)
       if(file.exists(paste0(output_dir,"selected_optima.csv"))){
-      lclick <- cbind(optimum = rownames(lclick), lclick)
+      lclick <- cbind(optimum = opt_sel_csv, lclick)
       write.table(lclick, file = paste0(output_dir,"selected_optima.csv"), sep = ",",
                   append = TRUE, col.names = FALSE, row.names = FALSE)
       
