@@ -2748,8 +2748,8 @@ server <- function(input, output, session) {
     content = function(file) {
       shinyjs::show("spinner_download_ahp")  
       mp =single_meas_fun()[[1]]
-      saveWidget(mp, "temp2.html", selfcontained = FALSE)
-      webshot::webshot("temp2.html", file = file, cliprect = "viewport",vwidth = 900,
+      saveWidget(mp, "temp.html", selfcontained = FALSE)
+      webshot::webshot("temp.html", file = file, cliprect = "viewport",vwidth = 900,
                        vheight = 900)
       shinyjs::hide("spinner_download_ahp")  
       file.remove("temp.html")
