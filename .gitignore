@@ -13,5 +13,3 @@ data/hru.dbf
 data/rou_unit.con
 data/paret_fitness.txt
 data/pareto_genomex.txt
-renv.txt
-renv/
