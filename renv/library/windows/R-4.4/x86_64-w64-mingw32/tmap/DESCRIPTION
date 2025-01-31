@@ -1,0 +1,63 @@
+Package: tmap
+Title: Thematic Maps
+Version: 3.99.9001
+Authors@R: c(
+    person("Martijn", "Tennekes", , "mtennekes@gmail.com", role = c("aut", "cre")),
+    person("Jakub", "Nowosad", , "nowosad.jakub@gmail.com", role = "ctb"),
+    person("Joel", "Gombin", , "joel.gombin@gmail.com", role = "ctb"),
+    person("Sebastian", "Jeworutzki", , "Sebastian.Jeworutzki@rub.de", role = "ctb"),
+    person("Kent", "Russell", , "kent.russell@timelyportfolio.com", role = "ctb"),
+    person("Richard", "Zijdeman", , "richard.zijdeman@iisg.nl", role = "ctb"),
+    person("John", "Clouse", , "johnaclouse@gmail.com", role = "ctb"),
+    person("Robin", "Lovelace", , "rob00x@gmail.com", role = "ctb"),
+    person("Jannes", "Muenchow", , "jannes.muenchow@uni-jena.de", role = "ctb"),
+    person("Olivier", "Roy", role = "ctb")
+  )
+Description: Thematic maps are geographical maps in which spatial data
+    distributions are visualized. This package offers a flexible,
+    layer-based, and easy to use approach to create thematic maps, such as
+    choropleths and bubble maps.
+License: GPL-3
+URL: https://github.com/r-tmap/tmap, https://r-tmap.github.io/tmap/
+BugReports: https://github.com/r-tmap/tmap/issues
+Depends: R (>= 3.6.0)
+Imports: classInt (>= 0.4-3), cols4all (>= 0.7-1), data.table, grid,
+        htmltools, htmlwidgets, leafem (>= 0.1), leafgl, leaflegend,
+        leaflet (>= 2.0.2), leafsync, methods, rlang, sf (>= 0.9-3),
+        stars (>= 0.4-2), stats, tmaptools (>= 3.1), units (>= 0.6-1),
+        widgetframe
+Suggests: av, cartogram, colorspace, dplyr, ggplot2, gifski, knitr,
+        maptiles, osmdata, png, rmapshaper, rmarkdown, shiny, terra,
+        testthat (>= 3.2.0), tidyr
+VignetteBuilder: knitr
+Config/Needs/check: Nowosad/spDataLarge, lwgeom
+Config/Needs/coverage: Nowosad/spDataLarge, lwgeom
+Config/testthat/edition: 3
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.1
+RemoteType: github
+RemoteHost: api.github.com
+RemoteRepo: tmap
+RemoteUsername: r-tmap
+RemoteRef: HEAD
+RemoteSha: 66304f18cc14804195e2275d7040142bad0553a9
+GithubRepo: tmap
+GithubUsername: r-tmap
+GithubRef: HEAD
+GithubSHA1: 66304f18cc14804195e2275d7040142bad0553a9
+NeedsCompilation: no
+Packaged: 2024-07-24 13:16:35 UTC; wittekin
+Author: Martijn Tennekes [aut, cre],
+  Jakub Nowosad [ctb],
+  Joel Gombin [ctb],
+  Sebastian Jeworutzki [ctb],
+  Kent Russell [ctb],
+  Richard Zijdeman [ctb],
+  John Clouse [ctb],
+  Robin Lovelace [ctb],
+  Jannes Muenchow [ctb],
+  Olivier Roy [ctb]
+Maintainer: Martijn Tennekes <mtennekes@gmail.com>
+Built: R 4.4.0; ; 2024-07-24 13:16:40 UTC; windows
