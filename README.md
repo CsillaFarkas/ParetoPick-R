@@ -34,7 +34,7 @@ the project consists of six folders
 ├── input
 │   └── config.ini
 ├── data
-├── data for container
+├── data_for_container
 │   └── config.ini (for hard reset)
 └── output
 ```
@@ -160,7 +160,6 @@ The non-straighforward way is to delete object_names.RDS from the input folder a
 ## Prio 1
   * observe(pareto_fitness) better, currently needs a reload sometimes
   * remove zoom from downloaded plot
-  * check aep table, priority not properly considered?
 
 ## Prio 2
   * catch empty selection and replace "replacement has length zero" with "no optima fulfill these conditions"
