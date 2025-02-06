@@ -199,16 +199,20 @@ for(op in paste0("V", 1:nopt)){
   # Calculate pairwise distances using the Haversine formula
   
    dist_matrix <- distm(mit_i[, c('lon', 'lat')], fun = distHaversine)
-  
-  # Create spatial weights matrix using inverse distances
-    inv_dist_matrix <- 1 / dist_matrix
-    diag(inv_dist_matrix) <- 0  # Set the diagonal to zero to avoid infinity
-    
-    total_elements <- length(inv_dist_matrix)
-    
-    non_zero_count <- sum(inv_dist_matrix != 0)
-    
-    pnz <- non_zero_count / total_elements #proportion on zero
+   # Create spatial weights matrix using inverse distances
+   inv_dist_matrix <- 1 / dist_matrix
+   diag(inv_dist_matrix) <- 0  # Set the diagonal to zero to avoid infinity
+   
+   # distance threshold for balancing computational efficiency and small scale information
+     if(as.numeric(object.size(inv_dist_matrix)) / (1024^2) > 70){
+      dist_thresh <- quantile(dist_matrix, probs = 0.65)
+      
+      inv_dist_matrix[dist_matrix > dist_thresh] <- 0  #everything further than threshold not considered
+      }
+   
+    # total_elements <- length(inv_dist_matrix)
+    # non_zero_count <- sum(inv_dist_matrix != 0)
+    # pnz <- non_zero_count / total_elements #proportion on zero
     
     #work with sparse matrix if over 100Mb or high share of zeroes
     # if(as.numeric(object.size(inv_dist_matrix)) / (1024^2) > 100 || pnz < -0.1){
