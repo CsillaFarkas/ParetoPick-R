@@ -163,6 +163,4 @@ The non-straighforward way is to delete object_names.RDS from the input folder a
 
 ## Prio 2
   * catch empty selection and replace "replacement has length zero" with "no optima fulfill these conditions"
-  * add a small spinner to the Check Data button to clarify that it takes a while
-  * output of convert_optain is printed twice, would look better with single-line output
-  
+  * add a small spinner to the Check Data button to clarify that it takes a while  
