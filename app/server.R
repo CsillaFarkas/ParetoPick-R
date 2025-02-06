@@ -486,11 +486,11 @@ server <- function(input, output, session) {
       
       # Check if the process is running
       if (!is.null(optain) && optain$is_alive()) {
-        new_output <- optain$read_output_lines()
+        new_output <- isolate(optain$read_output_lines())
         
         if (length(new_output) > 0) {
           current_output <- script_output()
-          updated_output <- c(current_output, new_output)
+          updated_output <- unique(c(current_output, new_output))
           
           if (length(updated_output) > 10) {
             updated_output <- tail(updated_output, 10)
