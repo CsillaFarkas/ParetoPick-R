@@ -3,7 +3,7 @@
 .RData
 .Ruserdata
 .Dockerfile.txt
-.Dockerfile
+Dockerfile
 other/
 output/appendix sydney paper/
 data/hru.con
