@@ -524,7 +524,7 @@ plt_freq = function(data,lo, la, buffers , remaining, dispal = pal, mes=mes, leg
   custom_legend <- HTML(
     paste0(
       "<div style='background: rgba(255, 255, 255, 0.8); padding: 4px; border-radius: 2px; font-size: 12px; line-height: 1;'>", # Compact line height
-      "<strong>Measure<br>Frequency</strong><br>",
+      "<strong>Measure<br>Frequency</strong><br><br>",
       paste(
         sapply(seq_along(mes), function(i) {
           paste0(
@@ -549,7 +549,7 @@ plt_freq = function(data,lo, la, buffers , remaining, dispal = pal, mes=mes, leg
   )}else{custom_legend <- HTML(
     paste0(
       "<div style='background: rgba(255, 255, 255, 0.8); padding: 4px; border-radius: 2px; font-size: 12px; line-height: 1;'>",
-      "<strong>Measure<br>Frequency</strong><br>",
+      "<strong>Measure<br>Frequency</strong><br><br>",
       paste(
         mapply(function(measure, colors) {
           paste0(
@@ -678,8 +678,8 @@ plt_boxpl_clus = function(dat, sel, all_obs,mima){
           panel.grid.major = element_line(color = "lightgray", size = 0.3),
           panel.grid.minor = element_blank(),
           panel.border = element_blank(),
-          axis.text.y = element_text(size=9),
-          axis.text.x = element_text(size = 12),
+          axis.text.y = element_text(size=14),
+          axis.text.x = element_text(size = 22),
           axis.title = element_blank(),
           legend.position = "none"
         )+
@@ -693,8 +693,8 @@ plt_boxpl_clus = function(dat, sel, all_obs,mima){
         panel.grid.major = element_line(color = "lightgray", size = 0.3),
         panel.grid.minor = element_blank(),
         panel.border = element_blank(),
-        axis.text.y = element_text(size=9),
-        axis.text.x = element_text(size = 12),
+        axis.text.y = element_text(size=14),
+        axis.text.x = element_text(size = 22),
         axis.title = element_blank(),
         legend.position = "none"
       )+
@@ -898,8 +898,8 @@ plt_share_con = function(dat){
     theme_minimal() + 
     theme(
       plot.title =  element_blank(),
-      axis.text.y = element_text(size = 15),
-      axis.text.x = element_text(size = 18),
+      axis.text.y = element_text(size = 18),
+      axis.text.x = element_text(size = 28),
       axis.title = element_blank(),
       legend.position = "none"
     )+geom_text(data = grp, aes(x = Variable, y = 100, label = Cluster), 
@@ -1115,8 +1115,8 @@ pcs_vs_var <- function(dat, x_var, y_var, col_var, size_var,flip=F, sel_tab=NULL
             panel.grid.major = element_line(color = "lightgray", size = 0.3),
             panel.grid.minor = element_blank(),
             panel.border = element_blank(),
-            axis.text = element_text(size = 12),
-            axis.title = element_text(size = 16),
+            axis.text = element_text(size = 16),
+            axis.title = element_text(size = 20),
             legend.position = "right", 
             legend.text = element_text(size=13.5),
             legend.title = element_text(size=15))+
