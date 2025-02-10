@@ -16,6 +16,10 @@ ParetoPick-R also integrates an Analytical Hierarchy Process (AHP) allowing the 
 
 Please note that the Python code used in this app was written by [S. White](https://github.com/SydneyEWhite).
 
+# Requirements
+R version 4.4.2 or higher
+package "promises" version 1.3.2 or higher
+
 # Folder Structure
 the project consists of six folders
 
