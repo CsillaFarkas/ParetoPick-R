@@ -2,6 +2,8 @@
 .Rhistory
 .RData
 .Ruserdata
+.Dockerfile.txt
+.Dockerfile
 other/
 output/appendix sydney paper/
 data/hru.con
