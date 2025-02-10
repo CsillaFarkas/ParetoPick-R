@@ -218,7 +218,7 @@ server <- function(input, output, session) {
     
     ##get new objective names, make fit() and objectives() and f_scaled
     observeEvent(input$save_par_fiti, {
-      short <<- c(input$short1, input$short2, input$short3, input$short4)
+      short <<- c(trimws(input$short1), trimws(input$short2), trimws(input$short3), trimws(input$short4))
       objectives(short)
       saveRDS(short, file = "../input/object_names.RDS")
       
