@@ -1830,15 +1830,15 @@ server <- function(input, output, session) {
     updateTextInput(session, "size", value = axiselected()[4])
     
     empty_count2 <- sum(input$axisx == "", input$axisy == "", input$colour == "", input$size == "")
-    if (empty_count2 < 2){
+    if (empty_count2 == 0){
       write_pca_ini(var1=input$element1,var2=input$element2,var3=input$element3,var4=input$element4,
                     var1_lab=input$axisx,var2_lab=input$axisy,var3_lab=input$colour,var4_lab=input$size)
     }
     
     output$axis_text <- renderText({
       
-      if (empty_count2 >= 2) {
-        "Please make selections for at least three elements."
+      if (empty_count2 >= 1) {
+        "Please make selections for all four elements."
       } else {
         HTML(paste("X Axis: ", ifelse(input$element1 == "", "No selection", input$axisx),
                    "<br/>Y Axis: ", ifelse(input$element2 == "", "No selection", input$axisy),
