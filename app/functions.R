@@ -834,9 +834,9 @@ plot_parline = function(datt,sizz=rep(.5, length(unique(datt$id))),colols=rep("g
       annotate("rect", xmin=1, xmax=4, ymin=0.3333333, ymax=0.6666667,  alpha=0.15, fill="#fd7e14") +
       annotate("rect", xmin=1, xmax=4, ymin=0.6666667, ymax=1,    alpha=0.2, fill="#28a745") +
     
-    annotate("text", x = 4.04, y = 0.1666666, label = "worst",  angle=90, size = 6) + # Adjust hjust for alignment
-    annotate("text", x = 4.04, y = 0.5, label = "medium",  angle=90, size = 6) +
-    annotate("text", x = 4.04, y = 0.8333333, label = "best",  angle=90, size = 6) +
+    annotate("text", x = 4.04, y = 0.1666666, label = "worst",  angle=90, size = 10) + # Adjust hjust for alignment
+    annotate("text", x = 4.04, y = 0.5, label = "medium",  angle=90, size = 10) +
+    annotate("text", x = 4.04, y = 0.8333333, label = "best",  angle=90, size = 10) +
     
     geom_line(
       aes(group = id),
@@ -847,9 +847,9 @@ plot_parline = function(datt,sizz=rep(.5, length(unique(datt$id))),colols=rep("g
     theme_minimal() +
     theme(legend.position = "none",
           plot.title = element_blank(),
-          axis.text.y = element_text(size = 15L),
-          axis.text.x = element_text(size = 14L),
-          axis.title.y = element_text(size = 15),
+          axis.text.y = element_text(size = 18),
+          axis.text.x = element_text(size = 20),
+          axis.title.y = element_text(size = 18),
           axis.title.x = element_blank()
     )+
     scale_y_continuous(limits = c(0,1)) +
