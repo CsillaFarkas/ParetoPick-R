@@ -52,7 +52,7 @@ nswrm_priorities <- function(lu) {
   prio_groups <- list(
     structural = c("pond", "constr_wetland", "wetland"), # structural elements (1st prio)
     land_use = c("hedge", "buffer", "grassslope", "terrace", "floodres", "rip_forest", "afforest"), #land use (2nd prio)
-    management = c("lowtillcc", "lowtill", "droughtplt", "notill") # management (3rd prio)
+    management = c("lowtillcc", "lowtill", "droughtplt", "notill", "intercrop") # management (3rd prio)
   )
   
   prio <- data.frame(nswrm = character(), priority = integer(), mngmt = integer(), stringsAsFactors = FALSE)
@@ -294,6 +294,9 @@ for(op in paste0("V", 1:nopt)){
     colnames(ru) <- ru_names  
     ru = ru %>% select(c(id, obj_typ, area, frac)) %>% filter(id != "aqu") %>% filter(obj_typ != "")
     colnames(ru) = c("obj_id", "obj_typ_1", "area", "frac_1")#path dependent name
+    
+    ru$obj_id = as.numeric(ru$obj_id)
+    ru$frac_1 = as.numeric(ru$frac_1)
     
   }else{
   ru = read.table("../data/rout_unit.con",header = T, fill = TRUE,
