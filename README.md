@@ -152,7 +152,7 @@ The non-straighforward way is to delete object_names.RDS from the input folder a
 
 * General 
   * as "land use" measures currently only hedge, buffer and grassslope, terrace, floodres, rip_forest, afforest - if more needed global.R, functions.R (write_corr) and convert_optain require adapting
-  * nswrm_priorities() function currently considers: pond, constr_wetland, wetland, hedge, buffer, grassslope, lowtillcc, lowtill, notill, droughtplt, terrace, floodres, rip_forest, afforest
+  * nswrm_priorities() function currently considers: pond, constr_wetland, wetland, hedge, buffer, grassslope, lowtillcc, lowtill, notill, droughtplt, terrace, floodres, rip_forest, afforest and intercrop
   * do the current default settings produce reasonable cluster outputs across all catchments? the default currently does not perform outlier testing 
   * in AHP, the initial state of the pairwise comparison as "Equal" amplifies the mathematical definition of inconsistency, therefore only when at least three sliders are NOT set to "Equal" is inconsistency considered at all
   * stratified variables such as lowflow in the Schoeps do not work in the tool, the sliders cannot be moved
