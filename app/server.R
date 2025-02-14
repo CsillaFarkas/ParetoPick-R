@@ -739,7 +739,6 @@ server <- function(input, output, session) {
         
         ## Configure tab and Analysis turned off (the latter would still work but with old data)
         if(!file.exists("../input/var_corr_par.csv")){
-          shinyjs::hide("config_all")
           shinyjs::hide("main_analysis")
           
           shinyjs::hide("show_extra_dat") #AHP hide option to show clusters
@@ -763,7 +762,10 @@ server <- function(input, output, session) {
       }
     })
     
-   
+   observe({
+     invalidateLater(1500)
+     if(!file.exists("../input/var_corr_par.csv")){shinyjs::hide("config_all") #otherwise not reactive enough
+}else{shinyjs::show("config_all")}})
     
     
    if(file.exists("../input/units.RDS")){#shinyjs::hide(id="units")
