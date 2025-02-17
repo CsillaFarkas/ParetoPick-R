@@ -418,12 +418,12 @@ run_python_script <- function(path_script="",pca_status) {
     # "python",  #old - when running with .py files
     # c(path_script),
     path_script,
-    stdout = "|", stderr = "|"
+    stdout = "|", stderr = NULL
   )
   
   while (p$is_alive()) {
     new_output <- p$read_output_lines()
-    new_output <- c(new_output, p$read_error_lines())
+    # new_output <- c(new_output, p$read_error_lines())
     if (length(new_output) > 0) {
       pca_status(paste(pca_status(), paste(new_output, collapse = "\n"), sep = "\n"))
     }
@@ -431,7 +431,7 @@ run_python_script <- function(path_script="",pca_status) {
   }
   
   final_output <- p$read_all_output_lines()
-  final_output <- c(final_output, p$read_all_error_lines())
+  # final_output <- c(final_output, p$read_all_error_lines())
   if (length(final_output) > 0) {
     pca_status(paste(pca_status(), paste(final_output, collapse = "\n"), sep = "\n"))
   }
