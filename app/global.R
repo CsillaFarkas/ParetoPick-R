@@ -21,7 +21,7 @@ foo1(c("configr", "corrplot", "DT", "fs", "fst",
        "quanteda",   "RColorBrewer",   "reticulate",
        "scales", "sf", "shiny", "shinycssloaders", "shinydashboard",
        "shinyFiles", "shinyjs","shinythemes",  "shinyWidgets",  "sp",
-       "spdep",    "tidyverse",  "tmap",  "viridis", "webshot"))
+       "spdep",    "tidyverse",  "tmap",  "viridis", "webshot", "zip"))
 
 
 options(shiny.maxRequestSize = 1000*1024^2)
