@@ -877,10 +877,11 @@ server <- function(input, output, session) {
         actionButton("map_sel", "Plot measure implementation map of selected optimum")
         } 
     })
-    observe({ if(clickpoint_button()){shinyjs::show("download_play_id")}})
+    # observe({ if(clickpoint_button()){shinyjs::show("download_play_id")}})
 
     observeEvent(input$map_sel,{
       req(fit(),sel_tay(),objectives())
+      shinyjs::show("download_play_id")
       play_running(TRUE) #for spinner
       
       map_plotted(TRUE)
@@ -949,6 +950,52 @@ server <- function(input, output, session) {
           }
     )
     
+    
+    shp_single_meas = function(shp=T){
+      req(cmf(),fit(), sel_tay(), objectives())
+      
+      fit1(fit() %>% rownames_to_column("optimum"))
+      
+      cols = objectives()
+      values = sel_tay()
+      
+      mv <- fit1() %>%  filter(across(all_of(cols), ~ . %in% values))
+      
+      # make sf files
+      hru_one = plt_sel(shp = cmf(), opti_sel = mv$optimum)
+      
+      if (shp) {
+        data = hru_one %>% subset(!st_is_empty(geometry))
+      } else{
+        data = names(hru_one)[grep("Optim", names(hru_one))] #col_sel
+      }
+      return(data)
+      
+    }
+    
+    output$download_shp <- downloadHandler(
+      
+      filename = function(){
+        curt = format(Sys.time(), "_%Y%m%d")
+        paste0(shp_single_meas(shp=F),"_",curt, ".zip")
+      },
+      
+      content = function(file) {
+        shinyjs::show("spinner_download_shp")
+        data <- shp_single_meas()
+        out_name <- shp_single_meas(shp=F)
+        sf::st_write(data,paste0(out_name,".shp"), driver = "ESRI Shapefile")
+        zip::zip( paste0(out_name,".zip"), c( paste0(out_name,".shp"), paste0(out_name,".shx"),
+                                              paste0(out_name,".dbf"), paste0(out_name,".prj")))
+        
+        file.rename(paste0(out_name,".zip"), file) #deletes zip from wd
+        file.remove(c( paste0(out_name,".shp"), paste0(out_name,".shx"),
+                       paste0(out_name,".dbf"), paste0(out_name,".prj")))
+        shinyjs::hide("spinner_download_shp")
+        
+      }
+    )
+    
       
     output$spinner_play <- renderUI({
       if(isTRUE(play_running())) {
@@ -959,6 +1006,10 @@ server <- function(input, output, session) {
         return(NULL) 
       }
     })
+    
+   
+    
+    
   
     
     

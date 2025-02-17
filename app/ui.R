@@ -580,12 +580,21 @@ ui <-
                                    ,
                                    div(
                                  style = "display: inline-block; vertical-align: top; margin-left: 0px; margin-top: 5px;",
-                                       downloadButton("download_pm", "Download map"),
+                                       downloadButton("download_pm", "Download map as .png"),
                                  div(
                                    id = "spinner_download_play",style = "display: none;",
                                    style = "display: none; vertical-align: top; margin-left: 0px; margin-top: 5px;",
                                    div(class = "spinspin")
-                                  ) )
+                                  ) ),
+                                 br(),
+                                 div(
+                                   style = "display: inline-block; vertical-align: top; margin-left: 0px; margin-top: 5px;",
+                                   downloadButton("download_shp", "Download map as shapefile"),
+                                   div(
+                                     id = "spinner_download_shp",style = "display: none;",
+                                     style = "display: none; vertical-align: top; margin-left: 0px; margin-top: 5px;",
+                                     div(class = "spinspin")
+                                   ) )
                                )%>%hidden(),
 
                               br(),
