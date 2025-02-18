@@ -162,10 +162,9 @@ The non-straighforward way is to delete object_names.RDS from the input folder a
 
 # To do
 ## Prio 1
-  * observe(pareto_fitness) better, currently needs a reload sometimes
+  * docker image
   * remove zoom from downloaded plot
-  * shapefile download to AHP and Cluster Analysis tab
-  
+   
 ## Prio 2
   * catch empty selection and replace "replacement has length zero" with "no optima fulfill these conditions"
   * add a small spinner to the Check Data button to clarify that it takes a while  
