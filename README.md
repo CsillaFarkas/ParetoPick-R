@@ -164,7 +164,7 @@ The non-straighforward way is to delete object_names.RDS from the input folder a
 ## Prio 1
   * docker image
   * remove zoom from downloaded plot
-   
+  * plots across mixed ranges clear signs
 ## Prio 2
   * catch empty selection and replace "replacement has length zero" with "no optima fulfill these conditions"
   * add a small spinner to the Check Data button to clarify that it takes a while  
