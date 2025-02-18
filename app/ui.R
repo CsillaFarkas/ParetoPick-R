@@ -1000,7 +1000,17 @@ ui <-
                            #   downloadButton("download_meas_plot", "Download Plot")
                            # )
                            #
-
+                           ,
+                           div(id="ca_shp",
+                               
+                               style = "display: inline-block; vertical-align: top; margin-left: 0px; margin-top: 5px;",
+                               downloadButton("ca_shp_download", label ="Download maps as .shp"),
+                               div(
+                                 id = "ca_shp_spin",style = "display: none;",
+                                 style = "display: none; vertical-align: top; margin-left: 0px; margin-top: 5px;",
+                                 div(class = "spinspin")
+                               )  
+                           )%>%hidden()
                          )),
                        tags$script(HTML("
                         function toggleSidebar(show) {
@@ -1143,12 +1153,21 @@ ui <-
                                     ),
                                  div(
                                    style = "display: inline-block; vertical-align: top; margin-left: 0px; margin-top: 5px;",
-                                 downloadButton(outputId="download_am", label ="Download best option map"),
+                                 downloadButton(outputId="download_am", label ="Download map as .png"),
                                  div(
                                    id = "spinner_download_ahp",style = "display: none;",
                                    style = "display: none; vertical-align: top; margin-left: 0px; margin-top: 5px;",
                                    div(class = "spinspin")
-                                 )  )
+                                 )  ),
+                                 br(),
+                                 div(
+                                   style = "display: inline-block; vertical-align: top; margin-left: 0px; margin-top: 5px;",
+                                   downloadButton(outputId="ahp_shp_download", label ="Download map as .shp"),
+                                   div(
+                                     id = "ahp_shp_spin",style = "display: none;",
+                                     style = "display: none; vertical-align: top; margin-left: 0px; margin-top: 5px;",
+                                     div(class = "spinspin")
+                                   )  )
                                  )%>%hidden()
                            )
                            )

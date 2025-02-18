@@ -977,7 +977,7 @@ server <- function(input, output, session) {
       
       filename = function(){
         curt = format(Sys.time(), "_%Y%m%d")
-        paste0(shp_single_meas(shp=F),"_",curt, ".zip")
+        paste0(shp_single_meas(shp=F),curt, ".zip")
       },
       
       content = function(file) {
@@ -2251,8 +2251,6 @@ server <- function(input, output, session) {
           selected_row <- input$antab_rows_selected
           selected_data <- sols()[selected_row,objectives()]  
           
-          fml2 <<- selected_data
-          
         }else{selected_data <- NULL}
         
       return(plt_sc_optima(
@@ -2423,7 +2421,7 @@ server <- function(input, output, session) {
     selected_data <- sols()[selected_row,]
     
    
-    hru_sel = plt_sel(shp=cmf(),opti_sel = selected_data$optimum)
+    hru_sel <- plt_sel(shp=cmf(),opti_sel = selected_data$optimum)
     mes = read.csv("../data/measure_location.csv")
     
     col_sel = names(hru_sel)[grep("Optim",names(hru_sel))]  #variable length of columns selected
@@ -2444,7 +2442,7 @@ server <- function(input, output, session) {
   
   observeEvent(input$plt_opti,{
     selected_row <- isolate(input$antab_rows_selected)
-    
+    shinyjs::show("ca_shp")
     if (is.null(selected_row)) {
       
       shinyjs::show(id = "no_row")
@@ -2467,16 +2465,47 @@ server <- function(input, output, session) {
     shinyjs::toggle("plot_spinner", condition = is_rendering())
   })
   
-  #pulling with html tags does not work for leaflet
-  # output$download_meas_plot <- downloadHandler(
-    # filename = function() {
-    #   paste(ifelse(input$meas_plot_savename == "", "measure_implementation", input$meas_plot_savename), ".html", sep = "")
-    # },
-    #      
-    #       save_tags(comp_fun(), filename, selfcontained=TRUE)
-    #   )
-
+  shp_ca <- function(shp=T){
+    req(sols(),cmf()) 
+    selected_row <- isolate(input$antab_rows_selected)
+    selected_data <- sols()[selected_row,]
+    
+    hru_sel <- plt_sel(shp=cmf(),opti_sel = selected_data$optimum)
+    
+    
+    if (shp){
+      data = hru_sel %>% subset(!st_is_empty(geometry))
+    }else{
+      data = names(hru_sel)[grep("Optim", names(hru_sel))] #col_sel
+      data = paste0("Optima_",paste0(gsub("Optimum","",data),collapse = ""))
+    }
+    return(data)
+    
+  }
   
+  output$ca_shp_download <- downloadHandler(
+    
+    filename = function(){
+      curt = format(Sys.time(), "_%Y%m%d")
+      paste0(shp_ca(shp=F),curt, ".zip")
+    },
+    
+    content = function(file) {
+      shinyjs::show("ca_shp_spin")
+      data <- shp_ca()
+      out_name <- shp_ca(shp=F)
+      sf::st_write(data,paste0(out_name,".shp"), driver = "ESRI Shapefile")
+      zip::zip( paste0(out_name,".zip"), c( paste0(out_name,".shp"), paste0(out_name,".shx"),
+                                            paste0(out_name,".dbf"), paste0(out_name,".prj")))
+      
+      file.rename(paste0(out_name,".zip"), file) #deletes zip from wd
+      file.remove(c( paste0(out_name,".shp"), paste0(out_name,".shx"),
+                     paste0(out_name,".dbf"), paste0(out_name,".prj")))
+      shinyjs::hide("ca_shp_spin")
+      
+    }
+  )
+
   
   ### AHP ####
   observeEvent(input$tabs == "ahp",{
@@ -2808,6 +2837,44 @@ server <- function(input, output, session) {
       file.remove("temp.html")
       unlink("temp_files", recursive = TRUE)
       }
+  )
+  
+  shp_ahp = function(shp=T){
+    req(boo(),lalo(),cmf())
+    
+    hru_one = plt_sel(shp=cmf(),opti_sel = boo())
+    
+    
+    if (shp) {
+      data = hru_one %>% subset(!st_is_empty(geometry))
+    } else{
+      data = names(hru_one)[grep("Optim", names(hru_one))] #col_sel
+    }
+    return(data)
+    
+  }
+  
+  output$ahp_shp_download <- downloadHandler(
+    
+    filename = function(){
+      curt = format(Sys.time(), "_%Y%m%d")
+      paste0(shp_ahp(shp=F),curt, ".zip")
+    },
+    
+    content = function(file) {
+      shinyjs::show("ahp_shp_spin")
+      data <- shp_ahp()
+      out_name <- shp_ahp(shp=F)
+      sf::st_write(data,paste0(out_name,".shp"), driver = "ESRI Shapefile")
+      zip::zip( paste0(out_name,".zip"), c( paste0(out_name,".shp"), paste0(out_name,".shx"),
+                                            paste0(out_name,".dbf"), paste0(out_name,".prj")))
+      
+      file.rename(paste0(out_name,".zip"), file) #deletes zip from wd
+      file.remove(c( paste0(out_name,".shp"), paste0(out_name,".shx"),
+                     paste0(out_name,".dbf"), paste0(out_name,".prj")))
+      shinyjs::hide("ahp_shp_spin")
+      
+    }
   )
  
   
