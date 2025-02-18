@@ -1027,8 +1027,8 @@ plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NUL
   }
   #   
   p=p+geom_point(shape = 21, stroke = 0.5 ) +
-    viridis::scale_fill_viridis(alpha = 0.8, name = col_var,labels = function(x) abs(as.numeric(x))) +
-    scale_size(range = c(1, 10), name = size_var,labels = function(x) abs(as.numeric(x))) +
+    viridis::scale_fill_viridis(alpha = 0.8, name = col_var,labels = function(x) abs(as.numeric(x)), limits=range(whole[[col_var]], na.rm = TRUE)) +
+    scale_size(range = c(1, 10),limits=range(whole[[size_var]], na.rm = TRUE) , name = size_var,labels = function(x) abs(as.numeric(x))) +
     theme_bw() +
     theme(panel.background = element_blank(),
           panel.grid.major = element_line(color = "lightgray", size = 0.3),
@@ -1081,10 +1081,10 @@ plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NUL
   if (!is.null(all_extra_data)) {
 
     p <- p +
-      geom_point(data = all_extra_data, aes(x = .data[[x_var]], y = .data[[y_var]], shape = set, color = set, size = .data[[size_var]]),
+      geom_point(data = all_extra_data, aes(x = .data[[x_var]], y = .data[[y_var]], shape = set, color = set, size = .data[[size_var]], fill = .data[[col_var]] ),
                   stroke = 1.8, show.legend = TRUE, alpha=0.7) +
       scale_shape_manual(labels = function(x) gsub("-", "", x),
-        values = c("cluster solutions" = 21, "AHP - best option" = 22, "Selection" =21, "Status Quo" = 17),name="") +
+        values = c("cluster solutions" = 21, "AHP - best option" = 22, "Selection" =21, "Status Quo" = 21),name="") +
       scale_color_manual(labels = function(x) gsub("-", "", x),
         values = c("cluster solutions" = "cyan", "AHP - best option" = "#FF4D4D", "Selection" = "black", "Status Quo" = "#FF00FF"),name="") +
       guides(color = guide_legend(override.aes = list(size = 5)),shape = guide_legend(override.aes = list(size = 5)))
