@@ -1095,7 +1095,7 @@ plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NUL
       scale_y_continuous(limits= range(whole[[y_var]], na.rm = TRUE),labels = function(x) {rem_min(x)})
 
   if(rev){
-    p = p+scale_y_reverse(labels = function(y) {rem_min(y)})+scale_x_reverse(labels = function(x) {rem_min(x)})}
+    p = p+scale_y_reverse(labels = function(y) {rem_min(y)}, limits= rev(range(whole[[y_var]], na.rm = TRUE)))+scale_x_reverse(labels = function(x) {rem_min(x)},limits= rev(range(whole[[x_var]], na.rm = TRUE)))}
 
   
   return(p)
