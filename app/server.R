@@ -41,9 +41,15 @@ server <- function(input, output, session) {
   best_option = reactiveVal(NULL)
   fit1 = reactiveVal()
   dat_matched = reactiveVal()
+
   buffers = reactiveVal(NULL)
   cmf = reactiveVal(NULL)
-
+  slider_mes_ini <- reactiveVal(FALSE)
+  opti_mima = reactiveVal(NULL)
+  memima_ini = reactiveVal(NULL)
+  mes_touched = reactiveVal(FALSE)
+  reset_move = reactiveVal(FALSE)
+  
   #control/limit range of objectives, works in combination with slider input$ran1 etc.
   default_vals = reactiveVal(list(ran1 = c(0,100),
                                   ran2 = c(0,100),
@@ -81,6 +87,8 @@ server <- function(input, output, session) {
  
   needs_buffer <- reactiveVal()
   hru_matcher <- reactiveVal()
+  hru_ever <- reactiveVal()
+  mt <- reactiveVal()
   aep_100 <- reactiveVal()
   aep_100_con <- reactiveVal()
   sel_opti <- reactiveVal()
@@ -246,7 +254,6 @@ server <- function(input, output, session) {
       data = read.table(pareto_path, header=F,stringsAsFactors=FALSE,sep = deli(pareto_path))
       names(data) = objectives()
       fit(data)
-      
       yo = fit() %>% mutate(across(everything(), ~ scales::rescale(.)))%>%mutate(id = row_number())
       f_scaled(yo)}
       
@@ -673,6 +680,87 @@ server <- function(input, output, session) {
       
     })
     
+    observe({ #create mt() for measure sliders
+      req(aep_100(), hru_ever())
+      ks = hru_ever() %>% select(-measure)
+
+      fk = aep_100()  %>% left_join(ks, by =c("hru"="id")) %>% select(-hru)
+      
+    
+      mt(fk %>%
+           group_by(nswrm, optims) %>%
+           summarize(distinct_aep = n_distinct(name), .groups = "drop") %>%
+           pivot_wider(names_from = optims, values_from = distinct_aep, values_fill = 0) %>%
+           column_to_rownames("nswrm") %>%  
+           t() %>%  
+           as.data.frame())
+      })
+    
+    observe({
+      req(mt())
+      memima_ini(rbind(
+        min = apply(mt(), 2, min, na.rm = TRUE),
+        max = apply(mt(), 2, max, na.rm = TRUE)
+      ))
+      })
+    
+    #measure slider
+    output$mes_sliders <- renderUI({
+      req(mt())
+      numeric_cols <- sapply(mt(), is.numeric)
+      sliders <- lapply(names(mt())[numeric_cols], function(col) {
+        sliderInput(inputId = paste0("slider_", col),
+                    label = col,
+                    min = min(mt()[[col]]),
+                    max = max(mt()[[col]]),
+                    step = 1,
+                    value = c(min(mt()[[col]]), max(mt()[[col]]))
+        )
+      })
+      
+      
+      slider_mes_ini(TRUE)
+      
+      sliders
+    })
+ 
+
+  observe({
+      req(slider_mes_ini(),mt(), fit())
+
+    numeric_cols <- names(mt())[sapply(mt(), is.numeric)]
+    values <- setNames(
+      lapply(numeric_cols, function(col) input[[paste0("slider_", col)]]),
+      numeric_cols
+    )
+    
+    if (any(sapply(values, is.null))) return()
+
+    names(values) = numeric_cols #slider current setting
+    
+    df_values <- as.data.frame(values)
+
+    df_first_values <- as.data.frame(memima_ini())
+    rownames(df_first_values) <- NULL
+    
+    if (!identical(df_values, df_first_values)) {#otherwise sometimes run too soon
+      isolate(mes_touched(TRUE))
+      
+
+      ff <- mt() %>%
+        rownames_to_column("optimum") %>%  # Store rownames
+        reduce(numeric_cols, function(df, col) {
+          df %>% filter(.data[[col]] >= values[[col]][1] & .data[[col]] <= values[[col]][2])
+        }, .init = .)
+      
+      mt_optis = ff$optimum #optima
+      opti_mima(fit() %>% rownames_to_column("optimum")%>%filter(optimum %in% mt_optis) %>% select(-optimum))
+      
+    }else{opti_mima(FALSE)}
+   
+  })
+
+    
     ## make or pull fit()
     observe({
       
@@ -684,7 +772,6 @@ server <- function(input, output, session) {
         new_col_data <- objectives()
         colnames(data) = new_col_data
         fit(data)
-
         yo = fit() %>% mutate(across(everything(), ~ scales::rescale(.)))%>%mutate(id = row_number())
         f_scaled(yo)
 
@@ -694,9 +781,9 @@ server <- function(input, output, session) {
         yo2 <- pull_high_range(fit(),num_order=T)
         rng_plt_axes(yo2)
         
-        output$uploaded_pareto <- renderText({"All Files found.
-                                               You can now examine the Pareto front.
-                                               How does it change when the objective ranges are modified?"})
+        # output$uploaded_pareto <- renderText({"All Files found.
+        #                                        You can now examine the Pareto front.
+        #                                        How does it change when the objective ranges are modified?"})
         
         
        ## adapt sliders in ahp and configure tab
@@ -790,19 +877,18 @@ server <- function(input, output, session) {
       }
     })
 
-   
-   
    observe({#for first_pareto, play_freq and scatter
      req(f_scaled(),objectives(),fit(),input$obj1,input$obj2,input$obj3,input$obj4)
      if(file.exists("../input/object_names.RDS")){
        objs <- objectives()
-     fit_data <- fit()
-     f_scaled_data <- f_scaled()
-     dat_matched(scaled_abs_match(minval_s=c(input$obj1[1],input$obj2[1],input$obj3[1],input$obj4[1]),
-                                  maxval_s=c(input$obj1[2],input$obj2[2],input$obj3[2],input$obj4[2]),
-                                  abs_tab = fit_data,scal_tab =f_scaled_data,
-                                  allobs = objs,smll=F))
-     
+       
+       fit_data <- fit()
+       f_scaled_data <- f_scaled()
+       dat_matched(scaled_abs_match(minval_s=c(input$obj1[1],input$obj2[1],input$obj3[1],input$obj4[1]),
+                                    maxval_s=c(input$obj1[2],input$obj2[2],input$obj3[2],input$obj4[2]),
+                                    abs_tab = fit_data,scal_tab =f_scaled_data,
+                                    allobs = objs,smll=F, mes_slider = mes_touched(), mes_df = opti_mima()))
+       
        df <- dat_matched()
        if(nrow(df) == 0 || ncol(df) == 0){
          output$ensure_sel <- renderText({
@@ -811,10 +897,17 @@ server <- function(input, output, session) {
        }else{output$ensure_sel <- renderText({paste("")})}
      }
      
-       
    })
  
- 
+
+   observe({
+     req(opti_mima())
+     if(nrow(opti_mima())== 0){
+       shinyjs::show("mes_empty")
+       output$mes_empty =  renderText({paste("None of the optima fall within the specified ranges. Please select different measure ranges!")
+    }) }else{shinyjs::hide("mes_empty")}
+   })
+  
     ## show rest of tab if all required data available
     observe({
       
@@ -859,7 +952,7 @@ server <- function(input, output, session) {
       dat = scaled_abs_match(minval_s=c(input$obj1[1],input$obj2[1],input$obj3[1],input$obj4[1]),
                              maxval_s=c(input$obj1[2],input$obj2[2],input$obj3[2],input$obj4[2]),
                              abs_tab = fit(),scal_tab = f_scaled(),
-                             allobs = objectives(),smll=F)
+                             allobs = objectives(),smll=F, mes_slider = mes_touched(), mes_df = opti_mima())
       #match clicked data point
       xc <- input$clickpoint$x
       yc <- input$clickpoint$y
@@ -958,7 +1051,6 @@ server <- function(input, output, session) {
       
       cols = objectives()
       values = sel_tay()
-      
       mv <- fit1() %>%  filter(across(all_of(cols), ~ . %in% values))
       
       # make sf files
@@ -1033,7 +1125,9 @@ server <- function(input, output, session) {
     parplot_fun = function(){
       req(f_scaled(),objectives(),fit())
       sk= match_scaled(minval_s=c(input$obj1[1],input$obj2[1],input$obj3[1],input$obj4[1]),
-                       maxval_s=c(input$obj1[2],input$obj2[2],input$obj3[2],input$obj4[2]),scal_tab = f_scaled(),allobs = objectives())
+                       maxval_s=c(input$obj1[2],input$obj2[2],input$obj3[2],input$obj4[2]),
+                       scal_tab = f_scaled(),
+                       abs_tab = fit(),  mes_slider = mes_touched(), mes_df = opti_mima(), allobs = objectives())
       
       if(is.null(sk)){return(NULL)}else{
       ko= sk%>% mutate(id = factor(row_number()))%>%pivot_longer(.,cols=-id)%>%
@@ -1077,7 +1171,8 @@ server <- function(input, output, session) {
     val = input$clickline$y
 
     sc= match_scaled(minval_s=c(input$obj1[1],input$obj2[1],input$obj3[1],input$obj4[1]),
-                     maxval_s=c(input$obj1[2],input$obj2[2],input$obj3[2],input$obj4[2]), scal_tab=f_scaled(),allobs=objectives())
+                     maxval_s=c(input$obj1[2],input$obj2[2],input$obj3[2],input$obj4[2]), 
+                     scal_tab=f_scaled(),allobs=objectives(), abs_tab = fit(),  mes_slider = mes_touched(), mes_df = opti_mima())
 
     # pull the closest value
     yo= sc%>% mutate(id = row_number())%>%slice(which.min(abs(.[[x]] - val)))
@@ -1095,7 +1190,7 @@ server <- function(input, output, session) {
     fml = scaled_abs_match(minval_s=c(input$obj1[1],input$obj2[1],input$obj3[1],input$obj4[1]),
                            maxval_s=c(input$obj1[2],input$obj2[2],input$obj3[2],input$obj4[2]),
                            abs_tab = fit(),scal_tab = f_scaled(),
-                           allobs = objectives(),smll=F)
+                           allobs = objectives(),smll=F, mes_slider = mes_touched(), mes_df = opti_mima())
 
     te = fml[yo$id,]   # te <- fit()[yo$id,] would not work!!
     
@@ -1188,7 +1283,7 @@ server <- function(input, output, session) {
                            maxval_s=c(input$obj1[2],input$obj2[2],input$obj3[2],input$obj4[2]),
                            scal_tab = f_scaled(),
                            abs_tab = fit(),
-                           allobs = objectives(),at=T)
+                           allobs = objectives(),at=T, mes_slider = mes_touched(), mes_df = opti_mima())
   
     
    #add percentage change
@@ -1314,7 +1409,7 @@ server <- function(input, output, session) {
 
       #for matching
       colnames(hru) = gsub("^V", "", colnames(hru))
-      hru_matcher(hru)
+      hru_matcher(hru %>% select(-measure))
       #aep for table
       genome_hru <- read.csv('../data/measure_location.csv')#connection aep, hru
       
@@ -1329,9 +1424,10 @@ server <- function(input, output, session) {
         relocate(hru, .after = obj_id)%>%drop_na(hru)%>%select(name,nswrm, hru)#hru = obj_id in separate columns
       
       aep_100$hru <- as.numeric(str_remove(aep_100$hru, " ") )#name = AEP, hru = hru
-      hru_everact = hru_matcher() %>%pivot_longer(cols = -id, names_to = "optims", values_to = "measure") %>%
-        group_by(id)%>%filter(!is.na(measure))
-      
+
+      hru_ever(hru_matcher() %>%pivot_longer(cols = -id, names_to = "optims", values_to = "measure") %>%
+        group_by(id)%>%filter(!is.na(measure)))
+      hru_everact = hru_ever()
       
       aep_100_con(aep_100 %>% filter(hru %in% unique(hru_everact$id)))
       aep_100(aep_100)
@@ -1410,17 +1506,18 @@ server <- function(input, output, session) {
 
   
      output$aep_tab_one <- renderTable({
-       req(hru_matcher(),aep_100(),fan_tab(),sel_tay(),objectives())
+       req(hru_ever(),aep_100(),fan_tab(),sel_tay(),objectives())
        
        cols = objectives()
        values = sel_tay()
+       if(nrow(sel_tay())>0){
+         
        
        fit = fit() %>% rownames_to_column("optimum")
        mv <- fit %>%  filter(across(all_of(cols), ~ . %in% values))
        one_opti = gsub("V","",mv$optimum)
-         
-       hru_one_act = hru_matcher() %>%pivot_longer(cols = -id, names_to = "optims", values_to = "measure") %>%
-         group_by(id)%>%filter(!is.na(measure))%>%filter(optims == one_opti)
+
+       hru_one_act = hru_ever() %>%filter(optims == one_opti)
        
        aep_one = aep_100() %>% filter(hru %in% unique(hru_one_act$id))
        aep_one = aep_one %>%select(-hru) %>% group_by(nswrm) %>%summarise(nom = n_distinct(name))
@@ -1441,6 +1538,14 @@ server <- function(input, output, session) {
        tab = as.data.frame(t(tab))
        names(tab) = tab[1,]
        tab=tab[-1,]
+       
+       }else{
+       nmes = length(fan_tab())
+       nix = rep("-",nmes)
+       tab <- as.data.frame(t(nix), row.names = NULL)
+       colnames(tab) <- fan_tab()
+        }
+
        tab
        }, align = "c")
      
@@ -1452,12 +1557,11 @@ server <- function(input, output, session) {
      
 
     output$aep_tab_full <-renderTable({
-      req(aep_100_con(),hru_matcher(),aep_100(),dat_matched(),fit())
+      req(aep_100_con(),hru_ever(),aep_100(),dat_matched(),fit())
       if(nrow(dat_matched())>= 1){
 
         optima <-unique(match(do.call(paste, dat_matched()), do.call(paste, fit())))
-        hru_spec_act = hru_matcher() %>%pivot_longer(cols = -id, names_to = "optims", values_to = "measure") %>%
-          group_by(id)%>%filter(!is.na(measure))%>%filter(optims %in% optima)
+        hru_spec_act = hru_ever() %>%filter(optims %in% optima)
         
         aep_sel = aep_100() %>% filter(hru %in% unique(hru_spec_act$id))
 
