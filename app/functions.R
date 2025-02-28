@@ -1061,7 +1061,7 @@ plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NUL
      all_extra_data <- rbind(all_extra_data,high_point)
   }
   
-  if (!is.null(sel_tab)) {
+  if (!is.null(sel_tab) && nrow(sel_tab) > 0) {
     names(sel_tab) = names(dat)
     
     sel_tab$set <- "Selection"
@@ -1185,7 +1185,7 @@ check_inconsistencies <- function(comparison_matrix, weights) {
 scaled_abs_match = function(minval_s=c(0,0,0,0),
                             maxval_s=c(1,1,1,1),
                             scal_tab=NULL,abs_tab=NULL,
-                            allobs=NULL,smll = TRUE,at=F){ 
+                            allobs=NULL,smll = TRUE,at=F,mes_slider =F, mes_df = NULL){ 
   
  
   df <- as.data.frame(array(NA,dim=c(2,length(allobs))),row.names = c("max","min"))
@@ -1232,8 +1232,14 @@ scaled_abs_match = function(minval_s=c(0,0,0,0),
   }
     
   
-  
   if(at){rownames(cw) = c("best","worst")}}else{ch=ch[0, , drop = FALSE]}
+  
+  #merge with selection under measure sliders
+  if(mes_slider &&!is.na(mes_slider) && identical(names(ch),names(mes_df))){
+    
+  ch =merge(ch, mes_df, by = allobs, all = FALSE)#new dat_matched()
+  }
+  
   
   #when smll is set to false the table with all absolute values is returned
   if(smll){return(cw)}else{return(ch)} 
@@ -1245,12 +1251,23 @@ scaled_abs_match = function(minval_s=c(0,0,0,0),
 match_scaled = function(minval_s=c(0,0,0,0),
                         maxval_s=c(1,1,1,1),
                         scal_tab = NULL,
+                        abs_tab = NULL, #needed for matching with measure sliders
+                        mes_slider =F, mes_df = NULL,
                         allobs){
   
   df <- as.data.frame(array(NA,dim=c(2,length(allobs))),row.names = c("max","min"))
   colnames(df) = allobs
   
-  # locate values in scaled data frame 
+  # if measure slider has been touched, we need to recreate f_scaled()
+  # from fit() after first subsetting it
+  if(mes_slider &&!is.na(mes_slider) && identical(names(abs_tab),names(mes_df))){
+    abs_tab = merge(abs_tab, mes_df, by = allobs, all = FALSE)
+    scal_tab = abs_tab %>% mutate(across(everything(), ~ scales::rescale(.)))%>%mutate(id = row_number())
+  }
+  
+  
+  if(nrow(scal_tab)>0){
+    # locate values in scaled data frame 
   for(i in seq_along(allobs)){
     
     sca_max <- scal_tab[which.min(abs(scal_tab[[allobs[i]]]-maxval_s[i])),]
@@ -1268,7 +1285,8 @@ match_scaled = function(minval_s=c(0,0,0,0),
     valmi = df["min",k]
     ch =  ch %>% filter(.data[[allobs[k]]]<=valma & .data[[allobs[k]]]>=valmi)
   }
-
+  }else{ch = scal_tab}
+  
   if(dim(ch)[1]==0){return(ch[0, , drop = FALSE])}else{return(ch)}
   
 }
