@@ -484,7 +484,11 @@ ui <-
                                                 sliderInput(inputId = "obj3", label = "Objective 3:", min = 0, max = 1, value = c(0,1), step = 0.01, width = "120%"),
                                                 sliderInput(inputId = "obj4", label = "Objective 4:", min = 0, max = 1, value = c(0,1), step = 0.01,width = "120%"),
                                                 tags$div(textOutput("ensure_sel"), style = "color: red;"),
-
+                                                div("Number of measures", style = "text-align: left; font-size:150%; margin-top: 10px;"),
+                                                
+                                                uiOutput("mes_sliders"),
+                                                div(id="mes_empty",
+                                                  tags$div(textOutput("mes_empty"), style = "color: red;"))%>%hidden(),
                                                 tags$p(
                                                   tags$strong("Please Note:"),
                                                   "For some of the visualisations and analyses in this tool, the objectives have been scaled to between 0 and 1 for easier comparison.
@@ -599,8 +603,10 @@ ui <-
 
                               br(),
                               br(),
-                              div("Number of individual measures implemented in selection compared to full front",
+                              div("Number of distinct measures used in selection compared to full front",
                                   style = "display: flex; justify-content: center; font-size:150%"),
+                              div("*please note that these numbers refer to the implementation/use of the total number of measures available in the catchment. They therefore differ from the selection made in the sliders which considers individual optima's implementation of measures.",
+                                  style = "display: flex; justify-content: center; font-size: 80%"),
 
                               div(style="display: flex; flex-direction: column; align-items: center;",
                                   tags$h4("Range (slider selection)"),
