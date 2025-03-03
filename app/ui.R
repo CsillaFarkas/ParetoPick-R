@@ -466,7 +466,7 @@ ui <-
                        wellPanel(    p("This tab plots the pareto front in a few different ways
                               and lets you explore the effects of reduced objective ranges.
                                        You can select specific points/optima on the pareto front by clicking on them,
-                                       then you can plot the map of the respective NSWRM plan."),
+                                       then you can plot and download the map of the respective NSWRM plan."),
                               p("You can also select optima in the line plot and analyse their location in the objective space.")),
 
                        sidebarLayout(
@@ -493,9 +493,8 @@ ui <-
                                                   tags$div(textOutput("mes_empty"), style = "color: red;"))%>%hidden(),
                                                 tags$p(
                                                   tags$strong("Please Note:"),
-                                                  "For some of the visualisations and analyses in this tool, the objectives have been scaled to between 0 and 1 for easier comparison.
-                                             1 aligns with the best achievable outcome while 0 aligns with the worst."
-                                                ),tags$p("The app does not display negative values, where an objective range covers both negative and positive values, a sign is added.")
+                                                  "For some of the visualisations and analyses in this tool, the objectives have been scaled to between 0 (worst) and 1 (best) for easier comparison."
+                                                ),tags$p("The app does not display negative signs, only where an objective range covers both negative and positive values, a sign is added.")
                                          ),
                                          div("Frequency of area implemented", style = "text-align: left; font-size:120%; margin-top: 10px;"),
                                          uiOutput("freq_map_play")%>%hidden(),
