@@ -258,7 +258,7 @@ ui <-
                                   .dataTable td.border-column {
                                    border-right: 1px solid #03597F;
                                   }
-
+                                  
                                       ')),
 
                      useShinyjs(),
@@ -356,13 +356,15 @@ ui <-
                                # div(id="fitness_avail",
 
                                div("pareto_fitness.txt",style = "text-align: left; font-size:115%;",
-                                   div(style = "margin-top: -15px;",fileInput("par_fit", "", accept = ".txt"),
-                                       div(style= "vertical-align: top; margin-top: -15px;",actionButton("save_paretofit","Save")))),
+                                   div(style = "margin-top: -15px;",
+                                       fileInput("par_fit", "", accept = ".txt", placeholder =""),
+                               div(style= "vertical-align: top; margin-top: -15px;",actionButton("save_paretofit","Save")))),
 
 
                                br(),
                                div("sq_fitness.txt (optional)",style = "text-align: left; font-size:115%;",
-                                   div(style = "margin-top: -15px;",fileInput("sq_in", "", accept = ".txt"),
+                                   div(style = "margin-top: -15px;",fileInput("sq_in", "", accept = ".txt", placeholder=""),
+
                                    div(style= "vertical-align: top; margin-top: -15px;",actionButton("save_sq_in","Save")))),
 
                                br(),
@@ -403,22 +405,22 @@ ui <-
 
                                #file numbers are jumbled but just here
                                div("1. pareto_genomes.txt",style = "text-align: left; font-size:115%"),
-                               div(style = "margin-top: -15px;",fileInput("file1", "", accept = ".txt")),
+                               div(style = "margin-top: -15px;",fileInput("file1", "", accept = ".txt", placeholder="")),
 
                                div("2. hru.con",style = "text-align: left; font-size:115%"),
-                               div(style = "margin-top: -15px;",fileInput("file2", "", accept = ".con")),
+                               div(style = "margin-top: -15px;",fileInput("file2", "", accept = ".con", placeholder="")),
 
 
                                div("3. measure_location.csv",style = "text-align: left; font-size:115%"),
-                               div(style = "margin-top: -15px;",fileInput("file3", "", accept = ".csv")),
+                               div(style = "margin-top: -15px;",fileInput("file3", "", accept = ".csv", placeholder="")),
 
 
                                div("4. rout_unit.con", style="text-align: left; font-size:115%"),
-                               div(style = "margin-top: -15px;",fileInput("file6", "", accept = ".con")),
+                               div(style = "margin-top: -15px;",fileInput("file6", "", accept = ".con", placeholder="")),
 
 
                                div("5. shapefile called \"hru\" with four components (.shp .dbf .prj and .shx)",style = "text-align: left; font-size:115%"),
-                               div(style = "margin-top: -15px;",fileInput("shapefile", "", multiple = TRUE,
+                               div(style = "margin-top: -15px;",fileInput("shapefile", "", multiple = TRUE, placeholder="",
                                                                           accept = c(".shp", ".shx", ".dbf", ".prj"))),
 
 
