@@ -258,7 +258,7 @@ ui <-
                                   .dataTable td.border-column {
                                    border-right: 1px solid #03597F;
                                   }
-                                  
+                                 
                                       ')),
 
                      useShinyjs(),
@@ -297,9 +297,10 @@ ui <-
 
                    tabItems(
                      tabItem(tabName = "intro",
-                             titlePanel("Introduction and Background"),
+                             h2("Introduction and Background", style = "margin-top: 0; padding-top: 0;"),
+                             
                              mainPanel( div(
-                               style = "width: 100%; text-align: justify; font-size:135%;",
+                               style = "width: 100%;; margin: 0 auto; text-align: justify; font-size:135%;",
                                p("This application analyses OPTAIN optimisation outputs and shall support decision making.
                                   While all solutions provided by the SWAT+ / COMOLA workflow are pareto-optimal (none of the objectives can be improved without losses
                                   in other objectives), choosing among a large number of solutions can be daunting."),
@@ -338,13 +339,12 @@ ui <-
                      ## DATA PREP PANEL #####
 
                tabItem(tabName = "data_prep",
+                       h2("Data Preparation", style = "margin-top: 0; padding-top: 0;"),
                        
-                             titlePanel("OPTAIN Data Preparation"),
-
                              wellPanel(  p(HTML("This tab requires you to provide the optimisation outputs.
                                                  Please refer to the Readme for examples of their structure.
                                                  You can provide a limited set of outputs to only analyse the Pareto front in the next tab.
-                                                 Alternatively, you can upload more data and prepare the variables for the subsequent correlation and cluster analysis
+                                                 ")), p(HTML("Alternatively, you can upload more data and prepare the variables for the subsequent correlation and cluster analysis
                                                  by clicking <strong>Check Files</strong> and
                                                 (if all files have been found) <strong>Run Prep</strong>. Please be aware that the preparation might take up to 15 minutes."))),
 
@@ -352,7 +352,7 @@ ui <-
                                
 
                                div(p("For being able to plot and analyse the Pareto front, please provide pareto_fitness.txt as well as the objective names.
-                                     If you would like to plot the status quo, sq_fitness.txt is also required:"),style = "text-align: left; font-size:140%"),
+                                     If you would like to plot the status quo, sq_fitness.txt is also required:"),style = "text-align: justify; font-size:140%; width: 100%;"),
                                # div(id="fitness_avail",
 
                                div("pareto_fitness.txt",style = "text-align: left; font-size:115%;",
@@ -461,13 +461,12 @@ ui <-
                      ),
                ## PLAY AROUND TAB ####
                tabItem(tabName = "play_around",
-                       titlePanel("Visualising the Optimisation Output"),
+                       h2("Visualising the Optimisation Output", style = "margin-top: 0; padding-top: 0;"),
 
                        wellPanel(    p("This tab plots the pareto front in a few different ways
-                              and lets you explore the effects of reduced objective ranges.
+                              and lets you explore the effects of different objective ranges.
                                        You can select specific points/optima on the pareto front by clicking on them,
-                                       then you can plot and download the map of the respective NSWRM plan."),
-                              p("You can also select optima in the line plot and analyse their location in the objective space.")),
+                                       then you can plot and download the map of the respective NSWRM plan. You can also select optima in the line plot and analyse their location in the objective space.")),
 
                        sidebarLayout(
 
@@ -680,9 +679,8 @@ ui <-
                    ## CONFIGURE CLUSTERING PANEL - USER DECISION FOR HIDING OR SHOWING correlation AND clustering ####
 
                      tabItem(tabName = "configure",
-
-                             titlePanel("Configure Cluster Settings"),
-
+                             h2("Configure Cluster Settings", style = "margin-top: 0; padding-top: 0;"),
+                           
                      mainPanel(
                        textOutput("config_needs_var"),
 
@@ -724,8 +722,8 @@ ui <-
 
                      ## CORRELATION ANALYSIS PANEL ####
                 tabItem(tabName = "correlation_analysis",
-                             titlePanel("Clustering Part 1 - Correlation Analysis"),
-
+                        h2("Clustering Part 1 - Correlation Analysis", style = "margin-top: 0; padding-top: 0;"),
+                        
                              wellPanel( p(HTML("A correlation analysis is needed as correlation among variables can skew cluster results. Therefore, please click <strong>Run Correlation Analysis</strong>.
                              Based on the levels of correlation you can select those variables you would like to exclude from the subsequent clustering. Select them and then click <strong>Confirm Selection</strong>. You can come back to this tab to change the selection of variables later.
                                         It is also possible to run the clustering across all variables and select no variables to exclude in this tab, however please always click <strong>Confirm Selection</strong>."))),
@@ -799,9 +797,8 @@ ui <-
                      tabItem(tabName = "pca",
 
                              #https://htmlcolorcodes.com/color-names/
-
-                             titlePanel("Clustering Part 2 - PCA & kmeans/kmedoids"),
-
+                             h2("Clustering Part 2 - PCA & kmeans/kmedoids", style = "margin-top: 0; padding-top: 0;"),
+                             
                              wellPanel(  p(HTML("This tab requires you to decide on the cluster settings. After selecting how the objectives shall be plotted, deciding on the axis titles and confirming the number of PCAs tested, the clustering can be run with default settings.
                                          Selecting <strong>Yes</strong> under either 2. or 3. allows to change those default settings and test a variable number of clusters and outlier considerations.")),
                                          p(HTML("The cluster outputs open in separate tabs and can be saved as images."))),
@@ -919,7 +916,8 @@ ui <-
                      ## Analysis panel ####
                      tabItem(
                        tabName = "analysis",
-                       titlePanel("Analysing the remaining optima"),
+                       h2("Analysing the remaining optima", style = "margin-top: 0; padding-top: 0;"),
+                       
                        wellPanel(p("This tab allows you to analyse the cluster outputs and plot and compare the measure implementation across the pareto solutions selected in the clustering. The table shows those optima selected as representative for the different clusters. The plot on the right aligns with the one produced during the clustering.
                        It shows the location of the optima selected in the table. Please be aware that plotting the measure allocation takes around 20 seconds.")),
 
@@ -1036,12 +1034,13 @@ ui <-
                      ## AHP ####
                      tabItem(
                        tabName = "ahp",
-                       titlePanel("Analytical Hierarchy Process"),
+                       h2("Analytical Hierarchy Process", style = "margin-top: 0; padding-top: 0;"),
+                       
 
                        wellPanel( p("This tab allows you to run a different approach (AHP) to selecting those pareto optima best matching your preferences.
                      AHP is a decision making tool that helps you prioritise different objectives by comparing them in pairs.
                                     If you want you can limit the objective ranges under 1."),
-                                  p("Under 2. you can compare objectives two at a time and and decide which objective is more important and by how much.
+                                  p("Under 2. you can compare objectives two at a time and decide which objective is more important and by how much.
                      ParetoPick-R will assign weights to each objective based on your inputs and check its consistency.
                      The respective best choice is plotted below and you can decide whether
                      it should be selected from the whole pareto front or from the subset of cluster results.")),
