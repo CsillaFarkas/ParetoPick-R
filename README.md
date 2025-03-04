@@ -161,11 +161,6 @@ The non-straighforward way is to delete object_names.RDS from the input folder a
  
 
 # To do
-## Prio 1
-  * docker image
+  * docker image with Linux executables
   * remove zoom from downloaded plot
-  * plots across mixed ranges clear signs
-
-## Prio 2
-  * prefill data prep bars when pareto_fitness.txt and sq_fitness.txt available
   * add a small spinner to the Check Data button to clarify that it takes a while  
