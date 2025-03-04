@@ -953,8 +953,8 @@ plt_sc = function(dat, ranges,col=rep("grey",nrow(dat)),size=rep(2.8, nrow(dat))
       
       #correct for negative scale aesthetics
          p = p +
-          scale_x_continuous(limits = c(x_min, x_max),labels = function(x) {rem_min(x)}, expand = c(0.5, 0)) +
-          scale_y_continuous(limits = c(y_min, y_max),labels = function(y) {rem_min(y)}, expand = c(0.5, 0))
+          scale_x_continuous(limits = c(x_min, x_max),labels = function(x) {rem_min(x)}, expand = c(0.15, 0)) +
+          scale_y_continuous(limits = c(y_min, y_max),labels = function(y) {rem_min(y)}, expand = c(0.15, 0))
    
      plots[[plot_index]] <- p
      plot_index <- plot_index + 1
