@@ -192,6 +192,7 @@ server <- function(input, output, session) {
       par_fiti(list(path = file$datapath, name = file$name))
     })
     
+  
     #get pareto_fitness.txt and make fit()
     observeEvent(input$save_paretofit,{
       req(par_fiti())
@@ -254,6 +255,7 @@ server <- function(input, output, session) {
       data = read.table(pareto_path, header=F,stringsAsFactors=FALSE,sep = deli(pareto_path))
       names(data) = objectives()
       fit(data)
+      blub <<- fit()
       yo = fit() %>% mutate(across(everything(), ~ scales::rescale(.)))%>%mutate(id = row_number())
       f_scaled(yo)}
       
@@ -694,6 +696,7 @@ server <- function(input, output, session) {
            column_to_rownames("nswrm") %>%  
            t() %>%  
            as.data.frame())
+      
       })
     
     observe({
@@ -753,6 +756,8 @@ server <- function(input, output, session) {
           df %>% filter(.data[[col]] >= values[[col]][1] & .data[[col]] <= values[[col]][2])
         }, .init = .)
       
+      fml <<- ff
+
       mt_optis = ff$optimum #optima
       opti_mima(fit() %>% rownames_to_column("optimum")%>%filter(optimum %in% mt_optis) %>% select(-optimum))
       
@@ -890,6 +895,7 @@ server <- function(input, output, session) {
                                     allobs = objs,smll=F, mes_slider = mes_touched(), mes_df = opti_mima()))
        
        df <- dat_matched()
+       
        if(nrow(df) == 0 || ncol(df) == 0){
          output$ensure_sel <- renderText({
            paste("None of the optima fall within the specified ranges. Please select different data ranges!")
@@ -2686,6 +2692,9 @@ server <- function(input, output, session) {
       weights
   })
 
+  # observe({req(calculate_weights)
+  #   print(calculate_weights)
+  #   })
  
   output$weights_output <- renderTable({
                                        req(calculate_weights())
@@ -2727,20 +2736,18 @@ server <- function(input, output, session) {
     }else{  
     
     weights <- calculate_weights()
-    
+    ww <<- weights
     min_fit <- apply(df, 2, min)
     max_fit <- apply(df, 2, max)
-    
+    fitti <<- df
     #scale to 0 and 1 not anchoring with original
     df_sc <- as.data.frame(mapply(function(col_name, column) {
       rescale_column(column, min_fit[col_name], max_fit[col_name])
      }, colnames(df), df, SIMPLIFY = FALSE))
     
     #final score based on df within 0 and 1
-    df$Score <- rowSums(df_sc * weights)
+    best_option_index <<- which.ahp(df_sc, weights)
     
-    best_option_index <<- which.max(df$Score)
-    df$Score <- NULL #drop Score column
     best_option(df[best_option_index, ])
     bo = best_option()
   

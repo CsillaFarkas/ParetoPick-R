@@ -1316,10 +1316,22 @@ match_abs <- function(minval, maxval, abs_tab, ranger = NULL) {
 ## rescale
 rescale_column <- function(column, min_val, max_val) {
   if (min_val == max_val) {
-    return(rep(NA, length(column)))  # or some other appropriate value/handling
+    return(rep(NA, length(column)))  
   }
   rescale(column, to = c(0, 1), from = c(min_val, max_val))
 }
+
+## ahp score function
+which.ahp <- function(df, weights) {
+  if (length(weights) != ncol(df)) {
+    stop("Length of weights must match the number of columns in df")
+  }
+  score <- rowSums(sweep(1 - df, 2, weights, `*`))
+  which.min(score)
+}
+
+
+
 
 ## pull highest range for nice plot
 pull_high_range <- function(df, num_order=F) {
