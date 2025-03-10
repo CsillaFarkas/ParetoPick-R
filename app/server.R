@@ -118,10 +118,18 @@ server <- function(input, output, session) {
   card_shown <- reactiveValues(ahp_card1 = FALSE, ahp_card2 = FALSE, ahp_card3 = FALSE, ahp_card4 = FALSE, ahp_card5 = FALSE, ahp_card6 = FALSE)
   sliders <- reactiveValues()
   boo <- reactiveVal() #best option optimum
+  mahp = reactiveVal(NULL) #measure vals
+  mahp_touched = reactiveVal(FALSE)
+  ahpmt = reactiveVal()
+  ahpima_ini = reactiveVal(NULL)
+  mahp_ini <- reactiveVal(FALSE)
+  man_weigh <- reactiveVal(NULL)
   
   default_running <- reactiveVal(NULL)#spinner in configure tab
   one_on <- reactiveValues(vari="") #to turn off single cards
   meas_running <- reactiveVal(FALSE) #spinner in ahp tab
+  fit_row <- reactiveVal()  
+  
   ### Startup ####
   if (file.exists("../input/var_corr_par_bu.csv")) { #if back up exists, the original needs replacing
     file.remove("../input/var_corr_par.csv")
@@ -751,13 +759,11 @@ server <- function(input, output, session) {
       
 
       ff <- mt() %>%
-        rownames_to_column("optimum") %>%  # Store rownames
+        rownames_to_column("optimum") %>%
         reduce(numeric_cols, function(df, col) {
           df %>% filter(.data[[col]] >= values[[col]][1] & .data[[col]] <= values[[col]][2])
         }, .init = .)
       
-      fml <<- ff
-
       mt_optis = ff$optimum #optima
       opti_mima(fit() %>% rownames_to_column("optimum")%>%filter(optimum %in% mt_optis) %>% select(-optimum))
       
@@ -2644,8 +2650,108 @@ server <- function(input, output, session) {
     
     })
   
+  observe({ #create ahpmt() for measure sliders
+    req(aep_100(), hru_ever())
+    ks = hru_ever() %>% select(-measure)
+    
+    fk = aep_100()  %>% left_join(ks, by =c("hru"="id")) %>% select(-hru)
+    
+    
+    ahpmt(fk %>%
+            group_by(nswrm, optims) %>%
+            summarize(distinct_aep = n_distinct(name), .groups = "drop") %>%
+            pivot_wider(names_from = optims, values_from = distinct_aep, values_fill = 0) %>%
+            column_to_rownames("nswrm") %>%  
+            t() %>%  
+            as.data.frame())
+    
+  })
+  
+  observe({
+    req(ahpmt())
+    ahpima_ini(rbind(
+      min = apply(ahpmt(), 2, min, na.rm = TRUE),
+      max = apply(ahpmt(), 2, max, na.rm = TRUE)
+    ))
+  })
+  
+  #measure slider
+  output$ahpmes_sliders <- renderUI({
+    req(ahpmt())
+    numeric_cols <- sapply(ahpmt(), is.numeric)
+    sliders <- lapply(names(ahpmt())[numeric_cols], function(col) {
+      sliderInput(inputId = paste0("mahp_", col),
+                  label = col,
+                  min = min(ahpmt()[[col]]),
+                  max = max(ahpmt()[[col]]),
+                  step = 1,
+                  value = c(min(ahpmt()[[col]]), max(ahpmt()[[col]]))
+      )
+    })
+    
+    
+    mahp_ini(TRUE)
+    
+    sliders
+  })
+  
+  
+  observe({
+    req(mahp_ini(),ahpmt(), fit())
+    
+    numeric_cols <- names(ahpmt())[sapply(ahpmt(), is.numeric)]
+    values <- setNames(
+      lapply(numeric_cols, function(col) input[[paste0("mahp_", col)]]),
+      numeric_cols
+    )
+    
+    if (any(sapply(values, is.null))) return()
+    
+    names(values) = numeric_cols #slider current setting
+    
+    df_values <- as.data.frame(values)
+    
+    df_first_values <- as.data.frame(ahpima_ini())
+    rownames(df_first_values) <- NULL
+    
+    if (!identical(df_values, df_first_values)) {#otherwise sometimes run too soon
+      isolate(mahp_touched(TRUE))
+      
+      
+      ff <- ahpmt() %>%
+        rownames_to_column("optimum") %>%
+        reduce(numeric_cols, function(df, col) {
+          df %>% filter(.data[[col]] >= values[[col]][1] & .data[[col]] <= values[[col]][2])
+        }, .init = .)
+      
+      mt_optis = ff$optimum #optima
+      mahp(fit() %>% rownames_to_column("optimum")%>%filter(optimum %in% mt_optis) %>% select(-optimum))
+      
+    }else{mahp(FALSE)}
+    
+  })
+  
+  
+  observe({
+    req(mahp())
+    if(nrow(mahp())== 0){
+      shinyjs::show("ahpmes_empty")
+      output$ahpmes_empty =  renderText({paste("None of the optima fall within the specified ranges. Please select different measure ranges!")
+      }) }else{shinyjs::hide("ahpmes_empty")}
+  })
 
-
+  observe({
+  if(input$best_cluster){shinyjs::show("ahp_cluster_num")
+    output$ahp_cluster_num <- renderText({
+      req(best_option(),sols(), objectives()) #best_option() is set to cluster in other table
+      
+      bor = sols() %>% filter(if_any(objectives(),~ . %in% best_option()))
+      
+      paste("cluster number: ", bor$`cluster number`, "; the representative optima is ", bor$optimum, sep = "")
+      
+    })
+  }else{shinyjs::hide("ahp_cluster_num")}
+  })
   
   calculate_weights = reactive({
     req(objectives())
@@ -2692,9 +2798,6 @@ server <- function(input, output, session) {
       weights
   })
 
-  # observe({req(calculate_weights)
-  #   print(calculate_weights)
-  #   })
  
   output$weights_output <- renderTable({
                                        req(calculate_weights())
@@ -2711,13 +2814,13 @@ server <- function(input, output, session) {
       
       df = match_abs(minval=c(input$obj1_ahp[1],input$obj2_ahp[1], input$obj3_ahp[1], input$obj4_ahp[1]),
                      maxval=c(input$obj1_ahp[2],input$obj2_ahp[2], input$obj3_ahp[2], input$obj4_ahp[2]),
-                     abs_tab = df, ranger = range_controlled())
+                     abs_tab = df, ranger = range_controlled(), mes_slider = mahp_touched(), mes_df = mahp())
 
     } else{ #best option out of whole pareto front (=default)
        
       df = match_abs(minval=c(input$obj1_ahp[1],input$obj2_ahp[1], input$obj3_ahp[1], input$obj4_ahp[1]),
                      maxval=c(input$obj1_ahp[2],input$obj2_ahp[2], input$obj3_ahp[2], input$obj4_ahp[2]),
-                     abs_tab = fit(), ranger = range_controlled())
+                     abs_tab = fit(), ranger = range_controlled(), mes_slider = mahp_touched(), mes_df = mahp())
     }
     
     if (!all(names(calculate_weights()) %in% colnames(df))) {
@@ -2736,10 +2839,10 @@ server <- function(input, output, session) {
     }else{  
     
     weights <- calculate_weights()
-    ww <<- weights
+   
     min_fit <- apply(df, 2, min)
     max_fit <- apply(df, 2, max)
-    fitti <<- df
+    
     #scale to 0 and 1 not anchoring with original
     df_sc <- as.data.frame(mapply(function(col_name, column) {
       rescale_column(column, min_fit[col_name], max_fit[col_name])
@@ -2760,6 +2863,198 @@ server <- function(input, output, session) {
       # datatable(bo,  colnames = names(bo), rownames = FALSE, escape = FALSE, options = list(dom = 't', paging = FALSE,bSort = FALSE))
       bo
   },colnames = T)
+    
+    output$aep_ahp <- renderTable({
+      req(aep_100_con(),hru_ever(),aep_100(),best_option(),fit(), objectives())
+      
+      if (input$best_cluster) {
+        df = subset(sols(),select= -c(optimum,`cluster number`,`cluster size`,outlier )) #best option out of optima
+        
+        df = match_abs(minval=c(input$obj1_ahp[1],input$obj2_ahp[1], input$obj3_ahp[1], input$obj4_ahp[1]),
+                       maxval=c(input$obj1_ahp[2],input$obj2_ahp[2], input$obj3_ahp[2], input$obj4_ahp[2]),
+                       abs_tab = df, ranger = range_controlled(), mes_slider = mahp_touched(), mes_df = mahp())
+        
+      } else{ #best option out of whole pareto front (=default)
+        
+        df = match_abs(minval=c(input$obj1_ahp[1],input$obj2_ahp[1], input$obj3_ahp[1], input$obj4_ahp[1]),
+                       maxval=c(input$obj1_ahp[2],input$obj2_ahp[2], input$obj3_ahp[2], input$obj4_ahp[2]),
+                       abs_tab = fit(), ranger = range_controlled(), mes_slider = mahp_touched(), mes_df = mahp())
+      }
+      
+      # slider vs. whole front
+      if(nrow(df)>= 1){
+        optima <-unique(match(do.call(paste, df), do.call(paste, fit())))#position/rowname/optimum in fit(), not super stable
+        hru_spec_act = hru_ever() %>%filter(optims %in% optima)
+        
+        aep_sel = aep_100() %>% filter(hru %in% unique(hru_spec_act$id))
+        
+        aep_100_con2 =aep_100_con() %>%select(-hru) %>% group_by(nswrm) %>%summarise(nom = n_distinct(name))
+        aep_sel =aep_sel %>%select(-hru) %>% group_by(nswrm) %>%summarise(nom = n_distinct(name))
+       
+      # selected point
+        cols = objectives()
+        values = best_option()
+        if(nrow(best_option())>0){
+          
+          fit = fit() %>% rownames_to_column("optimum")
+          mv <- fit %>%  filter(across(all_of(cols), ~ . %in% values))
+          one_opti = gsub("V","",mv$optimum)
+          
+          hru_one_act = hru_ever() %>%filter(optims == one_opti)
+          
+          aep_one = aep_100() %>% filter(hru %in% unique(hru_one_act$id))
+          aep_one = aep_one %>%select(-hru) %>% group_by(nswrm) %>%summarise(nom = n_distinct(name))
+          allmes = unique(aep_100()$nswrm)
+          missmes = setdiff(allmes,aep_one$nswrm)
+          
+          if(length(missmes)>=1){
+            
+            missing_rows <- data.frame(
+              nswrm = missmes,
+              nom = 0,
+              stringsAsFactors = FALSE
+            )
+            
+            aep_one <- rbind(aep_one, missing_rows)
+          }
+         
+        }else{ #show "-"
+          nmes = nrow(aep_sel)
+          nix = rep("-",nmes)
+          aep_one = data.frame(nom = nix,nswrm = aep_sel$nswrm)
+          
+        }
+
+        #all together
+        tab= aep_one %>% left_join(aep_100_con2, by = "nswrm") %>% left_join(aep_sel ,by = "nswrm")%>%replace(is.na(.), 0)%>%
+          mutate(implemented = paste0(nom.x," / ",nom, " / " , nom.y)) %>%select(nswrm,implemented)
+        fan_tab(tab$nswrm)
+        tab = as.data.frame(t(tab))
+        names(tab) = tab[1,]
+        tab=tab[-1,]
+        tab}
+    }, align = "c")
+    
+    
+    
+    ## ahp up down table
+    
+    observe({
+      req(fit(), best_option())
+      fit_sorted <- reactiveVal(fit())
+      
+      #find current position of bo and go from there (less scrolling)
+      fit_row(match(do.call(paste, best_option()), do.call(paste, fit())))
+      
+      
+      if(input$make_manual_ahp){
+        shinyjs::hide("weighted_approach")
+        shinyjs::show("manual_ahp")
+    
+    output$manual_ahp_tab <- renderTable({
+          
+          row_data <- fit_sorted()[fit_row(), , drop = FALSE]
+          row_display <- row_data
+          
+         
+          for (col in colnames(fit())) {
+            row_display[[col]] <- paste0(
+              actionButton(paste0("up_", col), "⬆", 
+                           onclick = paste0("Shiny.setInputValue('up_col', '", col, "', {priority: 'event'})")),
+              " ", row_data[[col]], " ",
+              actionButton(paste0("down_", col), "⬇", 
+                           onclick = paste0("Shiny.setInputValue('down_col', '", col, "', {priority: 'event'})"))
+            )
+          }
+          
+          row_display
+        }, sanitize.text.function = identity, rownames = FALSE)
+        
+        update_selected_row <- function(col, direction) {
+          sorted_data <- fit()[order(fit()[[col]]), ] 
+          fit_sorted(sorted_data) 
+         
+          current_index <- which(sorted_data[[col]] == fit_sorted()[fit_row(), col])[1]
+          if (is.na(current_index)) return()
+          
+          if (direction == "up") {
+            if (current_index < nrow(sorted_data)) fit_row(current_index + 1)
+          } else {
+            if (current_index > 1) fit_row(current_index - 1)
+          }
+        }
+        
+        observeEvent(input$up_col, {
+          update_selected_row(input$up_col, "up")
+        })
+        
+        observeEvent(input$down_col, {
+          update_selected_row(input$down_col, "down")
+        })
+      
+      }else{
+        shinyjs::show("weighted_approach")
+        
+        shinyjs::hide("manual_ahp")
+}
+    
+    })
+    
+    observe({
+      req(calculate_weights())
+      man_weigh(as.data.frame(t(calculate_weights()), row.names = NULL))#pull current weight
+      
+    })
+    
+    
+    # manual weights
+    observe({
+      if(input$yes_weight){
+        shinyjs::show("manual_weight")
+        shinyjs::hide("sel_wgt")
+        req(man_weigh())
+        
+        output$manual_weight = renderDT({
+          datatable(man_weigh(), editable = TRUE,
+                    options = list( searching = FALSE,   
+                      paging = FALSE, info = FALSE, autoWidth = F, dom = 't'),rownames = NULL)
+        })
+        
+      }else{shinyjs::hide("manual_weight")}
+        
+      })
+        
+        observeEvent(input$manual_weight_cell_edit, {
+          info <- input$manual_weight_cell_edit
+          j <- info$col
+          v <- info$value
+          
+          v <- as.numeric(v)
+        
+          new_data <- man_weigh()
+          
+          new_data[1, j+1] <- v
+          
+          man_weigh(new_data)
+          
+        })
+        
+        observeEvent(input$check_sum , {
+          new_data = man_weigh()
+          sum_values <- sum(as.numeric(new_data[1, ]), na.rm = TRUE)
+          
+          if (sum_values > 1) {
+            largest_value_col <- which.max(new_data[1, ])
+            new_data[1, largest_value_col] <- round(new_data[1, largest_value_col] - (sum_values - 1), 2)
+          }else if(sum_values < 1){
+            tiny_value_col <- which.min(new_data[1, ])
+            new_data[1, tiny_value_col] <- round(new_data[1, tiny_value_col] + (1 - sum_values), 2)
+          }
+          
+          man_weigh(new_data)
+        })
+        
+
     
     observe({
       req(sols(),range_controlled(),objectives())
@@ -2796,11 +3091,12 @@ server <- function(input, output, session) {
     
     weight_plt_fun = function(){
       req(objectives(),fit(),best_option(),sols())
+      
       sol<<-sols()[,objectives()]
       bo = best_option()
       df = match_abs(minval=c(input$obj1_ahp[1],input$obj2_ahp[1], input$obj3_ahp[1], input$obj4_ahp[1]),
                      maxval=c(input$obj1_ahp[2],input$obj2_ahp[2], input$obj3_ahp[2], input$obj4_ahp[2]),
-                     abs_tab = fit(), ranger = range_controlled())
+                     abs_tab = fit(), ranger = range_controlled(), mes_slider = mahp_touched(), mes_df = mahp())
       
       return(plt_sc_optima(dat=df,x_var=input$x_var,y_var=input$y_var,
                     col_var=input$col_var,size_var=input$size_var,high_point=bo,extra_dat = sol,
