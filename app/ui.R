@@ -1059,7 +1059,13 @@ ui <-
                                         sliderInput(inputId = "obj2_ahp", label = "Objective 2:", min = 0, max = 100, value = c(0, 100), width = "120%"),
                                         sliderInput(inputId = "obj3_ahp", label = "Objective 3:", min = 0, max = 100, value = c(0, 100), width = "120%"),
                                         sliderInput(inputId = "obj4_ahp", label = "Objective 4:", min = 0, max = 100, value = c(0, 100), width = "120%"))
-                               )),
+                               ),
+                               br(),
+                               div("Number of measures", style = "text-align: left; font-size:150%; margin-top: 10px;"),
+                               
+                               uiOutput("ahpmes_sliders"),
+                               div(id="ahpmes_empty",
+                                   tags$div(textOutput("ahpmes_empty"), style = "color: red;"))%>%hidden()),
 
                          ),
 
@@ -1069,9 +1075,15 @@ ui <-
 
 
                            div(id="all_ahp",
+                               checkboxInput("make_manual_ahp", label = "Click here to manually select your preferred option without using weights", value = F, width = "100%"),
+                               
+                               div(id = "weighted_approach",
+                        
+                               
                            fluidRow(
                              div("2. Assign weights",style = "text-align: center; font-size: 150%;"),
-
+                           
+                                
                              column(
                                width = 12,
                                actionButton("ahp_card1", "Show Card 1",
@@ -1093,7 +1105,16 @@ ui <-
                              br(),
                              div(id="sel_wgt","Selected Weights", style = "text-align: center; font-size: 150%;",
                                  div(tableOutput("weights_output"), style = "margin: 0 auto; width: fit-content;")),
-                           ),
+                           
+                             div(checkboxInput("yes_weight", label = "Click here to manually change weights.", value = F, width = "100%"),
+                                 style = "text-align: center"),
+                             
+                             div(id = "manual_weight", "Manual Assignment of Weights", style = "text-align: center; font-size: 150%;",
+                                 div(DTOutput("manual_weight"), style = "margin: 0 auto; width: fit-content;"),
+                                 actionButton("check_sum","Check & adapt weights")
+                                 )%>%hidden()
+                             
+                             ),
                            fluidRow(
                              uiOutput("card1_ui")%>%hidden(),
                              uiOutput("card2_ui")%>%hidden(),
@@ -1105,7 +1126,11 @@ ui <-
                            br(),
 
                            div(id = "pareto_weighted", "Best Option under selected weighting", style = "text-align: center; font-size: 150%;"),
-                                                   div(tableOutput("best_option_output"), style = "margin: 0 auto; width: fit-content; font-size: 150%;"),
+                                                   div(tableOutput("best_option_output"), style = "margin: 0 auto; width: fit-content; font-size: 150%;")),
+                           
+                           div(id = "manual_ahp", "Manual Selection of best Option", style = "text-align: center; font-size: 150%;",
+                           div(tableOutput("manual_ahp_tab"), style = "margin: 0 auto; width: fit-content;"))%>%hidden(),
+                           
 
                          checkboxInput("save_ahp",label = "Click here to save the selected optimum to the output folder (selected_optima.csv)",value=F, width = "100%"),
 
@@ -1117,8 +1142,9 @@ ui <-
 
                                div(id = "random_ahp",
                                   checkboxInput("best_cluster", label = "Best option among cluster solutions", value = FALSE),
-                                  style = "margin: 0 auto; width: fit-content;font-size: 100%;"
-                               ),
+                                  style = "margin: 0 auto; width: fit-content; font-size: 100%;"
+                               ), div(id = "ahp_cluster_num",textOutput("ahp_cluster_num"),style = "margin: 0 auto; width: fit-content; font-size: 100%; font-weight:bold;")%>%hidden(),
+
 
                            plotOutput({"weights_plot"}),
                            div(id="random_ahp2", fluidRow(
@@ -1142,6 +1168,11 @@ ui <-
                                downloadButton("download_weights_plot", "Download Plot")
                              ),
                              br(),
+                             div(
+                               style = "display: flex; flex-direction: column; align-items: center;",
+                               tags$h4("Number of measures in AHP optimum / slider selection / whole front"),
+                               tableOutput("aep_ahp")
+                             ),
                              br(),
                              br(),
                              div(style = "display: inline-block; vertical-align: top; margin-left: 0px;",
