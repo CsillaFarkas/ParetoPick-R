@@ -1055,7 +1055,7 @@ plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NUL
 
   }
 
-  if (!is.null(high_point)) {
+  if (!is.null(high_point) && nrow(high_point)!=0) {
      names(high_point) = names(dat)
      high_point$set <- "AHP - best option"
      all_extra_data <- rbind(all_extra_data,high_point)
@@ -1292,15 +1292,22 @@ match_scaled = function(minval_s=c(0,0,0,0),
 }
 
 ## subset dataframe based on (slider) selection
-match_abs <- function(minval, maxval, abs_tab, ranger = NULL) {
+match_abs <- function(minval, maxval, abs_tab, ranger = NULL, mes_slider = F, mes_df = NULL) {
   n_cols <- ncol(abs_tab)
-  
+
   if(!is.null(ranger)){#undo the scaling which was done for the slider visibility
     
     indices <- which(names(abs_tab) %in% ranger)
     maxval[indices] = maxval[indices] / 1000
     minval[indices] = minval[indices] / 1000
   }
+  
+  #consider measure slider
+  allobs = names(abs_tab) #naja
+  if(mes_slider && !is.na(mes_slider) && identical(names(abs_tab),names(mes_df))){
+    abs_tab = merge(abs_tab, mes_df, by = allobs, all = FALSE)
+  }
+  
   
   filter_conditions <- lapply(seq_len(n_cols), function(i) {
     abs_tab[[i]] >= minval[i] & abs_tab[[i]] <= maxval[i]
