@@ -39,6 +39,7 @@ server <- function(input, output, session) {
   rv <-reactiveValues(sizes= NULL,colls = NULL) #color for parallel axes
   er <- reactiveVal(NULL) #position
   best_option = reactiveVal(NULL)
+  bo_pass = reactiveVal()
   fit1 = reactiveVal()
   dat_matched = reactiveVal()
 
@@ -114,17 +115,21 @@ server <- function(input, output, session) {
   
   coma = reactiveVal()
   range_controlled = reactiveVal(NULL)
+  calculate_weights = reactiveVal()
   initial_update_done = reactiveValues(initial = FALSE)
   card_shown <- reactiveValues(ahp_card1 = FALSE, ahp_card2 = FALSE, ahp_card3 = FALSE, ahp_card4 = FALSE, ahp_card5 = FALSE, ahp_card6 = FALSE)
   sliders <- reactiveValues()
   boo <- reactiveVal() #best option optimum
+  
   mahp = reactiveVal(NULL) #measure vals
   mahp_touched = reactiveVal(FALSE)
+  
   ahpmt = reactiveVal()
   ahpima_ini = reactiveVal(NULL)
   mahp_ini <- reactiveVal(FALSE)
   man_weigh <- reactiveVal(NULL)
-  
+  pass_to_manual <- reactiveVal()
+
   default_running <- reactiveVal(NULL)#spinner in configure tab
   one_on <- reactiveValues(vari="") #to turn off single cards
   meas_running <- reactiveVal(FALSE) #spinner in ahp tab
@@ -263,7 +268,7 @@ server <- function(input, output, session) {
       data = read.table(pareto_path, header=F,stringsAsFactors=FALSE,sep = deli(pareto_path))
       names(data) = objectives()
       fit(data)
-      blub <<- fit()
+      
       yo = fit() %>% mutate(across(everything(), ~ scales::rescale(.)))%>%mutate(id = row_number())
       f_scaled(yo)}
       
@@ -2753,7 +2758,7 @@ server <- function(input, output, session) {
   }else{shinyjs::hide("ahp_cluster_num")}
   })
   
-  calculate_weights = reactive({
+  observe({
     req(objectives())
     n_criteria <- length(objectives())
     
@@ -2795,7 +2800,9 @@ server <- function(input, output, session) {
 
       weights <- weights/sum(weights)
       
-      weights
+      pass_to_manual(weights) #weights for passing and changing
+      
+      calculate_weights(weights) #weights for direct use
   })
 
  
@@ -2851,7 +2858,9 @@ server <- function(input, output, session) {
     #final score based on df within 0 and 1
     best_option_index <<- which.ahp(df_sc, weights)
     
-    best_option(df[best_option_index, ])
+    best_option(df[best_option_index, ]) #for direct use
+
+    bo_pass(df[best_option_index, ]) #for passing to manual 
     bo = best_option()
   
     }
@@ -2940,11 +2949,27 @@ server <- function(input, output, session) {
     ## ahp up down table
     
     observe({
-      req(fit(), best_option())
-      fit_sorted <- reactiveVal(fit())
+      req(fit(), bo_pass(), sols())
+      
+      if (input$best_cluster) {
+        df = subset(sols(),select= -c(optimum,`cluster number`,`cluster size`,outlier )) #best option out of optima
+        
+        df = match_abs(minval=c(input$obj1_ahp[1],input$obj2_ahp[1], input$obj3_ahp[1], input$obj4_ahp[1]),
+                       maxval=c(input$obj1_ahp[2],input$obj2_ahp[2], input$obj3_ahp[2], input$obj4_ahp[2]),
+                       abs_tab = df, ranger = range_controlled(), mes_slider = mahp_touched(), mes_df = mahp())
+        
+      } else{ #best option out of whole pareto front (=default)
+        
+        df = match_abs(minval=c(input$obj1_ahp[1],input$obj2_ahp[1], input$obj3_ahp[1], input$obj4_ahp[1]),
+                       maxval=c(input$obj1_ahp[2],input$obj2_ahp[2], input$obj3_ahp[2], input$obj4_ahp[2]),
+                       abs_tab = fit(), ranger = range_controlled(), mes_slider = mahp_touched(), mes_df = mahp())
+        
+      }
+      
+      fit_sorted <- reactiveVal(df)
       
       #find current position of bo and go from there (less scrolling)
-      fit_row(match(do.call(paste, best_option()), do.call(paste, fit())))
+      fit_row(match(do.call(paste, bo_pass()), do.call(paste, df))) #since main pass subsets too this should exist in
       
       
       if(input$make_manual_ahp){
@@ -2954,10 +2979,25 @@ server <- function(input, output, session) {
     output$manual_ahp_tab <- renderTable({
           
           row_data <- fit_sorted()[fit_row(), , drop = FALSE]
+          
+          #align rounding with other table
+          row_data <- row_data %>% 
+            mutate(across(everything(), ~ sapply(. , function(x) {
+              main_value <- abs(x)  
+              
+              if (main_value < 1) {
+                round(x, 4)  
+              } else if (main_value < 10) {
+                round(x, 2)  
+              } else {
+                round(x, 0)  
+              }
+            })))
+          
+          
           row_display <- row_data
           
-         
-          for (col in colnames(fit())) {
+          for (col in colnames(df)) {
             row_display[[col]] <- paste0(
               actionButton(paste0("up_", col), "⬆", 
                            onclick = paste0("Shiny.setInputValue('up_col', '", col, "', {priority: 'event'})")),
@@ -2966,12 +3006,13 @@ server <- function(input, output, session) {
                            onclick = paste0("Shiny.setInputValue('down_col', '", col, "', {priority: 'event'})"))
             )
           }
+          best_option(fit_sorted()[fit_row(), , drop = FALSE]) #pass back
           
           row_display
         }, sanitize.text.function = identity, rownames = FALSE)
         
         update_selected_row <- function(col, direction) {
-          sorted_data <- fit()[order(fit()[[col]]), ] 
+          sorted_data <- df[order(df[[col]]), ] 
           fit_sorted(sorted_data) 
          
           current_index <- which(sorted_data[[col]] == fit_sorted()[fit_row(), col])[1]
@@ -2996,14 +3037,14 @@ server <- function(input, output, session) {
         shinyjs::show("weighted_approach")
         
         shinyjs::hide("manual_ahp")
-}
+       }
     
     })
     
+    # switch to manual weights
     observe({
-      req(calculate_weights())
-      man_weigh(as.data.frame(t(calculate_weights()), row.names = NULL))#pull current weight
-      
+      req(pass_to_manual())
+      man_weigh(as.data.frame(t(pass_to_manual()), row.names = NULL))#pull current weight
     })
     
     
@@ -3012,15 +3053,17 @@ server <- function(input, output, session) {
       if(input$yes_weight){
         shinyjs::show("manual_weight")
         shinyjs::hide("sel_wgt")
-        req(man_weigh())
+        req(man_weigh(), objectives())
         
         output$manual_weight = renderDT({
           datatable(man_weigh(), editable = TRUE,
                     options = list( searching = FALSE,   
-                      paging = FALSE, info = FALSE, autoWidth = F, dom = 't'),rownames = NULL)
+                      paging = FALSE, info = FALSE, autoWidth = F, dom = 't'),rownames = NULL)%>%
+            formatRound(columns = objectives(), digits = 2)
         })
         
-      }else{shinyjs::hide("manual_weight")}
+      }else{shinyjs::hide("manual_weight")
+        shinyjs::show("sel_wgt")}
         
       })
         
@@ -3036,22 +3079,24 @@ server <- function(input, output, session) {
           new_data[1, j+1] <- v
           
           man_weigh(new_data)
-          
+         
         })
         
+        #pass manual weights back into main process
         observeEvent(input$check_sum , {
           new_data = man_weigh()
           sum_values <- sum(as.numeric(new_data[1, ]), na.rm = TRUE)
           
-          if (sum_values > 1) {
-            largest_value_col <- which.max(new_data[1, ])
-            new_data[1, largest_value_col] <- round(new_data[1, largest_value_col] - (sum_values - 1), 2)
-          }else if(sum_values < 1){
-            tiny_value_col <- which.min(new_data[1, ])
-            new_data[1, tiny_value_col] <- round(new_data[1, tiny_value_col] + (1 - sum_values), 2)
+          if (sum_values != 1) {
+            scaling_factor <- 1 / sum_values
+            new_data[1, ] <- round(new_data[1, ] * scaling_factor, 2)
           }
-          
           man_weigh(new_data)
+          nn = as.numeric(new_data[1,])
+          names(nn) = colnames(new_data)
+          
+          calculate_weights(nn)
+          
         })
         
 
@@ -3101,7 +3146,7 @@ server <- function(input, output, session) {
       return(plt_sc_optima(dat=df,x_var=input$x_var,y_var=input$y_var,
                     col_var=input$col_var,size_var=input$size_var,high_point=bo,extra_dat = sol,
                     plt_extra = input$show_extra_dat, status_q = input$show_status_quo,an_tab = F,rev = input$rev_box3,
-                    unit=input$unit_add3
+                    unit=input$unit_add3, ahp_man = input$make_manual_ahp
       ))
     }
     
