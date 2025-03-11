@@ -1075,8 +1075,9 @@ ui <-
 
 
                            div(id="all_ahp",
+                               div(
                                checkboxInput("make_manual_ahp", label = "Click here to manually select your preferred option without using weights", value = F, width = "100%"),
-                               
+                               style="text-align: center"),
                                div(id = "weighted_approach",
                         
                                
@@ -1153,7 +1154,7 @@ ui <-
                              column(3,selectInput(inputId = "col_var",label = "Colour", choices = NULL, multiple = F,selected=NULL)),
                              column(3,selectInput(inputId = "size_var",label = "Size", choices = NULL, multiple = F,selected=NULL))),
 
-                             checkboxInput("show_extra_dat", label = "Show cluster solutions", value = T),
+                             checkboxInput("show_extra_dat", label = "Show cluster solutions", value = F),
                              checkboxInput("show_status_quo", label = "Show Status Quo", value = FALSE),
                              checkboxInput("unit_add3",label = "Show units",value = TRUE),
                              
