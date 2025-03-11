@@ -1111,7 +1111,7 @@ ui <-
                              
                              div(id = "manual_weight", "Manual Assignment of Weights", style = "text-align: center; font-size: 150%;",
                                  div(DTOutput("manual_weight"), style = "margin: 0 auto; width: fit-content;"),
-                                 actionButton("check_sum","Check & adapt weights")
+                                 actionButton("check_sum","Check, adapt & apply weights")
                                  )%>%hidden()
                              
                              ),

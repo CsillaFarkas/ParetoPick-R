@@ -974,7 +974,8 @@ plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NUL
                           add_whole = F, #add the whole pareto front Analysis tab
                           status_q = FALSE,
                           rev = FALSE,
-                          unit = FALSE
+                          unit = FALSE,
+                          ahp_man = FALSE #adapt label in AHP for manual selection
                           ) {
   
   if(!file.exists(pareto_path)){return(NULL)}
@@ -1057,7 +1058,11 @@ plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NUL
 
   if (!is.null(high_point) && nrow(high_point)!=0) {
      names(high_point) = names(dat)
-     high_point$set <- "AHP - best option"
+     
+     if(ahp_man){
+       high_point$set = "Manual Selection"
+     }else{high_point$set = "AHP - best option"}
+     
      all_extra_data <- rbind(all_extra_data,high_point)
   }
   
@@ -1084,9 +1089,9 @@ plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NUL
       geom_point(data = all_extra_data, aes(x = .data[[x_var]], y = .data[[y_var]], shape = set, color = set, size = .data[[size_var]], fill = .data[[col_var]] ),
                   stroke = 1.8, show.legend = TRUE, alpha=0.7) +
       scale_shape_manual(labels = function(x) gsub("-", "", x),
-        values = c("cluster solutions" = 21, "AHP - best option" = 22, "Selection" =21, "Status Quo" = 21),name="") +
+        values = c("cluster solutions" = 21, "AHP - best option" = 22, "Manual Selection" = 22,  "Selection" =21, "Status Quo" = 21),name="") +
       scale_color_manual(labels = function(x) gsub("-", "", x),
-        values = c("cluster solutions" = "cyan", "AHP - best option" = "#FF4D4D", "Selection" = "black", "Status Quo" = "#FF00FF"),name="") +
+        values = c("cluster solutions" = "cyan", "AHP - best option" = "#FF4D4D", "Manual Selection" = "#FF4D4D", "Selection" = "black", "Status Quo" = "#FF00FF"),name="") +
       guides(color = guide_legend(override.aes = list(size = 5)),shape = guide_legend(override.aes = list(size = 5)))
   }
   
