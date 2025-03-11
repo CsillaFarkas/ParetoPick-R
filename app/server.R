@@ -950,13 +950,14 @@ server <- function(input, output, session) {
       #match scaled input with unscaled fit() to create dat
       dat=dat_matched()
       
+      if(!is.null(sel_tay()) && nrow(merge(sel_tay(),dat))==0){sel_tay(NULL)} #remove selection when not in sliders
+      
       #run plt_sc_optima with sq
       return(plt_sc_optima(dat=dat,    x_var = input$x_var3,
                     y_var = input$y_var3,
                     col_var = input$col_var3,
                     size_var = input$size_var3, status_q = input$add_sq_f,an_tab=T, rev = input$rev_box,
                     sel_tab = sel_tay(),unit=input$unit_add1))
-      
       
     }
     
