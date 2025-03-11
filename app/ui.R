@@ -1037,9 +1037,9 @@ ui <-
                        h2("Analytical Hierarchy Process", style = "margin-top: 0; padding-top: 0;"),
                        
 
-                       wellPanel( p("This tab allows you to run a different approach (AHP) to selecting those pareto optima best matching your preferences.
+                       wellPanel( p("This tab allows you to run a different approach (AHP) to selecting pareto optima that best match your preferences.
                      AHP is a decision making tool that helps you prioritise different objectives by comparing them in pairs.
-                                    If you want you can limit the objective ranges under 1."),
+                                    If you want you can limit the objective ranges and number of measures under 1."),
                                   p("Under 2. you can compare objectives two at a time and decide which objective is more important and by how much.
                      ParetoPick-R will assign weights to each objective based on your inputs and check its consistency.
                      The respective best choice is plotted below and you can decide whether
@@ -1054,14 +1054,14 @@ ui <-
                                fluidRow(
 
                                  column(12,
-                                        div("1. Limiting the objective space (optional)",style = "text-align: center; font-size: 120%;"),
+                                        div("1.1 Limiting the objective space (optional)",style = "text-align: center; font-size: 120%;"),
                                         sliderInput(inputId = "obj1_ahp", label = "Objective 1:", min = 0, max = 100, value = c(0, 100), width = "120%"),
                                         sliderInput(inputId = "obj2_ahp", label = "Objective 2:", min = 0, max = 100, value = c(0, 100), width = "120%"),
                                         sliderInput(inputId = "obj3_ahp", label = "Objective 3:", min = 0, max = 100, value = c(0, 100), width = "120%"),
                                         sliderInput(inputId = "obj4_ahp", label = "Objective 4:", min = 0, max = 100, value = c(0, 100), width = "120%"))
                                ),
                                br(),
-                               div("Number of measures", style = "text-align: left; font-size:150%; margin-top: 10px;"),
+                               div("1.2 Limiting the number of measures (optional)", style = "text-align: left; font-size:120%; margin-top: 10px;"),
                                
                                uiOutput("ahpmes_sliders"),
                                div(id="ahpmes_empty",
@@ -1099,10 +1099,9 @@ ui <-
                                             style="background-color: #f4f4f4; border-color: #2e6da4"),
                                actionButton("ahp_card6", "Show Card 6",
                                             style="background-color: #f4f4f4; border-color: #2e6da4"),
-                                 ),
-                             br(),br(),br(),
-                             br(),br(),br(),
-                             checkboxInput("show_all_cards", "Show all comparisons", value = FALSE),
+                               br(),
+                               div(checkboxInput("show_all_cards", "Show all comparisons", value = FALSE, width="100%"),style= "text-align: center")  ),
+                             
                              br(),
                              div(id="sel_wgt","Selected Weights", style = "text-align: center; font-size: 150%;",
                                  div(tableOutput("weights_output"), style = "margin: 0 auto; width: fit-content;")),
