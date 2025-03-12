@@ -42,7 +42,9 @@ server <- function(input, output, session) {
   bo_pass = reactiveVal()
   fit1 = reactiveVal()
   dat_matched = reactiveVal()
-
+  whole_ahp = reactiveVal(NULL)
+  sols_ahp = reactiveVal(NULL)
+  
   buffers = reactiveVal(NULL)
   cmf = reactiveVal(NULL)
   slider_mes_ini <- reactiveVal(FALSE)
@@ -903,7 +905,7 @@ server <- function(input, output, session) {
        dat_matched(scaled_abs_match(minval_s=c(input$obj1[1],input$obj2[1],input$obj3[1],input$obj4[1]),
                                     maxval_s=c(input$obj1[2],input$obj2[2],input$obj3[2],input$obj4[2]),
                                     abs_tab = fit_data,scal_tab =f_scaled_data,
-                                    allobs = objs,smll=F, mes_slider = mes_touched(), mes_df = opti_mima()))
+                                    allobs = objs, smll=F, mes_slider = mes_touched(), mes_df = opti_mima()))
        
        df <- dat_matched()
        
@@ -951,7 +953,6 @@ server <- function(input, output, session) {
       dat=dat_matched()
       
       if(!is.null(sel_tay()) && nrow(merge(sel_tay(),dat))==0){sel_tay(NULL)} #remove selection when not in sliders
-      
       #run plt_sc_optima with sq
       return(plt_sc_optima(dat=dat,    x_var = input$x_var3,
                     y_var = input$y_var3,
@@ -2747,16 +2748,26 @@ server <- function(input, output, session) {
   })
 
   observe({
-  if(input$best_cluster){shinyjs::show("ahp_cluster_num")
-    output$ahp_cluster_num <- renderText({
-      req(best_option(),sols(), objectives()) #best_option() is set to cluster in other table
+    req(best_option(), sols(), objectives()) #best_option() is set to cluster in other table
+    
+    if (input$best_cluster) {
+      shinyjs::show("ahp_cluster_num")
       
-      bor = sols() %>% filter(if_any(objectives(),~ . %in% best_option()))
-      
-      paste("cluster number: ", bor$`cluster number`, "; the representative optima is ", bor$optimum, sep = "")
-      
-    })
-  }else{shinyjs::hide("ahp_cluster_num")}
+      output$ahp_cluster_num <- renderText({
+          bor = sols() %>% filter(if_any(objectives(),  ~ . %in% best_option()))
+          if(nrow(bor)==0){#could be done nicer
+            paste("none of the clusters fall within your selection!", sep="")
+            }else{
+          paste("cluster number: ", bor$`cluster number`,
+            "; the representative optima is ", bor$optimum,
+            sep = ""
+          )}
+        
+        
+      })
+    } else{
+      shinyjs::hide("ahp_cluster_num")
+    }
   })
   
   observe({
@@ -2805,91 +2816,81 @@ server <- function(input, output, session) {
       
       calculate_weights(weights) #weights for direct use
   })
-
+  
+  
+  observe({#main datasets for this tab: sols_ahp() and whole_ahp()
+    req(sols(), fit(), input$obj1_ahp,input$obj2_ahp,input$obj3_ahp,input$obj4_ahp )
+    
+    df1 = subset(sols(),select= -c(optimum,`cluster number`,`cluster size`,outlier )) #best option out of optima
+    
+    sols_ahp(match_abs(minval=c(input$obj1_ahp[1],input$obj2_ahp[1], input$obj3_ahp[1], input$obj4_ahp[1]),
+                   maxval=c(input$obj1_ahp[2],input$obj2_ahp[2], input$obj3_ahp[2], input$obj4_ahp[2]),
+                   abs_tab = df1, ranger = range_controlled(), mes_slider = mahp_touched(), mes_df = mahp()))
+    
  
+    whole_ahp(match_abs(minval=c(input$obj1_ahp[1],input$obj2_ahp[1], input$obj3_ahp[1], input$obj4_ahp[1]),
+                   maxval=c(input$obj1_ahp[2],input$obj2_ahp[2], input$obj3_ahp[2], input$obj4_ahp[2]),
+                   abs_tab = fit(), ranger = range_controlled(), mes_slider = mahp_touched(), mes_df = mahp()))
+    
+    
+  })
+  
+ 
+  
   output$weights_output <- renderTable({
                                        req(calculate_weights())
                                        wgt=(t(calculate_weights()))
                                        wgt
                                        }, colnames = T)
   
+  
     output$best_option_output <- renderTable({
       
-    req(sols(),objectives())
+    req(sols(), objectives(), sols_ahp(), whole_ahp())
      
-    if (input$best_cluster) {
-      df = subset(sols(),select= -c(optimum,`cluster number`,`cluster size`,outlier )) #best option out of optima
-      
-      df = match_abs(minval=c(input$obj1_ahp[1],input$obj2_ahp[1], input$obj3_ahp[1], input$obj4_ahp[1]),
-                     maxval=c(input$obj1_ahp[2],input$obj2_ahp[2], input$obj3_ahp[2], input$obj4_ahp[2]),
-                     abs_tab = df, ranger = range_controlled(), mes_slider = mahp_touched(), mes_df = mahp())
-
-    } else{ #best option out of whole pareto front (=default)
-       
-      df = match_abs(minval=c(input$obj1_ahp[1],input$obj2_ahp[1], input$obj3_ahp[1], input$obj4_ahp[1]),
-                     maxval=c(input$obj1_ahp[2],input$obj2_ahp[2], input$obj3_ahp[2], input$obj4_ahp[2]),
-                     abs_tab = fit(), ranger = range_controlled(), mes_slider = mahp_touched(), mes_df = mahp())
-    }
+    if (input$best_cluster){ dfx = sols_ahp()}else{ dfx = whole_ahp() }
     
-    if (!all(names(calculate_weights()) %in% colnames(df))) {
-      return(
-             data.frame(Message = "Dataframe columns do not match criteria names."))
-    }
+    if (!all(names(calculate_weights()) %in% colnames(dfx))) {
       
-      if (nrow(df) == 0 || ncol(df) == 0) {
-        return(
-          data.frame(Message = "None of the values match these criteria."))
-      }
-
-    if(nrow(df)==0 || ncol(df) == 0){
-      bo = as.data.frame(array(0,dim=c(1,length(objectives())))) #to prevent error when tab is touched first
+            paste("Dataframe columns do not match criteria names.")
+    
+    }
+     
+    if(nrow(dfx)==0 || ncol(dfx) == 0){
+      bo = as.data.frame(array("-",dim=c(1,length(objectives())))) #to prevent error when tab is touched first
       colnames(bo) = objectives()
     }else{  
     
     weights <- calculate_weights()
    
-    min_fit <- apply(df, 2, min)
-    max_fit <- apply(df, 2, max)
+    min_fit <- apply(dfx, 2, min)
+    max_fit <- apply(dfx, 2, max)
     
     #scale to 0 and 1 not anchoring with original
     df_sc <- as.data.frame(mapply(function(col_name, column) {
       rescale_column(column, min_fit[col_name], max_fit[col_name])
-     }, colnames(df), df, SIMPLIFY = FALSE))
+     }, colnames(dfx), dfx, SIMPLIFY = FALSE))
     
     #final score based on df within 0 and 1
-    best_option_index <<- which.ahp(df_sc, weights)
+    best_option_index <- which.ahp(df_sc, weights)
     
-    best_option(df[best_option_index, ]) #for direct use
+    best_option(dfx[best_option_index, ]) #for direct use
 
-    bo_pass(df[best_option_index, ]) #for passing to manual 
-    bo = best_option()
-  
+    bo_pass(dfx[best_option_index, ]) #for passing to manual
+    bo = isolate(best_option())
+    
     }
       
-      bo = bo %>%mutate(across(where(is.numeric), 
-                               ~if_else(abs(.) < 1, round(., digits = 4), ifelse(abs(.) < 10,round(., digits = 2), round(., digits = 0)))))%>%
+      bo = bo %>%mutate(across(where(is.numeric),~if_else(abs(.) < 1, round(., digits = 4), ifelse(abs(.) < 10,round(., digits = 2), round(., digits = 0)))))%>%
         mutate(across(where(is.numeric), ~gsub("-", "", as.character(.))))
       
-      # datatable(bo,  colnames = names(bo), rownames = FALSE, escape = FALSE, options = list(dom = 't', paging = FALSE,bSort = FALSE))
       bo
   },colnames = T)
     
     output$aep_ahp <- renderTable({
-      req(aep_100_con(),hru_ever(),aep_100(),best_option(),fit(), objectives())
+      req(aep_100_con(),hru_ever(),aep_100(),best_option(),fit(), objectives(), sols_ahp(), whole_ahp())
       
-      if (input$best_cluster) {
-        df = subset(sols(),select= -c(optimum,`cluster number`,`cluster size`,outlier )) #best option out of optima
-        
-        df = match_abs(minval=c(input$obj1_ahp[1],input$obj2_ahp[1], input$obj3_ahp[1], input$obj4_ahp[1]),
-                       maxval=c(input$obj1_ahp[2],input$obj2_ahp[2], input$obj3_ahp[2], input$obj4_ahp[2]),
-                       abs_tab = df, ranger = range_controlled(), mes_slider = mahp_touched(), mes_df = mahp())
-        
-      } else{ #best option out of whole pareto front (=default)
-        
-        df = match_abs(minval=c(input$obj1_ahp[1],input$obj2_ahp[1], input$obj3_ahp[1], input$obj4_ahp[1]),
-                       maxval=c(input$obj1_ahp[2],input$obj2_ahp[2], input$obj3_ahp[2], input$obj4_ahp[2]),
-                       abs_tab = fit(), ranger = range_controlled(), mes_slider = mahp_touched(), mes_df = mahp())
-      }
+      if (input$best_cluster) {df = sols_ahp()} else{ df = whole_ahp() }
       
       # slider vs. whole front
       if(nrow(df)>= 1){
@@ -2950,22 +2951,10 @@ server <- function(input, output, session) {
     ## ahp up down table
     
     observe({
-      req(fit(), bo_pass(), sols())
+      req(fit(), bo_pass(), sols(), whole_ahp(), sols_ahp())
       
-      if (input$best_cluster) {
-        df = subset(sols(),select= -c(optimum,`cluster number`,`cluster size`,outlier )) #best option out of optima
-        
-        df = match_abs(minval=c(input$obj1_ahp[1],input$obj2_ahp[1], input$obj3_ahp[1], input$obj4_ahp[1]),
-                       maxval=c(input$obj1_ahp[2],input$obj2_ahp[2], input$obj3_ahp[2], input$obj4_ahp[2]),
-                       abs_tab = df, ranger = range_controlled(), mes_slider = mahp_touched(), mes_df = mahp())
-        
-      } else{ #best option out of whole pareto front (=default)
-        
-        df = match_abs(minval=c(input$obj1_ahp[1],input$obj2_ahp[1], input$obj3_ahp[1], input$obj4_ahp[1]),
-                       maxval=c(input$obj1_ahp[2],input$obj2_ahp[2], input$obj3_ahp[2], input$obj4_ahp[2]),
-                       abs_tab = fit(), ranger = range_controlled(), mes_slider = mahp_touched(), mes_df = mahp())
-        
-      }
+      if (input$best_cluster) {df = sols_ahp()} else{ df = whole_ahp() }
+      
       
       fit_sorted <- reactiveVal(df)
       
@@ -3128,6 +3117,7 @@ server <- function(input, output, session) {
         }}
     })
   
+    
    #show reverse option when needed
   observe({
     observe({
@@ -3136,16 +3126,15 @@ server <- function(input, output, session) {
     })
     
     weight_plt_fun = function(){
-      req(objectives(),fit(),best_option(),sols())
+       req(objectives(), sols(), whole_ahp(), best_option())
       
       sol<<-sols()[,objectives()]
       bo = best_option()
-      df = match_abs(minval=c(input$obj1_ahp[1],input$obj2_ahp[1], input$obj3_ahp[1], input$obj4_ahp[1]),
-                     maxval=c(input$obj1_ahp[2],input$obj2_ahp[2], input$obj3_ahp[2], input$obj4_ahp[2]),
-                     abs_tab = fit(), ranger = range_controlled(), mes_slider = mahp_touched(), mes_df = mahp())
+      df3 = whole_ahp()
       
-      return(plt_sc_optima(dat=df,x_var=input$x_var,y_var=input$y_var,
-                    col_var=input$col_var,size_var=input$size_var,high_point=bo,extra_dat = sol,
+      if(nrow(df3)==0){bo = NULL}
+      return(plt_sc_optima(dat=df3,x_var=input$x_var,y_var=input$y_var,
+                    col_var=input$col_var,size_var=input$size_var,high_point=bo, extra_dat = sol,
                     plt_extra = input$show_extra_dat, status_q = input$show_status_quo,an_tab = F,rev = input$rev_box3,
                     unit=input$unit_add3, ahp_man = input$make_manual_ahp
       ))
