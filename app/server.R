@@ -2748,7 +2748,7 @@ server <- function(input, output, session) {
   })
 
   observe({
-    req(best_option(), sols(), objectives()) #best_option() is set to cluster in other table
+    req(best_option(), sols(), objectives(), mahp()) #best_option() is set to cluster in other table
     
     if (input$best_cluster) {
       shinyjs::show("ahp_cluster_num")
@@ -2756,7 +2756,7 @@ server <- function(input, output, session) {
       output$ahp_cluster_num <- renderText({
           bor = sols() %>% filter(if_all(objectives(), ~. %in% best_option()))
          
-          if(nrow(bor)==0){#could be done nicer
+          if(nrow(bor)==0 || nrow(mahp()) == 0){#could be done nicer
             paste("none of the clusters fall within your selection!", sep="")
             }else{
           paste("cluster number: ", bor$`cluster number`,
