@@ -2754,7 +2754,8 @@ server <- function(input, output, session) {
       shinyjs::show("ahp_cluster_num")
       
       output$ahp_cluster_num <- renderText({
-          bor = sols() %>% filter(if_any(objectives(),  ~ . %in% best_option()))
+          bor = sols() %>% filter(if_all(objectives(), ~. %in% best_option()))
+         
           if(nrow(bor)==0){#could be done nicer
             paste("none of the clusters fall within your selection!", sep="")
             }else{
@@ -2996,6 +2997,7 @@ server <- function(input, output, session) {
                            onclick = paste0("Shiny.setInputValue('down_col', '", col, "', {priority: 'event'})"))
             )
           }
+          
           best_option(fit_sorted()[fit_row(), , drop = FALSE]) #pass back
           
           row_display
@@ -3004,7 +3006,7 @@ server <- function(input, output, session) {
         update_selected_row <- function(col, direction) {
           sorted_data <- df[order(df[[col]]), ] 
           fit_sorted(sorted_data) 
-         
+          
           current_index <- which(sorted_data[[col]] == fit_sorted()[fit_row(), col])[1]
           if (is.na(current_index)) return()
           
