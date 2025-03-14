@@ -162,5 +162,6 @@ The non-straighforward way is to delete object_names.RDS from the input folder a
 
 # To do
   * docker image with Linux executables
+  * pull AHP plot up with placeholder
   * remove zoom from downloaded plot
   * add a small spinner to the Check Data button to clarify that it takes a while  
