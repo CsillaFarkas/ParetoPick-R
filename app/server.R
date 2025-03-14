@@ -3013,6 +3013,8 @@ server <- function(input, output, session) {
           } else {
             if (current_index > 1) fit_row(current_index - 1)
           }
+          fit_sorted(sorted_data)
+          fit_row(fit_row())
         }
         
         observeEvent(input$up_col, {
