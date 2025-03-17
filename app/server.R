@@ -2702,11 +2702,20 @@ server <- function(input, output, session) {
       )
     })
     
-    
-    mahp_ini(TRUE)
+    observe({
+      lapply(names(ahpmt())[numeric_cols], function(col) {
+        observeEvent(input[[paste0("mahp_", col)]], {
+          manual_stuff <- c("make_manual_ahp", "yes_weight")  # Replace with your IDs
+          lapply(manual_stuff, function(id) {
+            updateCheckboxInput(session, id, value = FALSE)
+          })
+        }, ignoreInit = TRUE)
+      })
+    })
     
     sliders
   })
+  
   
   
   observe({
