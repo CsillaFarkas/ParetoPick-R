@@ -129,7 +129,16 @@ The clustering is later run across these variables.
 If you want this tab lets you select those measures that require a buffer in maps to enhance their visibility (note that elements in the downloaded maps tend to be a bit smaller than shown in the app).
 
 Please note that it is not straightforward to change the objectives names at a later point without performing a hard reset and rerunning the data preparation first. 
-The non-straighforward way is to delete object_names.RDS from the input folder and to remove the old object names written for var_1, var_2, var_3 and var_4 in the config.ini and then to restart the app.
+You can force a change of objective names with the following steps:
+
+1. delete object_names.RDS from the input folder
+
+2. manually change the names in the first four columns in var_corr_par.csv in the input folder
+
+3. manually change the names in the first four columns of the newest file in the output folder with a name like kmeans_data_w_clusters_representativesolutions.csv
+
+
+
 
 
 
