@@ -131,12 +131,12 @@ server <- function(input, output, session) {
   mahp_ini <- reactiveVal(FALSE)
   man_weigh <- reactiveVal(NULL)
   pass_to_manual <- reactiveVal()
-
+  dfx <- reactiveVal() #switch between cluster and whole datasets
   default_running <- reactiveVal(NULL)#spinner in configure tab
   one_on <- reactiveValues(vari="") #to turn off single cards
   meas_running <- reactiveVal(FALSE) #spinner in ahp tab
   fit_row <- reactiveVal()  
-  
+  fit_sorted <- reactiveVal()
   ### Startup ####
   if (file.exists("../input/var_corr_par_bu.csv")) { #if back up exists, the original needs replacing
     file.remove("../input/var_corr_par.csv")
@@ -2689,7 +2689,7 @@ server <- function(input, output, session) {
   })
   
   #measure slider
-  output$ahpmes_sliders <- renderUI({
+   output$ahpmes_sliders <- renderUI({
     req(ahpmt())
     numeric_cols <- sapply(ahpmt(), is.numeric)
     sliders <- lapply(names(ahpmt())[numeric_cols], function(col) {
@@ -2701,21 +2701,11 @@ server <- function(input, output, session) {
                   value = c(min(ahpmt()[[col]]), max(ahpmt()[[col]]))
       )
     })
+    mahp_ini(TRUE)
     
-    observe({
-      lapply(names(ahpmt())[numeric_cols], function(col) {
-        observeEvent(input[[paste0("mahp_", col)]], {
-          manual_stuff <- c("make_manual_ahp", "yes_weight")  # Replace with your IDs
-          lapply(manual_stuff, function(id) {
-            updateCheckboxInput(session, id, value = FALSE)
-          })
-        }, ignoreInit = TRUE)
-      })
-    })
     
     sliders
   })
-  
   
   
   observe({
@@ -2863,57 +2853,69 @@ server <- function(input, output, session) {
                                        }, colnames = T)
   
   
-    output$best_option_output <- renderTable({
-      
-    req(sols(), objectives(), sols_ahp(), whole_ahp())
-     
-    if (input$best_cluster){ dfx = sols_ahp()}else{ dfx = whole_ahp() }
+  observe({ #switch between datasets
     
-    if (!all(names(calculate_weights()) %in% colnames(dfx))) {
-      
-            paste("Dataframe columns do not match criteria names.")
+    req(sols_ahp(), whole_ahp())
     
-    }
-     
-    if(nrow(dfx)==0 || ncol(dfx) == 0){
-      bo = as.data.frame(array("-",dim=c(1,length(objectives())))) #to prevent error when tab is touched first
+    if (input$best_cluster) {dfx(sols_ahp())} else{ dfx(whole_ahp()) }
+    
+  })
+  
+  
+  output$best_option_output <- renderTable({
+    req(objectives(), calculate_weights(), dfx(), best_option())
+    
+    if (!all(names(calculate_weights()) %in% colnames(dfx()))) {paste("Dataframe columns do not match criteria names.")}
+    
+    if (nrow(dfx()) == 0 || ncol(dfx()) == 0) {
+      bo = as.data.frame(array("-", dim = c(1, length(objectives(
+      ))))) #to prevent error when tab is touched first
       colnames(bo) = objectives()
-    }else{  
-    
-    weights <- calculate_weights()
-   
-    min_fit <- apply(dfx, 2, min)
-    max_fit <- apply(dfx, 2, max)
-    
-    #scale to 0 and 1 not anchoring with original
-    df_sc <- as.data.frame(mapply(function(col_name, column) {
-      rescale_column(column, min_fit[col_name], max_fit[col_name])
-     }, colnames(dfx), dfx, SIMPLIFY = FALSE))
-    
-    #final score based on df within 0 and 1
-    best_option_index <- which.ahp(df_sc, weights)
-    
-    best_option(dfx[best_option_index, ]) #for direct use
-
-    bo_pass(dfx[best_option_index, ]) #for passing to manual
-    bo = isolate(best_option())
-    
+    } else{
+      bo = best_option() %>% mutate(across(where(is.numeric),  ~ if_else(
+        abs(.) < 1,
+        round(., digits = 4),
+        ifelse(abs(.) < 10, round(., digits = 2), round(., digits = 0))
+      ))) %>%
+        mutate(across(where(is.numeric), ~ gsub("-", "", as.character(.))))
     }
+    bo
+  }, colnames = T)
       
-      bo = bo %>%mutate(across(where(is.numeric),~if_else(abs(.) < 1, round(., digits = 4), ifelse(abs(.) < 10,round(., digits = 2), round(., digits = 0)))))%>%
-        mutate(across(where(is.numeric), ~gsub("-", "", as.character(.))))
+    
+    observe({ #control best_option
+      req(calculate_weights(), dfx())
+      weights <- calculate_weights()
       
-      bo
-  },colnames = T)
+      min_fit <- apply(dfx(), 2, min)
+      max_fit <- apply(dfx(), 2, max)
+      
+      #scale to 0 and 1 not anchoring with original
+      df_sc <- as.data.frame(mapply(function(col_name, column) {
+        rescale_column(column, min_fit[col_name], max_fit[col_name])
+      }, colnames(dfx()), dfx(), SIMPLIFY = FALSE))
+      
+      #final score based on df within 0 and 1
+      best_option_index <- which.ahp(df_sc, weights)
+      
+      best_option(dfx()[best_option_index, ]) #for direct use
+      
+      bo_pass(dfx()[best_option_index, ]) #for passing to manual
+      
+    })
+    
+    
+   
+      
+    
     
     output$aep_ahp <- renderTable({
-      req(aep_100_con(),hru_ever(),aep_100(),best_option(),fit(), objectives(), sols_ahp(), whole_ahp())
+      req(aep_100_con(),hru_ever(),aep_100(),best_option(),fit(), objectives(), sols_ahp(), whole_ahp(), dfx())
       
-      if (input$best_cluster) {df = sols_ahp()} else{ df = whole_ahp() }
       
       # slider vs. whole front
-      if(nrow(df)>= 1){
-        optima <-unique(match(do.call(paste, df), do.call(paste, fit())))#position/rowname/optimum in fit(), not super stable
+      if(nrow(dfx())>= 1){
+        optima <-unique(match(do.call(paste, dfx()), do.call(paste, fit())))#position/rowname/optimum in fit(), not super stable
         hru_spec_act = hru_ever() %>%filter(optims %in% optima)
         
         aep_sel = aep_100() %>% filter(hru %in% unique(hru_spec_act$id))
@@ -2965,29 +2967,35 @@ server <- function(input, output, session) {
         tab}
     }, align = "c")
     
+    # observe({
+    #   print(str(whole_ahp()))
+    #   print(str(sols_ahp()))
+    # })
     
     
     ## ahp up down table
     
     observe({
-      req(fit(), bo_pass(), sols(), whole_ahp(), sols_ahp())
+      req(fit(),sols(), bo_pass(), whole_ahp(), sols_ahp(),dfx())
       
-      if (input$best_cluster) {df = sols_ahp()} else{ df = whole_ahp() }
-      
-      
-      fit_sorted <- reactiveVal(df)
+
+      fit_sorted(dfx())
       
       #find current position of bo and go from there (less scrolling)
-      fit_row(match(do.call(paste, bo_pass()), do.call(paste, df))) #since main pass subsets too this should exist in
+      fit_row(match(do.call(paste, bo_pass()), do.call(paste, dfx()))) #since main pass subsets too this should exist 
       
-      
+    })
+    
+    observe({
       if(input$make_manual_ahp){
+        
         shinyjs::hide("weighted_approach")
         shinyjs::show("manual_ahp")
     
     output$manual_ahp_tab <- renderTable({
-          
-          row_data <- fit_sorted()[fit_row(), , drop = FALSE]
+      req( fit_sorted(), fit_row())
+      
+          row_data <- isolate(fit_sorted()[fit_row(), , drop = FALSE])
           
           #align rounding with other table
           row_data <- row_data %>% 
@@ -3006,7 +3014,7 @@ server <- function(input, output, session) {
           
           row_display <- row_data
           
-          for (col in colnames(df)) {
+          for (col in colnames(dfx())) {
             row_display[[col]] <- paste0(
               actionButton(paste0("up_", col), "⬆", 
                            onclick = paste0("Shiny.setInputValue('up_col', '", col, "', {priority: 'event'})")),
@@ -3015,14 +3023,13 @@ server <- function(input, output, session) {
                            onclick = paste0("Shiny.setInputValue('down_col', '", col, "', {priority: 'event'})"))
             )
           }
-          
           best_option(fit_sorted()[fit_row(), , drop = FALSE]) #pass back
           
           row_display
         }, sanitize.text.function = identity, rownames = FALSE)
         
         update_selected_row <- function(col, direction) {
-          sorted_data <- df[order(df[[col]]), ] 
+          sorted_data <- dfx()[order(dfx()[[col]]), ] 
           fit_sorted(sorted_data) 
           
           current_index <- which(sorted_data[[col]] == fit_sorted()[fit_row(), col])[1]
@@ -3139,6 +3146,21 @@ server <- function(input, output, session) {
         }}
     })
   
+    weight_plt_fun = function(){
+      req(objectives(), sols(), whole_ahp(), best_option(), input$x_var)
+      
+      sol<<-sols()[,objectives()]
+      bo = best_option()
+      df3 = whole_ahp()
+      
+      if(nrow(df3)==0){bo = NULL}
+      return(plt_sc_optima(dat=df3,x_var=input$x_var,y_var=input$y_var,
+                           col_var=input$col_var,size_var=input$size_var,high_point=bo, extra_dat = sol,
+                           plt_extra = input$show_extra_dat, status_q = input$show_status_quo,an_tab = F,rev = input$rev_box3,
+                           unit=input$unit_add3, ahp_man = input$make_manual_ahp
+      ))
+    }
+    
     
    #show reverse option when needed
   observe({
@@ -3147,20 +3169,6 @@ server <- function(input, output, session) {
          all(fit()[[input$y_var]]<=0)){shinyjs::show("rev_plot3")}else{shinyjs::hide("rev_plot3")}
     })
     
-    weight_plt_fun = function(){
-       req(objectives(), sols(), whole_ahp(), best_option())
-      
-      sol<<-sols()[,objectives()]
-      bo = best_option()
-      df3 = whole_ahp()
-      
-      if(nrow(df3)==0){bo = NULL}
-      return(plt_sc_optima(dat=df3,x_var=input$x_var,y_var=input$y_var,
-                    col_var=input$col_var,size_var=input$size_var,high_point=bo, extra_dat = sol,
-                    plt_extra = input$show_extra_dat, status_q = input$show_status_quo,an_tab = F,rev = input$rev_box3,
-                    unit=input$unit_add3, ahp_man = input$make_manual_ahp
-      ))
-    }
     
   output$weights_plot <- renderPlot({  weight_plt_fun() })
   
