@@ -2739,7 +2739,7 @@ server <- function(input, output, session) {
       mt_optis = ff$optimum #optima
       mahp(fit() %>% rownames_to_column("optimum")%>%filter(optimum %in% mt_optis) %>% select(-optimum))
       
-    }else{mahp(FALSE)}
+    }else{mahp(NULL)}
     
   })
   
@@ -2759,14 +2759,11 @@ server <- function(input, output, session) {
       shinyjs::show("ahp_cluster_num")
       
       output$ahp_cluster_num <- renderText({
-          bor = sols() %>% filter(if_all(objectives(), ~. %in% best_option()))
-         
-          if(nrow(bor)==0){#could be done nicer
+          bor = sols() %>% filter(if_all(objectives(), ~. %in% best_option()))%>%as.data.frame()
+          
+          if((!is.null(mahp()) && nrow(mahp()) == 0) || nrow(bor) == 0){
             paste("none of the clusters fall within your selection!", sep="")
-            }else if(mahp() && nrow(mahp()) == 0){
-              paste("none of the clusters fall within your selection!", sep="")
-              
-            }else{
+           }else{
           paste("cluster number: ", bor$`cluster number`,
             "; the representative optima is ", bor$optimum,
             sep = ""
