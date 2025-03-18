@@ -137,11 +137,13 @@ You can force a change of objective names with the following steps:
 
 3. manually change the names in the first four columns of the newest file in the output folder with a name like kmeans_data_w_clusters_representativesolutions.csv
 
+### Cluster Tabs
+The clustering, both manually or under default settings write two .csv files to the output folder. One, is called correlation_matrix.csv, the other is called kmeans_data_w_clusters_representativesolutions.csv or kmedoid_data_w_clusters_representativesolutions.csv or similar depending on which 
+cluster method you chose and if outliers were tested. 
 
-
-
-
-
+It is important to note that:
+1. **these files are overwritten** each time the clustering is run again, save them in another location if you would like to keep your clustering results
+2. in the following tabs, **only the most recent"" of the kmeans_data_w_clusters_re....csv file is read!
  
 
 ## Files created and used in the process
