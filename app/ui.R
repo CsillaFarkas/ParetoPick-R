@@ -1076,7 +1076,8 @@ ui <-
 
                            div(id="all_ahp",
                                div(
-                               checkboxInput("make_manual_ahp", label = "Click here to manually select your preferred option without using weights", value = F, width = "100%"),
+                               checkboxInput("make_manual_ahp", 
+                                             label = "Click here to manually select/refine your preferred option without using weights", value = F, width = "100%"),#table opens further below
                                style="text-align: center"),
                                div(id = "weighted_approach",
                         
@@ -1128,7 +1129,8 @@ ui <-
                            div(id = "pareto_weighted", "Best Option under selected weighting", style = "text-align: center; font-size: 150%;"),
                                                    div(tableOutput("best_option_output"), style = "margin: 0 auto; width: fit-content; font-size: 150%;")),
                            
-                           div(id = "manual_ahp", "Manual Selection of best Option", style = "text-align: center; font-size: 150%;",
+                           div(id = "manual_ahp", "Manual Selection/Refinement of best Option", style = "text-align: center; font-size: 150%;",
+                               div("The starting point is the currently selected best optimum", style = "text-align: center; font-size: 60%;"),
                            div(tableOutput("manual_ahp_tab"), style = "margin: 0 auto; width: fit-content;"))%>%hidden(),
                            
 

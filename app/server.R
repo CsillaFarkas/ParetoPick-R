@@ -2967,12 +2967,7 @@ server <- function(input, output, session) {
         tab}
     }, align = "c")
     
-    # observe({
-    #   print(str(whole_ahp()))
-    #   print(str(sols_ahp()))
-    # })
-    
-    
+   
     ## ahp up down table
     
     observe({
