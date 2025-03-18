@@ -3134,7 +3134,6 @@ server <- function(input, output, session) {
         bp = cbind(optimum = rownames(bp), bp)
         write.csv(bp,file=paste0(output_dir,"selected_optima.csv"),row.names = F)
 
-        write.table()
         }}
     })
   
