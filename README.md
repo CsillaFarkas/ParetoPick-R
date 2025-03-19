@@ -17,8 +17,9 @@ ParetoPick-R also integrates an Analytical Hierarchy Process (AHP) allowing the 
 Please note that the Python code used in this app was written by [S. White](https://github.com/SydneyEWhite).
 
 # Requirements
-R version 4.4.2 or higher
-package "promises" version 1.3.2 or higher
+  * R version 4.4.2 or higher
+  * package "promises" version 1.3.2 or higher
+  * package "tmap" has shown to lead to conflicts, it is recommended to either remove it(e.g. via remove.packages("tmap")) or to upgrade it to at least version 4.0
 
 # Folder Structure
 the project consists of six folders
@@ -173,6 +174,7 @@ It is important to note that:
 
 # To do
   * docker image with Linux executables
+  * fix first up/down click in AHP manual table, sometimes delayed reactivity!
   * pull AHP plot up with placeholder
   * remove zoom from downloaded plot
   * add a small spinner to the Check Data button to clarify that it takes a while  
