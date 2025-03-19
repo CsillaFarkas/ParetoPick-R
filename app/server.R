@@ -2968,14 +2968,76 @@ server <- function(input, output, session) {
     ## ahp up down table
     
     observe({
-      req(fit(),sols(), bo_pass(), whole_ahp(), sols_ahp(),dfx())
+      req(bo_pass(), dfx())
       
-
       fit_sorted(dfx())
       
       #find current position of bo and go from there (less scrolling)
       fit_row(match(do.call(paste, bo_pass()), do.call(paste, dfx()))) #since main pass subsets too this should exist 
+    })
+    
+    
+    manual_ahp_fun = function(){
+      req( fit_sorted(), fit_row())
       
+      row_data <- fit_sorted()[fit_row(), , drop = FALSE]
+      #align rounding with other table
+      row_data <- row_data %>% 
+        mutate(across(everything(), ~ sapply(. , function(x) {
+          main_value <- abs(x)  
+          
+          if (main_value < 1) {
+            round(x, 4)  
+          } else if (main_value < 10) {
+            round(x, 2)  
+          } else {
+            round(x, 0)  
+          }
+        })))
+      
+      
+      row_display <- row_data
+      
+      for (col in colnames(dfx())) {
+        row_display[[col]] <- paste0(
+          actionButton(paste0("up_", col), "⬆", 
+                       onclick = paste0("Shiny.setInputValue('up_col', '", col, "', {priority: 'event'})")),
+          " ", row_data[[col]], " ",
+          actionButton(paste0("down_", col), "⬇", 
+                       onclick = paste0("Shiny.setInputValue('down_col', '", col, "', {priority: 'event'})"))
+        )
+      }
+      # best_option(isolate(fit_sorted()[fit_row(), , drop = FALSE])) #pass back
+      
+      return(row_display)
+    }
+    
+    update_selected_row <- function(col, direction) {
+      req(dfx(), fit_row())
+      
+      sorted_data <- dfx()[order(dfx()[[col]]), ] 
+      fit_sorted(sorted_data) 
+     
+      current_index <- which(sorted_data[[col]] == sorted_data[fit_row(), col])[1]
+      fit_row(current_index)
+      if (is.na(current_index)) return()
+      
+      if (direction == "up") {
+        if (current_index < nrow(sorted_data)) fit_row(current_index + 1)
+      } else {
+        if (current_index > 1) fit_row(current_index - 1)
+      }
+      best_option(isolate(fit_sorted()[fit_row(), , drop = FALSE])) #pass back
+      
+    }
+    
+    
+    observeEvent(input$up_col, {
+      update_selected_row(input$up_col, "up")
+    })
+    
+    observeEvent(input$down_col, {
+      update_selected_row(input$down_col, "down")
     })
     
     observe({
@@ -2985,64 +3047,10 @@ server <- function(input, output, session) {
         shinyjs::show("manual_ahp")
     
     output$manual_ahp_tab <- renderTable({
-      req( fit_sorted(), fit_row())
-      
-          row_data <- isolate(fit_sorted()[fit_row(), , drop = FALSE])
-          
-          #align rounding with other table
-          row_data <- row_data %>% 
-            mutate(across(everything(), ~ sapply(. , function(x) {
-              main_value <- abs(x)  
-              
-              if (main_value < 1) {
-                round(x, 4)  
-              } else if (main_value < 10) {
-                round(x, 2)  
-              } else {
-                round(x, 0)  
-              }
-            })))
-          
-          
-          row_display <- row_data
-          
-          for (col in colnames(dfx())) {
-            row_display[[col]] <- paste0(
-              actionButton(paste0("up_", col), "⬆", 
-                           onclick = paste0("Shiny.setInputValue('up_col', '", col, "', {priority: 'event'})")),
-              " ", row_data[[col]], " ",
-              actionButton(paste0("down_", col), "⬇", 
-                           onclick = paste0("Shiny.setInputValue('down_col', '", col, "', {priority: 'event'})"))
-            )
-          }
-          best_option(fit_sorted()[fit_row(), , drop = FALSE]) #pass back
-          
-          row_display
+         manual_ahp_fun()
         }, sanitize.text.function = identity, rownames = FALSE)
         
-        update_selected_row <- function(col, direction) {
-          sorted_data <- dfx()[order(dfx()[[col]]), ] 
-          fit_sorted(sorted_data) 
-          
-          current_index <- which(sorted_data[[col]] == fit_sorted()[fit_row(), col])[1]
-          if (is.na(current_index)) return()
-          
-          if (direction == "up") {
-            if (current_index < nrow(sorted_data)) fit_row(current_index + 1)
-          } else {
-            if (current_index > 1) fit_row(current_index - 1)
-          }
-          fit_sorted(sorted_data)
-          fit_row(fit_row())
-        }
-        
-        observeEvent(input$up_col, {
-          update_selected_row(input$up_col, "up")
-        })
-        
-        observeEvent(input$down_col, {
-          update_selected_row(input$down_col, "down")
-        })
+       
       
       }else{
         shinyjs::show("weighted_approach")
