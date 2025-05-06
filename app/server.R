@@ -148,13 +148,14 @@ server <- function(input, output, session) {
     if (file.exists("../data/sq_fitness.txt")) {
       req(objectives())
       
-      shinyjs::enable("plt_sq")
+      # shinyjs::enable("plt_sq")
       
       st_q = read.table('../data/sq_fitness.txt', header = FALSE, stringsAsFactors = FALSE, sep = deli('../data/sq_fitness.txt'))
       names(st_q) = objectives()
       stq(st_q)
-    }else{
-      shinyjs::disable("plt_sq")} })
+    }#else{
+      # shinyjs::disable("plt_sq")} 
+    })
   
   
   ## ggplot melt and change plotting order
