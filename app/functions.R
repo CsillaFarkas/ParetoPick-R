@@ -464,7 +464,7 @@ plt_latlon = function(conpath){
 
 
 ## plot frequency
-plt_freq = function(data,lo, la, buffers , remaining, dispal = pal, mes=mes, legend = TRUE) {
+plt_freq = function(data,lo, la, buffers , remaining, dispal = pal, mes=mes, legend = TRUE, basemap = basemap) {
   
   data = left_join(data,remaining, by = c("id"))%>%st_make_valid() #only those with highest priority
   data = data %>%subset(!st_is_empty(geometry))
@@ -473,8 +473,14 @@ plt_freq = function(data,lo, la, buffers , remaining, dispal = pal, mes=mes, leg
   
   
   m =  leaflet(data=data) %>%
-    setView(lng = lo, lat = la, zoom = 12) %>%
-    addProviderTiles(providers$CartoDB.Positron) %>% #comment for anonymous location
+    setView(lng = lo, lat = la, zoom = 12) 
+  
+  if(!basemap){ #show basemap if anonymise NOT selected
+    m = m %>%
+      addProviderTiles(providers$CartoDB.Positron)#poviders$Esri.NatGeoWorldMap, $Stadia.StamenToner, $OpenTopoMap
+  }
+  
+  m = m %>%
     addPolygons(
       fillColor = ~ dispal(measure),
       fillOpacity = ~ freq,
@@ -707,7 +713,7 @@ plt_boxpl_clus = function(dat, sel, all_obs,mima){
 
 
 ## plot leaflet w/ specific column
-plt_lf <- function(data, lo, la, buff_els, col_sel, buffers, dispal = pal) {
+plt_lf <- function(data, lo, la, buff_els, col_sel, buffers, dispal = pal, basemap = basemap) {
   data = data %>%subset(!st_is_empty(geometry))
   m <- vector("list", length = length(col_sel))
   
@@ -716,8 +722,14 @@ plt_lf <- function(data, lo, la, buff_els, col_sel, buffers, dispal = pal) {
     
     
     p=   leaflet(data = data) %>%
-      setView(lng = lo, lat = la, zoom = 12) %>%
-      addProviderTiles(providers$CartoDB.Positron) %>%#poviders$Esri.NatGeoWorldMap, $Stadia.StamenToner, $OpenTopoMap
+      setView(lng = lo, lat = la, zoom = 12)
+    
+    if(!basemap){ #show basemap if anonymise NOT selected
+      p = p %>%
+        addProviderTiles(providers$CartoDB.Positron)#poviders$Esri.NatGeoWorldMap, $Stadia.StamenToner, $OpenTopoMap
+    }
+    
+   p = p %>%
       addPolygons(
         fillColor = ~ dispal(data[[col]]),
         fillOpacity = 0.8,
@@ -1107,7 +1119,7 @@ plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NUL
 }
 
 
-## scatter plot in Analysis tab vor comparing decision and objective space 
+## scatter plot in Analysis tab for comparing decision and objective space 
 
 pcs_vs_var <- function(dat, x_var, y_var, col_var, size_var,flip=F, sel_tab=NULL){
     
@@ -1217,6 +1229,12 @@ scaled_abs_match = function(minval_s=c(0,0,0,0),
 
   }
 
+  #merge with selection under measure sliders
+  if(mes_slider &&!is.na(mes_slider) && identical(names(ch),names(mes_df))){
+    
+    ch =merge(ch, mes_df, by = allobs, all = FALSE)#new dat_matched()
+  }
+  
   cw = as.data.frame(array(NA,dim=c(2,length(allobs))),row.names = c("max","min"))
   colnames(cw) = allobs
   
@@ -1238,12 +1256,6 @@ scaled_abs_match = function(minval_s=c(0,0,0,0),
     
   
   if(at){rownames(cw) = c("best","worst")}}else{ch=ch[0, , drop = FALSE]}
-  
-  #merge with selection under measure sliders
-  if(mes_slider &&!is.na(mes_slider) && identical(names(ch),names(mes_df))){
-    
-  ch =merge(ch, mes_df, by = allobs, all = FALSE)#new dat_matched()
-  }
   
   
   #when smll is set to false the table with all absolute values is returned
@@ -1321,8 +1333,8 @@ match_abs <- function(minval, maxval, abs_tab, ranger = NULL, mes_slider = F, me
   combined_filter <- Reduce(`&`, filter_conditions)
   
   abs_filter <- abs_tab %>% filter(combined_filter)
-  
   return(abs_filter)
+
 }
 
 ## rescale

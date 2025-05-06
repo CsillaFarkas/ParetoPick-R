@@ -258,6 +258,14 @@ ui <-
                                   .dataTable td.border-column {
                                    border-right: 1px solid #03597F;
                                   }
+                                  
+                                  .leaflet-container {
+                                    background: #fff !important;
+                                  }
+                                  
+                                  .checkbox label { 
+                                    white-space: nowrap;
+                                  }
                                  
                                       ')),
 
@@ -446,6 +454,12 @@ ui <-
                                actionButton("save_buff","Save buffers"))
                                ,
                                br(),br(),
+                               
+                               div("For some applications it makes sense to obscure the catchment location. Please click here if you would like to anonymise your catchment.", style = "text-align: left; font-size:120%; margin-top: 10px;"),
+                               
+                               checkboxInput("anomap",label = "Hide identifying map features/basemap", value = FALSE),#set to TRUE in LE
+                               br(), br(),
+                               
 
 
                                div(id="range_title","Range of objective values given in pareto_fitness.txt:",style = "text-align: left; font-size:120%"),

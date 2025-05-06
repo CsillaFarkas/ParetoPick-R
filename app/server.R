@@ -1045,7 +1045,8 @@ server <- function(input, output, session) {
       man_col = man_col[1:length(unique(mes$nswrm))]
       pal = colorFactor(palette = man_col, domain = unique(mes$nswrm), na.color = "lightgrey")
       
-      m1 = plt_lf( data = hru_one, dispal = pal,la = lalo()[1],lo =lalo()[2],buff_els = needs_buffer(), col_sel = col_sel,buffers=buffers())
+      m1 = plt_lf( data = hru_one, dispal = pal,la = lalo()[1],lo =lalo()[2],buff_els = needs_buffer(),
+                   col_sel = col_sel,buffers=buffers(), basemap = input$anomap)
       return(m1)
       play_running(FALSE) #for spinner
     }
@@ -1501,7 +1502,7 @@ server <- function(input, output, session) {
     man_col = man_col[1:length(unique(mes))]
     pal <<- colorFactor(palette = man_col, domain = unique(mes), na.color = "lightgrey")
 
-    m = plt_freq(data=cmf(),lo=lalo()[2], la=lalo()[1], buffers=buffers(), remaining=hru_share,dispal=pal, mes = mes, legend = leg)
+    m = plt_freq(data=cmf(),lo=lalo()[2], la=lalo()[1], buffers=buffers(), remaining=hru_share,dispal=pal, mes = mes, legend = leg, basemap = input$anomap)
     return(m)}
   }
   
@@ -2563,7 +2564,7 @@ server <- function(input, output, session) {
     pal = colorFactor(palette = man_col, domain = unique(mes$nswrm), na.color = "lightgrey")
     
     m1 = plt_lf(data=hru_sel, col_sel = col_sel ,dispal=pal,
-                la = lalo()[1],lo =lalo()[2], buff_els=needs_buffer(), buffers=buffers())
+                la = lalo()[1],lo =lalo()[2], buff_els=needs_buffer(), buffers=buffers(), basemap = input$anomap)
     
     m = m1
     
@@ -3284,7 +3285,7 @@ server <- function(input, output, session) {
     
     
     m1 = plt_lf(data=hru_one, dispal = pal,la = lalo()[1],lo =lalo()[2],
-                buff_els=needs_buffer(),col_sel=col_sel,buffers=buffers())
+                buff_els=needs_buffer(),col_sel=col_sel,buffers=buffers(), basemap = input$anomap)
     return(m1)
     meas_running(FALSE)
     }
