@@ -1481,7 +1481,7 @@ server <- function(input, output, session) {
     }else{shinyjs::hide("freq_map_play")
       shinyjs::hide("download_freq_id")}})
  
-  play_freq = function(leg=TRUE){ #excessive function
+  play_freq = function(leg = TRUE){ #excessive function
     req(cmf(),hru_100(),lalo(),prio(), dat_matched(),hru_matcher(),fit())
 
     dat = dat_matched()
@@ -1502,7 +1502,8 @@ server <- function(input, output, session) {
     man_col = man_col[1:length(unique(mes))]
     pal <<- colorFactor(palette = man_col, domain = unique(mes), na.color = "lightgrey")
 
-    m = plt_freq(data=cmf(),lo=lalo()[2], la=lalo()[1], buffers=buffers(), remaining=hru_share,dispal=pal, mes = mes, legend = leg, basemap = input$anomap)
+    m = plt_freq(data = cmf(),lo=lalo()[2], la=lalo()[1], buffers=buffers(), remaining=hru_share, dispal=pal, mes = mes, legend = leg, basemap = input$anomap)
+
     return(m)}
   }
   
@@ -1528,6 +1529,58 @@ server <- function(input, output, session) {
       file.remove("temp.html")
       unlink("temp_files", recursive = TRUE)
       }
+  )
+  
+ freq_shaper = function(){ 
+   req(cmf(),hru_100(), prio(), dat_matched(),hru_matcher(), fit())
+   
+   dat = dat_matched()
+   
+   if(nrow(dat)== 0 || ncol(dat)== 0){return(NULL)}else{
+     optima <-unique( match(do.call(paste, dat), do.call(paste, fit())))
+     hru_subset_freq = hru_matcher()[,c("id",as.character(optima))]     #subset to only those optima in selection
+     
+     hru_freq = hru_subset_freq
+     hru_freq$freq = (rowSums(!is.na(hru_freq[ , -which(names(hru_freq) == "id")])) / (ncol(hru_freq) - 1))*100
+     hru_freq$all_optima = rowSums(!is.na(hru_freq[ , -which(names(hru_freq) == "id")]))
+     hru_share = hru_freq%>%left_join(hru_100(),by="id") %>%select(id, measure, freq, all_optima)
+     
+     #make unique measures outside
+     mes <<- unique(hru_share$measure)
+     
+     #make palette outside and pass to it
+     man_col = c("#66C2A5", "#4db818", "#663e13", "#F7A600", "#03597F", "#83D0F5",  "#FFEF2C",   "#a84632",  "#b82aa5",  "#246643" )
+     man_col = man_col[1:length(unique(mes))]
+     pal <<- colorFactor(palette = man_col, domain = unique(mes), na.color = "lightgrey")
+
+     m = left_join(cmf(), hru_share, by = c("id"))%>%st_make_valid() 
+     m = m %>%subset(!st_is_empty(geometry))
+     
+     return(m)
+     }
+ }
+  
+  output$download_shp_freq <- downloadHandler(
+
+    filename = function(){
+      curt = format(Sys.time(), "_%Y%m%d")
+      paste0("frequency_selection",curt, ".zip")
+    },
+
+    content = function(file) {
+      shinyjs::show("spinner_download_shp2")
+      data <- freq_shaper()
+      out_name <- "frequency_selection"
+      sf::st_write(data,paste0(out_name,".shp"), driver = "ESRI Shapefile")
+      zip::zip( paste0(out_name,".zip"), c( paste0(out_name,".shp"), paste0(out_name,".shx"),
+                                            paste0(out_name,".dbf"), paste0(out_name,".prj")))
+
+      file.rename(paste0(out_name,".zip"), file) #deletes zip from wd
+      file.remove(c( paste0(out_name,".shp"), paste0(out_name,".shx"),
+                     paste0(out_name,".dbf"), paste0(out_name,".prj")))
+      shinyjs::hide("spinner_download_shp2")
+
+    }
   )
   
 
