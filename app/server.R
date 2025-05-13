@@ -1544,7 +1544,6 @@ server <- function(input, output, session) {
      hru_freq$freq = (rowSums(!is.na(hru_freq[ , -which(names(hru_freq) == "id")])) / (ncol(hru_freq) - 1))*100
      hru_freq$all_optima = rowSums(!is.na(hru_freq[ , -which(names(hru_freq) == "id")]))
      hru_share = hru_freq%>%left_join(hru_100(),by="id") %>%select(id, measure, freq, all_optima)
-     
      #make unique measures outside
      mes <<- unique(hru_share$measure)
      
@@ -1553,7 +1552,7 @@ server <- function(input, output, session) {
      man_col = man_col[1:length(unique(mes))]
      pal <<- colorFactor(palette = man_col, domain = unique(mes), na.color = "lightgrey")
 
-     m = left_join(cmf(), hru_share, by = c("id"))%>%st_make_valid() 
+     m = left_join(cmf(), hru_share, by = c("id"))%>%select(id, geometry, measure, freq, all_optima)%>%st_make_valid() 
      m = m %>%subset(!st_is_empty(geometry))
      
      return(m)
