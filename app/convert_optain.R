@@ -272,7 +272,7 @@ for(op in paste0("V", 1:nopt)){
   for(op in paste0("V", 1:nopt)){
     opti = hru_donde %>% select(all_of(op))%>%group_by(.data[[op]])%>%mutate(count=n())
     
-    mngmt = opti%>%filter(.data[[op]] %in% mngmt_obj)%>%ungroup()%>%select(count)%>%distinct()%>%pull()
+    mngmt = opti%>%filter(.data[[op]] %in% mngmt_obj)%>%distinct()%>%ungroup()%>%select(count)%>%sum()
     
     strc = opti %>% filter(.data[[op]] %in% strct_obj)%>%distinct()%>%ungroup()%>%select(count)%>%sum()
 
