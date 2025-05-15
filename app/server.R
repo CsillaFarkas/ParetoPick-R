@@ -1555,6 +1555,8 @@ server <- function(input, output, session) {
      m = left_join(cmf(), hru_share, by = c("id"))%>%select(id, geometry, measure, freq, all_optima)%>%st_make_valid() 
      m = m %>%subset(!st_is_empty(geometry))
      
+     #divide into different dataframes
+     m = split(m, m$measure)
      return(m)
      }
  }
@@ -1569,14 +1571,27 @@ server <- function(input, output, session) {
     content = function(file) {
       shinyjs::show("spinner_download_shp2")
       data <- freq_shaper()
-      out_name <- "frequency_selection"
-      sf::st_write(data,paste0(out_name,".shp"), driver = "ESRI Shapefile")
-      zip::zip( paste0(out_name,".zip"), c( paste0(out_name,".shp"), paste0(out_name,".shx"),
-                                            paste0(out_name,".dbf"), paste0(out_name,".prj")))
 
-      file.rename(paste0(out_name,".zip"), file) #deletes zip from wd
-      file.remove(c( paste0(out_name,".shp"), paste0(out_name,".shx"),
-                     paste0(out_name,".dbf"), paste0(out_name,".prj")))
+      temp_dir <- tempfile()
+      dir.create(temp_dir)
+      
+      # Step 2: Create a subfolder for all shapefiles
+      shp_dir <- file.path(temp_dir, "shapes")
+      dir.create(shp_dir)
+      
+      for (mea in names(data)) {
+        out_name <- paste0("frequency_selection_", mea)
+        
+        sf::st_write(data[[mea]],dsn = file.path(shp_dir, paste0(out_name, ".shp")),delete_layer = T, driver = "ESRI Shapefile")
+       
+      }
+        
+      zip::zip(
+        zipfile = file,
+        files = list.files(shp_dir, full.names = TRUE),
+        mode = "cherry-pick"
+      )      
+   
       shinyjs::hide("spinner_download_shp2")
 
     }
