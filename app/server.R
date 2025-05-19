@@ -3194,21 +3194,26 @@ server <- function(input, output, session) {
       if(!is.null(sols())) {shinyjs::show("save_ahp")}})
     
     observe({
-      req(best_option())
-      updateCheckboxInput(session, "save_ahp", value = FALSE) })
+      req(best_option(), fit(), objectives())
+      updateCheckboxInput(session, "save_ahp", value = FALSE) 
+      bp <-best_option()
+      
+      bp <<- fit()%>% rownames_to_column("optimum") %>% filter(across(all_of(objectives()), ~ . %in% bp))
+      })
+    
+      
     
     observeEvent(input$save_ahp,{
+      req(bp)
    
       if(input$save_ahp){
-        req(best_option())
+        
         if(file.exists(paste0(output_dir,"selected_optima.csv"))){
-          bp <-best_option()
-          bp = cbind(optimum = rownames(bp), bp)
+          
           write.table(bp, file = paste0(output_dir,"selected_optima.csv"), sep = ",",
                       append = TRUE, col.names = FALSE, row.names = FALSE)
 
-        }else{bp <-best_option()
-        bp = cbind(optimum = rownames(bp), bp)
+        }else{
         write.csv(bp,file=paste0(output_dir,"selected_optima.csv"),row.names = F)
 
         }}
