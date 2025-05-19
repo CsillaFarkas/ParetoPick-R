@@ -173,8 +173,6 @@ It is important to note that:
  
 
 # To do
-  * docker image with Linux executables
-  * fix first up/down click in AHP manual table, sometimes delayed reactivity!
+  * docker image with Linux executables OR translation to fully R-based clustering
   * pull AHP plot up with placeholder
-  * remove zoom from downloaded plot
   * add a small spinner to the Check Data button to clarify that it takes a while  
