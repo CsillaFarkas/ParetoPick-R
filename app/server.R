@@ -1433,10 +1433,10 @@ server <- function(input, output, session) {
         ) %>%
         select(id, non_na_count, measure))
 
-
       #for matching
       colnames(hru) = gsub("^V", "", colnames(hru))
       hru_matcher(hru %>% select(-measure))
+
       #aep for table
       genome_hru <- read.csv('../data/measure_location.csv')#connection aep, hru
       
@@ -3204,8 +3204,7 @@ server <- function(input, output, session) {
       
     
     observeEvent(input$save_ahp,{
-      req(bp)
-   
+      
       if(input$save_ahp){
         
         if(file.exists(paste0(output_dir,"selected_optima.csv"))){
