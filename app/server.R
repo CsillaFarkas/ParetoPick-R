@@ -1426,16 +1426,14 @@ server <- function(input, output, session) {
         }))
       
    
-      # comparison dataset (also pull straight away)
-      hru_100(hru2 %>%
-        # mutate(
-        #   non_na_count = rowSums(!is.na(select(., starts_with("V"))))
-        # ) %>%
-        select(id, measure))
-
+      # comparison dataset, only used for freq plotting
+      # currently not considering non-dominant measures! the color of the plot is always the dominant
+      # the frequency is however correct
+      hru_100(hru2 %>%select(id, measure))
+      
       #for matching
       colnames(hru) = gsub("^V", "", colnames(hru))
-      hru_matcher(hru)
+      hru_matcher(as_tibble(hru))
 
       #aep for table
       genome_hru <- read.csv('../data/measure_location.csv')#connection aep, hru
