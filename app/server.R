@@ -2739,7 +2739,7 @@ server <- function(input, output, session) {
     fk = aep_100()  %>% left_join(ks, by =c("hru"="id")) %>% select(-hru)
     
     
-    ahpmt(fk %>%
+    ahpmt(fk %>% ## all optima and the number of implemented measures
             group_by(nswrm, optims) %>%
             summarize(distinct_aep = n_distinct(name), .groups = "drop") %>%
             pivot_wider(names_from = optims, values_from = distinct_aep, values_fill = 0) %>%
@@ -2996,12 +2996,18 @@ server <- function(input, output, session) {
           
           fit = fit() %>% rownames_to_column("optimum")
           mv <- fit %>%  filter(across(all_of(cols), ~ . %in% values))
-          one_opti = gsub("V","",mv$optimum)
           
-          hru_one_act = hru_ever() %>%filter(optims == one_opti)
-          
-          aep_one = aep_100() %>% inner_join(hru_one_act, by = c("hru" = "id", "nswrm" = "measure")) 
-          aep_one = aep_one %>%select(-c(hru,optims)) %>% group_by(nswrm) %>%summarise(nom = n_distinct(name))
+          aep_one_fin <- ahpmt()[mv$optimum,]
+          aep_one = as_tibble(t(aep_one_fin))
+          aep_one[,2] = colnames(aep_one_fin)
+          colnames(aep_one) = c("nom","nswrm")
+          # one_opti = gsub("V","",mv$optimum)
+          # 
+          # hru_one_act = hru_ever() %>%filter(optims == one_opti)
+          # 
+          # aep_one = aep_100() %>% inner_join(hru_one_act, by = c("hru" = "id", "nswrm" = "measure"))
+          # aep_one = aep_one %>%select(-c(hru,optims)) %>% group_by(nswrm) %>%summarise(nom = n_distinct(name))
+          # uuu <<- aep_one
           
           allmes = unique(aep_100()$nswrm)
           missmes = setdiff(allmes,aep_one$nswrm)
@@ -3021,8 +3027,7 @@ server <- function(input, output, session) {
           nmes = nrow(aep_sel)
           nix = rep("-",nmes)
           aep_one = data.frame(nom = nix,nswrm = aep_sel$nswrm)
-          
-        }
+          }
 
         #all together
         tab= aep_one %>% left_join(aep_100_con2, by = "nswrm") %>% left_join(aep_sel ,by = "nswrm")%>%replace(is.na(.), 0)%>%
@@ -3227,6 +3232,7 @@ server <- function(input, output, session) {
       df3 = whole_ahp()
       
       if(nrow(df3)==0){bo = NULL}
+      
       return(plt_sc_optima(dat=df3,x_var=input$x_var,y_var=input$y_var,
                            col_var=input$col_var,size_var=input$size_var,high_point=bo, extra_dat = sol,
                            plt_extra = input$show_extra_dat, status_q = input$show_status_quo,an_tab = F,rev = input$rev_box3,
@@ -3234,6 +3240,11 @@ server <- function(input, output, session) {
       ))
     }
     
+ 
+    observe({
+      req(whole_ahp(), best_option())
+      if(nrow(whole_ahp())==1){best_option(whole_ahp())} #ugly fix
+    })
     
    #show reverse option when needed
   observe({
