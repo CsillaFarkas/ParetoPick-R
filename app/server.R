@@ -1613,8 +1613,10 @@ server <- function(input, output, session) {
 
        hru_one_act = hru_ever() %>%filter(optims == one_opti)
        
-       aep_one = aep_100() %>% filter(hru %in% unique(hru_one_act$id))
-       aep_one = aep_one %>%select(-hru) %>% group_by(nswrm) %>%summarise(nom = n_distinct(name))
+       # aep_one = aep_100() %>% filter(hru %in% unique(hru_one_act$id))
+       # aep_one = aep_one %>%select(-hru) %>% group_by(nswrm) %>%summarise(nom = n_distinct(name))
+       aep_one = aep_100() %>% inner_join(hru_one_act, by = c("hru" = "id", "nswrm" = "measure"))
+       aep_one = aep_one %>%select(-c(hru,optims)) %>% group_by(nswrm) %>%summarise(nom = n_distinct(name))
        allmes = unique(aep_100()$nswrm)
        missmes = setdiff(allmes,aep_one$nswrm)
        
@@ -3000,8 +3002,9 @@ server <- function(input, output, session) {
           
           hru_one_act = hru_ever() %>%filter(optims == one_opti)
           
-          aep_one = aep_100() %>% filter(hru %in% unique(hru_one_act$id))
-          aep_one = aep_one %>%select(-hru) %>% group_by(nswrm) %>%summarise(nom = n_distinct(name))
+          aep_one = aep_100() %>% inner_join(hru_one_act, by = c("hru" = "id", "nswrm" = "measure")) 
+          aep_one = aep_one %>%select(-c(hru,optims)) %>% group_by(nswrm) %>%summarise(nom = n_distinct(name))
+          
           allmes = unique(aep_100()$nswrm)
           missmes = setdiff(allmes,aep_one$nswrm)
           
