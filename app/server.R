@@ -2976,7 +2976,7 @@ server <- function(input, output, session) {
     
     
     output$aep_ahp <- renderTable({
-      req(aep_100_con(),hru_ever(),aep_100(),best_option(),fit(), objectives(), sols_ahp(), whole_ahp(), dfx())
+      req(aep_100_con(),hru_ever(),aep_100(),best_option(),fit(),ahpmt(), objectives(), sols_ahp(), whole_ahp(), dfx())
       
       
       # slider vs. whole front
