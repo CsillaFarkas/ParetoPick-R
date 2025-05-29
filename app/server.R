@@ -1405,7 +1405,7 @@ server <- function(input, output, session) {
       hru= readRDS("../input/hru_in_optima.RDS")
       prio(read.csv("../input/nswrm_priorities.csv"))
 
-      hru <-  hru %>%
+      hru2 <-  hru %>%
         pivot_longer(cols = starts_with("V"), names_to = "Variable", values_to = "Value") %>%
         group_by(id) %>%
         mutate(
@@ -1427,15 +1427,15 @@ server <- function(input, output, session) {
       
    
       # comparison dataset (also pull straight away)
-      hru_100(hru %>%
-        mutate(
-          non_na_count = rowSums(!is.na(select(., starts_with("V"))))
-        ) %>%
-        select(id, non_na_count, measure))
+      hru_100(hru2 %>%
+        # mutate(
+        #   non_na_count = rowSums(!is.na(select(., starts_with("V"))))
+        # ) %>%
+        select(id, measure))
 
       #for matching
       colnames(hru) = gsub("^V", "", colnames(hru))
-      hru_matcher(hru %>% select(-measure))
+      hru_matcher(hru)
 
       #aep for table
       genome_hru <- read.csv('../data/measure_location.csv')#connection aep, hru
@@ -1466,7 +1466,7 @@ server <- function(input, output, session) {
       buff_els = needs_buffer()
 
       if(!is.null(buff_els)){
-        relda <- bc[bc[["measure"]] %in% buff_els, ]%>%select(-non_na_count)
+        relda <- bc[bc[["measure"]] %in% buff_els, ]
         relda_utm <-  st_transform(relda, crs = 32633) # UTM zone 33N
         buffy <-st_buffer(relda_utm, dist = 60)
         buffers(st_transform(buffy, crs = st_crs(relda))) #all buffers ever required
