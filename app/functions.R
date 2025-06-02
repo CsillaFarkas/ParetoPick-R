@@ -1319,13 +1319,24 @@ match_abs <- function(minval, maxval, abs_tab, ranger = NULL, mes_slider = F, me
     minval[indices] = minval[indices] / 1000
   }
   
+  
+  fit_min <- vapply(abs_tab, min, numeric(1), na.rm = TRUE)
+  fit_max <- vapply(abs_tab, max, numeric(1), na.rm = TRUE)
+  
+  min_is_rounded <- minval == round(fit_min, 0)
+  max_is_rounded <- maxval == round(fit_max, 0)
+  
+  minval[min_is_rounded] <- fit_min[min_is_rounded]
+  maxval[max_is_rounded] <- fit_max[max_is_rounded]
+  
+  
   #consider measure slider
   allobs = names(abs_tab) #naja
   if(mes_slider && !is.na(mes_slider) && identical(names(abs_tab),names(mes_df))){
     abs_tab = merge(abs_tab, mes_df, by = allobs, all = FALSE)
   }
   
-  
+ 
   filter_conditions <- lapply(seq_len(n_cols), function(i) {
     abs_tab[[i]] >= minval[i] & abs_tab[[i]] <= maxval[i]
   })
