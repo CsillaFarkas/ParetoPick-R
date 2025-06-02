@@ -89,10 +89,10 @@ server <- function(input, output, session) {
   cm <- reactiveVal()
  
   needs_buffer <- reactiveVal()
-  hru_matcher <- reactiveVal()
-  hru_ever <- reactiveVal()
+  hru_matcher <- reactiveVal() #which optima have which measure on which hru
+  hru_ever <- reactiveVal() #long version of hru_matcher id-measure-optims
   mt <- reactiveVal()
-  aep_100 <- reactiveVal()
+  aep_100 <- reactiveVal() #hru-nswrm-distinct aep name
   aep_100_con <- reactiveVal()
   sel_opti <- reactiveVal()
   fan_tab <- reactiveVal() #matching nswrm order
@@ -1654,7 +1654,7 @@ server <- function(input, output, session) {
       req(aep_100_con(),hru_ever(),aep_100(),dat_matched(),fit())
       if(nrow(dat_matched())>= 1){
 
-        optima <-unique(match(do.call(paste, dat_matched()), do.call(paste, fit())))
+        optima <-match(do.call(paste, dat_matched()), do.call(paste, fit()))
         hru_spec_act = hru_ever() %>%filter(optims %in% optima)
         
         # aep_sel = aep_100() %>% filter(hru %in% unique(hru_spec_act$id))
@@ -2981,12 +2981,11 @@ server <- function(input, output, session) {
       # slider vs. whole front
       if(nrow(dfx())>= 1){
         optima <-unique(match(do.call(paste, dfx()), do.call(paste, fit())))#position/rowname/optimum in fit(), not super stable
-        hru_spec_act = hru_ever() %>% filter(optims %in% optima)
-        
-        # aep_sel = aep_100() %>% filter(hru %in% unique(hru_spec_act$id))
-        
+        hru_spec_act = hru_ever()%>%filter(optims %in% optima)
+        #whole front, number of all aep
         aep_100_con2 =aep_100_con() %>%select(-hru) %>% group_by(nswrm) %>%summarise(nom = n_distinct(name))
-        # aep_sel =aep_sel %>%select(-hru) %>% group_by(nswrm) %>%summarise(nom = n_distinct(name))
+
+        #selection aligned with sliders
         aep_sel = aep_100() %>% inner_join(hru_spec_act, by = c("hru" = "id", "nswrm" = "measure")) #matched by both id and measure otherwise kept non-activated/competing
         aep_sel = aep_sel %>%select(-c(hru,optims)) %>% group_by(nswrm) %>%summarise(nom = n_distinct(name))
         
