@@ -1657,12 +1657,15 @@ server <- function(input, output, session) {
         optima <-unique(match(do.call(paste, dat_matched()), do.call(paste, fit())))
         hru_spec_act = hru_ever() %>%filter(optims %in% optima)
         
-        aep_sel = aep_100() %>% filter(hru %in% unique(hru_spec_act$id))
+        # aep_sel = aep_100() %>% filter(hru %in% unique(hru_spec_act$id))
 
         aep_100_con2 =aep_100_con() %>%select(-hru) %>% group_by(nswrm) %>%summarise(nom = n_distinct(name))
-        aep_sel =aep_sel %>%select(-hru) %>% group_by(nswrm) %>%summarise(nom = n_distinct(name))
+        # aep_sel =aep_sel %>%select(-hru) %>% group_by(nswrm) %>%summarise(nom = n_distinct(name))
        
-        tab= aep_100_con2 %>% left_join(aep_sel, by = "nswrm")%>%replace(is.na(.), 0)%>%
+        aep_sel = aep_100() %>% inner_join(hru_spec_act, by = c("hru" = "id", "nswrm" = "measure")) #matched by both id and measure otherwise kept non-activated/competing
+        aep_sel = aep_sel %>%select(-c(hru,optims)) %>% group_by(nswrm) %>%summarise(nom = n_distinct(name))
+        
+       tab= aep_100_con2 %>% left_join(aep_sel, by = "nswrm")%>%replace(is.na(.), 0)%>%
           mutate(implemented = paste0(nom.y," / ",nom.x)) %>%select(nswrm,implemented)
         fan_tab(tab$nswrm)
         tab = as.data.frame(t(tab))
@@ -2906,8 +2909,7 @@ server <- function(input, output, session) {
     whole_ahp(match_abs(minval=c(input$obj1_ahp[1],input$obj2_ahp[1], input$obj3_ahp[1], input$obj4_ahp[1]),
                    maxval=c(input$obj1_ahp[2],input$obj2_ahp[2], input$obj3_ahp[2], input$obj4_ahp[2]),
                    abs_tab = fit(), ranger = range_controlled(), mes_slider = mahp_touched(), mes_df = mahp()))
-    
-    
+   
   })
   
  
@@ -2971,9 +2973,6 @@ server <- function(input, output, session) {
     })
     
     
-   
-      
-    
     
     output$aep_ahp <- renderTable({
       req(aep_100_con(),hru_ever(),aep_100(),best_option(),fit(),ahpmt(), objectives(), sols_ahp(), whole_ahp(), dfx())
@@ -2982,13 +2981,16 @@ server <- function(input, output, session) {
       # slider vs. whole front
       if(nrow(dfx())>= 1){
         optima <-unique(match(do.call(paste, dfx()), do.call(paste, fit())))#position/rowname/optimum in fit(), not super stable
-        hru_spec_act = hru_ever() %>%filter(optims %in% optima)
+        hru_spec_act = hru_ever() %>% filter(optims %in% optima)
         
-        aep_sel = aep_100() %>% filter(hru %in% unique(hru_spec_act$id))
+        # aep_sel = aep_100() %>% filter(hru %in% unique(hru_spec_act$id))
         
         aep_100_con2 =aep_100_con() %>%select(-hru) %>% group_by(nswrm) %>%summarise(nom = n_distinct(name))
-        aep_sel =aep_sel %>%select(-hru) %>% group_by(nswrm) %>%summarise(nom = n_distinct(name))
-       
+        # aep_sel =aep_sel %>%select(-hru) %>% group_by(nswrm) %>%summarise(nom = n_distinct(name))
+        aep_sel = aep_100() %>% inner_join(hru_spec_act, by = c("hru" = "id", "nswrm" = "measure")) #matched by both id and measure otherwise kept non-activated/competing
+        aep_sel = aep_sel %>%select(-c(hru,optims)) %>% group_by(nswrm) %>%summarise(nom = n_distinct(name))
+        
+        
       # selected point
         cols = objectives()
         values = best_option()
@@ -3001,15 +3003,8 @@ server <- function(input, output, session) {
           aep_one = as_tibble(t(aep_one_fin))
           aep_one[,2] = colnames(aep_one_fin)
           colnames(aep_one) = c("nom","nswrm")
-          # one_opti = gsub("V","",mv$optimum)
-          # 
-          # hru_one_act = hru_ever() %>%filter(optims == one_opti)
-          # 
-          # aep_one = aep_100() %>% inner_join(hru_one_act, by = c("hru" = "id", "nswrm" = "measure"))
-          # aep_one = aep_one %>%select(-c(hru,optims)) %>% group_by(nswrm) %>%summarise(nom = n_distinct(name))
-          # uuu <<- aep_one
-          
-          allmes = unique(aep_100()$nswrm)
+        
+          allmes = unique(aep_100_con()$nswrm)
           missmes = setdiff(allmes,aep_one$nswrm)
           
           if(length(missmes)>=1){
@@ -3030,7 +3025,7 @@ server <- function(input, output, session) {
           }
 
         #all together
-        tab= aep_one %>% left_join(aep_100_con2, by = "nswrm") %>% left_join(aep_sel ,by = "nswrm")%>%replace(is.na(.), 0)%>%
+        tab= aep_one %>% left_join(aep_100_con2, by = "nswrm") %>% left_join(aep_sel, by = "nswrm")%>%replace(is.na(.), 0)%>%
           mutate(implemented = paste0(nom.x," / ",nom, " / " , nom.y)) %>%select(nswrm,implemented)
         fan_tab(tab$nswrm)
         tab = as.data.frame(t(tab))
