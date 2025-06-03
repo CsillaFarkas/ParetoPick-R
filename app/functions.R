@@ -464,9 +464,10 @@ plt_latlon = function(conpath){
 
 
 ## plot frequency
-plt_freq = function(data,lo, la, buffers , remaining, dispal = pal, mes=mes, legend = TRUE, basemap = basemap) {
+plt_freq = function(data, lo, la, buffers, remaining, dispal = pal, 
+                    mes = mes, legend = TRUE, basemap = basemap ) {
   
-  data = left_join(data,remaining, by = c("id"))%>%st_make_valid() #only those with highest priority
+  data = left_join(data, remaining, by = c("id"))%>%st_make_valid() #only those with highest priority
   data = data %>%subset(!st_is_empty(geometry))
   
   rem_fil = remaining %>% filter(measure %in% unique(buffers$measure))
@@ -595,7 +596,8 @@ plt_freq = function(data,lo, la, buffers , remaining, dispal = pal, mes=mes, leg
       position = "bottomright"
     )
   
-  return(m)
+ 
+  return(m) 
 }
 
 ## pull cm clean
@@ -1108,11 +1110,17 @@ plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NUL
   }
   
   #control range limits with fit() as reference
-  p <- p + scale_x_continuous(limits= range(whole[[x_var]], na.rm = TRUE),labels = function(x) {rem_min(x)})+
-      scale_y_continuous(limits= range(whole[[y_var]], na.rm = TRUE),labels = function(x) {rem_min(x)})
+  
+  if(!is.null(all_extra_data)){ #CS2 Petite Glane has values outside of pareto_fitness dataset
+    extra_sd = all_extra_data %>% select(-set)
+    swiss_extra = rbind(extra_sd,whole)
+    }else{swiss_extra = whole}
+  
+  p <- p + scale_x_continuous(limits= range(swiss_extra[[x_var]], na.rm = TRUE),labels = function(x) {rem_min(x)})+
+      scale_y_continuous(limits= range(swiss_extra[[y_var]], na.rm = TRUE),labels = function(x) {rem_min(x)})
 
   if(rev){
-    p = p+scale_y_reverse(labels = function(y) {rem_min(y)}, limits= rev(range(whole[[y_var]], na.rm = TRUE)))+scale_x_reverse(labels = function(x) {rem_min(x)},limits= rev(range(whole[[x_var]], na.rm = TRUE)))}
+    p = p+scale_y_reverse(labels = function(y) {rem_min(y)}, limits= rev(range(swiss_extra[[y_var]], na.rm = TRUE)))+scale_x_reverse(labels = function(x) {rem_min(x)},limits= rev(range(swiss_extra[[x_var]], na.rm = TRUE)))}
 
   
   return(p)
@@ -1204,7 +1212,7 @@ scaled_abs_match = function(minval_s=c(0,0,0,0),
                             scal_tab=NULL,abs_tab=NULL,
                             allobs=NULL,smll = TRUE,at=F,mes_slider =F, mes_df = NULL){ 
   
- 
+
   df <- as.data.frame(array(NA,dim=c(2,length(allobs))),row.names = c("max","min"))
   colnames(df) = allobs
   
@@ -1261,7 +1269,7 @@ scaled_abs_match = function(minval_s=c(0,0,0,0),
   #when smll is set to false the table with all absolute values is returned
   if(smll){return(cw)}else{return(ch)} 
   
-}
+  }#}
 
 
 ## similar to ch in scaled_abs_match, matching input scaled data with a scaled dataframe
@@ -1319,24 +1327,13 @@ match_abs <- function(minval, maxval, abs_tab, ranger = NULL, mes_slider = F, me
     minval[indices] = minval[indices] / 1000
   }
   
-  
-  fit_min <- vapply(abs_tab, min, numeric(1), na.rm = TRUE)
-  fit_max <- vapply(abs_tab, max, numeric(1), na.rm = TRUE)
-  
-  min_is_rounded <- minval == round(fit_min, 0)
-  max_is_rounded <- maxval == round(fit_max, 0)
-  
-  minval[min_is_rounded] <- fit_min[min_is_rounded]
-  maxval[max_is_rounded] <- fit_max[max_is_rounded]
-  
-  
   #consider measure slider
   allobs = names(abs_tab) #naja
   if(mes_slider && !is.na(mes_slider) && identical(names(abs_tab),names(mes_df))){
     abs_tab = merge(abs_tab, mes_df, by = allobs, all = FALSE)
   }
   
- 
+  
   filter_conditions <- lapply(seq_len(n_cols), function(i) {
     abs_tab[[i]] >= minval[i] & abs_tab[[i]] <= maxval[i]
   })
