@@ -700,10 +700,10 @@ server <- function(input, output, session) {
     
     observe({ #create mt() for measure sliders
       req(aep_100(), hru_ever())
-      ks = hru_ever() %>% select(-measure)
+      # ks = hru_ever() %>% select(-measure)
 
-      fk = aep_100()  %>% left_join(ks, by =c("hru"="id")) %>% select(-hru)
-      
+      # fk = aep_100()  %>% left_join(ks, by =c("hru"="id")) %>% select(-hru)
+      fk = aep_100() %>% inner_join(hru_ever(),by = c("hru" = "id", "nswrm" = "measure"))%>% select(-hru)
     
       mt(fk %>%
            group_by(nswrm, optims) %>%
@@ -2737,11 +2737,12 @@ server <- function(input, output, session) {
   
   observe({ #create ahpmt() for measure sliders
     req(aep_100(), hru_ever())
-    ks = hru_ever() %>% select(-measure)
+    # ks = hru_ever() %>% select(-measure)
     
-    fk = aep_100()  %>% left_join(ks, by =c("hru"="id")) %>% select(-hru)
+    # fk = aep_100()  %>% left_join(ks, by =c("hru"="id")) %>% select(-hru)
     
-    
+    fk = aep_100() %>% inner_join(hru_ever(),by = c("hru" = "id", "nswrm" = "measure"))%>% select(-hru)
+ 
     ahpmt(fk %>% ## all optima and the number of implemented measures
             group_by(nswrm, optims) %>%
             summarize(distinct_aep = n_distinct(name), .groups = "drop") %>%
@@ -2749,7 +2750,7 @@ server <- function(input, output, session) {
             column_to_rownames("nswrm") %>%  
             t() %>%  
             as.data.frame())
-    
+  
   })
   
   observe({
@@ -2988,7 +2989,6 @@ server <- function(input, output, session) {
         #selection aligned with sliders
         aep_sel = aep_100() %>% inner_join(hru_spec_act, by = c("hru" = "id", "nswrm" = "measure")) #matched by both id and measure otherwise kept non-activated/competing
         aep_sel = aep_sel %>%select(-c(hru,optims)) %>% group_by(nswrm) %>%summarise(nom = n_distinct(name))
-        
         
       # selected point
         cols = objectives()
