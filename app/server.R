@@ -230,16 +230,16 @@ server <- function(input, output, session) {
     })
     
     observeEvent(input$save_sq_in, {
-      req(sq_file(),objectives())
+      req(sq_file())#,objectives())
       save_sq <- sq_file()$name
       save_path_sq <- file.path(save_dir, save_sq)
       file.copy(sq_file()$path,save_path_sq,overwrite = TRUE) #copy sq_fitness.txt
       
-      st_q = read.table("../data/sq_fitness.txt", header = FALSE, stringsAsFactors = FALSE, sep = deli("../data/sq_fitness.txt"))
-      st_q = as.numeric(st_q)
-      
-      names(st_q) = objectives()
-      stq(st_q)
+      # st_q = read.table("../data/sq_fitness.txt", header = FALSE, stringsAsFactors = FALSE, sep = deli("../data/sq_fitness.txt"))
+      # st_q = as.numeric(st_q)
+      # 
+      # names(st_q) = objectives()
+      # stq(st_q)
     })
     
     ##get new objective names, make fit() and objectives() and f_scaled
