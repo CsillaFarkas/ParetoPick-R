@@ -462,6 +462,14 @@ plt_latlon = function(conpath){
   return(c(lat_map,lon_map))
 }
 
+## color assigned based on highest frequency, not distinguishing buffers, would require two freq columns
+color_meas_most <- function(x) {
+  x <- x[!is.na(x)]
+  if (length(x) == 0) return(NA_character_)
+  fr <- table(x)
+  tied <- names(fr)[fr == max(fr)]
+  sample(tied, 1)
+}
 
 ## plot frequency
 plt_freq = function(data, lo, la, buffers, remaining, dispal = pal, 
@@ -469,9 +477,6 @@ plt_freq = function(data, lo, la, buffers, remaining, dispal = pal,
   
   data = left_join(data, remaining, by = c("id"))%>%st_make_valid() #only those with highest priority
   data = data %>%subset(!st_is_empty(geometry))
-  
-  rem_fil = remaining %>% filter(measure %in% unique(buffers$measure))
-  
   
   m =  leaflet(data=data) %>%
     setView(lng = lo, lat = la, zoom = 12) 
@@ -498,9 +503,9 @@ plt_freq = function(data, lo, la, buffers, remaining, dispal = pal,
   
   
   if(!is.null(buffers)){
-    buffered_data <- buffers %>%filter(id %in% rem_fil$id)
+    buffered_data <- buffers %>%filter(id %in% remaining$id)
     buffered_data <- buffered_data %>%
-      inner_join(rem_fil %>% select(-measure), by = "id") %>%
+      inner_join(remaining %>% filter(freq > 0), by = "id") %>% #previously NA filtered beforehand
       st_make_valid() 
  
   m = m %>% addPolygons(
@@ -755,7 +760,7 @@ plt_lf <- function(data, lo, la, buff_els, col_sel, buffers, dispal = pal, basem
       relevant_data <- data[data[[col]] %in% buff_els, ]
       
       buffered_data <- buffers %>%filter(id %in% relevant_data$id)%>%
-        rename(!!col := measure)%>%
+        # rename(!!col := measure)%>%
         st_make_valid()
       
     p = p%>%

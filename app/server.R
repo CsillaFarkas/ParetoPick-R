@@ -98,7 +98,6 @@ server <- function(input, output, session) {
   sel_opti <- reactiveVal()
   fan_tab <- reactiveVal() #matching nswrm order
   
-  hru_100 <-  reactiveVal(NULL)
   prio <- reactiveVal(NULL)
   #ahp
   previous_vals = reactiveValues(
@@ -1047,7 +1046,7 @@ server <- function(input, output, session) {
       pal = colorFactor(palette = man_col, domain = unique(mes$nswrm), na.color = "lightgrey")
       
       m1 = plt_lf( data = hru_one, dispal = pal,la = lalo()[1],lo =lalo()[2],buff_els = needs_buffer(),
-                   col_sel = col_sel,buffers=buffers(), basemap = input$anomap)
+                   col_sel = col_sel, buffers=buffers(), basemap = input$anomap)
       return(m1)
       play_running(FALSE) #for spinner
     }
@@ -1406,32 +1405,6 @@ server <- function(input, output, session) {
       hru= readRDS("../input/hru_in_optima.RDS")
       prio(read.csv("../input/nswrm_priorities.csv"))
 
-      hru2 <-  hru %>%
-        pivot_longer(cols = starts_with("V"), names_to = "Variable", values_to = "Value") %>%
-        group_by(id) %>%
-        mutate(
-          priority = prio()$priority[match(Value, prio()$nswrm)],
-          min_priority = min(priority, na.rm = TRUE),
-          Value = ifelse(priority == min_priority, Value, NA)
-        ) %>%
-        ungroup() %>%
-        select(-priority, -min_priority) %>%
-        pivot_wider(names_from = "Variable", values_from = "Value") %>%
-        mutate(measure = apply(across(starts_with("V")), 1, function(x) {
-          unique_values <- unique(na.omit(x))
-          if (length(unique_values) == 1) { #first unique value otherwise NA
-            return(unique_values[1])
-          } else {
-            return(NA)
-          }
-        }))
-      
-   
-      # comparison dataset, only used for freq plotting
-      # currently not considering non-dominant measures! the color of the plot is always the dominant
-      # the frequency is however correct
-      hru_100(hru2 %>%select(id, measure))
-      
       #for matching
       colnames(hru) = gsub("^V", "", colnames(hru))
       hru_matcher(as_tibble(hru))
@@ -1459,18 +1432,26 @@ server <- function(input, output, session) {
       aep_100(aep_100)
       #catchment forever
       cm(pull_shp_new())
+      
       #buffers forever
-      bc = left_join(cm(),hru_100(), by = c("id"))%>%st_make_valid() #only those with highest priority
+      # bc = left_join(cm(),hru_100(), by = c("id"))%>%st_make_valid() #only those with highest priority
 
       buff_els = needs_buffer()
 
-      if(!is.null(buff_els)){
-        relda <- bc[bc[["measure"]] %in% buff_els, ]
-        relda_utm <-  st_transform(relda, crs = 32633) # UTM zone 33N
-        buffy <-st_buffer(relda_utm, dist = 60)
-        buffers(st_transform(buffy, crs = st_crs(relda))) #all buffers ever required
-      }else{buffers(NULL)}
+      # if(!is.null(buff_els)){
+      #   relda <- bc[bc[["measure"]] %in% buff_els, ]
+      #   relda_utm <-  st_transform(relda, crs = 32633) # UTM zone 33N
+      #   buffy <-st_buffer(relda_utm, dist = 60)
+      #   buffers(st_transform(buffy, crs = st_crs(relda))) #all buffers ever required
+      # }else{buffers(NULL)}
       
+      if(!is.null(buff_els)){
+        hru_ever_buffer = hru_ever() %>% filter(measure %in% buff_els) %>% distinct(id)#ids with small elements
+        bc = cm() %>% filter(id %in% hru_ever_buffer$id)%>%st_make_valid()
+        relda_utm = st_transform(bc, crs = 32633) # UTM zone 33N
+        buffy <-st_buffer(relda_utm, dist = 60)
+        buffers(st_transform(buffy, crs = st_crs(bc))) #all buffers ever required
+      }else{buffers(NULL)}
 
       if(file.exists("../data/hru.con")){lalo(plt_latlon(conpath = "../data/hru.con"))}
       
@@ -1481,7 +1462,7 @@ server <- function(input, output, session) {
       shinyjs::hide("download_freq_id")}})
  
   play_freq = function(leg = TRUE){ #excessive function
-    req(cmf(),hru_100(),lalo(),prio(), dat_matched(),hru_matcher(),fit())
+    req(cmf(),lalo(),prio(), dat_matched(),hru_matcher(),fit())
 
     dat = dat_matched()
     
@@ -1491,11 +1472,16 @@ server <- function(input, output, session) {
       
     hru_freq = hru_subset_freq
     hru_freq$freq = rowSums(!is.na(hru_freq[ , -which(names(hru_freq) == "id")])) / (ncol(hru_freq) - 1)
-    hru_share = hru_freq%>%left_join(hru_100(),by="id") %>%select(id,measure,freq)
+    # hru_share = hru_freq%>%left_join(hru_100(),by="id") %>%select(id,measure,freq)
+    opt_cols <- setdiff(names(hru_freq), c("id", "freq")) #only opt colums
+    
+    hru_share = hru_freq
+    hru_share$measure = apply(hru_share[opt_cols], 1, color_meas_most) 
+    hru_share = hru_share %>% select(id, measure, freq)
     
     #make unique measures outside
-    mes <<- unique(hru_share$measure)
-
+    mes <<- unique(hru_ever()$measure)
+    
   #make palette outside and pass to it
     man_col = c("#66C2A5", "#4db818", "#663e13", "#F7A600", "#03597F", "#83D0F5",  "#FFEF2C",   "#a84632",  "#b82aa5",  "#246643" )
     man_col = man_col[1:length(unique(mes))]
@@ -1531,7 +1517,7 @@ server <- function(input, output, session) {
   )
   
  freq_shaper = function(){ 
-   req(cmf(),hru_100(), prio(), dat_matched(),hru_matcher(), fit())
+   req(cmf(), prio(), dat_matched(),hru_matcher(), fit())
    
    dat = dat_matched()
    
@@ -1541,10 +1527,17 @@ server <- function(input, output, session) {
      
      hru_freq = hru_subset_freq
      hru_freq$freq = (rowSums(!is.na(hru_freq[ , -which(names(hru_freq) == "id")])) / (ncol(hru_freq) - 1))*100
-     hru_freq$all_optima = rowSums(!is.na(hru_freq[ , -which(names(hru_freq) == "id")]))
-     hru_share = hru_freq%>%left_join(hru_100(),by="id") %>%select(id, measure, freq, all_optima)
+     hru_freq$all_optima = rowSums(!is.na(hru_freq[ , -which(names(hru_freq) %in% c("id","freq"))]))
+     # hru_share = hru_freq%>%left_join(hru_100(),by="id") %>%select(id, measure, freq, all_optima)
+     
+     opt_cols <- setdiff(names(hru_freq), c("id", "freq", "all_optima")) #only opt colums
+     
+     hru_share = hru_freq
+     hru_share$measure = apply(hru_share[opt_cols], 1, color_meas_most) 
+     hru_share = hru_share %>% select(id, measure, freq, all_optima)
+     
      #make unique measures outside
-     mes <<- unique(hru_share$measure)
+     mes <<- unique(hru_ever()$measure)
      
      #make palette outside and pass to it
      man_col = c("#66C2A5", "#4db818", "#663e13", "#F7A600", "#03597F", "#83D0F5",  "#FFEF2C",   "#a84632",  "#b82aa5",  "#246643" )
