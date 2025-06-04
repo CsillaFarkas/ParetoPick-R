@@ -59,6 +59,7 @@ server <- function(input, output, session) {
                                   ran3 = c(0,100),
                                   ran4 = c(0,100)))
   map_plotted <- reactiveVal(FALSE)
+  mahp_plotted <- reactiveVal(FALSE)#once clicked ahp measure map renders on best_option() changes
   settings_text <- reactiveVal("") #printing pca settings
   update_settings <- function() {
     settings <- pca_settings(input)
@@ -1434,7 +1435,7 @@ server <- function(input, output, session) {
       #for matching
       colnames(hru) = gsub("^V", "", colnames(hru))
       hru_matcher(as_tibble(hru))
-
+      
       #aep for table
       genome_hru <- read.csv('../data/measure_location.csv')#connection aep, hru
       
@@ -3315,12 +3316,13 @@ server <- function(input, output, session) {
     
   })
   
-  observeEvent(input$plt_bo,{
+  observeEvent(input$plt_bo,{ #first click
     meas_running(TRUE) 
 
     req(best_option(),fit(),objectives())
  
- 
+    mahp_plotted(TRUE)
+    
   fit1(fit() %>% rownames_to_column("optimum"))
 
   bo = best_option() 
@@ -3337,7 +3339,7 @@ server <- function(input, output, session) {
     
     if(file.exists("../data/hru.con")){lalo(plt_latlon(conpath = "../data/hru.con"))}
      needs_buffer(pull_buffer())
-     single_meas_fun()
+     # single_meas_fun()
      
      
      output$plt_bo_measure = renderUI({single_meas_fun()})
@@ -3346,6 +3348,37 @@ server <- function(input, output, session) {
 
   })
   
+  
+  observe({ #reactively replot every time best_option() changes
+    
+    req(mahp_plotted())
+    req(best_option(),fit(),objectives())
+    
+    
+    meas_running(TRUE) 
+    fit1(fit() %>% rownames_to_column("optimum"))
+    
+    bo = best_option() 
+    cols = objectives()
+    bo <- fit1() %>% filter(across(all_of(cols), ~ . %in% bo))
+    
+    ##shps for maps
+    if (file.exists("../input/hru_in_optima.RDS")) {
+      
+      req(cm())
+      cmf(fit_optims(cm=cm(),hru_in_opt_path = "../input/hru_in_optima.RDS",optims=bo))
+    }
+    boo(bo$optimum) #for single_meas_fun
+    
+    if(file.exists("../data/hru.con")){lalo(plt_latlon(conpath = "../data/hru.con"))}
+    needs_buffer(pull_buffer())
+    
+    
+    output$plt_bo_measure = renderUI({single_meas_fun()})
+    
+    # shinyjs::show("download_ahp_id") #show download button
+    
+  })
     
 
   single_meas_fun = function(){
