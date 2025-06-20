@@ -835,13 +835,15 @@ server <- function(input, output, session) {
             min_max$min[i] = round(min_max$min[i],0)
           }
             
-          assign(var_name,(min_max$max[i]-min_max$min[i])/20)
-            
-                 
+          step_val = (min_max$max[i]-min_max$min[i])/20
+          
+          
           range_controlled(range_value)
           
-          updateSliderInput(session, paste0("obj",i,"_ahp"), value = c(min_max$min[i],min_max$max[i]),min =min_max$min[i],max = min_max$max[i],step=var_name)
-          updateSliderInput(session, paste0("ran",i), value = c(min_max$min[i],min_max$max[i]),min =min_max$min[i],max = min_max$max[i],step=var_name)
+          updateSliderInput(session, paste0("obj",i,"_ahp"), value = c(min_max$min[i],min_max$max[i]),min =min_max$min[i],max = min_max$max[i],step=step_val)
+          updateSliderInput(session, paste0("ran",i), value = c(min_max$min[i],min_max$max[i]),min =min_max$min[i],max = min_max$max[i],step=step_val)
+                 
+          
           new_defaults[[paste0("ran",i)]] <- c(min_max$min[i], min_max$max[i]) 
           
           }
