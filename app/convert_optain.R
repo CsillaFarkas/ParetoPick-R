@@ -51,8 +51,8 @@ source("functions.R")
 nswrm_priorities <- function(lu) {
   prio_groups <- list(
     structural = c("pond", "constr_wetland", "wetland"), # structural elements (1st prio)
-    land_use = c("hedge", "buffer", "grassslope", "terrace", "floodres", "rip_forest", "afforest", "afforestation", "contr"), #land use (2nd prio)
-    management = c("lowtillcc", "lowtill", "droughtplt", "notill", "intercrop", "covcrop", "rotation", "rot") # management (3rd prio)
+    land_use = c("hedge", "buffer","edgefilter", "grassslope","grassrchrg", "terrace", "floodres", "rip_forest", "afforest", "afforestation", "contr"), #land use (2nd prio)
+    management = c("constill","lowtillcc", "lowtill", "droughtplt", "notill", "intercrop", "covcrop", "rotation", "rot") # management (3rd prio)
   )
   
   prio <- data.frame(nswrm = character(), priority = integer(), mngmt = integer(), stringsAsFactors = FALSE)
