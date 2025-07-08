@@ -492,24 +492,33 @@ ui <-
 
                                        div(id="play_sidebar",
                                          column(12,
-                                                div("Objective Range", style = "text-align: left; font-size:150%; margin-top: 10px;"),
-
+                                                div("Objective Range",
+                                                    title = "For some of the visualisations and analyses in this tool, the objectives have been scaled to between 0 (worst) and 1 (best) for easier comparison.",
+                                                    style = "text-align: left; font-size:150%; margin-top: 10px;"),
+                                              
                                                 sliderInput(inputId = "obj1", label=  "Objective 1:", min = 0, max = 1, value = c(0,1), step = 0.01,width = "120%"),
                                                 sliderInput(inputId = "obj2", label = "Objective 2:", min = 0, max = 1, value = c(0,1), step = 0.01,width = "120%"),
                                                 sliderInput(inputId = "obj3", label = "Objective 3:", min = 0, max = 1, value = c(0,1), step = 0.01, width = "120%"),
                                                 sliderInput(inputId = "obj4", label = "Objective 4:", min = 0, max = 1, value = c(0,1), step = 0.01,width = "120%"),
+
                                                 tags$div(textOutput("ensure_sel"), style = "color: red;"),
-                                                div("Number of measures", style = "text-align: left; font-size:150%; margin-top: 10px;"),
+                                                div("Number of measures", 
+                                                    title = "Please select the minimum and maximum number of measures you would like to implement.",
+                                                    
+                                                    style = "text-align: left; font-size:150%; margin-top: 10px;"),
                                                 
                                                 uiOutput("mes_sliders"),
                                                 div(id="mes_empty",
                                                   tags$div(textOutput("mes_empty"), style = "color: red;"))%>%hidden(),
-                                                tags$p(
-                                                  tags$strong("Please Note:"),
-                                                  "For some of the visualisations and analyses in this tool, the objectives have been scaled to between 0 (worst) and 1 (best) for easier comparison."
-                                                ),tags$p("The app does not display negative signs, only where an objective range covers both negative and positive values, a sign is added.")
+                                                # tags$p(
+                                                #   tags$strong("Please Note:"),
+                                                #   "For some of the visualisations and analyses in this tool, the objectives have been scaled to between 0 (worst) and 1 (best) for easier comparison."
+                                                # ),
+                                                # tags$p("The app does not display negative signs, only where an objective range covers both negative and positive values, a sign is added.")
                                          ),
-                                         div("Frequency of area implemented", style = "text-align: left; font-size:120%; margin-top: 10px;"),
+                                         div("Frequency of area implemented",
+                                             title = "if locations of different types of measures overlap, only the most frequent type of measure is displayed.",
+                                             style = "text-align: left; font-size:120%; margin-top: 10px;"),
                                          uiOutput("freq_map_play")%>%hidden(),
                                          div(id="download_freq_id",
                                              div(
@@ -627,8 +636,8 @@ ui <-
                               br(),
                               div("Number of distinct measures used in selection compared to full front",
                                   style = "display: flex; justify-content: center; font-size:150%"),
-                              div("*please note that these numbers refer to the implementation/use of the total number of measures available in the catchment. They therefore differ from the selection made in the sliders which considers individual optima's implementation of measures.",
-                                  style = "display: flex; justify-content: center; font-size: 80%"),
+                              # div("*please note that these numbers refer to the implementation/use of the total number of measures available in the catchment. They therefore differ from the selection made in the sliders which considers individual optima's implementation of measures.",
+                                  # style = "display: flex; justify-content: center; font-size: 80%"),
 
                               div(style="display: flex; flex-direction: column; align-items: center;",
                                   tags$h4("Range (slider selection)"),
@@ -650,7 +659,9 @@ ui <-
                                  column(12,
                                         fluidRow(column(6, div("Selected Objective Ranges (scaled)", style = "text-align: left; font-size:150%"),
                                                         tableOutput("sliders")),
-                                                 column(6, div("Selected Objective Ranges (absolute)", style = "text-align: left; font-size:150%"),
+                                                 column(6, div("Selected Objective Ranges (absolute)",
+                                                               title = "objectives optimised across negative and positive ranges are shown with signs. All other objectives are given without signs.",
+                                                               style = "text-align: left; font-size:150%"),
                                                         tableOutput("sliders_abs"),
                                                         div("*the percentage values signify the difference between the full range and the current max and min selection.", style = "text-align: left; font-size:100%"))),
                                         fluidRow(column(6,
@@ -660,8 +671,11 @@ ui <-
 
                                                  column(6,
                                                         div("Maximum Objective Ranges (absolute)",style = "text-align: left; font-size:150%"),
-                                                        tableOutput("whole_range"),
-                                                        div("*objectives optimised across negative and positive ranges are shown with signs. All other objectives are given without signs.", style = "text-align: left; font-size:100%"))
+                                                        title = "objectives optimised across negative and positive ranges are shown with signs. All other objectives are given without signs.",
+                                                        
+                                                        tableOutput("whole_range")#,
+                                                        # div("*objectives optimised across negative and positive ranges are shown with signs. All other objectives are given without signs.", style = "text-align: left; font-size:100%")
+                                                        )
                                         ))),
 
 
