@@ -1662,13 +1662,14 @@ server <- function(input, output, session) {
         aep_sel = aep_sel %>%select(-c(hru,optims)) %>% group_by(nswrm) %>%summarise(nom = n_distinct(name))
         
        tab= aep_100_con2 %>% left_join(aep_sel, by = "nswrm")%>%replace(is.na(.), 0)%>%
-          mutate(implemented = paste0(nom.y," / ",nom.x)) %>%select(nswrm,implemented)
+          mutate(implemented = paste0("<span title='slider selection: max number of measures implemented in individual optima'>",nom.y,"</span>"," / ",
+                                      "<span title='total number of measures available in the catchment'>",nom.x,"</span>")) %>%select(nswrm,implemented)
         fan_tab(tab$nswrm)
         tab = as.data.frame(t(tab))
         names(tab) = tab[1,]
         tab=tab[-1,]
         tab}
-    }, align = "c")
+    }, align = "c", sanitize.text.function = function(x) x)
     
 
   ## scatter plot
