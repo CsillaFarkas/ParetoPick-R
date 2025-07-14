@@ -638,7 +638,8 @@ fit_optims = function(cm,hru_in_opt_path="../input/hru_in_optima.RDS",optims){
   if(file.exists(hru_in_opt_path)){
     hio = readRDS(hru_in_opt_path)
     hio = hio %>% rename_with( ~ str_remove(., "^V"), starts_with("V"))
-    hio = hio %>% select(optims[["optimum"]], id)#subset to only optima remaining after clustering
+    
+    hio = hio %>% select(optims[["optimum"]], id)#works because character, subset to only optima remaining after clustering
     
     cm = cm %>% filter(id %in% hio$id)%>%st_make_valid()#remove all hrus that are never activated in this pareto front
     
@@ -995,60 +996,97 @@ plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NUL
                           rev = FALSE,
                           unit = FALSE,
                           ahp_man = FALSE #adapt label in AHP for manual selection
-                          ) {
+) {
   
   if(!file.exists(pareto_path)){return(NULL)}
   
   if(file.exists("../input/units.RDS")){units = readRDS("../input/units.RDS")}
   
   
- if(unit && file.exists("../input/units.RDS")){
-   current_obj_order = c(x_var, y_var,
-                         col_var, size_var)
-
-   original_order = names(dat)#=objectives()
-   # 
-   reorder_current = match(original_order, current_obj_order)
-   reorder_original = match(current_obj_order,original_order)
-   # 
-   units[which(is.na(units) | units %in% c(" ", "","unitless","no unit"))] <- "-"
-   # 
-   colnames(dat) = paste(original_order, " [",units,"]", sep = "") #needs old order
+  if(unit && file.exists("../input/units.RDS")){
+    current_obj_order = c(x_var, y_var,
+                          col_var, size_var)
     
-   new_order = paste(original_order, " [",units,"]", sep = "")[reorder_original]
+    original_order = names(dat)#=objectives()
+    # 
+    reorder_current = match(original_order, current_obj_order)
+    reorder_original = match(current_obj_order,original_order)
+    # 
+    units[which(is.na(units) | units %in% c(" ", "","unitless","no unit"))] <- "-"
+    # 
+    colnames(dat) = paste(original_order, " [",units,"]", sep = "") #needs old order
     
-   x_var =new_order[1]
-     y_var =new_order[2]
-     col_var=new_order[3]
-     size_var =new_order[4]
-     
- }
+    new_order = paste(original_order, " [",units,"]", sep = "")[reorder_original]
+    
+    x_var =new_order[1]
+    y_var =new_order[2]
+    col_var=new_order[3]
+    size_var =new_order[4]
+    
+  }
   
-
+  
   #pull fit() establish range limits
   whole <- read.table(pareto_path, header = FALSE, stringsAsFactors = FALSE, sep = deli(pareto_path) )
   colnames(whole) <- colnames(dat)[1:4]
+  swiss_extra = whole #for controlling that all data is within range limits
   
   xma = yma = NULL
   
- if(an_tab){
-   #separate for label (so nothing else has to change)
-   dat2 = dat
-   dat = dat[,1:4]
- }
- 
-  
-  #plot with main data and control if whole dataset shall be shown
-  p = ggplot(dat, aes(x = .data[[x_var]], y = .data[[y_var]],
-                      fill = .data[[col_var]], size = .data[[size_var]]), alpha = 0.5) 
-    
-  if(add_whole){
-    p=p+geom_point(data=whole,aes(x=.data[[x_var]], y = .data[[y_var]], size = .data[[size_var]]),fill="grey50",alpha=0.1)
+  if(an_tab){
+    #separate for label (so nothing else has to change)
+    dat2 = dat
+    dat = dat[,1:4]
   }
-  #   
-  p=p+geom_point(shape = 21, stroke = 0.5 ) +
-    viridis::scale_fill_viridis(alpha = 0.8, name = col_var,labels = function(x) abs(as.numeric(x)), limits=range(whole[[col_var]], na.rm = TRUE)) +
-    scale_size(range = c(1, 10),limits=range(whole[[size_var]], na.rm = TRUE) , name = size_var,labels = function(x) abs(as.numeric(x))) +
+  
+  #all extra data prepared first
+  all_extra_data = NULL
+  
+  if (!is.null(extra_dat) && plt_extra) {
+    names(extra_dat) = names(dat)
+    swiss_extra <- rbind(swiss_extra, extra_dat)
+    
+    extra_dat$set <- "cluster solutions"
+    all_extra_data <- rbind(all_extra_data,extra_dat)
+  }
+  
+  if (!is.null(high_point) && nrow(high_point)!=0) {
+    names(high_point) = names(dat)
+    swiss_extra <- rbind(swiss_extra, high_point)
+    
+    if(ahp_man){
+      high_point$set = "Manual Selection"
+    }else{high_point$set = "AHP - best option"}
+    
+    all_extra_data <- rbind(all_extra_data,high_point)
+  }
+  
+  if (!is.null(sel_tab) && nrow(sel_tab) > 0) {
+    names(sel_tab) = names(dat)
+    swiss_extra <- rbind(swiss_extra, sel_tab)
+    
+    sel_tab$set <- "Selection"
+    
+    if(!is.null(all_extra_data)){all_extra_data <- rbind(all_extra_data,sel_tab)}else{all_extra_data = sel_tab}
+  }
+  
+  if (status_q) {
+    st_q <- read.table(sq_path, header = FALSE, stringsAsFactors = FALSE, sep = deli(sq_path),colClasses = rep("numeric",4))
+    names(st_q) <- names(dat)
+    swiss_extra <- rbind(swiss_extra, st_q)
+    
+    st_q$set <- "Status Quo"
+    all_extra_data <- rbind(all_extra_data,st_q)
+  }
+  
+  #plot with main data
+  p = ggplot(dat, aes(x = .data[[x_var]], y = .data[[y_var]],
+                      fill = .data[[col_var]], size = .data[[size_var]]), alpha = 0.5) +
+    #essential scales added first to prevent warnings
+    viridis::scale_fill_viridis(alpha = 0.8, name = col_var, labels = function(x) abs(as.numeric(x)), limits=range(swiss_extra[[col_var]], na.rm = TRUE)) +
+    scale_size(range = c(1, 10), limits=range(swiss_extra[[size_var]], na.rm = TRUE), name = size_var, labels = function(x) abs(as.numeric(x))) +
+    scale_x_continuous(limits= range(swiss_extra[[x_var]], na.rm = TRUE), labels = function(x) {rem_min(x)}) +
+    scale_y_continuous(limits= range(swiss_extra[[y_var]], na.rm = TRUE), labels = function(x) {rem_min(x)}) +
     theme_bw() +
     theme(panel.background = element_blank(),
           panel.grid.major = element_line(color = "lightgray", size = 0.3),
@@ -1060,115 +1098,44 @@ plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NUL
           legend.text = element_text(size=13.5),
           legend.title = element_text(size=15))
   
-  if(an_tab && "cluster number" %in% colnames(dat2)){
-    p= p +
-     geom_text(data = dat2, aes(x = .data[[x_var]]+(0.03*diff(range(.data[[x_var]]))), y = .data[[y_var]], label = `cluster number`),
-              position = position_dodge(width = 0.85), hjust = 0,size=6)
-  }
-   
-  all_extra_data = NULL
-  
-  if (!is.null(extra_dat) && plt_extra) {
-    names(extra_dat) = names(dat)
-    extra_dat$set <- "cluster solutions"
-    all_extra_data <- rbind(all_extra_data,extra_dat)
-
-  }
-
-  if (!is.null(high_point) && nrow(high_point)!=0) {
-     names(high_point) = names(dat)
-     
-     if(ahp_man){
-       high_point$set = "Manual Selection"
-     }else{high_point$set = "AHP - best option"}
-     
-     all_extra_data <- rbind(all_extra_data,high_point)
-  }
-  
-  if (!is.null(sel_tab) && nrow(sel_tab) > 0) {
-    names(sel_tab) = names(dat)
-    
-    sel_tab$set <- "Selection"
-
-    if(!is.null(all_extra_data)){all_extra_data <- rbind(all_extra_data,sel_tab)}else{all_extra_data = sel_tab}
-
-  }
-  
-  if (status_q) {
-
-    st_q <- read.table(sq_path, header = FALSE, stringsAsFactors = FALSE, sep = deli(sq_path),colClasses = rep("numeric",4))
-    names(st_q) <- names(dat)
-    st_q$set <- "Status Quo"
-    all_extra_data <- rbind(all_extra_data,st_q)
-  }
-
+  #shape and color scales only if extra data exists
   if (!is.null(all_extra_data)) {
-
-    p <- p +
-      geom_point(data = all_extra_data, aes(x = .data[[x_var]], y = .data[[y_var]], shape = set, color = set, size = .data[[size_var]], fill = .data[[col_var]] ),
-                  stroke = 1.8, show.legend = TRUE, alpha=0.7) +
+    p = p + 
       scale_shape_manual(labels = function(x) gsub("-", "", x),
-        values = c("cluster solutions" = 21, "AHP - best option" = 22, "Manual Selection" = 22,  "Selection" =21, "Status Quo" = 21),name="") +
+                         values = c("cluster solutions" = 21, "AHP - best option" = 22, "Manual Selection" = 22, "Selection" = 21, "Status Quo" = 21), name="") +
       scale_color_manual(labels = function(x) gsub("-", "", x),
-        values = c("cluster solutions" = "cyan", "AHP - best option" = "#FF4D4D", "Manual Selection" = "#FF4D4D", "Selection" = "black", "Status Quo" = "#FF00FF"),name="") +
-      guides(color = guide_legend(override.aes = list(size = 5)),shape = guide_legend(override.aes = list(size = 5)))
+                         values = c("cluster solutions" = "cyan", "AHP - best option" = "#FF4D4D", "Manual Selection" = "#FF4D4D", "Selection" = "black", "Status Quo" = "#FF00FF"), name="") +
+      guides(color = guide_legend(override.aes = list(size = 5)),
+             shape = guide_legend(override.aes = list(size = 5)))
   }
   
-  #control range limits with fit() as reference
+  #the optional whole dataset 
+  if(add_whole){
+    p = p + geom_point(data=whole, aes(x=.data[[x_var]], y = .data[[y_var]], size = .data[[size_var]]), fill="grey50", alpha=0.1)
+  }
   
-  if(!is.null(all_extra_data)){ #CS2 Petite Glane has values outside of pareto_fitness dataset
-    extra_sd = all_extra_data %>% select(-set)
-    swiss_extra = rbind(extra_sd,whole)
-    }else{swiss_extra = whole}
+  #main data points
+  p = p + geom_point(shape = 21, stroke = 0.5)
   
-  p <- p + scale_x_continuous(limits= range(swiss_extra[[x_var]], na.rm = TRUE),labels = function(x) {rem_min(x)})+
-      scale_y_continuous(limits= range(swiss_extra[[y_var]], na.rm = TRUE),labels = function(x) {rem_min(x)})
-
+  #cluster number labels if needed
+  if(an_tab && "cluster number" %in% colnames(dat2)){
+    p = p + geom_text(data = dat2, aes(x = .data[[x_var]]+(0.03*diff(range(.data[[x_var]]))), y = .data[[y_var]], label = `cluster number`),
+                      position = position_dodge(width = 0.85), hjust = 0, size=6)
+  }
+  
+  #extra data points
+  if (!is.null(all_extra_data)) {
+    p = p + geom_point(data = all_extra_data, aes(x = .data[[x_var]], y = .data[[y_var]], shape = set, color = set, size = .data[[size_var]], fill = .data[[col_var]]),
+                       stroke = 1.8, show.legend = TRUE, alpha=0.7)
+  }
+  
+  
   if(rev){
-    p = p+scale_y_reverse(labels = function(y) {rem_min(y)}, limits= rev(range(swiss_extra[[y_var]], na.rm = TRUE)))+scale_x_reverse(labels = function(x) {rem_min(x)},limits= rev(range(swiss_extra[[x_var]], na.rm = TRUE)))}
-
+    p = p + scale_y_reverse(labels = function(y) {rem_min(y)}, limits= rev(range(swiss_extra[[y_var]], na.rm = TRUE))) +
+      scale_x_reverse(labels = function(x) {rem_min(x)}, limits= rev(range(swiss_extra[[x_var]], na.rm = TRUE)))
+  }
   
   return(p)
-}
-
-
-## scatter plot in Analysis tab for comparing decision and objective space 
-
-pcs_vs_var <- function(dat, x_var, y_var, col_var, size_var,flip=F, sel_tab=NULL){
-    
-    p = ggplot(dat, aes(x = .data[[x_var]], y = .data[[y_var]], fill = .data[[col_var]], size = .data[[size_var]])) +
-      geom_point(shape = 21, stroke = 0.5 ) +
-      viridis::scale_fill_viridis(alpha = 0.8, name = col_var,labels = function(x) abs(as.numeric(x))) +  
-      scale_size(range = c(1, 10), name = size_var,labels = function(x) abs(as.numeric(x))) +     
-      theme_bw() + 
-      theme(panel.background = element_blank(),
-            panel.grid.major = element_line(color = "lightgray", size = 0.3),
-            panel.grid.minor = element_blank(),
-            panel.border = element_blank(),
-            axis.text = element_text(size = 16),
-            axis.title = element_text(size = 20),
-            legend.position = "right", 
-            legend.text = element_text(size=13.5),
-            legend.title = element_text(size=15))+
-      scale_y_continuous(labels = function(x) {rem_min(x)})+scale_x_continuous(labels = function(x) {rem_min(x)})
-    
-    
-    if (!is.null(sel_tab)) {
-     
-        sel_tab$set <- "Selection"
-      p=  p+
-        geom_point(data = sel_tab, aes(x = .data[[x_var]], y = .data[[y_var]], shape = set, color = set, size = .data[[size_var]]), 
-                   stroke = 1.8, show.legend = TRUE, alpha=0.7)+
-          scale_shape_manual(labels = function(x) gsub("-", "", x),
-                             values = c("Selection" =21),name="") + 
-          scale_color_manual(labels = function(x) gsub("-", "", x),
-                             values = c( "Selection" = "black"),name="")
-    }
-    
-    if(flip){
-      p = p+coord_flip()}
-    
-    return(p)
 }
 
 #### AHP Functions ####
