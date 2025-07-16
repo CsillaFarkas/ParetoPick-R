@@ -241,7 +241,8 @@ ui <-
                                    font-weight: bold; font-size:
                                    16px; margin-bottom:
                                    5px; text-align: center;
-                                   }
+                                  }
+                                   
 
                                /* R2 and Pearson table in AHP tab */
                                   #relation {
@@ -293,12 +294,14 @@ ui <-
                                           setTimeout(removeMinusSigns, 5);
                                         }
                                       });
-
-
+                                      
                                    $(document).on('input change', '.irs-with-grid, .irs-to, .irs-from', function() {
                                         setTimeout(removeMinusSigns, 7);
                                       });
                                     });
+                                    
+                                    
+                                    
                                  ")),
 
 
@@ -493,14 +496,14 @@ ui <-
                                        div(id="play_sidebar",
                                          column(12,
                                                 div("Objective Range",
-                                                    title = "For some of the visualisations and analyses in this tool, the objectives have been scaled to between 0 (worst) and 1 (best) for easier comparison.",
+                                                    tags$h5("For some of the visualisations and analyses in this tool, the objectives have been scaled to between 0 (worst) and 1 (best) for easier comparison."),
                                                     style = "text-align: left; font-size:150%; margin-top: 10px;"),
                                               
                                                 sliderInput(inputId = "obj1", label=  "Objective 1:", min = 0, max = 1, value = c(0,1), step = 0.01,width = "120%"),
                                                 sliderInput(inputId = "obj2", label = "Objective 2:", min = 0, max = 1, value = c(0,1), step = 0.01,width = "120%"),
                                                 sliderInput(inputId = "obj3", label = "Objective 3:", min = 0, max = 1, value = c(0,1), step = 0.01, width = "120%"),
                                                 sliderInput(inputId = "obj4", label = "Objective 4:", min = 0, max = 1, value = c(0,1), step = 0.01,width = "120%"),
-
+     
                                                 tags$div(textOutput("ensure_sel"), style = "color: red;"),
                                                 div("Number of measures", 
                                                     title = "Please select the minimum and maximum number of measures you would like to implement.",
@@ -577,6 +580,8 @@ ui <-
                                                       @keyframes spin {to { transform: rotate(360deg);}}
 
                                                   ")) ,
+                           
+                           
 
                            div(id = "tab_play1",
 
@@ -634,43 +639,48 @@ ui <-
 
                               br(),
                               br(),
-                              div("Number of distinct measures used in selection compared to full front",
-                                  style = "display: flex; justify-content: center; font-size:150%"),
-                              # div("*please note that these numbers refer to the implementation/use of the total number of measures available in the catchment. They therefore differ from the selection made in the sliders which considers individual optima's implementation of measures.",
-                                  # style = "display: flex; justify-content: center; font-size: 80%"),
-
-                              div(style="display: flex; flex-direction: column; align-items: center;",
-                                  tags$h4("Range (slider selection)"),
-                                     tableOutput("aep_tab_full"),
+                              
                                   conditionalPanel(
                                     condition = "output.selectionmade",
                                     div(
                                       style = "display: flex; flex-direction: column; align-items: center;",
-                                    tags$h4("Optimum (selected in Pareto plot)"),
-                                    tableOutput("aep_tab_one")
-                                    ))),
+                                      tags$h3("Selected Optimum"),
+                                      div("objectives", style = "text-align: center; font-size:150%"),
+                                      div(style = "margin: 0 auto; text-align: center;", tableOutput("click_info")),
+                                      div("measures", style = "text-align: center; font-size:150%"),
+                                      div(style = "margin: 0 auto; text-align: center;", tableOutput("aep_tab_one")),
+                                      div(style = "margin: 0 auto; text-align: center;",  
+                                          checkboxInput("save_click_line", label = "Click here to save the selected optimum to the output folder (selected_optima.csv)", value = FALSE)
+                                      )
+                                    )
+                                  ),
+                              
+                              div("Number of distinct measures used in selection compared to full front",
+                                  style = "display: flex; justify-content: center; font-size:150%"),
+                              # div("*please note that these numbers refer to the implementation/use of the total number of measures available in the catchment. They therefore differ from the selection made in the sliders which considers individual optima's implementation of measures.",
+                              # style = "display: flex; justify-content: center; font-size: 80%"),
+                              
+                              div(style="display: flex; flex-direction: column; align-items: center;",
+                                  # tags$h4("Range (slider selection)"),
+                                  div(style = "margin: 0 auto; text-align: center;",tableOutput("aep_tab_full"))
+                              ),
 
                               br(),
                               br(),
 
-                               hr(style = "border-top: 2px solid #03597F;"),
+                               # hr(style = "border-top: 2px solid #03597F;"),
                                br(),
                                fluidRow(
                                  column(12,
                                         fluidRow(column(6, div("Selected Objective Ranges (scaled)", style = "text-align: left; font-size:150%"),
                                                         tableOutput("sliders")),
-                                                 column(6, div("Selected Objective Ranges (absolute)",
-                                                               title = "objectives optimised across negative and positive ranges are shown with signs. All other objectives are given without signs.",
+                                                 column(6, div("Difference to status quo",
                                                                style = "text-align: left; font-size:150%"),
-                                                        tableOutput("sliders_abs"),
-                                                        div("*the percentage values signify the difference between the full range and the current max and min selection.", style = "text-align: left; font-size:100%"))),
-                                        fluidRow(column(6,
-                                                        div("Optimum (selected in line plot)", style = "text-align: left; font-size:150%"),
-                                                        tableOutput("click_info"),
-                                                        checkboxInput("save_click_line",label = "Click here to save the selected optimum to the output folder (selected_optima.csv)",value=F)%>%hidden()),
+                                                        tableOutput("sliders_abs"))),
+                                        fluidRow(
 
-                                                 column(6,
-                                                        div("Maximum Objective Ranges (absolute)",style = "text-align: left; font-size:150%"),
+                                                 column(6, offset = 6,
+                                                        div("Maximum Objective Ranges",style = "text-align: left; font-size:150%"),
                                                         title = "objectives optimised across negative and positive ranges are shown with signs. All other objectives are given without signs.",
                                                         
                                                         tableOutput("whole_range")#,
@@ -908,11 +918,11 @@ ui <-
                                              conditionalPanel(
                                                condition = "input.outlyn == 'Yes'",
                                                h4("3.1 Please specify the number of standard deviations that shall be tested:"),
-                                               numericInput("sd_min", "Minimum standard deviation from cluster mean", value = 3),
-                                               numericInput("sd_max", "Maximum standard deviation from cluster mean", value = 3),
+                                               numericInput("sd_min", "Minimum standard deviation from cluster mean", min=1, max=3, value = 1),
+                                               numericInput("sd_max", "Maximum standard deviation from cluster mean",min=1, max=3, value = 3),
                                                h4("3.2 Please specify how many extreme variables within a datapoint shall be tested:"),
-                                               numericInput("count_min", "Minimum number of extreme variables", value = 3),
-                                               numericInput("count_max", "Maximum number of extreme variables", value = 3),
+                                               numericInput("count_min", "Minimum number of extreme variables", min=2, max=6, value = 2),
+                                               numericInput("count_max", "Maximum number of extreme variables",min=2, max=6, value = 6),
                                                h4("3.3 Please select a limit for the number of extreme solutions allowed in the final clustering:"),
                                                numericInput("outlier_ratio", "Outlier to cluster ratio", value = 0.5, min=0.1, max=0.9),
                                                actionButton("write_outl", "Confirm Outlier Testing")
@@ -931,7 +941,7 @@ ui <-
                                                condition = "input.clusyn == 'Yes'",
                                                h4("Please specify how many clusters to iterate through:"),
                                                numericInput("clus_min", "Minimum number of Clusters", value = 3),
-                                               numericInput("clus_max", "Maximum number of Clusters", value = 3),
+                                               numericInput("clus_max", "Maximum number of Clusters",max=20, value = 3),
 
                                              ),
 
@@ -976,13 +986,12 @@ ui <-
                              column(6,
                                     tags$div("Select among plots.",style = "text-align: center;font-size: 125%;"),
                                     fluidRow(
-                                      column(3,checkboxInput("show_pareto",label="Plot 1: Pareto solutions representative for the clusters.",value=TRUE)),
-                                      column(3,checkboxInput("show_pca_vs_var",label="Plot 2: Objectives (X-axis) versus cluster variables (Y-axis, colour, size) (select from drop down)",value=FALSE)),
-                                      column(3,checkboxInput("show_boxplot",label="Plot 3: The objectives' within-cluster distribution (select one from table)",value=FALSE)),
-                                      column(3,checkboxInput("show_share_con",label="Plot 4: The individual measures' share in total considered area (select several from table)",value=FALSE))
-
-
-                                      ),
+                                      column(12,
+                                      checkboxInput("show_pareto",label="Plot 1: Pareto solutions representative for the clusters.",value=TRUE),
+                                      checkboxInput("show_pca_vs_var",label="Plot 2: Objectives (X-axis) versus cluster variables (Y-axis, colour, size) (select from drop down)",value=FALSE),
+                                      checkboxInput("show_boxplot",label="Plot 3: The objectives' within-cluster distribution (select one from table)",value=FALSE),
+                                      checkboxInput("show_share_con",label="Plot 4: The individual measures' share in total considered area (select several from table)",value=FALSE)
+                                      )),
                                     plotOutput("par_plot_optima"),
 
 
