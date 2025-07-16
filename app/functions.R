@@ -345,26 +345,25 @@ word_splitter <- function(words, segment_length = 6) {
   })
 }
 
-## add percentage in brackets and remove minus/add plus (where signs are mixed)
-add_perc <- function(df1, df2) {
-  df1 = as.matrix(df1)
-  df2 = as.matrix(df2)
+## add percentage difference to status quo in brackets
+add_perc_stq = function(df, stq) {
+  df = as.matrix(df)
+  stq = as.matrix(stq)
+  df_new = df
   
-  df1_new <- df1
-  
-  for (j in seq_len(ncol(df1))) {
-    col_range <- max(df2[, j]) - min(df2[, j])
-    mixed_signs <- (max(df2[, j]) > 0 & min(df2[, j]) < 0)
-    
-    for (i in seq_len(nrow(df1))) {
-      if (col_range != 0) {
-        pd = (df1[i, j] - df2[i, j]) / col_range * 100
-      } else {
-        pd = NA  # no change
-      }
+  for (j in seq_len(ncol(df))) {
+    for (i in seq_len(nrow(df))) {
+      if (stq[j] != 0) {
+        pd = (df[i, j] - stq[j]) / stq[j] * 100
+        
+        direction_sign <-  if (pd > 0) "+" else "-"
+        
+        dumb_bracket <- paste0(" (", direction_sign)
+        
+      } else{ pd = NA } #if status quo is 0
+       
       
-      # conditional rounding
-      main_value <- abs(df1[i, j])
+      main_value <- abs(df[i, j])
       if (main_value < 1) {
         rounded_value <- round(main_value, 4)
       } else if (main_value < 10) {
@@ -373,41 +372,83 @@ add_perc <- function(df1, df2) {
         rounded_value <- round(main_value, 0)
       }
       
-      if (!is.na(pd) & !is.nan(pd) & !is.infinite(pd) & round(pd, 2) != 0) {
-        direction_sign <- if (pd > 0) "+" else "-"
-        dumb_bracket <- paste0(" (", direction_sign)
-        
-        if (mixed_signs) {
-          if (df1[i, j] > 0 && df2[i, j] < 0) {
-            value <- paste0("-", rounded_value)
-          } else if (df1[i, j] < 0 && df2[i, j] > 0) {
-            value <- paste0("-", rounded_value)
-          } else {
-            value <- if (df1[i, j] > 0) paste0("+", rounded_value) else paste0("-", rounded_value)
-          }
-        } else {
-          value <- as.character(rounded_value)
-        }
-        
-        df1_new[i, j] <- paste0(value, dumb_bracket, round(abs(pd), 2), "%)")
-      } else {
-        if (mixed_signs) {
-          if (df1[i, j] > 0 && df2[i, j] < 0) {
-            df1_new[i, j] <- paste0("-", rounded_value)
-          } else if (df1[i, j] < 0 && df2[i, j] > 0) {
-            df1_new[i, j] <- paste0("-", rounded_value)
-          } else {
-            df1_new[i, j] <- if (df1[i, j] > 0) paste0("+", rounded_value) else paste0("-", rounded_value)
-          }
-        } else {
-          df1_new[i, j] <- as.character(rounded_value)
-        }
+      if (is.na(pd)) {
+        df_new[i, j] <- paste0("<span title='no percentage change can be provided because the status quo is zero for this objective'>",as.character(rounded_value), "*","</span>")
+      } else if (pd == 0) {
+        df_new[i, j] <- as.character(rounded_value)
+      } else{
+        df_new[i, j] <- paste0(as.character(rounded_value), dumb_bracket, round(abs(pd), 2), "%)")
       }
+      
     }
   }
+  return(df_new)
   
-  return(df1_new)
 }
+
+
+# add_perc <- function(df1, df2) {
+#   df1 = as.matrix(df1)
+#   df2 = as.matrix(df2)
+#   
+#   df1_new <- df1
+#   
+#   for (j in seq_len(ncol(df1))) {
+#     col_range <- max(df2[, j]) - min(df2[, j])
+#     mixed_signs <- (max(df2[, j]) > 0 & min(df2[, j]) < 0)
+#     
+#     for (i in seq_len(nrow(df1))) {
+#       if (col_range != 0) {
+#         pd = (df1[i, j] - df2[i, j]) / col_range * 100
+#       } else {
+#         pd = NA  # no change
+#       }
+#       
+#       # conditional rounding
+#       main_value <- abs(df1[i, j])
+#       if (main_value < 1) {
+#         rounded_value <- round(main_value, 4)
+#       } else if (main_value < 10) {
+#         rounded_value <- round(main_value, 2)
+#       } else {
+#         rounded_value <- round(main_value, 0)
+#       }
+#       
+#       if (!is.na(pd) & !is.nan(pd) & !is.infinite(pd) & round(pd, 2) != 0) {
+#         direction_sign <- if (pd > 0) "+" else "-"
+#         dumb_bracket <- paste0(" (", direction_sign)
+#         
+#         if (mixed_signs) {
+#           if (df1[i, j] > 0 && df2[i, j] < 0) {
+#             value <- paste0("-", rounded_value)
+#           } else if (df1[i, j] < 0 && df2[i, j] > 0) {
+#             value <- paste0("-", rounded_value)
+#           } else {
+#             value <- if (df1[i, j] > 0) paste0("+", rounded_value) else paste0("-", rounded_value)
+#           }
+#         } else {
+#           value <- as.character(rounded_value)
+#         }
+#         
+#         df1_new[i, j] <- paste0(value, dumb_bracket, round(abs(pd), 2), "%)")
+#       } else {
+#         if (mixed_signs) {
+#           if (df1[i, j] > 0 && df2[i, j] < 0) {
+#             df1_new[i, j] <- paste0("-", rounded_value)
+#           } else if (df1[i, j] < 0 && df2[i, j] > 0) {
+#             df1_new[i, j] <- paste0("-", rounded_value)
+#           } else {
+#             df1_new[i, j] <- if (df1[i, j] > 0) paste0("+", rounded_value) else paste0("-", rounded_value)
+#           }
+#         } else {
+#           df1_new[i, j] <- as.character(rounded_value)
+#         }
+#       }
+#     }
+#   }
+#   
+#   return(df1_new)
+# }
 
 
 #### Python Caller ####
