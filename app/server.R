@@ -987,7 +987,7 @@ server <- function(input, output, session) {
     output$first_pareto <- renderPlot({ first_pareto_fun() },outputArgs = list(deferUntilFlush = FALSE))
   
    observeEvent(input$clickpoint, {
-  req(f_scaled(), objectives(), fit(), input$obj1, input$x_var3)
+  req(scaled_filtered_data(), input$obj1, input$x_var3)
   dat <- scaled_filtered_data()
   nearest <- nearPoints(dat, input$clickpoint, xvar = input$x_var3, yvar = input$y_var3, maxpoints = 1)
   if(nrow(nearest) > 0) {
@@ -1038,7 +1038,7 @@ server <- function(input, output, session) {
     
     
     single_meas_fun2 = function() {
-      req(lalo(), cmf(),fit(), sel_tay(), objectives(), fit1())
+      req(lalo(), cmf(), sel_tay(), fit1())
       
       cols = objectives()
       values = sel_tay()
@@ -1082,7 +1082,7 @@ server <- function(input, output, session) {
     
     
     shp_single_meas = function(shp=T){
-      req(cmf(),fit(), sel_tay(), objectives(),fit1())
+      req(cmf(), sel_tay(), fit1())
       
       cols = objectives()
       values = sel_tay()
@@ -1153,7 +1153,7 @@ server <- function(input, output, session) {
     
     ## line plot
     parplot_fun = function(){
-      req(f_scaled(),objectives(),fit(),filtered_data())
+      req(filtered_data())
       sk= filtered_data()
       
       if(is.null(sk)){return(NULL)}else{
@@ -1193,7 +1193,7 @@ server <- function(input, output, session) {
  
   ## pull values from parallel axis line when clicked
   observeEvent(input$clickline,{
-    req(fit(), objectives())
+    req(filtered_data())
     clickpoint_button(TRUE)
     cl_line_x(round(input$clickline$x))#x
     cl_line_val(input$clickline$y) #val
@@ -1347,7 +1347,7 @@ server <- function(input, output, session) {
     
     ## scaled table 
     output$sliders <- renderTable({
-      req(f_scaled(),fit(),objectives(),colname_unit)
+      req(fit(),colname_unit)
       
       slid = data.frame(
         col1 = c(input$obj1[2],input$obj1[1]),
