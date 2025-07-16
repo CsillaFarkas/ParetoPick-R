@@ -46,16 +46,14 @@ suppressPackageStartupMessages({
  
 })
 source("functions.R")
+land_u = c("hedge", "buffer","edgefilter","grasshedge", "shrubhedge", "grassbuffer", "shrubbuffer", "grassslope","grassland","grassrchrg", "terrace", "floodres","swale", "rip_forest", "afforest", "afforestation", "contr")
 
 ## check, assign and write priorities, hardcodes what has been used in CoMOLA
-
-land_use = c("hedge", "buffer","edgefilter","shrubbuffer","shrubhedge","grasshedge","grassbuffer", "grassslope", "grassland" ,"grassrchrg","swale", "terrace", "floodres", "rip_forest", "afforest", "afforestation", "contr")#land use (2nd prio)
-
 nswrm_priorities <- function(lu) {
   prio_groups <- list(
     structural = c("pond", "constr_wetland", "wetland"), # structural elements (1st prio)
-    land_use , # land use (2nd priority)
-    management = c("constill","lowtillcc","mintill", "lowtill", "droughtplt", "notill", "intercrop", "covcrop", "rotation", "rot") # management (3rd prio)
+    land_use = land_u, #land use (2nd prio)
+    management = c("constill","lowtillcc", "lowtill", "droughtplt","mintill", "notill", "intercrop", "covcrop", "rotation", "rot") # management (3rd prio)
   )
   
   prio <- data.frame(nswrm = character(), priority = integer(), mngmt = integer(), stringsAsFactors = FALSE)
@@ -391,8 +389,8 @@ for(op in paste0("V", 1:nopt)){
      rename_at(vars(meas),~paste0(., "_share_con"))%>%mutate(id = row_number())
   
    ## land use share in considered/implemented catchment area
-   if(any(meas %in% land_use )){
-     lu = meas[which(meas %in% land_use)]
+   if(any(meas %in% land_u)){
+     lu = meas[which(meas %in% land_u)]
    
      # new column with combined area share
      lu_share = arre %>%
