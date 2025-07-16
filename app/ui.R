@@ -482,8 +482,7 @@ ui <-
 
                        wellPanel(    p("This tab plots the pareto front in a few different ways
                               and lets you explore the effects of different objective ranges.
-                                       You can select specific points/optima on the pareto front by clicking on them,
-                                       then you can plot and download the map of the respective NSWRM plan. You can also select optima in the line plot and analyse their location in the objective space.")),
+                                       You can select specific points/optima on the pareto front by clicking on them in the Pareto or in the line plot. Then you can plot and download the map of the respective NSWRM plan.")),
 
                        sidebarLayout(
 
