@@ -163,16 +163,17 @@ It is important to note that:
 # Assumptions
 
 * General 
-  * as "land use" measures currently only hedge, buffer and grassslope, terrace, floodres, rip_forest, afforest - if more needed global.R, functions.R (write_corr) and convert_optain require adapting
-  * nswrm_priorities() function currently considers: pond, constr_wetland, wetland, hedge, buffer, grassslope, lowtillcc, lowtill, notill, droughtplt, terrace, floodres, rip_forest, afforest and intercrop
+  * covert_optain.R is hard coded to measures, if these measures are not specifically named in this script they cannot be processed
   * do the current default settings produce reasonable cluster outputs across all catchments? the default currently does not perform outlier testing 
   * in AHP, the initial state of the pairwise comparison as "Equal" amplifies the mathematical definition of inconsistency, therefore only when at least three sliders are NOT set to "Equal" is inconsistency considered at all
   * stratified variables such as lowflow in the Schoeps do not work in the tool, the sliders cannot be moved
   * range_controlled() controls for the objectives min value being less than 0.0005 (*1000) or over 10000 (--> rounding), this might not be applicable for all case studies 
-
  
 
 # To do
+  * selected line and optima jump around when sliders touched as this is done using line number/id, reevaluation required
+  * more exact point selection
+  * processing speed of Visualisation tab went down with matched selection
   * docker image with Linux executables OR translation to fully R-based clustering
   * pull AHP plot up with placeholder
   * add a small spinner to the Check Data button to clarify that it takes a while  
