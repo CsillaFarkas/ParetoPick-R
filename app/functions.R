@@ -1179,6 +1179,45 @@ plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NUL
   return(p)
 }
 
+## scatter plot in Analysis tab for comparing decision and objective space 
+
+pcs_vs_var <- function(dat, x_var, y_var, col_var, size_var,flip=F, sel_tab=NULL){
+  
+  p = ggplot(dat, aes(x = .data[[x_var]], y = .data[[y_var]], fill = .data[[col_var]], size = .data[[size_var]])) +
+    geom_point(shape = 21, stroke = 0.5 ) +
+    viridis::scale_fill_viridis(alpha = 0.8, name = col_var,labels = function(x) abs(as.numeric(x))) +  
+    scale_size(range = c(1, 10), name = size_var,labels = function(x) abs(as.numeric(x))) +     
+    theme_bw() + 
+    theme(panel.background = element_blank(),
+          panel.grid.major = element_line(color = "lightgray", size = 0.3),
+          panel.grid.minor = element_blank(),
+          panel.border = element_blank(),
+          axis.text = element_text(size = 16),
+          axis.title = element_text(size = 20),
+          legend.position = "right", 
+          legend.text = element_text(size=13.5),
+          legend.title = element_text(size=15))+
+    scale_y_continuous(labels = function(x) {rem_min(x)})+scale_x_continuous(labels = function(x) {rem_min(x)})
+  
+  
+  if (!is.null(sel_tab)) {
+    
+    sel_tab$set <- "Selection"
+    p=  p+
+      geom_point(data = sel_tab, aes(x = .data[[x_var]], y = .data[[y_var]], shape = set, color = set, size = .data[[size_var]]), 
+                 stroke = 1.8, show.legend = TRUE, alpha=0.7)+
+      scale_shape_manual(labels = function(x) gsub("-", "", x),
+                         values = c("Selection" =21),name="") + 
+      scale_color_manual(labels = function(x) gsub("-", "", x),
+                         values = c( "Selection" = "black"),name="")
+  }
+  
+  if(flip){
+    p = p+coord_flip()}
+  
+  return(p)
+}
+
 #### AHP Functions ####
 
 ## consistency index for AHP
