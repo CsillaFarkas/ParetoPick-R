@@ -849,7 +849,7 @@ plt_scat2 = function(dat, x, y){
       panel.border = element_blank(),
       axis.text = element_text(size = 12),
       axis.title = element_text(size = 16)) +
-    scale_x_continuous(labels = function(x) {rem_min(x)}) +
+    scale_x_continuous(expand = c(0.02, 0.15), labels = function(x) {rem_min(x)}) +
     scale_y_continuous(labels = function(y) {rem_min(y)})
 }
 
@@ -908,13 +908,13 @@ plot_parline = function(datt,sizz=rep(.5, length(unique(datt$id))),colols=rep("g
     theme_minimal() +
     theme(legend.position = "none",
           plot.title = element_blank(),
-          axis.text.y = element_text(size = 18),
+          axis.text.y = element_text(size = 20),
           axis.text.x = element_text(size = 20),
           axis.title.y = element_text(size = 18),
           axis.title.x = element_blank()
     )+
     scale_y_continuous(limits = c(0,1)) +
-    scale_x_discrete(expand = c(0.02, 0.02),labels = function(x) str_wrap(x, width = 10)) + 
+    scale_x_discrete(expand = expansion(mult =  c(-0.05, 0.035)),labels = function(x) str_wrap(x, width = 8)) + 
     labs(x = "Factors", y = "Scaled Values") +
     scale_size_manual(values = sizz) +
     scale_color_manual(values = colols)+
