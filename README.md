@@ -166,8 +166,7 @@ It is important to note that:
   * covert_optain.R is hard coded to measures, if these measures are not specifically named in this script they cannot be processed
   * do the current default settings produce reasonable cluster outputs across all catchments? the default currently does not perform outlier testing 
   * in AHP, the initial state of the pairwise comparison as "Equal" amplifies the mathematical definition of inconsistency, therefore only when at least three sliders are NOT set to "Equal" is inconsistency considered at all
-  * stratified variables such as lowflow in the Schoeps do not work in the tool, the sliders cannot be moved
-  * range_controlled() controls for the objectives min value being less than 0.0005 (*1000) or over 10000 (--> rounding), this might not be applicable for all case studies 
+  * stratified variables do not work in the tool, the sliders cannot be moved
  
 
 # To do
