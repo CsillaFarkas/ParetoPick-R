@@ -819,7 +819,7 @@ server <- function(input, output, session) {
          
           new_defaults <- default_vals()
           
-          for (i in 1:4) {#this should become obsolete with new function
+          for (i in 1:4) {
             var_name <- paste0("steps", i)
             
             if (abs(min_max$min[i]) <= 0.5) {
@@ -831,12 +831,20 @@ server <- function(input, output, session) {
             }
           
           if (abs(min_max$min[i]) > 100) {
-            min_max$max[i] = round(min_max$max[i],0)
-            min_max$min[i] = round(min_max$min[i],0)
+            min_max$max[i] = ceiling(min_max$max[i])
+            min_max$min[i] = floor(min_max$min[i])
           }
             
-          step_val = (min_max$max[i]-min_max$min[i])/20
+          step_val = 1 #otherwise keyboard arrows do not work properly
+          # ranger not particularly flexible, another option instead of /1000:
           
+          # range_abs =  abs(min_max$max[i]- min_max$min[i])
+          #   
+          # if(range_abs > 10){
+          #   step_val = 1 #
+          # }else{
+          #   step_val = cal_step(ra = range_abs, n = 100)
+          #   }
           
           range_controlled(range_value)
           
@@ -1476,17 +1484,8 @@ server <- function(input, output, session) {
       cm(pull_shp_new())
       
       #buffers forever
-      # bc = left_join(cm(),hru_100(), by = c("id"))%>%st_make_valid() #only those with highest priority
-
       buff_els = needs_buffer()
 
-      # if(!is.null(buff_els)){
-      #   relda <- bc[bc[["measure"]] %in% buff_els, ]
-      #   relda_utm <-  st_transform(relda, crs = 32633) # UTM zone 33N
-      #   buffy <-st_buffer(relda_utm, dist = 60)
-      #   buffers(st_transform(buffy, crs = st_crs(relda))) #all buffers ever required
-      # }else{buffers(NULL)}
-      
       if(!is.null(buff_els)){
         hru_ever_buffer = hru_ever() %>% filter(measure %in% buff_els) %>% distinct(id)#ids with small elements
         bc = cm() %>% filter(id %in% hru_ever_buffer$id)%>%st_make_valid()
