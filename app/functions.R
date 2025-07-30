@@ -1414,7 +1414,29 @@ which.ahp <- function(df, weights) {
   which.min(score)
 }
 
-
+## calculate appropriate step value for sliders, option for laggy sliders
+# cal_step = function(ra, n = 100){ # only used for tiny ranges
+#   rs = ra/n  #raw step
+# 
+#   mag = 10^floor(log10(abs(rs)))
+#   rn = rs/mag
+# 
+#   if(rn <= 1){
+#     nice = 1
+#   }else if(rn <= 2){
+#     nice = 2
+#   }else if(rn <= 5){
+#     nice = 5
+#   }else{
+#     nice = 10
+#   }
+# 
+#   nice = nice*mag
+#   nice = pmax(nice, ra/1000)
+#   nice = pmin(nice, ra/5)
+# 
+#   return(nice)
+# }
 
 
 ## pull highest range for nice plot
