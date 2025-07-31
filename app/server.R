@@ -54,6 +54,7 @@ server <- function(input, output, session) {
   reset_move = reactiveVal(FALSE)
   cl_line_val = reactiveVal(NULL)
   cl_line_x = reactiveVal(NULL)
+  scatter_regr = reactiveVal(NULL)
   
   #control/limit range of objectives, works in combination with slider input$ran1 etc.
   default_vals = reactiveVal(list(ran1 = c(0,100),
@@ -1683,7 +1684,28 @@ server <- function(input, output, session) {
      })
      outputOptions(output, "selectionmade", suspendWhenHidden = FALSE)
      
-     
+     observe({ #fill scatter_regr() for stable regression line in scatter plot
+       req(fit())
+       dat = fit() #fit() is named
+       vars = objectives()
+       nvars = length(vars)
+       
+       clist = list()
+       for(i in 1:(nvars-1)){
+         for(j in (i+1):nvars){
+           obj_par = paste(vars[i],vars[j],sep="_")
+           lm_fit = lm(dat[[vars[[j]]]] ~ dat[[vars[i]]])
+           
+           clist[[obj_par]] = list(intercept = coef(lm_fit)[1],
+                                   slope = coef(lm_fit)[2],
+                                   x_var = vars[i],
+                                   y_var = vars[j],
+                                   r_val = round(summary(lm_fit)$r.squared,2)
+                                   )
+         }
+       }
+         scatter_regr(clist)
+     })
 
     output$aep_tab_full <-renderTable({
       req(aep_100_con(),hru_ever(),aep_100(),dat_matched(),fit())
@@ -1713,11 +1735,10 @@ server <- function(input, output, session) {
 
   ## scatter plot
   scat_fun = function(){
-    req(fit(),objectives(),f_scaled(),dat_matched())
+    req(fit(),objectives(),f_scaled(),dat_matched(), scatter_regr())
    
     scat_abs = dat_matched()
-    
-    if(nrow(scat_abs)==0 || ncol(scat_abs)==0)return(NULL)else{
+  if(nrow(scat_abs)==0 || ncol(scat_abs)==0)return(NULL)else{
   
     if(!is.null(er())){
       rom = which(apply(scat_abs, 1, function(row) all(row == er())))
@@ -1734,10 +1755,12 @@ server <- function(input, output, session) {
     if (input$plt_sq) {
       req(stq())
       
-      plot_scatter = plt_sc(dat = scat_abs, ranges = mima,col = col,size = sizz,sq=stq())
+      plot_scatter = plt_sc(dat = scat_abs, ranges = mima, col = col,
+                            size = sizz, sq=stq(), coefo = scatter_regr())
       
     }else{
-      plot_scatter = plt_sc(dat = scat_abs, ranges = mima,col = col,size = sizz)
+      plot_scatter = plt_sc(dat = scat_abs, ranges = mima, col = col,
+                            size = sizz, coefo = scatter_regr())
     }
 
     grid.arrange(grobs = plot_scatter, nrow = 3, ncol = 2)
@@ -3547,7 +3570,7 @@ server <- function(input, output, session) {
     ## linear model
     model <- lm(y ~ x)
     metrics_df <- data.frame(
-      Metric = c("R<sup>2</sup>", "Pearson's r"),  # HTML for R²
+      Metric = c("R<sup>2</sup>", "Pearson's r"),  #HTML for R²
       Value = c(round(summary(model)$r.squared, 3), round(cor(x, y), 3))
     )
     

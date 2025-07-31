@@ -971,12 +971,13 @@ plt_share_con = function(dat){
 
 
 ## scatter plot in play around
-plt_sc = function(dat, ranges,col=rep("grey",nrow(dat)),size=rep(2.8, nrow(dat)),sq=NULL){
+plt_sc = function(dat, ranges, col=rep("grey",nrow(dat)), 
+                  size=rep(2.8, nrow(dat)), sq=NULL, coefo = NULL){
   plots <- list()
   vars <- colnames(dat)
   num_vars <- length(vars)
-
   plot_index <- 1
+  
   for (i in 1:(num_vars - 1)) {
     for (j in (i + 1):num_vars) {
       
@@ -1001,7 +1002,22 @@ plt_sc = function(dat, ranges,col=rep("grey",nrow(dat)),size=rep(2.8, nrow(dat))
           axis.text = element_text(size = 10),
           axis.title = element_text(size = 16)
         ) +  coord_cartesian(clip = "off") #prevent labels to be cut off
- 
+     
+     # regression line
+     pname = paste(xcol, ycol, sep = "_")
+     coef_dat = coefo[[pname]]
+     
+     p <- p + geom_abline(
+       intercept = coef_dat$intercept,
+       slope = coef_dat$slope,
+       color = "blue",
+       size = 0.4,
+       alpha = 0.7
+     )+annotate("text", x = Inf, y = -Inf,
+                label = paste("R² =", coef_dat$r_val),
+                hjust = 1.1, vjust = -0.5, size = 4)#add R²
+     
+     
      if("#FF5666" %in% col){
        ids= which(col == "#FF5666") 
        
@@ -1014,7 +1030,7 @@ plt_sc = function(dat, ranges,col=rep("grey",nrow(dat)),size=rep(2.8, nrow(dat))
       
       #correct for negative scale aesthetics
          p = p +
-          scale_x_continuous(limits = c(x_min, x_max),labels = function(x) {rem_min(x)}, expand = c(0.15, 0)) +
+          scale_x_continuous(limits = c(x_min, x_max),labels = function(x) {rem_min(x)}, expand = expansion(mult =  c(0.015, 0.015))) +
           scale_y_continuous(limits = c(y_min, y_max),labels = function(y) {rem_min(y)}, expand = c(0.15, 0))
    
      plots[[plot_index]] <- p
