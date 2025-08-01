@@ -997,6 +997,8 @@ server <- function(input, output, session) {
   
    observeEvent(input$clickpoint, {
   req(scaled_filtered_data(), input$obj1, input$x_var3)
+     shinyjs::show("download_play_id")
+     
   dat <- scaled_filtered_data()
   nearest <- nearPoints(dat, input$clickpoint, xvar = input$x_var3, yvar = input$y_var3, maxpoints = 1)
   if(nrow(nearest) > 0) {
