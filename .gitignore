@@ -12,5 +12,5 @@ data/hru.shx
 data/hru.prj
 data/hru.dbf
 data/rou_unit.con
-data/paret_fitness.txt
-data/pareto_genomex.txt
+data/pareto_fitness.txt
+data/pareto_genomes.txt

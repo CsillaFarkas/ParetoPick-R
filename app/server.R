@@ -823,7 +823,7 @@ server <- function(input, output, session) {
           for (i in 1:4) {
             var_name <- paste0("steps", i)
             
-            if (abs(min_max$min[i]) <= 0.5) {
+            if (pmin(abs(min_max$min[i]),abs(min_max$max[i])) <= 1) {
               min_max$max[i] = min_max$max[i] * 1000
               min_max$min[i] = min_max$min[i] * 1000
               
