@@ -164,14 +164,15 @@ It is important to note that:
 
 * General 
   * covert_optain.R is hard coded to measures, if these measures are not specifically named in this script they cannot be processed
-  * do the current default settings produce reasonable cluster outputs across all catchments? the default currently does not perform outlier testing 
+  * the current default settings produce reasonable cluster outputs across all catchments but the default currently does not perform outlier testing 
   * in AHP, the initial state of the pairwise comparison as "Equal" amplifies the mathematical definition of inconsistency, therefore only when at least three sliders are NOT set to "Equal" is inconsistency considered at all
   * stratified variables do not work in the tool, the sliders cannot be moved
  
 
-# To do
+# Nice to have
   * selected line and optima jump around when sliders touched as this is done using line number/id, reevaluation required
   * more exact point selection
+  * clearer error messages for aborted/failed clustering needed
   * processing speed of Visualisation tab went down with matched selection
   * docker image with Linux executables OR translation to fully R-based clustering
   * pull AHP plot up with placeholder
