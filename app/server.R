@@ -169,6 +169,7 @@ server <- function(input, output, session) {
   
   observe({
     req(pp())
+    req(length(unique(pp()$id))>0)
     rv$sizes= rep(0.5, length(unique(pp()$id)))
     rv$colls = rep("grey50", length(unique(pp()$id)))
   })
@@ -751,8 +752,10 @@ server <- function(input, output, session) {
         })
 
   observe({
-      req(slider_mes_ini(),mt(), fit())
-
+    req(fit())
+      req(slider_mes_ini(),mt())
+    req(length(names(mt())[sapply(mt(), is.numeric)]) > 0)
+    
     numeric_cols <- names(mt())[sapply(mt(), is.numeric)]
     values <- setNames(
       lapply(numeric_cols, function(col) input[[paste0("slider_", col)]]),
@@ -915,7 +918,11 @@ server <- function(input, output, session) {
 
   # cache the slider observations
   filtered_data <- reactive({
-    req(fit())
+    req(input$obj1, input$obj2, input$obj3, input$obj4) 
+    req(length(input$obj1) == 2, length(input$obj2) == 2,
+        length(input$obj3) == 2, length(input$obj4) == 2)
+    req(fit(), f_scaled())
+    
     match_scaled(minval_s=c(input$obj1[1],input$obj2[1],input$obj3[1],input$obj4[1]),
                  maxval_s=c(input$obj1[2],input$obj2[2],input$obj3[2],input$obj4[2]), 
                  scal_tab=f_scaled(),allobs=objectives(), abs_tab = fit(),  
@@ -923,7 +930,11 @@ server <- function(input, output, session) {
   })
   
   scaled_filtered_data <- reactive({
-    req(fit())
+    req(input$obj1, input$obj2, input$obj3, input$obj4)
+    req(length(input$obj1) == 2, length(input$obj2) == 2,
+        length(input$obj3) == 2, length(input$obj4) == 2)
+    req(fit(), f_scaled())
+    
     scaled_abs_match(minval_s=c(input$obj1[1],input$obj2[1],input$obj3[1],input$obj4[1]),
                      maxval_s=c(input$obj1[2],input$obj2[2],input$obj3[2],input$obj4[2]),
                      abs_tab = fit(),scal_tab = f_scaled(),
@@ -933,7 +944,10 @@ server <- function(input, output, session) {
   
   
    observe({#for first_pareto, play_freq and scatter
-     req(scaled_filtered_data(),input$obj1,input$obj2,input$obj3,input$obj4)
+     req(scaled_filtered_data())
+     req(input$obj1, input$obj2, input$obj3, input$obj4)
+     req(length(input$obj1) == 2, length(input$obj2) == 2, 
+         length(input$obj3) == 2, length(input$obj4) == 2 )#check if initialised
      if(file.exists("../input/object_names.RDS")){
       
        dat_matched(scaled_filtered_data())
@@ -985,10 +999,12 @@ server <- function(input, output, session) {
       
       if(!is.null(sel_tay()) && nrow(merge(sel_tay(),dat))==0){sel_tay(NULL)} #remove selection when not in sliders
       #run plt_sc_optima with sq
-      return(plt_sc_optima(dat=dat,    x_var = input$x_var3,
+      return(plt_sc_optima(dat=dat, x_var = input$x_var3,
                     y_var = input$y_var3,
                     col_var = input$col_var3,
-                    size_var = input$size_var3, status_q = input$add_sq_f,an_tab=T, rev = input$rev_box,
+                    size_var = input$size_var3, 
+                    full_front = fit(),
+                    status_q = input$add_sq_f,an_tab=T, rev = input$rev_box,
                     sel_tab = sel_tay(),unit=input$unit_add1))
       
     }
@@ -1461,7 +1477,7 @@ server <- function(input, output, session) {
       #for matching
       colnames(hru) = gsub("^V", "", colnames(hru))
       hru_matcher(as_tibble(hru))
-      
+
       #aep for table
       genome_hru <- read.csv('../data/measure_location.csv')#connection aep, hru
       
@@ -1480,7 +1496,7 @@ server <- function(input, output, session) {
       hru_ever(hru_matcher() %>%pivot_longer(cols = -id, names_to = "optims", values_to = "measure") %>%
         group_by(id)%>%filter(!is.na(measure)))
       hru_everact = hru_ever()
-      
+      saveRDS(hru_ever(),"hru_ever.RDS")
       aep_100_con(aep_100 %>% filter(hru %in% unique(hru_everact$id)))
       aep_100(aep_100)
       #catchment forever
@@ -2521,6 +2537,7 @@ server <- function(input, output, session) {
           y_var = input$y_var2,
           col_var = input$col_var2,
           size_var = input$size_var2,
+          full_front = fit(),
           sel_tab = selected_data,
           add_whole = input$add_whole,
           an_tab = T,
@@ -2957,22 +2974,64 @@ server <- function(input, output, session) {
       calculate_weights(weights) #weights for direct use
   })
   
+  #debouncing to save on processing time when several sliders are moved or one slider moved with keyboard
+  ahp_combined_debounced <- debounce(
+    reactive({
+      req(input$obj1_ahp, input$obj2_ahp, input$obj3_ahp, input$obj4_ahp)
+      
+      list(
+        obj1 = input$obj1_ahp,
+        obj2 = input$obj2_ahp,
+        obj3 = input$obj3_ahp,
+        obj4 = input$obj4_ahp,
+        mahp_data = mahp(),  
+        mahp_touched = mahp_touched()
+      )
+    }), 
+    600
+  )
   
-  observe({#main datasets for this tab: sols_ahp() and whole_ahp()
-    req(sols(), fit(), input$obj1_ahp,input$obj2_ahp,input$obj3_ahp,input$obj4_ahp )
+  #main datasets for this tab: sols_ahp() and whole_ahp()
+  observeEvent(ahp_combined_debounced(), {
+    req(sols(), fit())
+    inputs <- ahp_combined_debounced()
     
-    df1 = subset(sols(),select= -c(optimum,`cluster number`,`cluster size`,outlier )) #best option out of optima
+    df1 = subset(sols(), select = -c(optimum, `cluster number`, `cluster size`, outlier)) #best option out of optima
     
-    sols_ahp(match_abs(minval=c(input$obj1_ahp[1],input$obj2_ahp[1], input$obj3_ahp[1], input$obj4_ahp[1]),
-                   maxval=c(input$obj1_ahp[2],input$obj2_ahp[2], input$obj3_ahp[2], input$obj4_ahp[2]),
-                   abs_tab = df1, ranger = range_controlled(), mes_slider = mahp_touched(), mes_df = mahp()))
+    sols_ahp(match_abs(
+      minval = c(inputs$obj1[1], inputs$obj2[1], inputs$obj3[1], inputs$obj4[1]),
+      maxval = c(inputs$obj1[2], inputs$obj2[2], inputs$obj3[2], inputs$obj4[2]),
+      abs_tab = df1, 
+      ranger = range_controlled(), 
+      mes_slider = inputs$mahp_touched, 
+      mes_df = inputs$mahp_data
+    ))
     
- 
-    whole_ahp(match_abs(minval=c(input$obj1_ahp[1],input$obj2_ahp[1], input$obj3_ahp[1], input$obj4_ahp[1]),
-                   maxval=c(input$obj1_ahp[2],input$obj2_ahp[2], input$obj3_ahp[2], input$obj4_ahp[2]),
-                   abs_tab = fit(), ranger = range_controlled(), mes_slider = mahp_touched(), mes_df = mahp()))
-   
+    whole_ahp(match_abs(
+      minval = c(inputs$obj1[1], inputs$obj2[1], inputs$obj3[1], inputs$obj4[1]),
+      maxval = c(inputs$obj1[2], inputs$obj2[2], inputs$obj3[2], inputs$obj4[2]),
+      abs_tab = fit(), 
+      ranger = range_controlled(), 
+      mes_slider = inputs$mahp_touched, 
+      mes_df = inputs$mahp_data
+    ))
   })
+  
+  # observe({#main datasets for this tab: sols_ahp() and whole_ahp()
+  #   req(sols(), fit(), input$obj1_ahp,input$obj2_ahp,input$obj3_ahp,input$obj4_ahp )
+  #   
+  #   df1 = subset(sols(),select= -c(optimum,`cluster number`,`cluster size`,outlier )) #best option out of optima
+  #   
+  #   sols_ahp(match_abs(minval=c(input$obj1_ahp[1],input$obj2_ahp[1], input$obj3_ahp[1], input$obj4_ahp[1]),
+  #                  maxval=c(input$obj1_ahp[2],input$obj2_ahp[2], input$obj3_ahp[2], input$obj4_ahp[2]),
+  #                  abs_tab = df1, ranger = range_controlled(), mes_slider = mahp_touched(), mes_df = mahp()))
+  #   
+  # 
+  #   whole_ahp(match_abs(minval=c(input$obj1_ahp[1],input$obj2_ahp[1], input$obj3_ahp[1], input$obj4_ahp[1]),
+  #                  maxval=c(input$obj1_ahp[2],input$obj2_ahp[2], input$obj3_ahp[2], input$obj4_ahp[2]),
+  #                  abs_tab = fit(), ranger = range_controlled(), mes_slider = mahp_touched(), mes_df = mahp()))
+  #  
+  # })
   
  
   
@@ -3280,7 +3339,8 @@ server <- function(input, output, session) {
     })
   
     weight_plt_fun = function(){
-      req(objectives(), sols(), whole_ahp(), best_option(), input$x_var)
+      req(best_option())
+      req(sols(), whole_ahp(),input$x_var)
       
       sol<<-sols()[,objectives()]
       bo = best_option()
@@ -3289,7 +3349,7 @@ server <- function(input, output, session) {
       if(nrow(df3)==0){bo = NULL}
       
       return(plt_sc_optima(dat=df3,x_var=input$x_var,y_var=input$y_var,
-                           col_var=input$col_var,size_var=input$size_var,high_point=bo, extra_dat = sol,
+                           col_var=input$col_var,size_var=input$size_var,high_point=bo, extra_dat = sol, full_front = fit(),
                            plt_extra = input$show_extra_dat, status_q = input$show_status_quo,an_tab = F,rev = input$rev_box3,
                            unit=input$unit_add3, ahp_man = input$make_manual_ahp
       ))
