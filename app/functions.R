@@ -1043,7 +1043,7 @@ return(plots)
 
 ## scatter plot in analysis tab and AHP tab
 
-plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NULL, pareto_path = "../data/pareto_fitness.txt",sq_path ="../data/sq_fitness.txt",
+plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NULL, full_front = NULL, sq_path ="../data/sq_fitness.txt",
                           extra_dat = NULL, #highlight optima in AHP tab
                           an_tab = FALSE,
                           plt_extra=F, #potentially redundant tbf
@@ -1055,7 +1055,7 @@ plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NUL
                           ahp_man = FALSE #adapt label in AHP for manual selection
 ) {
   
-  if(!file.exists(pareto_path)){return(NULL)}
+  if(is.null(full_front)){return(NULL)}
   
   if(file.exists("../input/units.RDS")){units = readRDS("../input/units.RDS")}
   
@@ -1083,9 +1083,9 @@ plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NUL
   }
   
   
-  #pull fit() establish range limits
-  whole <- read.table(pareto_path, header = FALSE, stringsAsFactors = FALSE, sep = deli(pareto_path) )
-  colnames(whole) <- colnames(dat)[1:4]
+  #fit() to establish range limits
+  whole <- full_front
+  colnames(whole) = colnames(dat)[1:4]
   swiss_extra = whole #for controlling that all data is within range limits
   
   xma = yma = NULL
