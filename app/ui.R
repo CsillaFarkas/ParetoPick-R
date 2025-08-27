@@ -1189,7 +1189,7 @@ ui <-
                                div(id = "random_ahp",
                                   checkboxInput("best_cluster", label = "Best option among cluster solutions", value = FALSE),
                                   style = "margin: 0 auto; width: fit-content; font-size: 100%;"
-                               ), div(id = "ahp_cluster_num",textOutput("ahp_cluster_num"),style = "margin: 0 auto; width: fit-content; font-size: 100%; font-weight:bold;")%>%hidden(),
+                               ), div(id = "ahp_cluster_div",textOutput("ahp_cluster_num"),style = "margin: 0 auto; width: fit-content; font-size: 100%; font-weight:bold;"),
 
 
                            plotOutput({"weights_plot"}),
