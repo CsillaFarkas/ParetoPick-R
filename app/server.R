@@ -958,7 +958,9 @@ server <- function(input, output, session) {
          output$ensure_sel <- renderText({
            paste("None of the optima fall within the specified ranges. Please select different data ranges!")
          })
-       }else{output$ensure_sel <- renderText({paste("")})}
+       }else{
+         
+         output$ensure_sel <- renderText({paste("")})}
      }
      
    })
@@ -2442,8 +2444,11 @@ server <- function(input, output, session) {
           all_py_out <- file.info(check_files())
 
           current_py_out <- rownames(all_py_out)[which.max(all_py_out$mtime)]
+          
+          # careful because read.csv defaults to next closest binary double for 10 significant digits
+          # happens in Cherio with -21992843.9, fixed with tolerance but not great
           sols_data = read.csv(current_py_out,check.names = F)
-
+        
           new_col_sol = c("optimum", objectives(),"cluster size","cluster number","outlier")
           
           sols(sols_data %>% rownames_to_column("optimum") %>%
@@ -2455,8 +2460,7 @@ server <- function(input, output, session) {
                    TRUE ~ "" 
                  ))%>% rename_with(~new_col_sol,everything()))
           
-         
-          
+
           sols2(sols_data %>% rownames_to_column("optimum") %>%  #for boxplot the whole thing is needed
                   rename_with(~new_col_sol[1:5],1:5))
           
@@ -2804,6 +2808,14 @@ server <- function(input, output, session) {
     
       } else{choices = readRDS("../input/object_names.RDS")}
     
+    if(is.null(sols())) {#turn off all cluster-related options
+      shinyjs::disable("best_cluster")
+      shinyjs::disable("show_extra_dat")
+    } else{
+      shinyjs::enable("best_cluster")
+      shinyjs::enable("show_extra_dat")
+    }
+    
     ahp_choices(choices)
    
     updateSelectInput(session,inputId = "x_var", choices = choices,selected = rng_plt()[1])
@@ -2899,32 +2911,35 @@ server <- function(input, output, session) {
     req(mahp())
     if(nrow(mahp())== 0){
       shinyjs::show("ahpmes_empty")
+      
       output$ahpmes_empty =  renderText({paste("None of the optima fall within the specified ranges. Please select different measure ranges!")
-      }) }else{shinyjs::hide("ahpmes_empty")}
+      }) }else{shinyjs::hide("ahpmes_empty")
+        shinyjs::enable("save_ahp")
+      }
   })
 
   observe({
-    req(best_option(), sols(), objectives()) #best_option() is set to cluster in other table
+    #best_option() is set to cluster in other table
     
-    if (input$best_cluster) {
-      shinyjs::show("ahp_cluster_num")
+    req(sols(), best_option(), dfx())
+    
+    if (!is.null(input$best_cluster) && input$best_cluster) {
+      shinyjs::show("ahp_cluster_div")
+      bor = sols() %>% filter(if_all(objectives(), ~ . %in% best_option())) %>% as.data.frame()
       
-      output$ahp_cluster_num <- renderText({
-          bor = sols() %>% filter(if_all(objectives(), ~. %in% best_option()))%>%as.data.frame()
-          
-          if((!is.null(mahp()) && nrow(mahp()) == 0) || nrow(bor) == 0){
-            paste("none of the clusters fall within your selection!", sep="")
-           }else{
-          paste("cluster number: ", bor$`cluster number`,
-            "; the representative optima is ", bor$optimum,
-            sep = ""
-          )}
+      
+      if (
+          (!is.null(mahp()) && nrow(mahp()) == 0) || 
+          nrow(bor) == 0) {
+        output$ahp_cluster_num <- renderText({paste0("none of the clusters fall within your selection!")})
+          shinyjs::disable("save_ahp")
         
+      }else{
+        output$ahp_cluster_num <- renderText({paste("cluster number: ", 
+                bor$`cluster number`,"; the representative optima is ", bor$optimum,sep = "")})
         
-      })
-    } else{
-      shinyjs::hide("ahp_cluster_num")
-    }
+      }
+    }else{shinyjs::hide("ahp_cluster_div")}
   })
   
   observe({
@@ -2993,21 +3008,10 @@ server <- function(input, output, session) {
   
   #main datasets for this tab: sols_ahp() and whole_ahp()
   observeEvent(ahp_combined_debounced(), {
-    req(sols(), fit())
+    req(fit())
     inputs <- ahp_combined_debounced()
     
-    df1 = subset(sols(), select = -c(optimum, `cluster number`, `cluster size`, outlier)) #best option out of optima
-    
-    sols_ahp(match_abs(
-      minval = c(inputs$obj1[1], inputs$obj2[1], inputs$obj3[1], inputs$obj4[1]),
-      maxval = c(inputs$obj1[2], inputs$obj2[2], inputs$obj3[2], inputs$obj4[2]),
-      abs_tab = df1, 
-      ranger = range_controlled(), 
-      mes_slider = inputs$mahp_touched, 
-      mes_df = inputs$mahp_data
-    ))
-    
-    whole_ahp(match_abs(
+    whole_ahp(match_abs(#always produced
       minval = c(inputs$obj1[1], inputs$obj2[1], inputs$obj3[1], inputs$obj4[1]),
       maxval = c(inputs$obj1[2], inputs$obj2[2], inputs$obj3[2], inputs$obj4[2]),
       abs_tab = fit(), 
@@ -3015,6 +3019,30 @@ server <- function(input, output, session) {
       mes_slider = inputs$mahp_touched, 
       mes_df = inputs$mahp_data
     ))
+    
+    if(!is.null(sols())){#only produced when clustering has run
+      df1 = subset(sols(), select = -c(optimum, `cluster number`, `cluster size`, outlier)) #best option out of optima
+      
+      sols_ahp(match_abs(
+        minval = c(inputs$obj1[1], inputs$obj2[1], inputs$obj3[1], inputs$obj4[1]),
+        maxval = c(inputs$obj1[2], inputs$obj2[2], inputs$obj3[2], inputs$obj4[2]),
+        abs_tab = df1, 
+        ranger = range_controlled(), 
+        mes_slider = inputs$mahp_touched, 
+        mes_df = inputs$mahp_data
+      ))
+    } 
+ 
+  })
+  
+  observe({ #switch between datasets
+    
+    req( whole_ahp())
+    
+    if(!is.null(sols_ahp()) && !is.null(input$best_cluster) && input$best_cluster){dfx(sols_ahp())}else{
+      dfx(whole_ahp()) #default
+    }
+    
   })
   
   # observe({#main datasets for this tab: sols_ahp() and whole_ahp()
@@ -3041,14 +3069,11 @@ server <- function(input, output, session) {
                                        wgt
                                        }, colnames = T)
   
+  observe({req(dfx())
+    if (nrow(dfx()) == 0 || ncol(dfx()) == 0) {shinyjs::disable("save_ahp")
   
-  observe({ #switch between datasets
-    
-    req(sols_ahp(), whole_ahp())
-    
-    if (input$best_cluster) {dfx(sols_ahp())} else{ dfx(whole_ahp()) }
-    
-  })
+          }else{shinyjs::enable("save_ahp")}
+    })
   
   
   output$best_option_output <- renderTable({
@@ -3093,15 +3118,18 @@ server <- function(input, output, session) {
       
     })
     
-    
+  
     
     output$aep_ahp <- renderTable({
-      req(aep_100_con(),hru_ever(),aep_100(),best_option(),fit(),ahpmt(), objectives(), sols_ahp(), whole_ahp(), dfx())
+      req(fit())
+      req(hru_ever(), aep_100_con())
+      req(best_option(),ahpmt(), dfx())
       
       
       # slider vs. whole front
-      if(nrow(dfx())>= 1){
-        optima <-unique(match(do.call(paste, dfx()), do.call(paste, fit())))#position/rowname/optimum in fit(), not super stable
+      if(nrow(dfx())>= 1){ 
+        #optima pulled from whole dataset = whole_ahp() and not dfx() which can be cluster solutions (otherwise 2nd number cluster instead of slider selection)
+        optima <-unique(match(do.call(paste, whole_ahp()), do.call(paste, fit())))#position/rowname/optimum in fit(), not super stable
         hru_spec_act = hru_ever()%>%filter(optims %in% optima)
         #whole front, number of all aep
         aep_100_con2 =aep_100_con() %>%select(-hru) %>% group_by(nswrm) %>%summarise(nom = n_distinct(name))
@@ -3113,35 +3141,49 @@ server <- function(input, output, session) {
       # selected point
         cols = objectives()
         values = best_option()
-        if(nrow(best_option())>0){
-          
-          fit = fit() %>% rownames_to_column("optimum")
-          mv <- fit %>%  filter(across(all_of(cols), ~ . %in% values))
-          
-          aep_one_fin <- ahpmt()[mv$optimum,]
-          aep_one = as_tibble(t(aep_one_fin))
-          aep_one[,2] = colnames(aep_one_fin)
-          colnames(aep_one) = c("nom","nswrm")
+        BO <<- best_option()
+        COLS <<- cols
+        FIT <<- fit()
+        default_empty_ahp <- function(){#then we don't recreate this all the time
+          data.frame(nom = rep("-",nrow(aep_sel)),
+                     nswrm = aep_sel$nswrm,
+                     stringsAsFactors = F)
+        }
         
-          allmes = unique(aep_100_con()$nswrm)
-          missmes = setdiff(allmes,aep_one$nswrm)
+         if(nrow(best_option()) == 0){
+           aep_one = default_empty_ahp()
+        }else{
+          fit = fit() %>% rownames_to_column("optimum")
+          tol_rel <- 1e-6
+          mv = fit %>%filter(rowSums(across(all_of(cols), ~ 
+                                          abs(.-values[[cur_column()]])/abs(values[[cur_column()]])<tol_rel))==length(cols))
           
-          if(length(missmes)>=1){
+          if(nrow(mv) == 0){
+            aep_one = default_empty_ahp()
             
-            missing_rows <- data.frame(
-              nswrm = missmes,
-              nom = 0,
-              stringsAsFactors = FALSE
-            )
+          }else{
+            mv$optimum <- as.character(mv$optimum)
+            AHPMT <<- ahpmt()
+            aep_one_fin <- ahpmt()[mv$optimum,,drop=F]
+            aep_one = tibble( nom = as.numeric(aep_one_fin),
+                              nswrm = colnames(aep_one_fin))
             
-            aep_one <- rbind(aep_one, missing_rows)
+            
+            allmes = unique(aep_100_con()$nswrm)
+            missmes = setdiff(allmes,aep_one$nswrm)
+            
+            if(length(missmes)>=1){
+              
+              missing_rows <- tibble(
+                nom = rep(0, length(missmes)),
+                nswrm = missmes
+              )
+              
+              aep_one <- bind_rows(aep_one, missing_rows)
+            }
           }
-         
-        }else{ #show "-"
-          nmes = nrow(aep_sel)
-          nix = rep("-",nmes)
-          aep_one = data.frame(nom = nix,nswrm = aep_sel$nswrm)
-          }
+          
+        }
 
         #all together
         tab= aep_one %>% left_join(aep_100_con2, by = "nswrm") %>% left_join(aep_sel, by = "nswrm")%>%replace(is.na(.), 0)%>%
@@ -3309,9 +3351,9 @@ server <- function(input, output, session) {
         
 
     
-    observe({
-      req(sols(),range_controlled(),objectives())
-      if(!is.null(sols())) {shinyjs::show("save_ahp")}})
+    # observe({#moved elsewhere
+    #   req(dfx(),objectives())
+    #   if(!is.null(best_option())) {shinyjs::show("save_ahp")}})
     
     observe({
       req(best_option(), fit(), objectives())
@@ -3338,11 +3380,13 @@ server <- function(input, output, session) {
         }}
     })
   
+    
+    
     weight_plt_fun = function(){
       req(best_option())
-      req(sols(), whole_ahp(),input$x_var)
+      req(whole_ahp(),input$x_var)
       
-      sol<<-sols()[,objectives()]
+     if(!is.null(sols())){ sol<<-sols()[,objectives()]}else{sol = NULL}
       bo = best_option()
       df3 = whole_ahp()
       
