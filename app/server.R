@@ -865,7 +865,7 @@ server <- function(input, output, session) {
         
         ## Configure tab and Analysis turned off (the latter would still work but with old data)
         if(!file.exists("../input/var_corr_par.csv")){
-          shinyjs::hide("main_analysis")
+          # shinyjs::hide("main_analysis")
           
           shinyjs::hide("show_extra_dat") #AHP hide option to show clusters
           shinyjs::hide("random_ahp") #AHP hide option to show clusters
@@ -1016,7 +1016,7 @@ server <- function(input, output, session) {
    observeEvent(input$clickpoint, {
   req(scaled_filtered_data(), input$obj1, input$x_var3)
      shinyjs::show("download_play_id")
-     
+     clickpoint_button(TRUE)
   dat <- scaled_filtered_data()
   nearest <- nearPoints(dat, input$clickpoint, xvar = input$x_var3, yvar = input$y_var3, maxpoints = 1)
   if(nrow(nearest) > 0) {
