@@ -1,3 +1,4 @@
+# Background
 ParetoPick-R is part of the post processing in the [OPTAIN Project](https://www.optain.eu/). It shall facilitate the analysis of the Pareto front across objectives and support decision making for measure implementation.
 It provides a dashboard for the user to supply their own data, visualise it and alter a range of parameters. 
 The code allows the user to select variables to be analysed in a correlation analysis and a cluster algorithm. 
@@ -21,8 +22,11 @@ Please note that the Python code used in this app was written by [S. White](http
   * package "promises" version 1.3.2 or higher
   * package "tmap" has shown to lead to conflicts, it is recommended to either remove it(e.g. via remove.packages("tmap")) or to upgrade it to at least version 4.0
 
-# Folder Structure
-the project consists of six folders
+# Folder and File Structure
+The tool consists of six folders: input, app, data, output, data_for_container and python_files. In the portable version, the app was converted into a fully R-based software and the python_files and data for container folders have been removed.
+The folder “data for container” stores the default configuration file, called config.ini, which is used by the external python executables. During a reset of the app, this file is used to restore the config.ini in the input folder.
+All files supplied through by the user are stored in the data folder, these are the outputs of the previous MOO (Strauch and Schürz, 2024).
+The output folder stores all files produced during the correlation and cluster analysis. When selecting to save specific optima, these are also this folder to a file called selected_optima.csv. The python_files folder contains all Python-based parts of the software. These are three executables, correlation_matrix.exe, kmeans.exe and kmedoid.exe as well as an _internal folder that creates a temporary Python environment including all necessary dependencies.
 
 ```
 .
@@ -43,6 +47,34 @@ the project consists of six folders
 │   └── config.ini (for hard reset)
 └── output
 ```
+
+The input folder is used for storing all data required to run the tool. These input files are created by the software and regularly accessed and modified after all required data files have been provided by the user.
+
+## Files created and used in the process
+(stored in input folder)
+
+* object_names.RDS: the names of the four objectives
+* var_corr_par.csv: (created in convert_optain.R) objectives and variables considered in correlation and cluster analysis
+* nswrm_priorities.RDS: (created in covert_optain.R based on measure_location.csv) measures and their priority of implementation
+* hru_in_optima.RDS: created in convert_optain.R based on measure_location.csv) connection between activated HRUs and optima/measure allocation across all HRUs for all optima
+* all_var.RDS: all variables produced in the clustering
+* pca_content.RDS: variables considered in the clustering after highly correlated variables have been removed from all_var
+* config.ini: used for communicating with the external Python processes
+* buffers.RDS: names of measures that require a buffer to improve their visibility in maps
+* units.RDS
+
+## Scripts
+ParetoPick-R is built using a standard structure for dividing shiny functionalities among scripts. The five R scripts contained in the app folder are: ui.R, app.R, server.R, global.R, and convert_optain.R.
+
+Each script serves a specific purpose in the software’s architecture:
+* ui.R: This script establishes the UI of the app. It organises the app's layout, including input controls for sliders, clustering parameters and visualisation options. Additionally, it specifies the locations for displaying plots, tables, and clustering results.
+* server.R: This is the core backend functionality containing the server-side logic of the software. It captures user inputs, processes data, performs calculations and updates outputs. It relies on reactive expressions to efficiently manage data flow and calls external functions from functions.R alongside defining its own to create dynamic visualisations and tables.
+* functions.R: This script defines all custom functions used throughout the app. Most of them are used for formatting, data manipulation and plotting, while a few are for adapting config.ini to control the external Python processes. The codebase is easier to maintain when consolidating the most important and frequently used function definitions.
+* global.R: This short script defines global paths and app settings. It installs and/or loads packages and sets constants such as file paths, default parameters and any configuration options that need to be accessible across the entire app. It's kept concise to focus on app-wide settings.
+* convert_optain.R: This script is needed for the desktop version only. It handles all data preparation. It reads the required data files and prepares the input data for the clustering analysis.
+
+This design separates functionality, creating a modular software simpler to develop and maintain. The convert_optain.R file maintains uniform data formatting for clustering across OPTAIN studies.
+
 
 # Required input files and data structure 
 (with example data structures from the Schwarzer Schöps catchment)
@@ -146,18 +178,6 @@ It is important to note that:
 1. **these files are overwritten** each time the clustering is run again, save them in another location if you would like to keep your clustering results
 2. in the following tabs, **only the most recent** of the <kmeans_data_w_clusters_re....>csv file is read! If you would like to process an older one, you have to remove all newer ones from the output folder
  
-
-## Files created and used in the process
-(stored in input folder)
-* var_corr_par.csv (created in convert_optain.R)
-* hru_in_optima.RDS (created in convert_optain.R based on measure_location.csv, connection between activated HRUs and optima)
-* nswrm_priorities.csv (created in covert_optain.R based on measure_location.csv)
-* object_names.RDS
-* pca_content.RDS
-* all_var.RDS
-* units.RDS
-* buffers.RDS
-
 
 
 # Assumptions
