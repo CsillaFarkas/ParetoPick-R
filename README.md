@@ -23,9 +23,9 @@ Please note that the Python code used in this app was written by [S. White](http
   * package "tmap" has shown to lead to conflicts, it is recommended to either remove it(e.g. via remove.packages("tmap")) or to upgrade it to at least version 4.0
 
 # Folder and File Structure
-The tool consists of six folders: input, app, data, output, data_for_container and python_files. In the portable version, the app was converted into a fully R-based software and the python_files and data for container folders have been removed.
+The tool consists of six folders: input, app, data, output, data_for_container and python_files. In the forthcoming portable version [OPTAIN_Pareto_Demo](https://github.com/MartynLLM/OPTAIN_Pareto_Demo), the app was converted into a fully R-based software and the python_files and data for container folders have been removed.
 The folder “data for container” stores the default configuration file, called config.ini, which is used by the external python executables. During a reset of the app, this file is used to restore the config.ini in the input folder.
-All files supplied through by the user are stored in the data folder, these are the outputs of the previous MOO (Strauch and Schürz, 2024).
+All files supplied through by the user are stored in the data folder, these are the outputs of the previous MOO [Strauch and Schürz, 2024](https://www.optain.eu/sites/default/files/delivrables/OPTAIN%20D5.1%20-%20Common%20optimisation%20protocol.pdf).
 The output folder stores all files produced during the correlation and cluster analysis. When selecting to save specific optima, these are also this folder to a file called selected_optima.csv. The python_files folder contains all Python-based parts of the software. These are three executables, correlation_matrix.exe, kmeans.exe and kmedoid.exe as well as an _internal folder that creates a temporary Python environment including all necessary dependencies.
 
 ```
