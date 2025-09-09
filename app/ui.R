@@ -518,7 +518,8 @@ ui <-
                                                 # ),
                                                 # tags$p("The app does not display negative signs, only where an objective range covers both negative and positive values, a sign is added.")
                                          ),
-                                         div("Frequency of area implemented",
+                                         div(id ="freq_title",
+                                           "Frequency of area implemented",
                                              title = "if locations of different types of measures overlap, only the most frequent type of measure is displayed.",
                                              style = "text-align: left; font-size:120%; margin-top: 10px;"),
                                          uiOutput("freq_map_play")%>%hidden(),
