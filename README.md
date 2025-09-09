@@ -79,7 +79,7 @@ Each script serves a specific purpose in the software’s architecture:
 This design separates functionality, creating a modular software simpler to develop and maintain. The convert_optain.R file maintains uniform data formatting for clustering across OPTAIN studies.
 
 
-# Required input files and data structure 
+# Required input files and data structure for all functionalities
 (with example data structures from the Schwarzer Schöps catchment)
 1. __pareto_fitness.txt__
   * comma delineated, four columns representing the objectives that were maximised in optimisation
@@ -156,6 +156,22 @@ id,	name,	nswrm,	obj_id
   * connection file created with SWAT+ Editor/SWATmeasR delineating the transport of water between HRUs, channel and aquifer
   * this file has to contain the columns: obj_id, obj_typ_1, area, frac_1
 
+## Input files for reduced functionalities
+
+There are four levels of functionality based on input data availability.
+If all input data files are available from a coupled model workflow based on SWAT+ and CoMOLA or if all files can be reproduced, then all functionalities of ParetoPick-R (inlcuding both slider types, clustering and plotting) can be used.
+The table below outlines the four levels of functionality, their differences and required input files. 
+
+| Level                 | Description                                          | Required Input Files                                   |                               
+|:----------------------|:-----------------------------------------------------|:-------------------------------------------------------|
+| Full Functionality    | All sliders, maps, the AHP & the <br> clustering are working | All files named above. <br> The Data Prep has to before the <br> Clustering can be performed |
+| w/o clustering        | All sliders, maps & the AHP are working <br> but the clustering cannot be performed | All files named above <br> other than rout_unit.con |
+| w/o map plotting      | All sliders and Visualisations <br> & the AHP are working but no <br> map plotting and no Clustering | All files named above <br> other than shape files and hru.con file |
+| w/o measure sliders   | Objective sliders and Visualisations <br> & the AHP are working but without <br> measure sliders, clustering and map plotting | Only the base files. <br> pareto_fitness.txt, pareto_genomes.txt <br> object_names.RDS |
+
+This manual will be expanded with a detailed explanation of the steps required to reproduce the data, specifically: hru_in_optima.RDS and measure_location.csv required for the measure sliders and hru.shp and hru.con required for the mapping.
+Since rout_unit.con is the only additional file needed to perform the Data Preparation for the clustering (write var_corr_par.csv), a method for replacing it for other projects shall also be developed. This might potentially include turning off the cluster variable "fraction of water".
+
 # Process
 ### Data Preparation tab
 This tab allows you to either only provide pareto_fitness.txt (optionally also sq_fitness.txt) and the objective names or to provide all required datasets and perform the Data Preparation. The option to "Run Prep" becomes available when all files have been found after clicking "Check Files".
@@ -192,11 +208,12 @@ It is important to note that:
   * stratified variables do not work in the tool, the sliders cannot be moved
  
 
-# Nice to have
+# Nice to have/Missing
   * selected line and optima jump around when sliders touched as this is done using line number/id, reevaluation required
   * more exact point selection
   * clearer error messages for aborted/failed clustering needed
   * processing speed of Visualisation tab went down with matched selection
-  * docker image with Linux executables OR translation to fully R-based clustering
   * pull AHP plot up with placeholder
-  * add a small spinner to the Check Data button to clarify that it takes a while  
+  * add a small spinner to the Check Data button to clarify that it takes a while
+  * description of reproducing data 
+  * dynamic clustering with other variables, different var_corr_par.csv unlinked from SWAT+ and CoMOLA  
