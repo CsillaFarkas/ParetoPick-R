@@ -1015,7 +1015,7 @@ server <- function(input, output, session) {
   
    observeEvent(input$clickpoint, {
   req(scaled_filtered_data(), input$obj1, input$x_var3)
-     shinyjs::show("download_play_id")
+     # shinyjs::show("download_play_id")
      clickpoint_button(TRUE)
   dat <- scaled_filtered_data()
   nearest <- nearPoints(dat, input$clickpoint, xvar = input$x_var3, yvar = input$y_var3, maxpoints = 1)
@@ -1034,8 +1034,12 @@ server <- function(input, output, session) {
     
     output$clickpoint_map <- renderUI({
       if(clickpoint_button()){
-        actionButton("map_sel", "Plot measure implementation map of selected optimum")
+        if(is.null(cm())){ #indirect check if hru.shp is available
+          return(NULL)
+        }else{
+          actionButton("map_sel", "Plot measure implementation map of selected optimum")
         } 
+      }
     })
     # observe({ if(clickpoint_button()){shinyjs::show("download_play_id")}})
 
@@ -1454,32 +1458,27 @@ server <- function(input, output, session) {
    df
   }, rownames = T)
   
-  
-  #frequency plot
+  #make prio()
   observe({
-    map_files = c(
-      "../data/hru.con",
-      "../input/nswrm_priorities.csv",
-      "../data/hru.shp",
-      "../data/hru.shx",
-      "../data/hru.dbf",
-      "../data/hru.prj",
-      "../input/hru_in_optima.RDS",
-      "../data/measure_location.csv"
-    )
-
-    if (all(file.exists(map_files))) {
-      shinyjs::show("freq_map_play")
-      shinyjs::show("download_freq_id")
-      needs_buffer(pull_buffer()) #needs nswrm_priorities.csv
-
-      hru= readRDS("../input/hru_in_optima.RDS")
+    if(file.exists("../input/nswrm_priorities.csv")){
       prio(read.csv("../input/nswrm_priorities.csv"))
-
+    }
+  })
+  
+  #measure sliders, make hru_matcher/hru_ever and aep_100
+  observe({
+    two_basis_meas = c(
+                       "../input/hru_in_optima.RDS", #hru_matcher()/hru_ever()
+                       "../data/measure_location.csv")#aep_100()
+    
+    if(all(file.exists(two_basis_meas))){
+      hru= readRDS("../input/hru_in_optima.RDS")
+     
+      
       #for matching
       colnames(hru) = gsub("^V", "", colnames(hru))
       hru_matcher(as_tibble(hru))
-
+      
       #aep for table
       genome_hru <- read.csv('../data/measure_location.csv')#connection aep, hru
       
@@ -1494,13 +1493,43 @@ server <- function(input, output, session) {
         relocate(hru, .after = obj_id)%>%drop_na(hru)%>%select(name,nswrm, hru)#hru = obj_id in separate columns
       
       aep_100$hru <- as.numeric(str_remove(aep_100$hru, " ") )#name = AEP, hru = hru
-
+      
       hru_ever(hru_matcher() %>%pivot_longer(cols = -id, names_to = "optims", values_to = "measure") %>%
-        group_by(id)%>%filter(!is.na(measure)))
+                 group_by(id)%>%filter(!is.na(measure)))
       hru_everact = hru_ever()
-      saveRDS(hru_ever(),"hru_ever.RDS")
+      
       aep_100_con(aep_100 %>% filter(hru %in% unique(hru_everact$id)))
       aep_100(aep_100)
+    }
+  })
+  
+  
+  #frequency plot/map plot
+  observe({ #hide map title too
+    if(is.null(cm())){
+      shinyjs::hide("freq_title")
+    } else{
+      shinyjs::show("freq_title")
+    }
+  })
+  
+  
+  observe({
+    map_files = c(
+      "../data/hru.con", #only for lalo()
+      "../data/hru.shp",#for cm() and cmf()
+      "../data/hru.shx",#for cm() and cmf()
+      "../data/hru.dbf",#for cm() and cmf()
+      "../data/hru.prj",#for cm() and cmf()
+      "../input/hru_in_optima.RDS" #for cm() and cmf()
+    )
+
+    if (all(file.exists(map_files))) {
+      shinyjs::show("freq_map_play")
+      shinyjs::show("download_freq_id")
+      needs_buffer(pull_buffer()) #needs nswrm_priorities.csv
+
+      
       #catchment forever
       cm(pull_shp_new())
       
@@ -2828,7 +2857,7 @@ server <- function(input, output, session) {
   observe({ #create ahpmt() for measure sliders
     req(aep_100(), hru_ever())
     # ks = hru_ever() %>% select(-measure)
-    
+   
     # fk = aep_100()  %>% left_join(ks, by =c("hru"="id")) %>% select(-hru)
     
     fk = aep_100() %>% inner_join(hru_ever(),by = c("hru" = "id", "nswrm" = "measure"))%>% select(-hru)
@@ -2843,6 +2872,7 @@ server <- function(input, output, session) {
   
   })
   
+
   observe({
     req(ahpmt())
     ahpima_ini(rbind(
@@ -3478,6 +3508,14 @@ server <- function(input, output, session) {
     
     output$which_inconsistency = renderText({inconsistency_check(tab=T)})
     
+  })
+  
+  observe({ #remove plot button
+    if(is.null(cm())) {
+      shinyjs::hide("plt_bo")
+    } else {
+      shinyjs::show("plt_bo")
+    }
   })
   
   observeEvent(input$plt_bo,{ #first click
