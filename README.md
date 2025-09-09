@@ -1,4 +1,4 @@
-# Background
+# 1. Background
 ParetoPick-R is part of the post processing in the [OPTAIN Project](https://www.optain.eu/). It shall facilitate the analysis of the Pareto front across objectives and support decision making for measure implementation.
 It provides a dashboard for the user to supply their own data, visualise it and alter a range of parameters. 
 The code allows the user to select variables to be analysed in a correlation analysis and a cluster algorithm. 
@@ -17,12 +17,12 @@ ParetoPick-R also integrates an Analytical Hierarchy Process (AHP) allowing the 
 
 Please note that the Python code used in this app was written by [S. White](https://github.com/SydneyEWhite).
 
-# Requirements
+# 2. Requirements
   * R version 4.4.2 or higher
   * package "promises" version 1.3.2 or higher
   * package "tmap" has shown to lead to conflicts, it is recommended to either remove it(e.g. via remove.packages("tmap")) or to upgrade it to at least version 4.0
 
-# Folder and File Structure
+# 3. Folder and File Structure
 The tool consists of six folders: input, app, data, output, data_for_container* and python_files*. 
 
 The folder “data for container” stores the default configuration file, called config.ini, which is used by the external python executables. During a reset of the app, this file is used to restore the config.ini in the input folder.
@@ -53,7 +53,7 @@ The input folder is used for storing all data required to run the tool. These in
 *In the forthcoming portable version [OPTAIN_Pareto_Demo](https://github.com/MartynLLM/OPTAIN_Pareto_Demo), the app was converted into a fully R-based software and the python_files and data for container folders have been removed.
 
 
-## Files created and used in the process
+## 3.1 Files created and used in the process
 (stored in input folder)
 
 * object_names.RDS: the names of the four objectives
@@ -66,7 +66,7 @@ The input folder is used for storing all data required to run the tool. These in
 * buffers.RDS: names of measures that require a buffer to improve their visibility in maps
 * units.RDS
 
-## Scripts
+## 3.2 Scripts
 ParetoPick-R is built using a standard structure for dividing shiny functionalities among scripts. The five R scripts contained in the app folder are: ui.R, app.R, server.R, global.R, and convert_optain.R.
 
 Each script serves a specific purpose in the software’s architecture:
@@ -79,7 +79,7 @@ Each script serves a specific purpose in the software’s architecture:
 This design separates functionality, creating a modular software simpler to develop and maintain. The convert_optain.R file maintains uniform data formatting for clustering across OPTAIN studies.
 
 
-# Required input files and data structure for all functionalities
+# 4. Required input files and data structure
 (with example data structures from the Schwarzer Schöps catchment)
 1. __pareto_fitness.txt__
   * comma delineated, four columns representing the objectives that were maximised in optimisation
@@ -156,7 +156,7 @@ id,	name,	nswrm,	obj_id
   * connection file created with SWAT+ Editor/SWATmeasR delineating the transport of water between HRUs, channel and aquifer
   * this file has to contain the columns: obj_id, obj_typ_1, area, frac_1
 
-## Input files for reduced functionalities
+## 4.1 Input files for reduced functionalities
 
 There are four levels of functionality based on input data availability.
 If all input data files are available from a coupled model workflow based on SWAT+ and CoMOLA or if all files can be reproduced, then all functionalities of ParetoPick-R (inlcuding both slider types, clustering and plotting) can be used.
@@ -164,15 +164,15 @@ The table below outlines the four levels of functionality, their differences and
 
 | Level                 | Description                                          | Required Input Files                                   |                               
 |:----------------------|:-----------------------------------------------------|:-------------------------------------------------------|
-| Full Functionality    | All sliders, maps, the AHP & the <br> clustering are working | All files named above. <br> The Data Prep has to before the <br> Clustering can be performed |
+| Full Functionality    | All sliders, maps, the AHP & the <br> clustering are working | All files named above. <br> The Data Prep has to run before the <br> Clustering can be performed |
 | w/o clustering        | All sliders, maps & the AHP are working <br> but the clustering cannot be performed | All files named above <br> other than rout_unit.con |
 | w/o map plotting      | All sliders and Visualisations <br> & the AHP are working but no <br> map plotting and no Clustering | All files named above <br> other than shape files and hru.con file |
-| w/o measure sliders   | Objective sliders and Visualisations <br> & the AHP are working but without <br> measure sliders, clustering and map plotting | Only the base files. <br> pareto_fitness.txt, pareto_genomes.txt <br> object_names.RDS |
+| w/o measure sliders   | Objective sliders and Visualisations <br> & the AHP are working but without <br> measure sliders, clustering and <br>map plotting | Only the base files: <br> pareto_fitness.txt<br>pareto_genomes.txt <br> object_names.RDS |
 
 This manual will be expanded with a detailed explanation of the steps required to reproduce the data, specifically: hru_in_optima.RDS and measure_location.csv required for the measure sliders and hru.shp and hru.con required for the mapping.
 Since rout_unit.con is the only additional file needed to perform the Data Preparation for the clustering (write var_corr_par.csv), a method for replacing it for other projects shall also be developed. This might potentially include turning off the cluster variable "fraction of water".
 
-# Process
+# 5. Process
 ### Data Preparation tab
 This tab allows you to either only provide pareto_fitness.txt (optionally also sq_fitness.txt) and the objective names or to provide all required datasets and perform the Data Preparation. The option to "Run Prep" becomes available when all files have been found after clicking "Check Files".
 "Run Prep" calls the convert_optain R script and writes var_corr_par.csv into the input folder. Var_corr_par.csv contains all variables considered in the clustering. Depending on the measures implemented, different variables are included. You can find their description in the glossary.
@@ -199,16 +199,16 @@ It is important to note that:
  
 
 
-# Assumptions
+# 6. Assumptions and Planned Features
 
-* General 
+## 6.1 General 
   * covert_optain.R is hard coded to measures, if these measures are not specifically named in this script they cannot be processed
   * the current default settings produce reasonable cluster outputs across all catchments but the default currently does not perform outlier testing 
   * in AHP, the initial state of the pairwise comparison as "Equal" amplifies the mathematical definition of inconsistency, therefore only when at least three sliders are NOT set to "Equal" is inconsistency considered at all
   * stratified variables do not work in the tool, the sliders cannot be moved
  
 
-# Nice to have/Missing
+## 6.2 Planned Features/Missing
   * selected line and optima jump around when sliders touched as this is done using line number/id, reevaluation required
   * more exact point selection
   * clearer error messages for aborted/failed clustering needed
