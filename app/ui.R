@@ -504,7 +504,8 @@ ui <-
                                                 sliderInput(inputId = "obj4", label = "Objective 4:", min = 0, max = 1, value = c(0,1), step = 0.01,width = "120%"),
      
                                                 tags$div(textOutput("ensure_sel"), style = "color: red;"),
-                                                div("Number of measures", 
+                                                div(id = "measure_title_vis",
+                                                  "Number of measures", 
                                                     title = "Please select the minimum and maximum number of measures you would like to implement.",
                                                     
                                                     style = "text-align: left; font-size:150%; margin-top: 10px;"),
@@ -1106,7 +1107,8 @@ ui <-
                                         sliderInput(inputId = "obj4_ahp", label = "Objective 4:", min = 0, max = 100, value = c(0, 100), width = "120%"))
                                ),
                                br(),
-                               div("1.2 Limiting the number of measures (optional)", style = "text-align: left; font-size:120%; margin-top: 10px;"),
+                               div(id = "measure_title_ahp",
+                                 "1.2 Limiting the number of measures (optional)", style = "text-align: left; font-size:120%; margin-top: 10px;"),
                                
                                uiOutput("ahpmes_sliders"),
                                div(id="ahpmes_empty",
