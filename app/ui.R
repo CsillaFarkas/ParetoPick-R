@@ -326,8 +326,8 @@ ui <-
                                        br(),
                                        br(),
                                p(" The application is structured the following way:"),
-                               p(HTML("The second tab <strong>Visualising the Pareto Front</strong> provides an overview over the optimisation results. The user can gain insights into the relationships between the objectives and the pareto front by selecting and plotting preferred objective ranges.")),
-                               p(HTML("The third tab <b>Data Preparation</b> is needed to produce the data required for the subsequent analyses. Several files need to be provided so the variables considered in the clustering can be calculated.")),
+                               p(HTML("The second tab <b>Data Preparation</b> is needed to produce the data required for the subsequent analyses. Four different levels of functionality can be distinguished depending on whether the SWAT+ - CoMOLA workflow was used or if files have to be reproduced in the SWAT+ - CoMOLA structure.")),
+                               p(HTML("The third tab <strong>Visualising the Pareto Front</strong> provides an overview over the optimisation results. The user can gain insights into the relationships between the objectives and the pareto front by selecting and plotting preferred objective ranges.")),
                                p(HTML("The fourth tab <strong>Configure Clustering</strong> allows to perform the clustering with default settings or to jump to the optional tabs for manual clustering.")),
                                
                                p(HTML("
@@ -353,17 +353,16 @@ ui <-
                        h2("Data Preparation", style = "margin-top: 0; padding-top: 0;"),
                        
                              wellPanel(  p(HTML("This tab requires you to provide the optimisation outputs.
-                                                 Please refer to the Readme for examples of their structure.
-                                                 You can provide a limited set of outputs to only analyse the Pareto front in the next tab.
-                                                 ")), p(HTML("Alternatively, you can upload more data and prepare the variables for the subsequent correlation and cluster analysis
-                                                 by clicking <strong>Check Files</strong> and
-                                                (if all files have been found) <strong>Run Prep</strong>. Please be aware that the preparation might take up to 15 minutes."))),
+                                                 Please refer to the Readme for examples of their individual structures.
+                                                 You can provide a limited set of outputs to only visualise your data and perform the AHP without measure sliders and map plotting (see the Readme and secions 3 and 4 on this tab for details).
+                                                 ")), p(HTML("If you're working with data produced through SWAT+ and CoMOLA, please upload all data required in sections 1 & 2 and click <strong>Check Files</strong> and
+                                                (if all files have been found) <strong>Run Prep</strong>."))),
 
                              mainPanel(
                                
-
-                               div(p("For being able to plot and analyse the Pareto front, please provide pareto_fitness.txt as well as the objective names.
-                                     If you would like to plot the status quo, sq_fitness.txt is also required:"),style = "text-align: justify; font-size:140%; width: 100%;"),
+                               div("1. File Upload - Basic Functionality",
+                                   style = "text-align: left; font-size:160%; font-weight: bold; margin-top: 10px;"),
+                               div(p("Please provide pareto_fitness.txt as well as the objective names. These two files are sufficient to run the Visualisations and the AHP without the measure sliders."),style = "text-align: justify; font-size:140%; width: 150%;"),
                                # div(id="fitness_avail",
 
                                div("pareto_fitness.txt",style = "text-align: left; font-size:115%;",
@@ -373,6 +372,7 @@ ui <-
 
 
                                br(),
+                               div(p("If you would like to plot the status quo, sq_fitness.txt is also required:"), style = "text-align: justify; font-size:140%; width: 150%;"),
                                div("sq_fitness.txt (optional)",style = "text-align: left; font-size:115%;",
                                    div(style = "margin-top: -15px;",fileInput("sq_in", "", accept = ".txt", placeholder=""),
 
@@ -381,8 +381,8 @@ ui <-
                                br(),
                                div( "The objective names should align with the first four columns of the pareto_fitness.txt file:",
                                  style = "text-align: left; font-size:115%",
-                                 div("*Please note, you can only change these names later if you perform a Hard Reset below.",
-                                     style="text-align: left; font-size:90%"),
+                                 div("*Please note, you can only change these names later if you perform a Hard Reset below or by following the procedure described in the Readme.",
+                                     style="text-align: left; font-size:90%; width: 150%;"),
                                  textInput("short1", "Objective 1\n (Column 1)"),
                                  textInput("short2", "Objective 2\n (Column 2)"),
                                  textInput("short3", "Objective 3\n (Column 3)"),
@@ -407,12 +407,14 @@ ui <-
 
                                br(),
 
-                               ############################################################# rest not needed for non-OPTAIN projects
-
+                               ############################################################# Full Functionality
 
                                hr(style = "border-top: 2px solid #03597F;"),  # Horizontal line with custom styling
                                br(),
-                               p("If you also want to run the subsequent correlation and cluster analysis, please provide the following files. Their names have to align with what is given here:",style =  "text-align: left; font-size:140%"),
+                               div("2. File Upload - Full Functionality",
+                                   style = "text-align: left; font-size:160%; font-weight: bold; margin-top: 10px;"),
+                               p("If you have used a model workflow based on SWAT+ and CoMOLA, you can use the full functionality of this tool. Please provide the following files. 
+                                 Their names have to align with what is given here:",style =  "text-align: left; font-size:140%; width:150%"),
 
                                #file numbers are jumbled but just here
                                div("1. pareto_genomes.txt",style = "text-align: left; font-size:115%"),
@@ -443,12 +445,54 @@ ui <-
 
                                hr(),
 
-                               div(id="runprep_show",p("Run Preparation Script when ready (depending on the size of the shapefiles this can take up to 10 minutes)",style =  "text-align: left; font-size:150%"),
+                               div(id="runprep_show",p("Run Preparation Script when ready (depending on the size of the shapefiles this can take up to 10 minutes)",style =  "text-align: left; font-size:150%; width: 150%;"),
                                    actionButton("runprep", "Run Prep"))%>%hidden,
                                uiOutput("scriptdp"),
-                               br(),br(),
+                               ######################################################################## Full Visualisation
+                               hr(style = "border-top: 2px solid #03597F;"), 
+                               
+                               div("3. File Upload - Full Visualisation (not needed for OPTAIN)",
+                                   style = "text-align: left; font-size:160%; font-weight: bold; margin-top: 10px;"),
+                               p("Only relevant if you have used a model workflow with outputs structured differently than CoMOLA and SWAT+ outputs. If you can reproduce 
+                                 the following files according the Readme, you will be able to use all visualisations and the AHP including the measure sliders :",style =  "text-align: left; font-size:130%; width: 150%;"),
+                               
+                               div("1. measure_location.csv",style = "text-align: left; font-size:115%"),
+                               div(style = "margin-top: -15px;",fileInput("measure_loc", "", accept = ".csv", placeholder="")),
+                               
+                               div("2. hru_in_optima.RDS",style = "text-align: left; font-size:115%"),
+                               div(style = "margin-top: -15px;",fileInput("hru_activ", "", accept = ".RDS", placeholder="")),
+                               
+                               actionButton("save_full_vis", "Save files"),
+                               
+                               
+                               ######################################################################## Full Connection to Decision Space
+                               hr(style = "border-top: 2px solid #03597F;"), 
+                               
+                               div("4. File Upload - Full Connection to Decision Space (not needed for OPTAIN)",
+                                   style = "text-align: left; font-size:160%; font-weight: bold; margin-top: 10px;"),
+                               p("Only relevant if you have used a model workflow with outputs structured differently than CoMOLA and SWAT+ outputs. If you can reproduce 
+                                 the following files according the Readme, you will be able to use all visualisations and the AHP including the measure sliders and map plotting :",style =  "text-align: left; font-size:130%; width: 150%;"),
+                               
+                               div("1. hru.con",style = "text-align: left; font-size:115%"),
+                               div(style = "margin-top: -15px;",fileInput("hru_con", "", accept = ".con", placeholder="")),
+                               
+                               div("2. shapefile called \"hru\" with four components (.shp .dbf .prj and .shx)",style = "text-align: left; font-size:115%"),
+                               div(style = "margin-top: -15px;",fileInput("shapefile_cd", "", multiple = TRUE, placeholder="",
+                                                                          accept = c(".shp", ".shx", ".dbf", ".prj"))),
+                               
+                               actionButton("save_full_cd", "Save files"),
+                               
+                               #####################################################################################
+                               br(),
+                               hr(style = "border-top: 2px solid #03597F;"),  # Horizontal line with custom styling
+                               br(),
+                               div("Other Settings",
+                                   style = "text-align: left; font-size:160%; font-weight: bold; margin-top: 10px;"),
+                              
+                               
                                div("Please select those measures that are small and require a buffer to enhance their visibility in maps.", style = "text-align: left; font-size:120%; margin-top: 10px;"),
-
+                               div("Buffers:", style="text-align: left; margin-top: 5px; font-size:115%; width: 150%;"),
+                               
                                div(
                                  style = "display: inline-block; vertical-align: top; margin-right: 0px; margin-top: 5px",
                                selectInput("buffies",label  = "select measures",choices=NULL,selected=NULL,multiple = T)),
@@ -458,18 +502,22 @@ ui <-
                                ,
                                br(),br(),
                                
-                               div("For some applications it makes sense to obscure the catchment location. Please click here if you would like to anonymise your catchment.", style = "text-align: left; font-size:120%; margin-top: 10px;"),
+                               div("For some applications it makes sense to obscure the catchment location. Please click here if you would like to anonymise your catchment.", 
+                                   style = "text-align: left; font-size:120%; margin-top: 10px; width: 150%;"),
                                
                                checkboxInput("anomap",label = "Hide identifying map features/basemap", value = FALSE),#set to TRUE in LE
                                br(), br(),
                                
-
-
+                               
                                div(id="range_title","Range of objective values given in pareto_fitness.txt:",style = "text-align: left; font-size:120%"),
                                tableOutput("obj_conf"),
 
-                               br(),br(),br(),
-
+                               br(),
+                               hr(style = "border-top: 2px solid #03597F;"),  # Horizontal line with custom styling
+                               
+                               div("Hard Reset",
+                                   style = "text-align: left; font-size:160%; font-weight: bold; margin-top: 10px;"),
+                               br(),
                                div(id="reset", htmlOutput("reset_prompt"),
                                    actionButton("reset_btn", "Hard Reset",style = "color: white; background-color: red; font-size: 15px; padding: 8px 8px; border-radius: 5px;"),
                                    textOutput("reset_status"))
