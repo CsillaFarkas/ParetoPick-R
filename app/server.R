@@ -278,7 +278,7 @@ server <- function(input, output, session) {
       fit1(fit() %>% rownames_to_column("optimum"))
       yo = fit() %>% mutate(across(everything(), ~ scales::rescale(.)))%>%mutate(id = row_number())
       f_scaled(yo)}
-      
+      shinyjs::refresh()
       
       output$obj_conf <- renderTable({
         if(file.exists(pareto_path)){
@@ -1510,6 +1510,14 @@ server <- function(input, output, session) {
       shinyjs::hide("freq_title")
     } else{
       shinyjs::show("freq_title")
+    }
+  })
+  
+  observe({ #hide measire slider title too
+    if(is.null(hru_ever())){
+      shinyjs::hide("measure_title_vis")
+    } else{
+      shinyjs::show("measure_title_vis")
     }
   })
   
@@ -2822,7 +2830,7 @@ server <- function(input, output, session) {
   ### AHP ####
   observeEvent(input$tabs == "ahp",{
     if(!file.exists("../data/pareto_fitness.txt")){ #check if fit() has been created yet
-      output$nothing_ran_ahp <- renderText({HTML("please provide the pareto_fitness.txt in the Data Preparation tab.")})
+      output$nothing_ran_ahp <- renderText({HTML("please provide the pareto_fitness.txt and the objective names in the Data Preparation tab.")})
     }else{ shinyjs::hide("nothing_ran_ahp")
       shinyjs::runjs("toggleSidebar(false);")  # Hide sidebar
     }      
@@ -2853,6 +2861,16 @@ server <- function(input, output, session) {
     updateSelectInput(session,inputId = "size_var", choices = choices, selected = rng_plt()[4])
     
     })
+  
+  observe({ #hide measire slider title too
+    if(is.null(hru_ever())){
+      shinyjs::hide("measure_title_ahp")
+    } else{
+      shinyjs::show("measure_title_ahp")
+    }
+  })
+  
+  
   
   observe({ #create ahpmt() for measure sliders
     req(aep_100(), hru_ever())
