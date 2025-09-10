@@ -11,6 +11,10 @@ server <- function(input, output, session) {
   file_data2 <- reactiveVal(NULL)
   file_data3 <- reactiveVal(NULL)
   file_data6 <- reactiveVal(NULL)
+  file_measure_loc = reactiveVal(NULL)
+  file_hru_activ = reactiveVal(NULL)
+  file_hru_con = reactiveVal(NULL)
+  file_shapefile_cd = reactiveVal(NULL)
   ##
   shapefile <- reactiveVal(NULL)
   
@@ -490,6 +494,67 @@ server <- function(input, output, session) {
     } })
   
     
+    ## Full Visualisation with reproduced measure_location.csv and hru_in_optima.RDS
+    observeEvent(input$measure_loc, { file <- input$measure_loc
+    if (is.null(file)) {return(NULL)}
+    file_measure_loc(list(path = file$datapath, name = file$name))}, ignoreInit = TRUE)
+    
+    
+    observeEvent(input$hru_activ, { file <- input$hru_activ
+    if (is.null(file)) {return(NULL)}
+    file_hru_activ(list(path = file$datapath, name = file$name))}, ignoreInit = TRUE)
+    
+    
+    observeEvent(input$save_full_vis,{
+      
+      # measure_location.csv
+      save_measure_loc <- file_measure_loc()$name
+      save_path_measure_loc <- file.path(save_dir, save_measure_loc)
+      file.copy(file_measure_loc()$path, save_path_measure_loc, overwrite = TRUE)
+      
+      # hru_in_optima.RDS
+      save_hru_activ <- file_hru_activ()$name
+      save_path_hru_activ <- file.path(input_dir, save_hru_activ)
+      file.copy(file_hru_activ()$path, save_path_hru_activ, overwrite = TRUE)
+      
+      shinyjs::refresh()
+      
+    })
+    ## Full Connection to Decision Space with reproduced hru.con and hru.shp files
+    observeEvent(input$hru_con, { file <- input$hru_con
+    if (is.null(file)) {return(NULL)}
+    file_hru_con(list(path = file$datapath, name = file$name))}, ignoreInit = TRUE)
+    
+    observeEvent(input$shapefile_cd, { file <- input$shapefile_cd
+    if (is.null(file)) {return(NULL)}
+    file_shapefile_cd(list(path = file$datapath, name = file$name))}, ignoreInit = TRUE)
+    
+    
+    observeEvent(input$save_full_cd, {
+      save_hru_con <- file_hru_con()$name
+      path_hru_con <- file.path(save_dir, save_hru_con)
+      file.copy(file_hru_con()$path, path_hru_con, overwrite = TRUE)
+      
+      
+      shp_req = c(".shp",".shx", ".dbf", ".prj")
+      shapefile <- input$shapefile_cd
+      shapefile_names <- shapefile$name
+      shapefile_paths <- shapefile$datapath
+      missing_shapefile_components <- shp_req[!sapply(shp_req, function(ext) any(grepl(paste0(ext, "$"), shapefile_names)))]
+      
+      # copy shapefile components if none are missing
+      if (length(missing_shapefile_components) == 0) {
+        lapply(seq_along(shapefile_paths), function(i) {
+          save_path <- file.path(save_dir, shapefile_names[i])
+          if (!file.exists(save_path)) {
+            file.copy(shapefile_paths[i], save_path, overwrite = TRUE)
+          }
+        })
+      }
+      shinyjs::refresh()
+    })
+    
+    
     ## run external script that produces variables considered in the clustering
     
     optain <- NULL 
@@ -877,7 +942,7 @@ server <- function(input, output, session) {
         
       }else{#not even pareto_fitness available
           output$config_needs_var = renderText({"Please provide pareto_fitness.txt and click Run Prep in the Data Preparation tab before proceeding here!"})
-            output$uploaded_pareto <- renderText({"To be able to proceed, please provide pareto_fitness.txt in the previous tab."})
+            output$uploaded_pareto <- renderText({"To be able to proceed, please provide pareto_fitness.txt as well as the objective names in the previous tab."})
             shinyjs::hide("main_analysis")
             shinyjs::hide("all_ahp")
             shinyjs::hide("ahp_analysis")
@@ -1458,12 +1523,6 @@ server <- function(input, output, session) {
    df
   }, rownames = T)
   
-  #make prio()
-  observe({
-    if(file.exists("../input/nswrm_priorities.csv")){
-      prio(read.csv("../input/nswrm_priorities.csv"))
-    }
-  })
   
   #measure sliders, make hru_matcher/hru_ever and aep_100
   observe({
@@ -1561,7 +1620,7 @@ server <- function(input, output, session) {
       shinyjs::hide("download_freq_id")}})
  
   play_freq = function(leg = TRUE){ #excessive function
-    req(cmf(),lalo(),prio(), dat_matched(),hru_matcher(),fit())
+    req(cmf(),lalo(), dat_matched(),hru_matcher(),fit())
 
     dat = dat_matched()
     
@@ -1616,7 +1675,7 @@ server <- function(input, output, session) {
   )
   
  freq_shaper = function(){ 
-   req(cmf(), prio(), dat_matched(),hru_matcher(), fit())
+   req(cmf(), dat_matched(),hru_matcher(), fit())
    
    dat = dat_matched()
    
