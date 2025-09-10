@@ -167,7 +167,7 @@ The table below outlines the four levels of functionality, their differences and
 | Full Functionality    | All sliders, maps, the AHP & the <br> clustering are working | All files named above. <br> The Data Prep has to run before the <br> Clustering can be performed |
 | w/o clustering        | All sliders, maps & the AHP are working <br> but the clustering cannot be performed | All files named above <br> other than rout_unit.con |
 | w/o map plotting  <br> w/o clustering  | All sliders and Visualisations <br> & the AHP are working but no <br> map plotting and no Clustering | All files named above <br> other than shape files and hru.con file |
-| w/o measure sliders <br> w/o map plotting <br> w/o clustering| Objective sliders and Visualisations <br> & the AHP are working but without <br> measure sliders, clustering and <br>map plotting | Only the base files: <br> pareto_fitness.txt<br>pareto_genomes.txt <br> object_names.RDS |
+| w/o measure sliders <br> w/o map plotting <br> w/o clustering| Objective sliders and Visualisations <br> & the AHP are working but without <br> measure sliders, clustering and <br>map plotting | Only the base file: <br> pareto_fitness.txt <br> object_names.RDS is created in the app|
 
 This manual will be expanded with a detailed explanation of the steps required to reproduce the data, specifically: hru_in_optima.RDS and measure_location.csv required for the measure sliders and hru.shp and hru.con required for the mapping.
 Since rout_unit.con is the only additional file needed to perform the Data Preparation for the clustering (write var_corr_par.csv), a method for replacing it for other projects shall also be developed. This might potentially include turning off the cluster variable "fraction of water".
