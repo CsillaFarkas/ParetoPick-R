@@ -164,7 +164,7 @@ The table below outlines the four levels of functionality, their differences and
 
 | Level                 | Description                                          | Required Input Files                                   |                               
 |:----------------------|:-----------------------------------------------------|:-------------------------------------------------------|
-| Basic Functionality   | Objective sliders and Visualisations <br> & the AHP are working but without <br> measure sliders, clustering and <br>map plotting | Only the base file: <br> pareto_fitness.txt|
+| Basic Functionality   | Visualisations & the AHP  <br> are working but without <br> measure sliders, clustering and <br>map plotting | Only the base file: <br> pareto_fitness.txt|
 | Full Visualisation    | All sliders, Visualisations <br> & the AHP are working but neither <br> map plotting nor Clustering | pareto_fitness.txt <br> measure_location.csv <br> hru_in_optima.RDS |
 | Full Connection to Decision Space  | All sliders, maps & the AHP are working <br> only the clustering cannot be performed | pareto_fitness.txt <br> measure_location.csv <br> hru_in_optima.RDS <br> hru.con <br> hru.shp/.dbf/.prj/.shx |
 | Full Functionality    | All sliders, maps, the AHP & the <br> clustering are working | All files named above. <br> The Data Prep has to run before the <br> Clustering can be performed |
