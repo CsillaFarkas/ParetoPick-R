@@ -697,7 +697,7 @@ ui <-
                                       div("objectives", style = "text-align: center; font-size:150%"),
                                       div(style = "margin: 0 auto; text-align: center;", tableOutput("click_info")),
                                       conditionalPanel(
-                                        condition = "output.cm_available",
+                                        condition = "output.hru_available",
                                         div("measures", style = "text-align: center; font-size:150%")
                                       ),
                                       div(style = "margin: 0 auto; text-align: center;", tableOutput("aep_tab_one")),
@@ -726,18 +726,20 @@ ui <-
                                  column(12,
                                         fluidRow(column(6, div("Selected Objective Ranges (scaled)", style = "text-align: left; font-size:150%"),
                                                         tableOutput("sliders")),
-                                                 column(6, div("Difference to status quo",
-                                                               style = "text-align: left; font-size:150%"),
-                                                        tableOutput("sliders_abs"))),
-                                        fluidRow(
-
-                                                 column(6, offset = 6,
+                                                 
+                                                 column(6, 
                                                         div("Maximum Objective Ranges",style = "text-align: left; font-size:150%"),
                                                         title = "objectives optimised across negative and positive ranges are shown with signs. All other objectives are given without signs.",
                                                         
                                                         tableOutput("whole_range")#,
                                                         # div("*objectives optimised across negative and positive ranges are shown with signs. All other objectives are given without signs.", style = "text-align: left; font-size:100%")
-                                                        )
+                                                 )
+                                                ),
+                                        fluidRow(
+
+                                                 column(6, offset = 6, div(id = "status_quo_title", "Difference to status quo",
+                                                                           style = "text-align: left; font-size:150%"),
+                                                        tableOutput("sliders_abs"))
                                         ))),
 
 

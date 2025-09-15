@@ -712,7 +712,11 @@ server <- function(input, output, session) {
   })
   
   if (!file.exists("../data/sq_fitness.txt")){
-    shinyjs::disable("plt_sq")}else{shinyjs::enable("plt_sq")}
+    shinyjs::disable("plt_sq")
+    shinyjs::hide("status_quo_title")
+  }else{
+     shinyjs::show("status_quo_title") 
+    shinyjs::enable("plt_sq")}
   
  
   ### Play Around Tab ####
@@ -1566,24 +1570,26 @@ server <- function(input, output, session) {
   observe({ #hide map title too
     if(is.null(cm())){
       shinyjs::hide("freq_title")
-      shinyjs::hide("number_mes_tab")
       
     } else{
       shinyjs::show("freq_title")
-      shinyjs::show("number_mes_tab")
       
     }
   })
   
   #"measures" title is part of conditional
-  output$cm_available <- reactive({!is.null(cm())})
-  outputOptions(output,"cm_available",suspendWhenHidden = FALSE)
+  output$hru_available <- reactive({!is.null(hru_ever())})
+  outputOptions(output,"hru_available",suspendWhenHidden = FALSE)
   
   observe({ #hide measure slider title too
     if(is.null(hru_ever())){
       shinyjs::hide("measure_title_vis")
+      shinyjs::hide("number_mes_tab")
+      
     } else{
       shinyjs::show("measure_title_vis")
+      shinyjs::show("number_mes_tab")
+      
     }
   })
   
