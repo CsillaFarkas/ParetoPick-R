@@ -696,7 +696,10 @@ ui <-
                                       tags$h3("Selected Optimum"),
                                       div("objectives", style = "text-align: center; font-size:150%"),
                                       div(style = "margin: 0 auto; text-align: center;", tableOutput("click_info")),
-                                      div("measures", style = "text-align: center; font-size:150%"),
+                                      conditionalPanel(
+                                        condition = "output.cm_available",
+                                        div("measures", style = "text-align: center; font-size:150%")
+                                      ),
                                       div(style = "margin: 0 auto; text-align: center;", tableOutput("aep_tab_one")),
                                       div(style = "margin: 0 auto; text-align: center;",  
                                           checkboxInput("save_click_line", label = "Click here to save the selected optimum to the output folder (selected_optima.csv)", value = FALSE)
@@ -704,7 +707,7 @@ ui <-
                                     )
                                   ),
                               
-                              div("Number of distinct measures used in selection compared to full front",
+                              div(id = "number_mes_tab","Number of distinct measures used in selection compared to full front",
                                   style = "display: flex; justify-content: center; font-size:150%"),
                               # div("*please note that these numbers refer to the implementation/use of the total number of measures available in the catchment. They therefore differ from the selection made in the sliders which considers individual optima's implementation of measures.",
                               # style = "display: flex; justify-content: center; font-size: 80%"),
@@ -1265,7 +1268,7 @@ ui <-
                                downloadButton("download_weights_plot", "Download Plot")
                              ),
                              br(),
-                             div(
+                             div(id = "measure_table_title",
                                style = "display: flex; flex-direction: column; align-items: center;",
                                tags$h4("Number of measures in AHP optimum / slider selection / whole front"),
                                tableOutput("aep_ahp")

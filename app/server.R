@@ -1562,17 +1562,24 @@ server <- function(input, output, session) {
     }
   })
   
-  
-  #frequency plot/map plot
+  #hide stuff for measures and map plotting
   observe({ #hide map title too
     if(is.null(cm())){
       shinyjs::hide("freq_title")
+      shinyjs::hide("number_mes_tab")
+      
     } else{
       shinyjs::show("freq_title")
+      shinyjs::show("number_mes_tab")
+      
     }
   })
   
-  observe({ #hide measire slider title too
+  #"measures" title is part of conditional
+  output$cm_available <- reactive({!is.null(cm())})
+  outputOptions(output,"cm_available",suspendWhenHidden = FALSE)
+  
+  observe({ #hide measure slider title too
     if(is.null(hru_ever())){
       shinyjs::hide("measure_title_vis")
     } else{
@@ -1590,7 +1597,7 @@ server <- function(input, output, session) {
       "../data/hru.prj",#for cm() and cmf()
       "../input/hru_in_optima.RDS" #for cm() and cmf()
     )
-
+    #frequency plot/map plot
     if (all(file.exists(map_files))) {
       shinyjs::show("freq_map_play")
       shinyjs::show("download_freq_id")
@@ -2924,8 +2931,13 @@ server <- function(input, output, session) {
   observe({ #hide measire slider title too
     if(is.null(hru_ever())){
       shinyjs::hide("measure_title_ahp")
+      shinyjs::hide("measure_table_title")
+      
+      
     } else{
       shinyjs::show("measure_title_ahp")
+      shinyjs::show("measure_table_title")
+      
     }
   })
   
