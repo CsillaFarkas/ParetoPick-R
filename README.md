@@ -215,7 +215,6 @@ It is important to note that:
   * more exact point selection
   * clearer error messages for aborted/failed clustering needed
   * processing speed of Visualisation tab went down with matched selection
-  * pull AHP plot up with placeholder
   * add a small spinner to the Check Data button to clarify that it takes a while
   * description of reproducing data 
   * dynamic clustering with other variables, different var_corr_par.csv unlinked from SWAT+ and CoMOLA  
