@@ -617,7 +617,8 @@ ui <-
                            tags$style(HTML(".js-irs-13 .irs-single, .js-irs-12 .irs-bar-edge, .js-irs-12 .irs-bar {background: #f28522 ;border-top: 1px solid #f28522 ;border-bottom: 1px solid #f28522;}.js-irs-12 .irs-from, .js-irs-12 .irs-to, .js-irs-12 .irs-single { font-size: 13px;background: #f28522 !important }")),
                            tags$style(HTML("#actual_plt_play_measure {width: 450px;height: 550px;margin-bottom: -150px; } ")),
                            tags$style(HTML("#freq_map_play {width: 100%; max-width: 100%; height: 550px; margin-bottom: -150px; } ")),
-
+                           tags$style(HTML("#plt_bo_measure {width: 450px;height: 550px;margin-bottom: -150px !important; }")),
+                           
                            tags$style(HTML(".spinspin { display: inline-block;
                                                         width: 20px;
                                                         height: 20px;
@@ -1280,18 +1281,16 @@ ui <-
                              div(style = "display: inline-block; vertical-align: top; margin-left: 0px;",
                                  actionButton("plt_bo", "Plot map of measure implementation under best option"),
                              ),
-
-                             uiOutput("plt_bo_measure"),
                              withSpinner(uiOutput("spinner_meas"),
                                          type=4, color ="#F7A600"),
-
+                             uiOutput("plt_bo_measure"),
                              div(id="download_ahp_id",
                                  div(
-                                  style = "display: inline-block; vertical-align: top; margin-right: 0px; margin-top: 5px;",
+                                  style = "display: inline-block; vertical-align: top; margin-right: 0px; margin-top: 0px;",
                                  textInput("meas_ahp_savename", label = NULL, value = "ahp_measure_implementation")
                                     ),
                                  div(
-                                   style = "display: inline-block; vertical-align: top; margin-left: 0px; margin-top: 5px;",
+                                   style = "display: inline-block; vertical-align: top; margin-left: 0px; margin-top: 0px;",
                                  downloadButton(outputId="download_am", label ="Download map as .png"),
                                  div(
                                    id = "spinner_download_ahp",style = "display: none;",
