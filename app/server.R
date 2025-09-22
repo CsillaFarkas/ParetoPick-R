@@ -1084,13 +1084,13 @@ server <- function(input, output, session) {
   
    observeEvent(input$clickpoint, {
   req(scaled_filtered_data(), input$obj1, input$x_var3)
-     # shinyjs::show("download_play_id")
+   
      clickpoint_button(TRUE)
   dat <- scaled_filtered_data()
   nearest <- nearPoints(dat, input$clickpoint, xvar = input$x_var3, yvar = input$y_var3, maxpoints = 1)
   if(nrow(nearest) > 0) {
-    id <- which(dat[[input$x_var3]] == nearest[[input$x_var3]] &
-                dat[[input$y_var3]] == nearest[[input$y_var3]])
+    id <-  as.numeric(rownames(nearest)[1])
+
     yo <- dat[id, , drop = FALSE]
     yo$id = id
     sel_tay(yo %>% select(-id))
@@ -1098,9 +1098,10 @@ server <- function(input, output, session) {
     cl_line_x(1)
     cl_line_val(filtered_data()[id,1])
   }
+  
 })
-
-    
+   
+   
     output$clickpoint_map <- renderUI({
       if(clickpoint_button()){
         if(is.null(cm())){ #indirect check if hru.shp is available
@@ -1299,21 +1300,14 @@ server <- function(input, output, session) {
     clickpoint_button(TRUE)
     cl_line_x(round(input$clickline$x))#x
     cl_line_val(input$clickline$y) #val
-    
-  }, ignoreNULL = TRUE)
-  
-  observe({
-    req(cl_line_x(),cl_line_val(),filtered_data())
-  
+ 
     sc = filtered_data() %>% mutate(id = row_number())
-    
-    # More efficient closest value finding
+  #   
     closest_id <- which.min(abs(sc[[cl_line_x()]] - cl_line_val()))
     cl_line(sc[closest_id, "id", drop = FALSE])
     sel_tay(sc[closest_id,-5, drop=FALSE]) #dropping the 5th column (id)
 
-  })
-  
+  }, ignoreNULL = TRUE)
  
   observeEvent({
     list(
