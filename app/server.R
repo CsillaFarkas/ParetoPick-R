@@ -3635,11 +3635,9 @@ server <- function(input, output, session) {
     
     if(file.exists("../data/hru.con")){lalo(plt_latlon(conpath = "../data/hru.con"))}
      needs_buffer(pull_buffer())
-     # single_meas_fun()
-     
-     
+
      output$plt_bo_measure = renderUI({single_meas_fun()})
-     
+    
      shinyjs::show("download_ahp_id") #show download button
 
   })
