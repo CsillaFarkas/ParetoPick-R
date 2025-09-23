@@ -17,7 +17,7 @@ foo1 <- function(x) {
 foo1(c("configr", "corrplot", "DT", "fs", "fst", 
        "geosphere","geohashTools", "ggplot2","ggtext", "gridExtra",
        "ini", "leaflet", "leafsync",
-       "mapview",  "plotly",  "processx", 
+       "mapview", "patchwork", "plotly",  "processx", 
        "quanteda",   "RColorBrewer",   "reticulate",
        "scales", "sf", "shiny", "shinycssloaders", "shinydashboard",
        "shinyFiles", "shinyjs","shinythemes",  "shinyWidgets",  "sp",
