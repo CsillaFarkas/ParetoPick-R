@@ -973,10 +973,27 @@ plt_share_con = function(dat){
 ## scatter plot in play around
 plt_sc = function(dat, ranges, col=rep("grey",nrow(dat)), 
                   size=rep(2.8, nrow(dat)), sq=NULL, coefo = NULL){
-  plots <- list()
+ 
   vars <- colnames(dat)
   num_vars <- length(vars)
+  
+  plots <- list()
   plot_index <- 1
+  
+  
+  bt = theme_bw() + theme(
+    panel.background = element_blank(),
+    panel.grid.major = element_line(color = "lightgray", size = 0.3),
+    panel.grid.minor = element_blank(),
+    panel.border = element_blank(),
+    axis.text = element_text(size = 10),
+    axis.title = element_text(size = 16)
+  ) 
+  
+  
+  
+  sel_col <- "#FF5666" %in% col
+  sel_ids <- if (sel_col) which(col == "#FF5666") else integer(0)
   
   for (i in 1:(num_vars - 1)) {
     for (j in (i + 1):num_vars) {
@@ -993,15 +1010,8 @@ plt_sc = function(dat, ranges, col=rep("grey",nrow(dat)),
        
       # p <- ggplot(dat, aes_string(x = vars[i], y = vars[j])) +
      p = ggplot(dat, aes(x = .data[[xcol]], y = .data[[ycol]]))+
-       geom_point(size=size,color= col)+ 
-        theme_bw() + theme(
-          panel.background = element_blank(),
-          panel.grid.major = element_line(color = "lightgray", size = 0.3),
-          panel.grid.minor = element_blank(),
-          panel.border = element_blank(),
-          axis.text = element_text(size = 10),
-          axis.title = element_text(size = 16)
-        ) +  coord_cartesian(clip = "off") #prevent labels to be cut off
+       geom_point(size=size,color= col)+ bt + coord_cartesian(clip = "off") #prevent labels to be cut off
+        
      
      # regression line
      pname = paste(xcol, ycol, sep = "_")
@@ -1018,10 +1028,9 @@ plt_sc = function(dat, ranges, col=rep("grey",nrow(dat)),
                 hjust = 1.1, vjust = -0.5, size = 4)#add R²
      
      
-     if("#FF5666" %in% col){
-       ids= which(col == "#FF5666") 
+     if(sel_col){
        
-       p = p + geom_point(data=dat[ids,], aes(x = .data[[xcol]], y= .data[[ycol]]), color="#FF5666", size=2.8)
+       p = p + geom_point(data=dat[sel_ids,], aes(x = .data[[xcol]], y= .data[[ycol]]), color="#FF5666", size=2.8)
      }
      if(!is.null(sq)){
        p = p+ geom_point(data=sq,aes(x = .data[[xcol]], y= .data[[ycol]]), color="cyan", size=2.8)
@@ -1039,6 +1048,7 @@ plt_sc = function(dat, ranges, col=rep("grey",nrow(dat)),
   }
 
 return(plots)
+
 }
 
 ## scatter plot in analysis tab and AHP tab
@@ -1086,7 +1096,7 @@ plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NUL
   #fit() to establish range limits
   whole <- full_front
   colnames(whole) = colnames(dat)[1:4]
-  swiss_extra = whole #for controlling that all data is within range limits
+  # swiss_extra = whole #for controlling that all data is within range limits
   
   xma = yma = NULL
   
@@ -1097,43 +1107,57 @@ plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NUL
   }
   
   #all extra data prepared first
-  all_extra_data = NULL
-  
+  # all_extra_data = NULL
+  aed = list() #all extra data
+
   if (!is.null(extra_dat) && plt_extra) {
     names(extra_dat) = names(dat)
-    swiss_extra <- rbind(swiss_extra, extra_dat)
+    # swiss_extra <- rbind(swiss_extra, extra_dat)
     
     extra_dat$set <- "cluster solutions"
-    all_extra_data <- rbind(all_extra_data,extra_dat)
+    # all_extra_data <- rbind(all_extra_data,extra_dat)
+    aed[[length(aed) + 1]] = extra_dat
   }
   
   if (!is.null(high_point) && nrow(high_point)!=0) {
     names(high_point) = names(dat)
-    swiss_extra <- rbind(swiss_extra, high_point)
+    # swiss_extra <- rbind(swiss_extra, high_point)
     
     if(ahp_man){
       high_point$set = "Manual Selection"
     }else{high_point$set = "AHP - best option"}
     
-    all_extra_data <- rbind(all_extra_data,high_point)
+    # all_extra_data <- rbind(all_extra_data,high_point)
+    aed[[length(aed) + 1]] = high_point
+    
   }
   
   if (!is.null(sel_tab) && nrow(sel_tab) > 0) {
     names(sel_tab) = names(dat)
-    swiss_extra <- rbind(swiss_extra, sel_tab)
+    # swiss_extra <- rbind(swiss_extra, sel_tab)
     
     sel_tab$set <- "Selection"
     
-    if(!is.null(all_extra_data)){all_extra_data <- rbind(all_extra_data,sel_tab)}else{all_extra_data = sel_tab}
-  }
+    # if(!is.null(all_extra_data)){all_extra_data <- rbind(all_extra_data,sel_tab)}else{all_extra_data = sel_tab}
+    aed[[length(aed) + 1]] = sel_tab
+      
+     }
   
   if (status_q) {
     st_q <- read.table(sq_path, header = FALSE, stringsAsFactors = FALSE, sep = deli(sq_path),colClasses = rep("numeric",4))
     names(st_q) <- names(dat)
-    swiss_extra <- rbind(swiss_extra, st_q)
+    # swiss_extra <- rbind(swiss_extra, st_q)
     
     st_q$set <- "Status Quo"
-    all_extra_data <- rbind(all_extra_data,st_q)
+    # all_extra_data <- rbind(all_extra_data,st_q)
+    aed[[length(aed) + 1]] = st_q
+    
+  }
+  
+  if (length(aed) > 0) {
+    swiss_extra <- bind_rows(list(whole, aed)) %>% select(-set)
+  } else{
+    swiss_extra = whole
   }
   
   #plot with main data
@@ -1156,7 +1180,8 @@ plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NUL
           legend.title = element_text(size=15))
   
   #shape and color scales only if extra data exists
-  if (!is.null(all_extra_data)) {
+  # if (!is.null(all_extra_data)) {
+  if(length(aed)>0){
     p = p + 
       scale_shape_manual(labels = function(x) gsub("-", "", x),
                          values = c("cluster solutions" = 21, "AHP - best option" = 22, "Manual Selection" = 22, "Selection" = 21, "Status Quo" = 21), name="") +
@@ -1181,7 +1206,9 @@ plt_sc_optima <- function(dat, x_var, y_var, col_var, size_var, high_point = NUL
   }
   
   #extra data points
-  if (!is.null(all_extra_data)) {
+  # if (!is.null(all_extra_data)) {
+  if(length(aed)>0){
+    all_extra_data = do.call(rbind, aed)
     p = p + geom_point(data = all_extra_data, aes(x = .data[[x_var]], y = .data[[y_var]], shape = set, color = set, size = .data[[size_var]], fill = .data[[col_var]]),
                        stroke = 1.8, show.legend = TRUE, alpha=0.7)
   }

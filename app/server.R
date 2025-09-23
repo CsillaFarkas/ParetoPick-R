@@ -985,54 +985,74 @@ server <- function(input, output, session) {
       }
     })
 
-  # cache the slider observations
+  # cache slider observations
+  input_ranges_valid <- reactive({
+    all(
+      !is.null(input$obj1), !is.null(input$obj2), 
+      !is.null(input$obj3), !is.null(input$obj4),
+      length(input$obj1) == 2, length(input$obj2) == 2,
+      length(input$obj3) == 2, length(input$obj4) == 2
+    )
+  })
+  
+  #extract min/max vals
+  input_ranges <- reactive({
+    req(input_ranges_valid())
+    
+    list(
+      minvals = c(input$obj1[1], input$obj2[1], input$obj3[1], input$obj4[1]),
+      maxvals = c(input$obj1[2], input$obj2[2], input$obj3[2], input$obj4[2])
+    )
+  })
+  
+  
   filtered_data <- reactive({
-    req(input$obj1, input$obj2, input$obj3, input$obj4) 
-    req(length(input$obj1) == 2, length(input$obj2) == 2,
-        length(input$obj3) == 2, length(input$obj4) == 2)
+    req(input_ranges_valid())
     req(fit(), f_scaled())
     
-    match_scaled(minval_s=c(input$obj1[1],input$obj2[1],input$obj3[1],input$obj4[1]),
-                 maxval_s=c(input$obj1[2],input$obj2[2],input$obj3[2],input$obj4[2]), 
+    ranges <- input_ranges()
+    
+    match_scaled(minval_s = ranges$minvals, maxval_s = ranges$maxvals,
                  scal_tab=f_scaled(),allobs=objectives(), abs_tab = fit(),  
                  mes_slider = mes_touched(), mes_df = opti_mima())
   })
   
   scaled_filtered_data <- reactive({
-    req(input$obj1, input$obj2, input$obj3, input$obj4)
-    req(length(input$obj1) == 2, length(input$obj2) == 2,
-        length(input$obj3) == 2, length(input$obj4) == 2)
+    req(input_ranges_valid())
     req(fit(), f_scaled())
     
-    scaled_abs_match(minval_s=c(input$obj1[1],input$obj2[1],input$obj3[1],input$obj4[1]),
-                     maxval_s=c(input$obj1[2],input$obj2[2],input$obj3[2],input$obj4[2]),
+    ranges <- input_ranges()
+    
+    scaled_abs_match(minval_s = ranges$minvals,
+                     maxval_s = ranges$maxvals,
                      abs_tab = fit(),scal_tab = f_scaled(),
                      allobs = objectives(),smll=F, mes_slider = mes_touched(), 
                      mes_df =opti_mima())
   })
   
   
-   observe({#for first_pareto, play_freq and scatter
-     req(scaled_filtered_data())
-     req(input$obj1, input$obj2, input$obj3, input$obj4)
-     req(length(input$obj1) == 2, length(input$obj2) == 2, 
-         length(input$obj3) == 2, length(input$obj4) == 2 )#check if initialised
-     if(file.exists("../input/object_names.RDS")){
-      
-       dat_matched(scaled_filtered_data())
-       
-       df <- dat_matched()
-       
-       if(nrow(df) == 0 || ncol(df) == 0){
-         output$ensure_sel <- renderText({
-           paste("None of the optima fall within the specified ranges. Please select different data ranges!")
-         })
-       }else{
-         
-         output$ensure_sel <- renderText({paste("")})}
-     }
-     
-   })
+  object_names_exists <- reactive({
+    file.exists("../input/object_names.RDS")
+  }) %>% bindCache("object_names_file_check")
+  
+  
+  observe({
+    req(scaled_filtered_data(), input_ranges_valid())
+    req(object_names_exists())
+    
+    df <- scaled_filtered_data()
+    dat_matched(df)
+    
+    is_empty <- nrow(df) == 0 || ncol(df) == 0
+    
+    output$ensure_sel <- renderText({
+      if (is_empty) {
+        "None of the optima fall within the specified ranges. Please select different data ranges!"
+      } else {
+        ""
+      }
+    })
+  })
  
 
    observe({
@@ -1064,12 +1084,12 @@ server <- function(input, output, session) {
     
   
     first_pareto_fun = function(){
-      req(input$x_var3,dat_matched())
+      req(dat_matched(),input$y_var3)
       #match scaled input with unscaled fit() to create dat
       dat=dat_matched()
-      
       if(!is.null(sel_tay()) && nrow(merge(sel_tay(),dat))==0){sel_tay(NULL)} #remove selection when not in sliders
-      #run plt_sc_optima with sq
+     
+       #run plt_sc_optima with sq
       return(plt_sc_optima(dat=dat, x_var = input$x_var3,
                     y_var = input$y_var3,
                     col_var = input$col_var3,
@@ -1079,8 +1099,8 @@ server <- function(input, output, session) {
                     sel_tab = sel_tay(),unit=input$unit_add1))
       
     }
-    
-    output$first_pareto <- renderPlot({ first_pareto_fun() },outputArgs = list(deferUntilFlush = FALSE))
+    ##TOP Pareto plot
+    output$first_pareto <- renderPlot({ first_pareto_fun() })
   
    observeEvent(input$clickpoint, {
   req(scaled_filtered_data(), input$obj1, input$x_var3)
@@ -1337,20 +1357,18 @@ server <- function(input, output, session) {
       
       }else{
        
-      update_selection(m_opt, te)
+      update_selection(m_opt)
 
 
     colnms = objectives()
     
     ## table of chosen line 
-    output$click_info <- renderTable({
-      click_table_data()
-    }, include.rownames = F)
+    output$click_info <- renderTable({click_table_data()}, include.rownames = F)
     
     }}, ignoreNULL = TRUE) 
   
   click_table_data <- reactive({
-    req(m_opt, er())
+    req(m_opt, sel_tay())
     
     colnms <- objectives()
     new_colnms <- if(!is.null(axiselected())){
@@ -1359,7 +1377,7 @@ server <- function(input, output, session) {
       }, col = colnms, unit = axiselected(), SIMPLIFY = TRUE)
     } else colnms
     
-    lclick <- cbind(m_opt$optimum, as.data.frame(er()))
+    lclick <- cbind(m_opt$optimum, as.data.frame(sel_tay()))
     colnames(lclick) <- c("optimum", new_colnms)
     
     lclick %>%
@@ -1370,7 +1388,7 @@ server <- function(input, output, session) {
       )))
   })
   
-
+ 
   reset_selection <- function(){
     cl_line(NULL)
     sel_tay(NULL)
@@ -1380,7 +1398,7 @@ server <- function(input, output, session) {
     # output$click_info <- renderTable({data.frame()}, include.rownames = F)
   }
   
-  update_selection <- function(m_opt, ete){
+  update_selection <- function(m_opt){
     rom <- as.numeric(cl_line()[["id"]]) #length(rv) has to align with subset and NOT with fit()
     
     n_points <- length(unique(pp()$id))
@@ -1392,8 +1410,7 @@ server <- function(input, output, session) {
     rv$colls[rom] <- "#FF5666"
     
     sel_tay(m_opt %>% select(-optimum))#pass to pareto plot and selection table
-    er(ete)
-    
+   
   }
   
   observeEvent(input$save_click_line,{
@@ -1857,39 +1874,53 @@ server <- function(input, output, session) {
     
 
   ## scatter plot
-  scat_fun = function(){
-    req(fit(),objectives(),f_scaled(),dat_matched(), scatter_regr())
-   
-    scat_abs = dat_matched()
-  if(nrow(scat_abs)==0 || ncol(scat_abs)==0)return(NULL)else{
-  
-    if(!is.null(er())){
-      rom = which(apply(scat_abs, 1, function(row) all(row == er())))
-      col = rep("grey",nrow(scat_abs))
-      col[rom] = "#FF5666"
-      sizz = rep(2.8, nrow(scat_abs))
-      sizz[rom] = 3
-    }else{col = rep("grey",nrow(scat_abs))
     
-    sizz = rep(2.8, nrow(scat_abs))}
-
-    mima = get_mima(fit())
-
-    if (input$plt_sq) {
-      req(stq())
+    scat_fun = function() {
+      scat_abs = dat_matched()
+      scatter_regr_val = scatter_regr()
       
-      plot_scatter = plt_sc(dat = scat_abs, ranges = mima, col = col,
-                            size = sizz, sq=stq(), coefo = scatter_regr())
+      req(scat_abs, scatter_regr_val)
       
-    }else{
-      plot_scatter = plt_sc(dat = scat_abs, ranges = mima, col = col,
-                            size = sizz, coefo = scatter_regr())
+      if (nrow(scat_abs) == 0 || ncol(scat_abs) == 0)
+        return(NULL)
+      else{
+        n_rows <- nrow(scat_abs)
+        col <- rep("grey", n_rows)
+        sizz <- rep(2.8, n_rows)
+        
+        if (!is.null(sel_tay())) {
+          erv = sel_tay() #previously er()
+          SCAT_ABS <<- scat_abs
+          ST <<- sel_tay()
+          rom = which(rowSums(scat_abs == as.vector(unlist(erv))[col(scat_abs)]) == ncol(scat_abs))
+          col[rom] = "#FF5666"
+          sizz[rom] = 3
+        } 
+          
+      
+        mima = get_mima(fit())
+        
+        sq_d = if (input$plt_sq && !is.null(stq())) stq() else NULL
+        
+        plot_scatter = plt_sc(
+          dat = scat_abs,
+          ranges = mima,
+          col = col,
+          sq = sq_d,
+          size = sizz,
+          coefo = scatter_regr_val
+        )
+        
+        combo_scatter = (plot_scatter[[1]] + plot_scatter[[2]]) /
+                        (plot_scatter[[3]] + plot_scatter[[4]]) /
+                        (plot_scatter[[5]] + plot_scatter[[6]])
+        
+        return(combo_scatter)
+      }
+      
     }
-
-    grid.arrange(grobs = plot_scatter, nrow = 3, ncol = 2)
-    }    
-  }
   
+
     output$scatter_plot <- renderPlot({ scat_fun()})
   
     
