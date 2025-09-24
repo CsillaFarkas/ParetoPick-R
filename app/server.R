@@ -1644,7 +1644,7 @@ server <- function(input, output, session) {
       shinyjs::hide("download_freq_id")}})
  
   play_freq = function(leg = TRUE){ #excessive function
-    req(cmf(),lalo(), dat_matched(),hru_matcher(),fit())
+    req(cmf(),lalo(), dat_matched(),hru_matcher())
 
     dat = dat_matched()
     
@@ -1699,7 +1699,7 @@ server <- function(input, output, session) {
   )
   
  freq_shaper = function(){ 
-   req(cmf(), dat_matched(),hru_matcher(), fit())
+   req(cmf(), dat_matched(),hru_matcher())
    
    dat = dat_matched()
    
@@ -1774,7 +1774,7 @@ server <- function(input, output, session) {
 
   
      output$aep_tab_one <- renderTable({
-       req(hru_ever(),aep_100(),fan_tab(),sel_tay(),objectives())
+       req(hru_ever(),aep_100(),fan_tab(),sel_tay())
        
        cols = objectives()
        values = sel_tay()
@@ -1848,7 +1848,7 @@ server <- function(input, output, session) {
      })
 
     output$aep_tab_full <-renderTable({
-      req(aep_100_con(),hru_ever(),aep_100(),dat_matched(),fit())
+      req(aep_100_con(),hru_ever(),dat_matched())
       if(nrow(dat_matched())>= 1){
 
         optima <-match(do.call(paste, dat_matched()), do.call(paste, fit()))
@@ -1878,6 +1878,9 @@ server <- function(input, output, session) {
     scat_fun = function() {
       scat_abs = dat_matched()
       scatter_regr_val = scatter_regr()
+      erv = sel_tay()
+      ft = fit()
+      stq_v = stq()
       
       req(scat_abs, scatter_regr_val)
       
@@ -1885,22 +1888,20 @@ server <- function(input, output, session) {
         return(NULL)
       else{
         n_rows <- nrow(scat_abs)
-        col <- rep("grey", n_rows)
-        sizz <- rep(2.8, n_rows)
+        col <-  rep_len("grey", n_rows)
+        sizz <- rep_len(2.8, n_rows)
         
-        if (!is.null(sel_tay())) {
-          erv = sel_tay() #previously er()
-          SCAT_ABS <<- scat_abs
-          ST <<- sel_tay()
-          rom = which(rowSums(scat_abs == as.vector(unlist(erv))[col(scat_abs)]) == ncol(scat_abs))
+        if (!is.null(erv)) {
+          erv_vec <- as.vector(unlist(erv))
+          rom <- which(apply(scat_abs, 1, function(x) all(x == erv_vec)))
           col[rom] = "#FF5666"
           sizz[rom] = 3
         } 
           
       
-        mima = get_mima(fit())
+        mima = get_mima(ft)#fit()
         
-        sq_d = if (input$plt_sq && !is.null(stq())) stq() else NULL
+        sq_d = if (input$plt_sq) stq_v else NULL
         
         plot_scatter = plt_sc(
           dat = scat_abs,
@@ -1911,9 +1912,7 @@ server <- function(input, output, session) {
           coefo = scatter_regr_val
         )
         
-        combo_scatter = (plot_scatter[[1]] + plot_scatter[[2]]) /
-                        (plot_scatter[[3]] + plot_scatter[[4]]) /
-                        (plot_scatter[[5]] + plot_scatter[[6]])
+        combo_scatter <- wrap_plots(plot_scatter, ncol = 2)
         
         return(combo_scatter)
       }
@@ -3291,9 +3290,7 @@ server <- function(input, output, session) {
       # selected point
         cols = objectives()
         values = best_option()
-        BO <<- best_option()
-        COLS <<- cols
-        FIT <<- fit()
+        
         default_empty_ahp <- function(){#then we don't recreate this all the time
           data.frame(nom = rep("-",nrow(aep_sel)),
                      nswrm = aep_sel$nswrm,
@@ -3313,7 +3310,6 @@ server <- function(input, output, session) {
             
           }else{
             mv$optimum <- as.character(mv$optimum)
-            AHPMT <<- ahpmt()
             aep_one_fin <- ahpmt()[mv$optimum,,drop=F]
             aep_one = tibble( nom = as.numeric(aep_one_fin),
                               nswrm = colnames(aep_one_fin))

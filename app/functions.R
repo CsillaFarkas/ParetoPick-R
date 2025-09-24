@@ -969,6 +969,21 @@ plt_share_con = function(dat){
   return(p)
 }
 
+## base theme
+.base_theme_cache <- NULL
+.get_base_theme <- function() {
+  if (is.null(.base_theme_cache)) {
+    .base_theme_cache <<- theme_bw() + theme(
+      panel.background = element_blank(),
+      panel.grid.major = element_line(color = "lightgray", size = 0.3),
+      panel.grid.minor = element_blank(),
+      panel.border = element_blank(),
+      axis.text = element_text(size = 10),
+      axis.title = element_text(size = 16)
+    )
+  }
+  return(.base_theme_cache)
+}
 
 ## scatter plot in play around
 plt_sc = function(dat, ranges, col=rep("grey",nrow(dat)), 
@@ -977,23 +992,18 @@ plt_sc = function(dat, ranges, col=rep("grey",nrow(dat)),
   vars <- colnames(dat)
   num_vars <- length(vars)
   
-  plots <- list()
-  plot_index <- 1
-  
-  
-  bt = theme_bw() + theme(
-    panel.background = element_blank(),
-    panel.grid.major = element_line(color = "lightgray", size = 0.3),
-    panel.grid.minor = element_blank(),
-    panel.border = element_blank(),
-    axis.text = element_text(size = 10),
-    axis.title = element_text(size = 16)
-  ) 
-  
-  
-  
+  bt = .get_base_theme()
+
   sel_col <- "#FF5666" %in% col
   sel_ids <- if (sel_col) which(col == "#FF5666") else integer(0)
+  sel_data <- if (sel_col) dat[sel_ids, , drop = FALSE] else NULL
+  
+  #get stable limits
+  ranges_matrix <- as.matrix(ranges[vars, 2:3])
+  
+  
+  plots <- list()
+  plot_index <- 1
   
   for (i in 1:(num_vars - 1)) {
     for (j in (i + 1):num_vars) {
@@ -1001,46 +1011,43 @@ plt_sc = function(dat, ranges, col=rep("grey",nrow(dat)),
       xcol = vars[i]
       ycol = vars[j]
       
-      
-      x_min = ranges[xcol,2]
-      x_max = ranges[xcol,3]
-        y_min = ranges[ycol,2]
-        y_max = ranges[ycol,3]
-     
+      x_min <- ranges_matrix[xcol, 1]
+      x_max <- ranges_matrix[xcol, 2]
+      y_min <- ranges_matrix[ycol, 1]
+      y_max <- ranges_matrix[ycol, 2]
        
       # p <- ggplot(dat, aes_string(x = vars[i], y = vars[j])) +
-     p = ggplot(dat, aes(x = .data[[xcol]], y = .data[[ycol]]))+
-       geom_point(size=size,color= col)+ bt + coord_cartesian(clip = "off") #prevent labels to be cut off
-        
      
      # regression line
-     pname = paste(xcol, ycol, sep = "_")
+     pname = paste0(xcol, "_", ycol)
      coef_dat = coefo[[pname]]
      
-     p <- p + geom_abline(
+     p <- ggplot(dat, aes(x = .data[[xcol]], y = .data[[ycol]]))+
+       geom_point(size = size, color = col) + bt + coord_cartesian(clip = "off") +  #prevent labels to be cut off
+       geom_abline(
        intercept = coef_dat$intercept,
        slope = coef_dat$slope,
        color = "blue",
        size = 0.4,
        alpha = 0.7
-     )+annotate("text", x = Inf, y = -Inf,
+     )+annotate("text", x = Inf, y = -Inf,#add R²
                 label = paste("R² =", coef_dat$r_val),
-                hjust = 1.1, vjust = -0.5, size = 4)#add R²
+                hjust = 1.1, vjust = -0.5, size = 4)+    #correct for negative scale aesthetics
+       scale_x_continuous(limits = c(x_min, x_max),labels = rem_min, expand = expansion(mult =  c(0.015, 0.015))) +
+       scale_y_continuous(limits = c(y_min, y_max),labels = rem_min, expand = c(0.15, 0))
      
      
-     if(sel_col){
-       
-       p = p + geom_point(data=dat[sel_ids,], aes(x = .data[[xcol]], y= .data[[ycol]]), color="#FF5666", size=2.8)
+    
+     if (sel_col) {
+       p <- p + geom_point(data = sel_data,aes(x = .data[[xcol]], y = .data[[ycol]]),color = "#FF5666", size = 2.8)
      }
+     
      if(!is.null(sq)){
        p = p+ geom_point(data=sq,aes(x = .data[[xcol]], y= .data[[ycol]]), color="cyan", size=2.8)
      }
       
       
-      #correct for negative scale aesthetics
-         p = p +
-          scale_x_continuous(limits = c(x_min, x_max),labels = function(x) {rem_min(x)}, expand = expansion(mult =  c(0.015, 0.015))) +
-          scale_y_continuous(limits = c(y_min, y_max),labels = function(y) {rem_min(y)}, expand = c(0.15, 0))
+      
    
      plots[[plot_index]] <- p
      plot_index <- plot_index + 1
@@ -1535,18 +1542,16 @@ pull_high_range <- function(df, num_order=F) {
 
 #### Other Functions ####
 
-get_mima = function(df){
-  min_values <- sapply(df, min, na.rm = TRUE)
-  max_values <- sapply(df, max, na.rm = TRUE)
+get_mima <- function(df) {
+  mins <- vapply(df, min, numeric(1), na.rm = TRUE)
+  maxs <- vapply(df, max, numeric(1), na.rm = TRUE)
   
-  min_max_df <- data.frame(
-    Variable = names(min_values),
-    worst = min_values,
-    best = max_values,
+  data.frame(
+    Variable = names(mins),
+    worst = mins,
+    best = maxs,
     stringsAsFactors = FALSE
   )
-  
-  return(min_max_df)
 }
 
 ## check sliders and adapt var_corr_par accordingly
