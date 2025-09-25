@@ -986,6 +986,7 @@ server <- function(input, output, session) {
     })
 
   # cache slider observations
+  # cache slider observations
   input_ranges_valid <- reactive({
     all(
       !is.null(input$obj1), !is.null(input$obj2), 
@@ -1028,29 +1029,27 @@ server <- function(input, output, session) {
                      abs_tab = fit(),scal_tab = f_scaled(),
                      allobs = objectives(),smll=F, mes_slider = mes_touched(), 
                      mes_df =opti_mima())
-  })
+  })  
+  
   
   
   object_names_exists <- reactive({
     file.exists("../input/object_names.RDS")
   }) %>% bindCache("object_names_file_check")
   
-  
+
   observe({
-    req(scaled_filtered_data(), input_ranges_valid())
-    req(object_names_exists())
+    req(scaled_filtered_data(), object_names_exists())
     
     df <- scaled_filtered_data()
     dat_matched(df)
     
-    is_empty <- nrow(df) == 0 || ncol(df) == 0
+    is_empty <- nrow(df) == 0
     
     output$ensure_sel <- renderText({
       if (is_empty) {
         "None of the optima fall within the specified ranges. Please select different data ranges!"
-      } else {
-        ""
-      }
+      } else {""}
     })
   })
  
@@ -1088,38 +1087,41 @@ server <- function(input, output, session) {
       #match scaled input with unscaled fit() to create dat
       dat=dat_matched()
       if(!is.null(sel_tay()) && nrow(merge(sel_tay(),dat))==0){sel_tay(NULL)} #remove selection when not in sliders
-     
-       #run plt_sc_optima with sq
+      
+      #run plt_sc_optima with sq
       return(plt_sc_optima(dat=dat, x_var = input$x_var3,
-                    y_var = input$y_var3,
-                    col_var = input$col_var3,
-                    size_var = input$size_var3, 
-                    full_front = fit(),
-                    status_q = input$add_sq_f,an_tab=T, rev = input$rev_box,
-                    sel_tab = sel_tay(),unit=input$unit_add1))
+                           y_var = input$y_var3,
+                           col_var = input$col_var3,
+                           size_var = input$size_var3, 
+                           full_front = fit(),
+                           status_q = input$add_sq_f,an_tab=T, rev = input$rev_box,
+                           sel_tab = sel_tay(),unit=input$unit_add1))
       
     }
+    
+    
     ##TOP Pareto plot
     output$first_pareto <- renderPlot({ first_pareto_fun() })
   
-   observeEvent(input$clickpoint, {
-  req(scaled_filtered_data(), input$obj1, input$x_var3)
-   
-     clickpoint_button(TRUE)
-  dat <- scaled_filtered_data()
-  nearest <- nearPoints(dat, input$clickpoint, xvar = input$x_var3, yvar = input$y_var3, maxpoints = 1)
-  if(nrow(nearest) > 0) {
-    id <-  as.numeric(rownames(nearest)[1])
-
-    yo <- dat[id, , drop = FALSE]
-    yo$id = id
-    sel_tay(yo %>% select(-id))
-    cl_line(yo %>% select(id))
-    cl_line_x(1)
-    cl_line_val(filtered_data()[id,1])
-  }
-  
-})
+    observeEvent(input$clickpoint, { #first pareto
+      req(scaled_filtered_data(), input$obj1, input$x_var3)
+      
+      clickpoint_button(TRUE)
+      dat <- scaled_filtered_data()
+      nearest <- nearPoints(dat, input$clickpoint, xvar = input$x_var3, yvar = input$y_var3, maxpoints = 1)
+      if(nrow(nearest) > 0) {
+        id <-  as.numeric(rownames(nearest)[1])
+        
+        yo <- dat[id, , drop = FALSE]
+        yo$id = id
+        sel_tay(yo %>% select(-id))
+        cl_line(yo %>% select(id))
+        cl_line_x(1)
+        cl_line_val(filtered_data()[id,1])
+      }
+      
+    })
+    
    
    
     output$clickpoint_map <- renderUI({
@@ -1134,7 +1136,7 @@ server <- function(input, output, session) {
     # observe({ if(clickpoint_button()){shinyjs::show("download_play_id")}})
 
     observeEvent(input$map_sel,{
-      req(fit(),sel_tay(),objectives())
+      req(sel_tay(),objectives())
       shinyjs::show("download_play_id")
       play_running(TRUE) #for spinner
       
@@ -1275,38 +1277,44 @@ server <- function(input, output, session) {
     )
     
     ## line plot
-    parplot_fun = function(){
+    parplot_fun = function(){ #clickline
       req(filtered_data())
       sk= filtered_data()
       
       if(is.null(sk)){return(NULL)}else{
-      ko= sk%>% mutate(id = factor(row_number()))%>%pivot_longer(.,cols=-id)%>%
-        mutate(name=factor(name))%>%mutate(name=forcats::fct_relevel(name,objectives()))
+        ko= sk%>% mutate(id = factor(row_number()))%>%pivot_longer(.,cols=-id)%>%
+          mutate(name=factor(name))%>%mutate(name=forcats::fct_relevel(name,objectives()))
+        
+        if(input$plt_sq) {
+          req(stq())
+          
+          #rescale single (extra) point
+          min_fit <- apply(fit(), 2, min)
+          max_fit <- apply(fit(), 2, max)
+          
+          stq_sk <- as.data.frame(mapply(function(col_name, column) {
+            rescale_column(column, min_fit[col_name], max_fit[col_name])
+          }, objectives(), stq(), SIMPLIFY = FALSE))
+          
+          colnames(stq_sk) = objectives()#otherwise spaces do not work because mapply adds dots
+          
+          stq_ko <- pivot_longer(stq_sk,cols = everything(),names_to = "name",values_to = "value")
+          stq_ko <- stq_ko %>% mutate(name=forcats::fct_relevel(name,objectives()))
+          
+          return(plot_parline(datt = ko,colols = rv$colls,   sizz = rv$sizes, sq = stq_ko))
+          
+        }else{
+          
+          return(plot_parline(datt = ko,colols = rv$colls, sizz = rv$sizes, sq= NULL))
+        }
+        
+      }}
+    
+    observe({
+      list(fit(), f_scaled())
       
-      if(input$plt_sq) {
-        req(stq())
-        
-        #rescale single (extra) point
-        min_fit <- apply(fit(), 2, min)
-        max_fit <- apply(fit(), 2, max)
-        
-        stq_sk <- as.data.frame(mapply(function(col_name, column) {
-          rescale_column(column, min_fit[col_name], max_fit[col_name])
-        }, objectives(), stq(), SIMPLIFY = FALSE))
-        
-        colnames(stq_sk) = objectives()#otherwise spaces do not work because mapply adds dots
-        
-        stq_ko <- pivot_longer(stq_sk,cols = everything(),names_to = "name",values_to = "value")
-        stq_ko <- stq_ko %>% mutate(name=forcats::fct_relevel(name,objectives()))
-       
-        return(plot_parline(datt = ko,colols = rv$colls,   sizz = rv$sizes, sq = stq_ko))
-        
-      }else{
-        
-        return(plot_parline(datt = ko,colols = rv$colls, sizz = rv$sizes, sq= NULL))
-      }
-      
-    }}
+      if(exists("cached_min_max")) cached_min_max <<- NULL
+    })
     
     output$linePlot <- renderPlot({ parplot_fun() })
     
@@ -1315,57 +1323,57 @@ server <- function(input, output, session) {
   
  
   ## pull values from parallel axis line when clicked
-  observeEvent(input$clickline,{
-    req(filtered_data())
-    clickpoint_button(TRUE)
-    cl_line_x(round(input$clickline$x))#x
-    cl_line_val(input$clickline$y) #val
- 
-    sc = filtered_data() %>% mutate(id = row_number())
-  #   
-    closest_id <- which.min(abs(sc[[cl_line_x()]] - cl_line_val()))
-    cl_line(sc[closest_id, "id", drop = FALSE])
-    sel_tay(sc[closest_id,-5, drop=FALSE]) #dropping the 5th column (id)
-
-  }, ignoreNULL = TRUE)
+  observeEvent(input$clickline,
+               {
+                 req(filtered_data())
+                 clickpoint_button(TRUE)
+                 cl_line_x(round(input$clickline$x))#x
+                 cl_line_val(input$clickline$y) #val
+                 
+                 sc = filtered_data() %>% mutate(id = row_number())
+                 #
+                 closest_id <- which.min(abs(sc[[cl_line_x()]] - cl_line_val()))
+                 cl_line(sc[closest_id, "id", drop = FALSE])
+                 sel_tay(sc[closest_id, -5, drop = FALSE]) #dropping the 5th column (id)
+                 
+               },
+               ignoreNULL = TRUE)
  
   observeEvent({
-    list(
-      cl_line(),
-      input$obj1,
-      input$obj2, 
-      input$obj3,
-      input$obj4,
-      opti_mima()
-    )
+    list(cl_line(),
+         input$obj1,
+         input$obj2,
+         input$obj3,
+         input$obj4,
+         opti_mima())
   }, {
     req(cl_line(), pp())
     
-  
     # selected optimum from reduced table
+    
     fml = scaled_filtered_data()
-
+    
     te <<- fml[cl_line()$id,]   # te <- fit()[yo$id,] would not work!!
     
     m_opt <<- fit1() %>% filter(across(all_of(objectives()), ~ . %in% te))
-
+    
     if(nrow(m_opt)==0){
       
       reset_selection()
       
       output$click_info <- renderTable({data.frame()}, include.rownames = F, align = "c")
       
-      }else{
-       
+    }else{
+      
       update_selection(m_opt)
-
-
-    colnms = objectives()
-    
-    ## table of chosen line 
-    output$click_info <- renderTable({click_table_data()}, include.rownames = F)
-    
-    }}, ignoreNULL = TRUE) 
+      
+      colnms = objectives()
+      
+      ## table of chosen line 
+      output$click_info <- renderTable({click_table_data()}, include.rownames = F)
+      
+    }}, ignoreNULL = TRUE)
+  
   
   click_table_data <- reactive({
     req(m_opt, sel_tay())
@@ -1645,34 +1653,35 @@ server <- function(input, output, session) {
  
   play_freq = function(leg = TRUE){ #excessive function
     req(cmf(),lalo(), dat_matched(),hru_matcher())
-
+    
     dat = dat_matched()
     
     if(nrow(dat)== 0 || ncol(dat)== 0){return(NULL)}else{
-    optima <-unique( match(do.call(paste, dat), do.call(paste, fit())))
-    hru_subset_freq = hru_matcher()[,c("id",as.character(optima))]     #subset to only those optima in selection
+      optima <-unique( match(do.call(paste, dat), do.call(paste, fit())))
+      hru_subset_freq = hru_matcher()[,c("id",as.character(optima))]     #subset to only those optima in selection
       
-    hru_freq = hru_subset_freq
-    hru_freq$freq = rowSums(!is.na(hru_freq[ , -which(names(hru_freq) == "id")])) / (ncol(hru_freq) - 1)
-    # hru_share = hru_freq%>%left_join(hru_100(),by="id") %>%select(id,measure,freq)
-    opt_cols <- setdiff(names(hru_freq), c("id", "freq")) #only opt colums
-    
-    hru_share = hru_freq
-    hru_share$measure = apply(hru_share[opt_cols], 1, color_meas_most) 
-    hru_share = hru_share %>% select(id, measure, freq)
-    
-    #make unique measures outside
-    mes <<- unique(hru_ever()$measure)
-    
-  #make palette outside and pass to it
-    man_col = c("#66C2A5", "#4db818", "#663e13", "#F7A600", "#03597F", "#83D0F5",  "#FFEF2C",   "#a84632",  "#b82aa5",  "#246643" )
-    man_col = man_col[1:length(unique(mes))]
-    pal <<- colorFactor(palette = man_col, domain = unique(mes), na.color = "lightgrey")
-
-    m = plt_freq(data = cmf(),lo=lalo()[2], la=lalo()[1], buffers=buffers(), remaining=hru_share, dispal=pal, mes = mes, legend = leg, basemap = input$anomap)
-
-    return(m)}
+      hru_freq = hru_subset_freq
+      hru_freq$freq = rowSums(!is.na(hru_freq[ , -which(names(hru_freq) == "id")])) / (ncol(hru_freq) - 1)
+      # hru_share = hru_freq%>%left_join(hru_100(),by="id") %>%select(id,measure,freq)
+      opt_cols <- setdiff(names(hru_freq), c("id", "freq")) #only opt colums
+      
+      hru_share = hru_freq
+      hru_share$measure = apply(hru_share[opt_cols], 1, color_meas_most) 
+      hru_share = hru_share %>% select(id, measure, freq)
+      
+      #make unique measures outside
+      mes <<- unique(hru_ever()$measure)
+      
+      #make palette outside and pass to it
+      man_col = c("#66C2A5", "#4db818", "#663e13", "#F7A600", "#03597F", "#83D0F5",  "#FFEF2C",   "#a84632",  "#b82aa5",  "#246643" )
+      man_col = man_col[1:length(unique(mes))]
+      pal <<- colorFactor(palette = man_col, domain = unique(mes), na.color = "lightgrey")
+      
+      m = plt_freq(data = cmf(),lo=lalo()[2], la=lalo()[1], buffers=buffers(), remaining=hru_share, dispal=pal, mes = mes, legend = leg, basemap = input$anomap)
+      
+      return(m)}
   }
+  
   
   output$freq_map_play = renderUI({ play_freq()  })
   
@@ -1918,6 +1927,9 @@ server <- function(input, output, session) {
       }
       
     }
+
+    
+    
   
 
     output$scatter_plot <- renderPlot({ scat_fun()})
@@ -1991,8 +2003,8 @@ server <- function(input, output, session) {
         
         corr <<- read.csv("../output/correlation_matrix.csv", row.names = 1) #global because of re-rendering of plot
         high_corr = find_high_corr(corr,threshold=0.7, tab=T, strike=NULL) 
-        
-        pca_content = all_var[-which(all_var %in% unique(high_corr$variable1))]
+       
+        pca_content = all_var[!(all_var %in% unique(high_corr$variable1))]
 
         if(file.exists("../input/units.RDS")){axiselected(readRDS("../input/units.RDS"))}else{axiselected(c("-","-","-","-"))}
         axis_high_range <- axiselected()[rng_plt_axes()]#reorder axis labels
@@ -2184,7 +2196,7 @@ server <- function(input, output, session) {
     if (is.null(pca_remove())) {
       pca_content = all_var
     } else{
-      pca_content = all_var[-which(all_var %in% pca_remove())]
+      pca_content = all_var[!(all_var %in% pca_remove())]
     }
     
     saveRDS(pca_content,file = "../input/pca_content.RDS") #required for PCA
